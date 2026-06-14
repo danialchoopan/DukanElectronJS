@@ -13,7 +13,7 @@
 
 ---
 
-## تصاویر برنامه
+# تصاویر برنامه
 <img src="screenshot/1.jpg" height="500">
 <img src="screenshot/2.jpg" height="500">
 <img src="screenshot/3.jpg" height="500">
@@ -125,3 +125,4 @@ npm run start
 ## Tech Stack
 
 Electron 33 · React 18 · TypeScript 5 · Vite 6 · Zustand 5 · better-sqlite3 11 · Tailwind CSS 3 · html5-qrcode · Vazirmatn (Local) · i18n (FA/EN) · Dark/Light Mode · electron-builder 25
+ 
