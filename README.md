@@ -14,9 +14,10 @@
 ---
 
 ## تصاویر برنامه
-!(screenshot/1.jpg)
-!(screenshot/2.jpg)
-!(screenshot/3.jpg)
+<img src="screenshot/1.jpg" height="500">
+<img src="screenshot/2.jpg" height="500">
+<img src="screenshot/3.jpg" height="500">
+
 
 
 
