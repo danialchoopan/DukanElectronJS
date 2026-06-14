@@ -3,19 +3,20 @@ productName: SuperMarket POS
 directories:
   output: release
 files:
+  - dist-electron/**/*
   - dist/**/*
   - package.json
-extraResources:
-  - from: assets/
-    to: assets/
+  - "!node_modules/**/*"
+  - "node_modules/better-sqlite3/**/*"
 win:
   target:
     - nsis
-  icon: assets/icon.ico
+  sign: false
+  signingHashAlgorithms: []
+  artifactName: "${productName}-${version}-Setup.${ext}"
 linux:
   target:
     - AppImage
-  icon: assets/icon.png
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
