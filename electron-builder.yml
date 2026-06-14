@@ -1,0 +1,23 @@
+appId: com.supermarket.pos
+productName: SuperMarket POS
+directories:
+  output: release
+files:
+  - dist/**/*
+  - package.json
+extraResources:
+  - from: assets/
+    to: assets/
+win:
+  target:
+    - nsis
+  icon: assets/icon.ico
+linux:
+  target:
+    - AppImage
+  icon: assets/icon.png
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true

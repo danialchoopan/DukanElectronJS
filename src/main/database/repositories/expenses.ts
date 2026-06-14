@@ -1,0 +1,46 @@
+import { getDatabase } from '../connection'
+import type { Expense, ExpenseInput } from '../../../types'
+
+export function getAllExpenses(): Expense[] {
+  const db = getDatabase()
+  return (db.prepare('SELECT * FROM expenses ORDER BY date DESC, createdAt DESC')
+    .all() as Record<string, unknown>[]).map(r => ({
+    id: r.id as number, category: r.category as string, description: r.description as string,
+    amount: r.amount as number, date: r.date as string, createdAt: r.createdAt as string,
+  }))
+}
+
+export function getExpensesByDateRange(startDate: string, endDate: string): Expense[] {
+  const db = getDatabase()
+  return (db.prepare('SELECT * FROM expenses WHERE date BETWEEN ? AND ? ORDER BY date DESC')
+    .all(startDate, endDate) as Record<string, unknown>[]).map(r => ({
+    id: r.id as number, category: r.category as string, description: r.description as string,
+    amount: r.amount as number, date: r.date as string, createdAt: r.createdAt as string,
+  }))
+}
+
+export function createExpense(input: ExpenseInput): Expense {
+  const db = getDatabase()
+  const result = db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)')
+    .run(input.category, input.description, input.amount, input.date)
+  return { id: result.lastInsertRowid as number, ...input, createdAt: new Date().toISOString() }
+}
+
+export function deleteExpense(id: number): boolean {
+  const db = getDatabase()
+  return db.prepare('DELETE FROM expenses WHERE id = ?').run(id).changes > 0
+}
+
+export function getExpenseCategories(): string[] {
+  const db = getDatabase()
+  return (db.prepare("SELECT DISTINCT category FROM expenses WHERE category != '' ORDER BY category").all() as { category: string }[]).map(r => r.category)
+}
+
+export function getTotalExpenses(startDate?: string, endDate?: string): number {
+  const db = getDatabase()
+  let query = 'SELECT COALESCE(SUM(amount), 0) as total FROM expenses WHERE 1=1'
+  const params: string[] = []
+  if (startDate) { query += ' AND date >= ?'; params.push(startDate) }
+  if (endDate) { query += ' AND date <= ?'; params.push(endDate) }
+  return (db.prepare(query).get(...params) as { total: number }).total
+}
