@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react'
+import { useState, useEffect, useCallback, useRef, forwardRef, useImperativeHandle } from 'react'
+import type { Product } from '../../../types'
 import { fa } from '../i18n'
 
 interface Props {
@@ -6,49 +7,113 @@ interface Props {
 }
 
 const BarcodeInput = forwardRef<HTMLInputElement, Props>(({ onBarcodeScanned }, ref) => {
-  const [value, setValue] = useState('')
-  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<Product[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
-  useImperativeHandle(ref, () => inputRef.current!)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>()
 
+  useImperativeHandle(ref, () => inputRef.current!, [])
   useEffect(() => { inputRef.current?.focus() }, [])
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && value.trim()) { onBarcodeScanned(value.trim()); setValue(''); setSearchResults([]); setShowDropdown(false) }
-      if (e.key === 'Escape') { setSearchResults([]); setShowDropdown(false) }
+    if (selectedIndex >= 0 && results[selectedIndex]) {
+      const item = dropdownRef.current?.children[selectedIndex] as HTMLElement
+      item?.scrollIntoView({ block: 'nearest' })
     }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [value, onBarcodeScanned])
+  }, [selectedIndex])
 
-  const handleInput = async (query: string) => {
-    setValue(query)
-    if (query.length >= 2) {
-      const result = await window.api.products.search(query)
-      if (result.success && result.data) { setSearchResults(result.data.slice(0, 8)); setShowDropdown(true) }
-    } else { setSearchResults([]); setShowDropdown(false) }
+  const doSearch = useCallback(async (q: string) => {
+    if (q.length < 1) { setResults([]); setShowDropdown(false); return }
+    const r = await window.api.products.search(q)
+    if (r.success && r.data) { setResults(r.data); setShowDropdown(r.data.length > 0); setSelectedIndex(-1) }
+  }, [])
+
+  const handleInput = (val: string) => {
+    setQuery(val)
+    setSelectedIndex(-1)
+    clearTimeout(searchTimer.current)
+    searchTimer.current = setTimeout(() => doSearch(val), 200)
   }
 
-  const selectProduct = (product: any) => {
+  const selectAndClose = (product: Product) => {
     onBarcodeScanned(product.barcode || product.title)
-    setValue(''); setSearchResults([]); setShowDropdown(false); inputRef.current?.focus()
+    setQuery('')
+    setResults([])
+    setShowDropdown(false)
+    setSelectedIndex(-1)
+    inputRef.current?.focus()
   }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1))
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      if (selectedIndex >= 0 && results[selectedIndex]) {
+        selectAndClose(results[selectedIndex])
+      } else if (query.trim()) {
+        onBarcodeScanned(query.trim())
+        setQuery('')
+        setResults([])
+        setShowDropdown(false)
+      }
+    } else if (e.key === 'Escape') {
+      setShowDropdown(false)
+      setQuery('')
+    }
+  }
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
-    <div className="relative">
-      <input ref={inputRef} type="text" value={value} onChange={(e) => handleInput(e.target.value)}
-        className="input-field text-lg" placeholder={fa.pos.scanOrSearch} autoFocus />
-      {showDropdown && searchResults.length > 0 && (
-        <div className="absolute z-10 top-full left-0 right-0 mt-1 rounded-xl shadow-lg max-h-60 overflow-auto"
+    <div className="relative" ref={dropdownRef}>
+      <input
+        ref={inputRef}
+        type="text"
+        value={query}
+        onChange={(e) => handleInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        className="input-field text-lg"
+        placeholder={fa.pos.scanOrSearch}
+        autoFocus
+      />
+      {showDropdown && results.length > 0 && (
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 rounded-xl shadow-2xl max-h-64 overflow-auto"
           style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          {searchResults.map((p) => (
-            <button key={p.id} onClick={() => selectProduct(p)}
-              className="w-full text-right px-4 py-2.5 flex justify-between text-sm hover:opacity-80 transition-all"
-              style={{ borderBottom: '1px solid var(--border-color)' }}>
-              <span style={{ color: 'var(--text-primary)' }}>{p.title}</span>
-              <span style={{ color: 'var(--text-muted)' }}>{p.sale_price.toLocaleString('fa-IR')} {fa.common.toman}</span>
+          {results.map((p, i) => (
+            <button
+              key={p.id}
+              onClick={() => selectAndClose(p)}
+              onMouseEnter={() => setSelectedIndex(i)}
+              className="w-full text-right px-4 py-2.5 flex justify-between items-center text-sm transition-colors"
+              style={{
+                backgroundColor: i === selectedIndex ? 'var(--bg-tertiary)' : 'transparent',
+                color: 'var(--text-primary)',
+                borderBottom: '1px solid var(--border-color)',
+              }}>
+              <div>
+                <div className="font-medium">{p.title}</div>
+                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{p.barcode} | {p.category}</div>
+              </div>
+              <div className="text-left">
+                <div className="font-bold text-green-500">{p.sale_price.toLocaleString('fa-IR')} T</div>
+                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{fa.admin.stock}: {p.stock}</div>
+              </div>
             </button>
           ))}
         </div>
@@ -56,5 +121,6 @@ const BarcodeInput = forwardRef<HTMLInputElement, Props>(({ onBarcodeScanned }, 
     </div>
   )
 })
+
 BarcodeInput.displayName = 'BarcodeInput'
 export default BarcodeInput

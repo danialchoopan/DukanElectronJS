@@ -21,10 +21,10 @@ export const en = {
   pos: {
     scanOrSearch: 'Scan barcode or search...',
     noItems: 'No items in cart. Scan a barcode to begin.',
+    fullAmount: 'Fully paid (exact amount)',
     subtotal: 'Subtotal',
     items: 'items',
     total: 'Total',
-    rounded: 'Rounded from',
     hold: 'Hold',
     resume: 'Resume',
     slot: 'Slot',

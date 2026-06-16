@@ -24,12 +24,14 @@ interface SettingsState {
   fontSize: string
   fontSizeCustom: number
   highContrast: boolean
+  showCameraScanner: boolean
   setTheme: (theme: Theme) => void
   setLanguage: (lang: 'fa' | 'en') => void
   setNavTheme: (navTheme: NavTheme) => void
   setFontSize: (size: string) => void
   setFontSizeCustom: (size: number) => void
   setHighContrast: (hc: boolean) => void
+  setShowCameraScanner: (v: boolean) => void
   init: () => Promise<void>
 }
 
@@ -40,6 +42,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   fontSize: 'md',
   fontSizeCustom: 1,
   highContrast: false,
+  showCameraScanner: true,
 
   setTheme: (theme) => {
     set({ theme })
@@ -80,6 +83,11 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     window.api.settings.set('highContrast', String(highContrast))
   },
 
+  setShowCameraScanner: (showCameraScanner) => {
+    set({ showCameraScanner })
+    window.api.settings.set('showCameraScanner', String(showCameraScanner))
+  },
+
   init: async () => {
     const result = await window.api.settings.getAll()
     if (result.success && result.data) {
@@ -89,7 +97,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       const fontSize = result.data.fontSize || 'md'
       const fontSizeCustom = parseFloat(result.data.fontSizeCustom) || 1
       const highContrast = result.data.highContrast === 'true'
-      set({ theme, language, navTheme, fontSize, fontSizeCustom, highContrast })
+      const showCameraScanner = result.data.showCameraScanner !== 'false'
+      set({ theme, language, navTheme, fontSize, fontSizeCustom, highContrast, showCameraScanner })
       applyTheme(theme)
       document.documentElement.style.fontSize = `${fontSizeCustom * 16}px`
       if (highContrast) document.documentElement.classList.add('high-contrast')

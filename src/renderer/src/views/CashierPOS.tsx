@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { useCartStore } from '../store/cartStore'
 import { useAuthStore } from '../store/authStore'
 import { useSuspendStore } from '../store/suspendStore'
+import { useSettingsStore } from '../store/settingsStore'
 import BarcodeInput from '../components/BarcodeInput'
 import CartTable from '../components/CartTable'
 import PaymentPanel from '../components/PaymentPanel'
@@ -21,6 +22,7 @@ export default function CashierPOS() {
   const slots = useSuspendStore((s) => s.slots)
   const setSlot = useSuspendStore((s) => s.setSlot)
   const clearSlot = useSuspendStore((s) => s.clearSlot)
+  const { showCameraScanner } = useSettingsStore()
   const [notification, setNotification] = useState('')
   const [showWebcam, setShowWebcam] = useState(false)
   const [showSuspended, setShowSuspended] = useState(false)
@@ -28,89 +30,62 @@ export default function CashierPOS() {
   const [saleComplete, setSaleComplete] = useState<Sale | null>(null)
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [storeSettings, setStoreSettings] = useState({ storeName: '', storeAddress: '', storePhone: '', receiptFooter: '' })
+  const [fullyPaid, setFullyPaid] = useState(true)
   const barcodeRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     window.api.settings.getAll().then((r) => {
-      if (r.success && r.data) {
-        setStoreSettings({
-          storeName: r.data.storeName ?? '',
-          storeAddress: r.data.storeAddress ?? '',
-          storePhone: r.data.storePhone ?? '',
-          receiptFooter: r.data.receiptFooter ?? '',
-        })
-      }
+      if (r.success && r.data) setStoreSettings({ storeName: r.data.storeName ?? '', storeAddress: r.data.storeAddress ?? '', storePhone: r.data.storePhone ?? '', receiptFooter: r.data.receiptFooter ?? '' })
     })
   }, [])
 
-  const showNotif = useCallback((msg: string) => {
-    setNotification(msg)
-    setTimeout(() => setNotification(''), 3000)
-  }, [])
+  const showNotif = useCallback((msg: string) => { setNotification(msg); setTimeout(() => setNotification(''), 3000) }, [])
 
   const handleBarcodeScan = useCallback(async (barcode: string) => {
     const result = await window.api.products.getByBarcode(barcode)
     if (result.success && result.data) {
       const product = result.data
-      if (product.stock <= 0) { showNotif(` ${product.title} — ${fa.admin.outOfStock}`); return }
+      if (product.stock <= 0) { showNotif(`${fa.admin.outOfStock}: ${product.title}`); return }
       addItem({ productId: product.id, title: product.title, unitPrice: product.sale_price, purchasePrice: product.purchase_price })
-      showNotif(` ${product.title} — ${product.sale_price.toLocaleString('fa-IR')} ${fa.common.toman}`)
-    } else {
-      showNotif(` ${barcode} — ${fa.common.noData}`)
-    }
+      showNotif(`${product.title} — ${product.sale_price.toLocaleString('fa-IR')} ${fa.common.toman}`)
+    } else { showNotif(`${fa.common.noData}: ${barcode}`) }
     setShowWebcam(false)
   }, [addItem, showNotif])
 
   const handlePaymentComplete = useCallback(async (method: 'cash' | 'card' | 'ledger', customerPaid?: number) => {
-    if (items.length === 0) { showNotif(` ${fa.pos.noItems}`); return }
-    if (method === 'ledger' && !selectedCustomer) { showNotif(` ${fa.payment.selectCustomer}`); return }
-
+    if (items.length === 0) { showNotif(fa.pos.noItems); return }
+    const total = getSubtotal()
+    const paidAmt = fullyPaid ? total : (customerPaid || 0)
     const result = await window.api.sales.create({
       userId: user!.id,
-      items: items.map((i) => ({
-        productId: i.productId, productTitle: i.title, quantity: i.quantity,
-        unitPrice: i.unitPrice, purchasePrice: i.purchasePrice,
-      })),
+      items: items.map((i) => ({ productId: i.productId, productTitle: i.title, quantity: i.quantity, unitPrice: i.unitPrice, purchasePrice: i.purchasePrice })),
       paymentMethod: method,
       customerId: selectedCustomer?.id,
-      customerPaid: customerPaid || 0,
+      customerPaid: paidAmt,
     })
-
     if (result.success && result.data) {
       showNotif(`${result.data.invoiceNumber} — ${result.data.total_amount.toLocaleString('fa-IR')} ${fa.common.toman}`)
       setSaleComplete(result.data)
       clearCart()
       setSelectedCustomer(null)
+      setFullyPaid(true)
       barcodeRef.current?.focus()
-    } else {
-      showNotif(` ${result.error}`)
-    }
-  }, [items, user, selectedCustomer, clearCart, showNotif])
+    } else { showNotif(`${result.error}`) }
+  }, [items, user, selectedCustomer, fullyPaid, clearCart, showNotif])
 
   const handleSuspend = useCallback(async (slotIndex?: number) => {
-    if (items.length === 0) { showNotif(` ${fa.pos.nothingToHold}`); return }
+    if (items.length === 0) { showNotif(fa.pos.nothingToHold); return }
     const targetSlot = slotIndex ?? slots.findIndex((s) => s.items.length === 0)
-    if (targetSlot === -1 || targetSlot >= 3) { showNotif(` ${fa.pos.allSlotsFull}`); return }
+    if (targetSlot === -1 || targetSlot >= 3) { showNotif(fa.pos.allSlotsFull); return }
     const result = await window.api.suspend.save(user!.id, targetSlot, items)
-    if (result.success && result.data) {
-      setSlot(targetSlot, result.data.id, items)
-      clearCart()
-      showNotif(`${fa.pos.holdInvoice} ${fa.pos.slot} ${targetSlot + 1}`)
-      barcodeRef.current?.focus()
-    }
+    if (result.success && result.data) { setSlot(targetSlot, result.data.id, items); clearCart(); showNotif(`${fa.pos.holdInvoice} ${fa.pos.slot} ${targetSlot + 1}`); barcodeRef.current?.focus() }
   }, [items, user, slots, setSlot, clearCart, showNotif])
 
   const handleResume = useCallback(async (slotIndex: number) => {
     const slot = slots[slotIndex]
-    if (!slot || !slot.id || slot.items.length === 0) { showNotif(` ${fa.pos.emptySlot}`); return }
+    if (!slot || !slot.id || slot.items.length === 0) { showNotif(fa.pos.emptySlot); return }
     const result = await window.api.suspend.load(slot.id)
-    if (result.success && result.data) {
-      clearCart()
-      for (const item of result.data.items) addItem(item)
-      clearSlot(slotIndex)
-      showNotif(`${fa.pos.resumeFrom} ${fa.pos.slot} ${slotIndex + 1}`)
-      barcodeRef.current?.focus()
-    }
+    if (result.success && result.data) { clearCart(); for (const item of result.data.items) addItem(item); clearSlot(slotIndex); showNotif(`${fa.pos.resumeFrom} ${fa.pos.slot} ${slotIndex + 1}`); barcodeRef.current?.focus() }
   }, [slots, clearCart, addItem, clearSlot, showNotif])
 
   useEffect(() => {
@@ -133,39 +108,24 @@ export default function CashierPOS() {
 
       {showWebcam && <WebcamScanner onScan={handleBarcodeScan} onClose={() => setShowWebcam(false)} />}
 
-      {showReceipt && (
-        <ReceiptPrinter
-          sale={showReceipt}
-          storeName={storeSettings.storeName}
-          storeAddress={storeSettings.storeAddress}
-          storePhone={storeSettings.storePhone}
-          receiptFooter={storeSettings.receiptFooter}
-          onClose={() => setShowReceipt(null)}
-        />
-      )}
-
-      {saleComplete && !showReceipt && (
+      {saleComplete && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="rounded-2xl p-8 max-w-sm w-full mx-4 text-center border-2" style={{
-            backgroundColor: document.documentElement.classList.contains('dark') ? '#1e293b' : '#ffffff',
-            borderColor: '#22c55e',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-          }}>
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>
-              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <div className="card p-8 max-w-sm w-full text-center" style={{ border: '2px solid #22c55e' }}>
+            <div className="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>
+              <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
-            <h2 className="text-xl font-bold mb-2" style={{ color: document.documentElement.classList.contains('dark') ? '#f1f5f9' : '#0f172a' }}>{fa.pos.total}: {saleComplete.total_amount.toLocaleString('fa-IR')} {fa.common.toman}</h2>
-            <p className="text-sm mb-1" style={{ color: document.documentElement.classList.contains('dark') ? '#94a3b8' : '#64748b' }}>{saleComplete.invoiceNumber}</p>
+            <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{fa.pos.total}: {saleComplete.total_amount.toLocaleString('fa-IR')} {fa.common.toman}</h2>
+            <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>{saleComplete.invoiceNumber}</p>
             <div className="flex gap-2 mt-6">
-              <button onClick={() => { setShowReceipt(saleComplete); setSaleComplete(null) }} className="btn-primary flex-1 py-3">
-                {fa.receipt.print}
-              </button>
-              <button onClick={() => setSaleComplete(null)} className="btn-success flex-1 py-3">
-                {fa.common.close}
-              </button>
+              <button onClick={() => { setShowReceipt(saleComplete); setSaleComplete(null) }} className="btn btn-primary flex-1 py-2.5">{fa.receipt.print}</button>
+              <button onClick={() => setSaleComplete(null)} className="btn btn-success flex-1 py-2.5">{fa.common.close}</button>
             </div>
           </div>
         </div>
+      )}
+
+      {showReceipt && (
+        <ReceiptPrinter sale={showReceipt} storeName={storeSettings.storeName} storeAddress={storeSettings.storeAddress} storePhone={storeSettings.storePhone} receiptFooter={storeSettings.receiptFooter} onClose={() => setShowReceipt(null)} />
       )}
 
       {showSuspended && (
@@ -181,13 +141,15 @@ export default function CashierPOS() {
       )}
 
       <div className="flex-1 flex flex-col gap-3">
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <div className="flex-1">
             <BarcodeInput ref={barcodeRef} onBarcodeScanned={handleBarcodeScan} />
           </div>
-          <button onClick={() => setShowWebcam(true)} className="btn-primary px-4" title={fa.common.webcam}>
-            <CameraIcon className="w-5 h-5" />
-          </button>
+          {showCameraScanner && (
+            <button onClick={() => setShowWebcam(true)} className="btn btn-primary px-4" title={fa.common.webcam}>
+              <CameraIcon className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         <LooseItemsGrid />
@@ -197,29 +159,34 @@ export default function CashierPOS() {
         }} />
         <CartTable items={items} />
 
-        <div className="flex gap-3 text-[10px] text-gray-500">
+        <div className="flex gap-3 text-[10px]" style={{ color: 'var(--text-muted)' }}>
           <span>F4: {fa.pos.hold}</span>
           <span>F5-F7: {fa.pos.resume}</span>
           <span>Enter: {fa.pos.add}</span>
-          <span>{fa.common.webcam}</span>
         </div>
       </div>
 
       <div className="w-80 flex flex-col gap-2">
-        <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+        <div className="card">
           <div className="flex justify-between items-center">
-            <span className="text-gray-400 text-sm">{fa.pos.subtotal}</span>
-            <span className="text-2xl font-bold text-green-400">
-              {getSubtotal().toLocaleString('fa-IR')} {fa.common.toman}
-            </span>
+            <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{fa.pos.subtotal}</span>
+            <span className="text-2xl font-bold text-green-400">{getSubtotal().toLocaleString('fa-IR')} {fa.common.toman}</span>
           </div>
-          <div className="text-xs text-gray-500 mt-1">{items.length} {fa.pos.items}</div>
+          <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{items.length} {fa.pos.items}</div>
+
+          <div className="flex items-center gap-2 mt-2 pt-2" style={{ borderTop: '1px solid var(--border-color)' }}>
+            <input type="checkbox" id="fullyPaid" checked={fullyPaid} onChange={(e) => setFullyPaid(e.target.checked)} className="w-4 h-4" />
+            <label htmlFor="fullyPaid" className="text-xs font-medium cursor-pointer" style={{ color: 'var(--text-secondary)' }}>
+              {fa.pos.fullAmount}
+            </label>
+          </div>
         </div>
 
         <PaymentPanel
           onPaymentComplete={handlePaymentComplete}
           selectedCustomer={selectedCustomer}
           onSelectCustomer={setSelectedCustomer}
+          fullyPaid={fullyPaid}
         />
 
         <div className="grid grid-cols-3 gap-1.5">

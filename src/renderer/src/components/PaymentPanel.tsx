@@ -10,9 +10,10 @@ interface Props {
   onPaymentComplete: (method: PaymentMethod, customerPaid?: number) => void
   selectedCustomer: Customer | null
   onSelectCustomer: (c: Customer | null) => void
+  fullyPaid: boolean
 }
 
-export default function PaymentPanel({ onPaymentComplete, selectedCustomer, onSelectCustomer }: Props) {
+export default function PaymentPanel({ onPaymentComplete, selectedCustomer, onSelectCustomer, fullyPaid }: Props) {
   const totalAmount = useCartStore((s) => s.getSubtotal())
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null)
   const [paid, setPaid] = useState('')
@@ -26,7 +27,7 @@ export default function PaymentPanel({ onPaymentComplete, selectedCustomer, onSe
     }
   }, [showCustomerSearch, customerQuery])
 
-  const paidAmount = parseFloat(paid) || 0
+  const paidAmount = fullyPaid ? totalAmount : (parseFloat(paid) || 0)
   const change = Math.max(0, paidAmount - totalAmount)
 
   const methods: { key: PaymentMethod; label: string; icon: JSX.Element; color: string }[] = [
