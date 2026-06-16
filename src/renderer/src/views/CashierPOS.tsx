@@ -13,7 +13,7 @@ import ReceiptPrinter from '../components/ReceiptPrinter'
 import Notification from '../components/Notification'
 import { CameraIcon } from '../components/Icons'
 import PopularItems from '../components/PopularItems'
-import type { Sale, Customer } from "../../../types"
+import type { Sale, Customer, Product } from "../../../types"
 import { fa } from "../i18n"
 
 export default function CashierPOS() {
@@ -48,30 +48,45 @@ export default function CashierPOS() {
       if (product.stock <= 0) { showNotif(`${fa.admin.outOfStock}: ${product.title}`); return }
       addItem({ productId: product.id, title: product.title, unitPrice: product.sale_price, purchasePrice: product.purchase_price })
       showNotif(`${product.title} — ${product.sale_price.toLocaleString('fa-IR')} ${fa.common.toman}`)
-    } else { showNotif(`${fa.common.noData}: ${barcode}`) }
+    } else { showNotif(`${barcode} — ${fa.common.noData}`) }
     setShowWebcam(false)
   }, [addItem, showNotif])
+
+  const handleProductSelect = useCallback((product: Product) => {
+    if (product.stock <= 0) { showNotif(`${fa.admin.outOfStock}: ${product.title}`); return }
+    addItem({ productId: product.id, title: product.title, unitPrice: product.sale_price, purchasePrice: product.purchase_price })
+    showNotif(`${product.title} — ${product.sale_price.toLocaleString('fa-IR')} ${fa.common.toman}`)
+  }, [addItem, showNotif])
+
+  const [pendingPayment, setPendingPayment] = useState<{ method: 'cash' | 'card' | 'ledger'; customerPaid?: number } | null>(null)
 
   const handlePaymentComplete = useCallback(async (method: 'cash' | 'card' | 'ledger', customerPaid?: number) => {
     if (items.length === 0) { showNotif(fa.pos.noItems); return }
     const total = getSubtotal()
     const paidAmt = fullyPaid ? total : (customerPaid || 0)
+    setPendingPayment({ method, customerPaid: paidAmt })
+  }, [items, fullyPaid, getSubtotal, showNotif])
+
+  const confirmSale = useCallback(async () => {
+    if (!pendingPayment || items.length === 0) return
+    const { method, customerPaid: paidAmt } = pendingPayment
     const result = await window.api.sales.create({
       userId: user!.id,
       items: items.map((i) => ({ productId: i.productId, productTitle: i.title, quantity: i.quantity, unitPrice: i.unitPrice, purchasePrice: i.purchasePrice })),
       paymentMethod: method,
       customerId: selectedCustomer?.id,
-      customerPaid: paidAmt,
+      customerPaid: paidAmt || 0,
     })
     if (result.success && result.data) {
-      showNotif(`${result.data.invoiceNumber} — ${result.data.total_amount.toLocaleString('fa-IR')} ${fa.common.toman}`)
       setSaleComplete(result.data)
       clearCart()
       setSelectedCustomer(null)
       setFullyPaid(true)
+      setPendingPayment(null)
       barcodeRef.current?.focus()
     } else { showNotif(`${result.error}`) }
-  }, [items, user, selectedCustomer, fullyPaid, clearCart, showNotif])
+    setPendingPayment(null)
+  }, [pendingPayment, items, user, selectedCustomer, clearCart, showNotif])
 
   const handleSuspend = useCallback(async (slotIndex?: number) => {
     if (items.length === 0) { showNotif(fa.pos.nothingToHold); return }
@@ -108,15 +123,57 @@ export default function CashierPOS() {
 
       {showWebcam && <WebcamScanner onScan={handleBarcodeScan} onClose={() => setShowWebcam(false)} />}
 
+      {pendingPayment && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+          <div className="card p-6 max-w-sm w-full text-center" style={{ border: '2px solid #f59e0b' }}>
+            <div className="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(245,158,11,0.15)' }}>
+              <svg className="w-7 h-7 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{fa.common.confirm}؟</h2>
+            <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>{fa.pos.total}: {getSubtotal().toLocaleString('fa-IR')} {fa.common.toman}</p>
+            <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>{pendingPayment.method === 'cash' ? fa.payment.cash : pendingPayment.method === 'card' ? fa.payment.card : fa.payment.ledger}</p>
+            <div className="flex gap-2">
+              <button onClick={() => setPendingPayment(null)} className="btn btn-danger flex-1 py-2.5">{fa.common.cancel}</button>
+              <button onClick={confirmSale} className="btn btn-success flex-1 py-2.5">{fa.common.confirm}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {saleComplete && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="card p-8 max-w-sm w-full text-center" style={{ border: '2px solid #22c55e' }}>
-            <div className="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>
-              <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <div className="card p-6 max-w-md w-full" style={{ border: '2px solid #22c55e' }}>
+            <div className="text-center mb-4">
+              <div className="w-14 h-14 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>
+                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{fa.pos.total}: {saleComplete.total_amount.toLocaleString('fa-IR')} {fa.common.toman}</h2>
             </div>
-            <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{fa.pos.total}: {saleComplete.total_amount.toLocaleString('fa-IR')} {fa.common.toman}</h2>
-            <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>{saleComplete.invoiceNumber}</p>
-            <div className="flex gap-2 mt-6">
+            <div className="rounded-xl p-3 mb-4" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+              <div className="flex justify-between text-sm mb-1">
+                <span style={{ color: 'var(--text-secondary)' }}>{fa.receipt.invoice}</span>
+                <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{saleComplete.invoiceNumber}</span>
+              </div>
+              <div className="flex justify-between text-sm mb-1">
+                <span style={{ color: 'var(--text-secondary)' }}>{fa.receipt.method}</span>
+                <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{saleComplete.paymentMethod === 'cash' ? fa.payment.cash : saleComplete.paymentMethod === 'card' ? fa.payment.card : fa.payment.ledger}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span style={{ color: 'var(--text-secondary)' }}>{fa.receipt.date}</span>
+                <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{saleComplete.createdAt?.split('T')[0]}</span>
+              </div>
+              {saleComplete.items && saleComplete.items.length > 0 && (
+                <div className="mt-2 pt-2" style={{ borderTop: '1px solid var(--border-color)' }}>
+                  {saleComplete.items.map((item: any, idx: number) => (
+                    <div key={idx} className="flex justify-between text-xs mb-1">
+                      <span style={{ color: 'var(--text-secondary)' }}>{item.productTitle} x{item.quantity}</span>
+                      <span style={{ color: 'var(--text-primary)' }}>{item.subtotal.toLocaleString('fa-IR')}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="flex gap-2">
               <button onClick={() => { setShowReceipt(saleComplete); setSaleComplete(null) }} className="btn btn-primary flex-1 py-2.5">{fa.receipt.print}</button>
               <button onClick={() => setSaleComplete(null)} className="btn btn-success flex-1 py-2.5">{fa.common.close}</button>
             </div>
@@ -143,7 +200,7 @@ export default function CashierPOS() {
       <div className="flex-1 flex flex-col gap-3">
         <div className="flex gap-2 items-center">
           <div className="flex-1">
-            <BarcodeInput ref={barcodeRef} onBarcodeScanned={handleBarcodeScan} />
+            <BarcodeInput ref={barcodeRef} onBarcodeScanned={handleBarcodeScan} onProductSelected={handleProductSelect} />
           </div>
           {showCameraScanner && (
             <button onClick={() => setShowWebcam(true)} className="btn btn-primary px-4" title={fa.common.webcam}>
