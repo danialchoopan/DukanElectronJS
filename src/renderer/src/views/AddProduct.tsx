@@ -4,7 +4,7 @@ import { useSettingsStore } from '../store/settingsStore'
 import WebcamScanner from '../components/WebcamScanner'
 import type { Product } from '../../../types'
 
-const PAGE_SIZE = 10
+const PAGE_SIZES = [5, 10, 20, 50]
 
 export default function AddProduct() {
   const theme = useSettingsStore((s) => s.theme)
@@ -17,6 +17,7 @@ export default function AddProduct() {
   const [categories, setCategories] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
   const [form, setForm] = useState({
     barcode: '', title: '', category: '', unit: 'number' as 'number' | 'weight',
     purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false,
@@ -74,8 +75,8 @@ export default function AddProduct() {
     loadProducts(); loadCategories()
   }
 
-  const totalPages = Math.ceil(products.length / PAGE_SIZE)
-  const pagedProducts = products.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+  const totalPages = Math.ceil(products.length / pageSize)
+  const pagedProducts = products.slice(page * pageSize, (page + 1) * pageSize)
 
   return (
     <div className="h-full p-4 overflow-auto">
@@ -204,15 +205,29 @@ export default function AddProduct() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-4">
-          <button onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0}
-            className="btn btn-primary text-sm disabled:opacity-40" style={{ padding: '6px 12px' }}>قبلی</button>
-          <span className="text-sm font-bold px-4" style={{ color: textPrimary }}>{page + 1} / {totalPages}</span>
-          <button onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1}
-            className="btn btn-primary text-sm disabled:opacity-40" style={{ padding: '6px 12px' }}>بعدی</button>
+      <div className="flex flex-wrap justify-between items-center gap-3 mt-4">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold" style={{ color: textSecondary }}>تعداد در هر صفحه:</span>
+          <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(0) }}
+            className="input-field text-sm w-20" style={{ padding: '4px 8px' }}>
+            {PAGE_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <span className="text-xs" style={{ color: textSecondary }}>{products.length} کالا</span>
         </div>
-      )}
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <button onClick={() => setPage(0)} disabled={page === 0}
+              className="btn btn-primary text-sm disabled:opacity-40" style={{ padding: '6px 10px', fontSize: '11px' }}>اول</button>
+            <button onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0}
+              className="btn btn-primary text-sm disabled:opacity-40" style={{ padding: '6px 10px', fontSize: '11px' }}>قبلی</button>
+            <span className="text-sm font-bold px-2" style={{ color: textPrimary }}>{page + 1} / {totalPages}</span>
+            <button onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1}
+              className="btn btn-primary text-sm disabled:opacity-40" style={{ padding: '6px 10px', fontSize: '11px' }}>بعدی</button>
+            <button onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1}
+              className="btn btn-primary text-sm disabled:opacity-40" style={{ padding: '6px 10px', fontSize: '11px' }}>آخر</button>
+          </div>
+        )}
+      </div>
     </div>
   )
 

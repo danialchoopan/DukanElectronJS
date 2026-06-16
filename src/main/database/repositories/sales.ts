@@ -167,8 +167,9 @@ export function getTopProducts(startDate?: string, endDate?: string, limit = 10)
 
 function generateInvoiceNumber(): string {
   const db = getDatabase()
-  const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
-  const row = db.prepare("SELECT COUNT(*) as count FROM sales WHERE date(createdAt) = date('now', 'localtime')").get() as { count: number }
+  const now = new Date()
+  const today = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+  const row = db.prepare("SELECT COUNT(*) as count FROM sales WHERE invoiceNumber LIKE ?").get(`INV-${today}-%`) as { count: number }
   const seq = String(row.count + 1).padStart(4, '0')
   return `INV-${today}-${seq}`
 }
