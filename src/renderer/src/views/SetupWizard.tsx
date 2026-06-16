@@ -9,6 +9,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
   const [shopName, setShopName] = useState('')
   const [shopAddress, setShopAddress] = useState('')
   const [shopPhone, setShopPhone] = useState('')
+  const [businessType, setBusinessType] = useState<'supermarket' | 'online'>('supermarket')
   const [adminName, setAdminName] = useState('')
   const [adminPin, setAdminPin] = useState('')
   const [adminPinConfirm, setAdminPinConfirm] = useState('')
@@ -36,6 +37,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
       window.api.settings.set('storeName', shopName || (lang === 'fa' ? 'فروشگاه من' : 'My Store')),
       window.api.settings.set('storeAddress', shopAddress),
       window.api.settings.set('storePhone', shopPhone),
+      window.api.settings.set('businessType', businessType),
       window.api.settings.set('autoRounding', String(autoRounding)),
       window.api.settings.set('language', lang),
       window.api.settings.set('theme', theme),
@@ -98,6 +100,19 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
             <div>
               <label className="text-sm block mb-1 font-medium" style={{ color: subColor }}>{ui.setup.shopName} *</label>
               <input value={shopName} onChange={(e) => setShopName(e.target.value)} className="input-field text-lg" placeholder={lang === 'fa' ? 'مثلاً: فروشگاه زنجیره‌ای ...' : 'e.g. My Supermarket'} autoFocus />
+            </div>
+            <div>
+              <label className="text-sm block mb-1 font-medium" style={{ color: subColor }}>{lang === 'fa' ? 'نوع کسب و کار' : 'Business Type'}</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => setBusinessType('supermarket')} className="py-3 rounded-xl text-sm font-bold transition-all"
+                  style={{ background: businessType === 'supermarket' ? 'linear-gradient(135deg, #2563eb, #3b82f6)' : 'var(--bg-tertiary)', color: businessType === 'supermarket' ? '#ffffff' : subColor, boxShadow: businessType === 'supermarket' ? '0 4px 12px rgba(59,130,246,0.4)' : 'none' }}>
+                  {lang === 'fa' ? 'فروشگاه' : 'Supermarket'}
+                </button>
+                <button onClick={() => setBusinessType('online')} className="py-3 rounded-xl text-sm font-bold transition-all"
+                  style={{ background: businessType === 'online' ? 'linear-gradient(135deg, #2563eb, #3b82f6)' : 'var(--bg-tertiary)', color: businessType === 'online' ? '#ffffff' : subColor, boxShadow: businessType === 'online' ? '0 4px 12px rgba(59,130,246,0.4)' : 'none' }}>
+                  {lang === 'fa' ? 'کسب و کارهای آنلاین' : 'Online Shops'}
+                </button>
+              </div>
             </div>
             <div>
               <label className="text-sm block mb-1 font-medium" style={{ color: subColor }}>{ui.setup.shopAddress}</label>
