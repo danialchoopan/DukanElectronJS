@@ -6,9 +6,8 @@ export default function Categories() {
   const theme = useSettingsStore((s) => s.theme)
   const isDark = theme === 'dark'
   const [categories, setCategories] = useState<{ name: string; count: number }[]>([])
-  const [newCategory, setNewCategory] = useState('')
-  const [newSubCategory, setNewSubCategory] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [renameInput, setRenameInput] = useState('')
   const [notification, setNotification] = useState('')
 
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
@@ -31,47 +30,32 @@ export default function Categories() {
 
   useEffect(() => { loadCategories() }, [])
 
-  const handleAddCategory = async () => {
-    if (!newCategory.trim()) return
-    if (categories.some(c => c.name === newCategory.trim())) {
-      showNotif('این دسته‌بندی قبلاً وجود دارد')
-      return
-    }
-    const r = await window.api.products.create({
-      title: newCategory.trim(), purchase_price: 0, sale_price: 0, stock: 0, category: newCategory.trim(), isLoose: false,
-    })
-    if (r.success) {
-      showNotif(`${newCategory} اضافه شد`)
-      setNewCategory('')
-      loadCategories()
-    }
-  }
-
-  const handleAddSubCategory = async () => {
-    if (!newSubCategory.trim() || !selectedCategory) return
-    const fullName = `${selectedCategory} > ${newSubCategory.trim()}`
-    if (categories.some(c => c.name === fullName)) {
-      showNotif('این زیردسته قبلاً وجود دارد')
-      return
-    }
-    const r = await window.api.products.create({
-      title: newSubCategory.trim(), purchase_price: 0, sale_price: 0, stock: 0, category: fullName, isLoose: false,
-    })
-    if (r.success) {
-      showNotif(`${fullName} اضافه شد`)
-      setNewSubCategory('')
+  const handleRenameCategory = async (oldName: string) => {
+    if (!renameInput.trim() || renameInput.trim() === oldName) return
+    const r = await window.api.products.getAll()
+    if (r.success && r.data) {
+      for (const p of r.data) {
+        if (p.category === oldName) {
+          await window.api.products.update(p.id, { category: renameInput.trim() })
+        }
+      }
+      showNotif(`"${oldName}" به "${renameInput.trim()}" تغییر کرد`)
+      setRenameInput('')
+      setSelectedCategory(null)
       loadCategories()
     }
   }
 
   const handleDeleteCategory = async (catName: string) => {
+    if (!confirm(`آیا از حذف دسته‌بندی "${catName}" اطمینان دارید؟`)) return
     const r = await window.api.products.getAll()
     if (r.success && r.data) {
-      const products = r.data.filter((p) => p.category === catName || p.category.startsWith(catName + ' > '))
-      for (const p of products) {
-        await window.api.products.delete(p.id)
+      for (const p of r.data) {
+        if (p.category === catName) {
+          await window.api.products.update(p.id, { category: '' })
+        }
       }
-      showNotif(`${catName} حذف شد`)
+      showNotif(`"${catName}" حذف شد`)
       loadCategories()
     }
   }
@@ -85,22 +69,20 @@ export default function Categories() {
       <h2 className="text-xl font-bold mb-4" style={{ color: textPrimary }}>{fa.nav.categories}</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Add Category */}
+        {/* Rename Category */}
         <div className="rounded-2xl p-5 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-          <h3 className="font-bold mb-3" style={{ color: textPrimary }}>افزودن دسته‌بندی</h3>
-          <div className="flex gap-2">
-            <input value={newCategory} onChange={(e) => setNewCategory(e.target.value)} className="input-field flex-1" placeholder="نام دسته‌بندی جدید" />
-            <button onClick={handleAddCategory} className="btn btn-primary">افزودن</button>
-          </div>
-
-          {selectedCategory && (
-            <div className="mt-4">
-              <h4 className="text-sm font-bold mb-2" style={{ color: textPrimary }}>افزودن زیردسته برای: {selectedCategory}</h4>
+          <h3 className="font-bold mb-3" style={{ color: textPrimary }}>تغییر نام دسته‌بندی</h3>
+          {selectedCategory ? (
+            <div>
+              <p className="text-sm mb-2" style={{ color: textSecondary }}>انتخاب شده: <b style={{ color: textPrimary }}>{selectedCategory}</b></p>
               <div className="flex gap-2">
-                <input value={newSubCategory} onChange={(e) => setNewSubCategory(e.target.value)} className="input-field flex-1" placeholder="نام زیردسته" />
-                <button onClick={handleAddSubCategory} className="btn btn-success">افزودن</button>
+                <input value={renameInput} onChange={(e) => setRenameInput(e.target.value)} className="input-field flex-1" placeholder="نام جدید" />
+                <button onClick={() => handleRenameCategory(selectedCategory)} className="btn btn-primary">تغییر نام</button>
+                <button onClick={() => { setSelectedCategory(null); setRenameInput('') }} className="btn btn-danger">{fa.admin.cancel}</button>
               </div>
             </div>
+          ) : (
+            <p className="text-sm" style={{ color: textSecondary }}>روی یک دسته‌بندی کلیک کنید تا نام آن را تغییر دهید</p>
           )}
         </div>
 
@@ -109,21 +91,18 @@ export default function Categories() {
           <h3 className="font-bold mb-3" style={{ color: textPrimary }}>دسته‌بندی‌ها ({categories.length})</h3>
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {categories.map((cat) => (
-              <div key={cat.name} className="flex items-center justify-between p-3 rounded-xl" style={{ backgroundColor: selectedCategory === cat.name ? 'rgba(59,130,246,0.1)' : 'var(--bg-tertiary)' }}>
+              <div key={cat.name} className="flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer"
+                style={{ backgroundColor: selectedCategory === cat.name ? 'rgba(59,130,246,0.1)' : 'var(--bg-tertiary)' }}
+                onClick={() => { setSelectedCategory(cat.name); setRenameInput(cat.name) }}>
                 <div className="flex items-center gap-3">
-                  <button onClick={() => setSelectedCategory(selectedCategory === cat.name ? null : cat.name)}
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                    style={{ backgroundColor: selectedCategory === cat.name ? '#3b82f6' : 'var(--bg-tertiary)', color: selectedCategory === cat.name ? '#fff' : textSecondary }}>
-                    {cat.count}
-                  </button>
+                  <span className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{
+                    backgroundColor: selectedCategory === cat.name ? '#3b82f6' : 'var(--bg-card)',
+                    color: selectedCategory === cat.name ? '#fff' : textSecondary,
+                  }}>{cat.count}</span>
                   <span className="text-sm font-medium" style={{ color: textPrimary }}>{cat.name}</span>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setSelectedCategory(cat.name)} className="text-xs px-2 py-1 rounded" style={{ color: '#3b82f6' }}>
-                    {selectedCategory === cat.name ? 'انتخاب شده' : 'زیردسته'}
-                  </button>
-                  <button onClick={() => handleDeleteCategory(cat.name)} className="text-xs px-2 py-1 rounded" style={{ color: '#ef4444' }}>حذف</button>
-                </div>
+                <button onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat.name) }}
+                  className="text-xs px-2 py-1 rounded" style={{ color: '#ef4444' }}>حذف</button>
               </div>
             ))}
             {categories.length === 0 && <p className="text-center py-4 text-sm" style={{ color: textSecondary }}>هیچ دسته‌بندی وجود ندارد</p>}

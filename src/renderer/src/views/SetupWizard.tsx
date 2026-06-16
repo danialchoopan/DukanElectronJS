@@ -68,7 +68,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
         {step === 1 && (
           <div className="space-y-4">
             <div className="text-center mb-6">
-              <div className="text-5xl mb-3">🏪</div>
+              <svg className="w-12 h-12 mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
               <h1 className="text-2xl font-bold" style={{ color: textColor }}>{ui.setup.welcome}</h1>
               <p style={{ color: subColor }} className="mt-1">{ui.setup.step1}</p>
             </div>
@@ -133,7 +133,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
         {step === 2 && (
           <div className="space-y-4">
             <div className="text-center mb-6">
-              <div className="text-5xl mb-3">👤</div>
+              <svg className="w-12 h-12 mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               <h1 className="text-2xl font-bold" style={{ color: textColor }}>{ui.setup.step2}</h1>
             </div>
             <div>

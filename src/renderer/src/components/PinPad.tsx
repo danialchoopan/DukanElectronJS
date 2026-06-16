@@ -37,7 +37,7 @@ export default function PinPad({ length = 4, onSubmit, error, showToggle = false
           className="text-xs px-3 py-1 rounded-lg self-end"
           style={{ color: 'var(--text-muted)', backgroundColor: 'var(--bg-tertiary)' }}
         >
-          {visible ? '●●●' : '👁'}
+          {visible ? '●●●' : '●●●'}
         </button>
       )}
 
