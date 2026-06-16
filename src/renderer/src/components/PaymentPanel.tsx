@@ -36,7 +36,7 @@ export default function PaymentPanel({ onPaymentComplete, selectedCustomer, onSe
     { key: 'ledger', label: fa.payment.ledger, icon: <BookIcon className="w-5 h-5" />, color: 'linear-gradient(135deg, #a855f7, #7c3aed)' },
   ]
 
-  const quickAmounts = [totalAmount, Math.ceil(totalAmount / 1000) * 1000, Math.ceil(totalAmount / 5000) * 5000, Math.ceil(totalAmount / 10000) * 10000].filter((v, i, a) => a.indexOf(v) === i)
+  const quickAmounts = fullyPaid ? [] : [totalAmount, Math.ceil(totalAmount / 1000) * 1000, Math.ceil(totalAmount / 5000) * 5000, Math.ceil(totalAmount / 10000) * 10000].filter((v, i, a) => a.indexOf(v) === i)
 
   return (
     <div className="card">
@@ -86,7 +86,7 @@ export default function PaymentPanel({ onPaymentComplete, selectedCustomer, onSe
 
       <div className="grid grid-cols-3 gap-2 mb-3">
         {methods.map((m) => (
-          <button key={m.key} onClick={() => { setSelectedMethod(m.key); setPaid('') }}
+          <button key={m.key} onClick={() => { setSelectedMethod(m.key); if (!fullyPaid) setPaid('') }}
             className="btn text-white rounded-xl p-3 flex flex-col items-center gap-1.5 transition-all"
             style={{
               background: selectedMethod === m.key ? m.color : 'var(--bg-tertiary)',
@@ -102,35 +102,59 @@ export default function PaymentPanel({ onPaymentComplete, selectedCustomer, onSe
 
       {selectedMethod === 'cash' && (
         <div className="space-y-2">
-          <input type="number" value={paid} onChange={(e) => setPaid(e.target.value)} className="input-field text-2xl text-center font-bold py-3" placeholder="0" autoFocus />
-          <div className="flex justify-between items-center rounded-xl p-3" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-            <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{fa.payment.change}</span>
-            <span className={`text-lg font-bold ${change > 0 ? 'text-yellow-400' : ''}`} style={change <= 0 ? { color: 'var(--text-muted)' } : {}}>
-              {change.toLocaleString('fa-IR')} {fa.common.toman}
-            </span>
-          </div>
-          <div className="grid grid-cols-4 gap-1.5">
-            {quickAmounts.map((amt) => (
-              <button key={amt} onClick={() => setPaid(String(amt))} className="btn-primary text-[10px] py-2 rounded-lg">
-                {amt.toLocaleString('fa-IR')}
-              </button>
-            ))}
-          </div>
-          <button onClick={() => onPaymentComplete('cash', paidAmount)} disabled={paidAmount < totalAmount || totalAmount <= 0}
-            className="btn-success w-full text-lg py-3 disabled:opacity-40">{fa.payment.completeSale}</button>
+          {!fullyPaid && (
+            <>
+              <input type="number" value={paid} onChange={(e) => setPaid(e.target.value)} className="input-field text-2xl text-center font-bold py-3" placeholder="0" autoFocus />
+              {quickAmounts.length > 0 && (
+                <div className="grid grid-cols-4 gap-1.5">
+                  {quickAmounts.map((amt) => (
+                    <button key={amt} onClick={() => setPaid(String(amt))} className="btn btn-primary text-[10px] py-2 rounded-lg">{amt.toLocaleString('fa-IR')}</button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+          {fullyPaid && (
+            <div className="rounded-xl p-3 text-center" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+              <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{fa.pos.total}:</span>
+              <span className="text-lg font-bold text-green-400 mr-2">{totalAmount.toLocaleString('fa-IR')} {fa.common.toman}</span>
+            </div>
+          )}
+          {!fullyPaid && (
+            <div className="flex justify-between items-center rounded-xl p-3" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+              <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{fa.payment.change}</span>
+              <span className={`text-lg font-bold ${change > 0 ? 'text-yellow-400' : ''}`} style={change <= 0 ? { color: 'var(--text-muted)' } : {}}>
+                {change.toLocaleString('fa-IR')} {fa.common.toman}
+              </span>
+            </div>
+          )}
+          <button onClick={() => onPaymentComplete('cash', paidAmount)} disabled={totalAmount <= 0}
+            className="btn btn-success w-full text-lg py-3 disabled:opacity-40">{fa.payment.completeSale}</button>
         </div>
       )}
+
       {selectedMethod === 'card' && (
         <div className="space-y-2">
-          <div className="text-center mb-2" style={{ color: 'var(--text-secondary)' }}>{fa.payment.customerPays}</div>
-          <input type="number" value={paid} onChange={(e) => setPaid(e.target.value)} className="input-field text-2xl text-center font-bold py-3" placeholder="0" autoFocus />
-          <button onClick={() => onPaymentComplete('card', paidAmount || totalAmount)} disabled={totalAmount <= 0}
-            className="btn-success w-full text-lg py-3">{fa.payment.confirmCard}</button>
+          {!fullyPaid && (
+            <>
+              <div className="text-center mb-2" style={{ color: 'var(--text-secondary)' }}>{fa.payment.customerPays}</div>
+              <input type="number" value={paid} onChange={(e) => setPaid(e.target.value)} className="input-field text-2xl text-center font-bold py-3" placeholder="0" autoFocus />
+            </>
+          )}
+          {fullyPaid && (
+            <div className="rounded-xl p-3 text-center" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+              <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{fa.pos.total}:</span>
+              <span className="text-lg font-bold text-green-400 mr-2">{totalAmount.toLocaleString('fa-IR')} {fa.common.toman}</span>
+            </div>
+          )}
+          <button onClick={() => onPaymentComplete('card', paidAmount)} disabled={totalAmount <= 0}
+            className="btn btn-success w-full text-lg py-3">{fa.payment.confirmCard}</button>
         </div>
       )}
+
       {selectedMethod === 'ledger' && (
         <button onClick={() => onPaymentComplete('ledger')} disabled={totalAmount <= 0 || !selectedCustomer}
-          className="btn-success w-full text-lg py-3 disabled:opacity-40">{fa.payment.addToLedger}</button>
+          className="btn btn-success w-full text-lg py-3 disabled:opacity-40">{fa.payment.addToLedger}</button>
       )}
     </div>
   )

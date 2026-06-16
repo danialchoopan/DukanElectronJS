@@ -174,11 +174,16 @@ export default function CashierPOS() {
           </div>
           <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{items.length} {fa.pos.items}</div>
 
-          <div className="flex items-center gap-2 mt-2 pt-2" style={{ borderTop: '1px solid var(--border-color)' }}>
-            <input type="checkbox" id="fullyPaid" checked={fullyPaid} onChange={(e) => setFullyPaid(e.target.checked)} className="w-4 h-4" />
-            <label htmlFor="fullyPaid" className="text-xs font-medium cursor-pointer" style={{ color: 'var(--text-secondary)' }}>
+          <div className="flex items-center justify-between mt-2 pt-2" style={{ borderTop: '1px solid var(--border-color)' }}>
+            <label className="text-xs font-bold cursor-pointer" style={{ color: 'var(--text-primary)' }}>
               {fa.pos.fullAmount}
             </label>
+            <button onClick={() => setFullyPaid(!fullyPaid)}
+              className="relative w-12 h-6 rounded-full transition-all duration-200"
+              style={{ backgroundColor: fullyPaid ? '#22c55e' : 'var(--bg-tertiary)', boxShadow: fullyPaid ? '0 2px 8px rgba(34,197,94,0.3)' : 'none' }}>
+              <div className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-all duration-200"
+                style={{ left: fullyPaid ? '24px' : '2px' }} />
+            </button>
           </div>
         </div>
 

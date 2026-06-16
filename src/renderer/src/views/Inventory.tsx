@@ -174,10 +174,14 @@ export default function Inventory() {
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.map((p) => (
-              <tr key={p.id} style={{ borderBottom: `1px solid ${cardBorder}` }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.03)')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}>
+            {filteredProducts.map((p) => {
+              const isZero = p.stock <= 0
+              const isLow = p.stock > 0 && p.stock <= p.minStock
+              const rowBg = isZero ? (isDark ? 'rgba(239,68,68,0.08)' : 'rgba(239,68,68,0.05)') : isLow ? (isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.05)') : 'transparent'
+              return (
+              <tr key={p.id} style={{ borderBottom: `1px solid ${cardBorder}`, backgroundColor: rowBg }}
+                onMouseEnter={(e) => { if (!isZero && !isLow) e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.03)' }}
+                onMouseLeave={(e) => { if (!isZero && !isLow) e.currentTarget.style.backgroundColor = 'transparent' }}>
                 <td className="px-4 py-2" style={{ color: textSecondary }}>{p.id}</td>
                 <td className="px-4 py-2 font-mono text-xs" style={{ color: textPrimary }}>{p.barcode || '-'}</td>
                 <td className="px-4 py-2 font-medium" style={{ color: textPrimary }}>{p.title}</td>
@@ -195,7 +199,8 @@ export default function Inventory() {
                   <button onClick={() => { setSelectedProduct(p); setRestockQty('') }} className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: '#3b82f6' }}>+ ریستاک</button>
                 </td>
               </tr>
-            ))}
+              )
+            })}
             {filteredProducts.length === 0 && <tr><td colSpan={9} className="text-center py-8" style={{ color: textSecondary }}>{fa.admin.noProducts}</td></tr>}
           </tbody>
         </table>
