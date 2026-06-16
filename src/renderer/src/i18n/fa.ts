@@ -15,6 +15,7 @@ export const fa = {
     expenses: 'هزینه‌ها',
     accounting: 'حسابداری',
     inventory: 'انبارداری',
+    categories: 'دسته‌بندی‌ها',
     help: 'راهنما',
     logout: 'خروج',
   },

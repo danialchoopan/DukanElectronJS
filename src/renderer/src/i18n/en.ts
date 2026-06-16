@@ -15,6 +15,7 @@ export const en = {
     expenses: 'Expenses',
     accounting: 'Accounting',
     inventory: 'Inventory',
+    categories: 'Categories',
     help: 'Help',
     logout: 'Logout',
   },
