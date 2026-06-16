@@ -1,4 +1,4 @@
-const jalaali = require('jalaali-js')
+import jalaali from 'jalaali-js'
 
 export function gregorianToJalali(gY: number, gM: number, gD: number): [number, number, number] {
   const j = jalaali.toJalaali(gY, gM, gD)
