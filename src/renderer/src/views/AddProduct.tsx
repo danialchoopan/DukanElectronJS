@@ -114,13 +114,11 @@ export default function AddProduct() {
             <div>
               <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.category} *</label>
               <div className="flex gap-1">
-                <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                  className="input-field text-sm flex-1">
-                  <option value="">{fa.admin.selectRole}</option>
-                  {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <button onClick={() => { const name = prompt('نام دسته‌بندی جدید:'); if (name && name.trim()) { setForm((f) => ({ ...f, category: name.trim() })); loadCategories() } }}
-                  className="btn btn-primary text-xs px-2" style={{ whiteSpace: 'nowrap' }}>+</button>
+                <input value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                  className="input-field text-sm flex-1" placeholder="نام دسته‌بندی" list="categories-list" />
+                <datalist id="categories-list">
+                  {categories.map((c) => <option key={c} value={c} />)}
+                </datalist>
               </div>
             </div>
             <div>
