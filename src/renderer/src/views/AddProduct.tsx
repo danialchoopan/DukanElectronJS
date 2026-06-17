@@ -113,13 +113,12 @@ export default function AddProduct() {
             </div>
             <div>
               <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.category} *</label>
-              <div className="flex gap-1">
-                <input value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                  className="input-field text-sm flex-1" placeholder="نام دسته‌بندی" list="categories-list" />
-                <datalist id="categories-list">
-                  {categories.map((c) => <option key={c} value={c} />)}
-                </datalist>
-              </div>
+              <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                className="input-field text-sm" style={{ borderColor: !form.category ? '#ef4444' : undefined }}>
+                <option value="">-- انتخاب دسته‌بندی --</option>
+                {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              {!form.category && <p className="text-[10px] mt-1" style={{ color: '#ef4444' }}>انتخاب دسته‌بندی الزامی است</p>}
             </div>
             <div>
               <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.purchasePrice}</label>
