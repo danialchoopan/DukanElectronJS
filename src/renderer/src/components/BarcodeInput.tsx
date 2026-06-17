@@ -54,9 +54,9 @@ const BarcodeInput = forwardRef<HTMLInputElement, Props>(({ onBarcodeScanned, on
     else if (e.key === 'Enter') {
       e.preventDefault()
       if (selectedIndex >= 0 && results[selectedIndex]) { selectAndClose(results[selectedIndex]) }
-      else if (query.trim()) { onBarcodeScanned(query.trim()); setQuery(''); setResults([]); setShowDropdown(false) }
+      else if (query.trim()) { onBarcodeScanned(query.trim()); setShowDropdown(false) }
     }
-    else if (e.key === 'Escape') { setShowDropdown(false); setQuery('') }
+    else if (e.key === 'Escape') { setShowDropdown(false) }
   }
 
   useEffect(() => {

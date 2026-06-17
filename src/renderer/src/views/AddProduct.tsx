@@ -68,15 +68,27 @@ export default function AddProduct() {
     if (!form.title || !form.category) return
     if (editProduct) {
       const r = await window.api.products.update(editProduct.id, form)
-      if (r.success) showNotif(`${form.title} — ${fa.admin.saved}`)
+      if (r.success) {
+        showNotif(`${form.title} — ${fa.admin.saved}`)
+        setShowForm(false); setEditProduct(null)
+        setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '' })
+        await loadProducts(); await loadCategories()
+        window.dispatchEvent(new Event('products:refresh'))
+      } else {
+        showNotif(`${r.error || 'خطا در بروزرسانی'}`)
+      }
     } else {
       const r = await window.api.products.create(form)
-      if (r.success) showNotif(`${form.title} — ${fa.admin.create}`)
+      if (r.success) {
+        showNotif(`${form.title} — ${fa.admin.create}`)
+        setShowForm(false); setEditProduct(null)
+        setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '' })
+        await loadProducts(); await loadCategories()
+        window.dispatchEvent(new Event('products:refresh'))
+      } else {
+        showNotif(`${r.error || 'خطا در ایجاد محصول'}`)
+      }
     }
-    setShowForm(false); setEditProduct(null)
-    setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '' })
-    await loadProducts(); await loadCategories()
-    window.dispatchEvent(new Event('products:refresh'))
   }
 
   const handleDelete = async () => {

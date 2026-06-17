@@ -45,9 +45,9 @@ export function registerAllHandlers(): void {
   handleArg<ProductInput, ReturnType<typeof products.createProduct>>('products:create', (a) => {
     if (!a.barcode || a.barcode.trim() === '') {
       const db = require('../database/connection').getDatabase()
-      const row = db.prepare("SELECT MAX(id) as maxId FROM products").get() as { maxId: number | null }
-      const nextId = (row.maxId || 0) + 1
-      a.barcode = `PRD-${String(nextId).padStart(6, '0')}`
+      const row = db.prepare("SELECT barcode FROM products WHERE barcode LIKE 'PRD-%' ORDER BY CAST(SUBSTR(barcode, 5) AS INTEGER) DESC LIMIT 1").get() as { barcode: string } | undefined
+      const lastNum = row ? parseInt(row.barcode.replace('PRD-', '')) : 0
+      a.barcode = `PRD-${String(lastNum + 1).padStart(6, '0')}`
     }
     return products.createProduct(a)
   })
