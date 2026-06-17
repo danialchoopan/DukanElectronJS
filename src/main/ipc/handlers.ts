@@ -44,24 +44,77 @@ export function registerAllHandlers(): void {
   handleArg<{ id: number }, ReturnType<typeof products.getProductById>>('products:getById', (a) => products.getProductById(a.id))
   handleArg<{ barcode: string }, ReturnType<typeof products.getProductByBarcode>>('products:getByBarcode', (a) => products.getProductByBarcode(a.barcode))
   handleArg<{ query: string }, ReturnType<typeof products.searchProducts>>('products:search', (a) => products.searchProducts(a.query))
-  handleArg<ProductInput, ReturnType<typeof products.createProduct>>('products:create', (a) => {
-    if (!a.barcode || a.barcode.trim() === '') {
-      const db = getDatabase()
-      const row = db.prepare("SELECT barcode FROM products WHERE barcode LIKE 'PRD-%' ORDER BY CAST(SUBSTR(barcode, 5) AS INTEGER) DESC LIMIT 1").get() as { barcode: string } | undefined
-      const lastNum = row ? parseInt(row.barcode.replace('PRD-', '')) : 0
-      a.barcode = `PRD-${String(lastNum + 1).padStart(6, '0')}`
-    }
-    return products.createProduct(a)
+  ipcMain.handle('products:create', (_event, a: ProductInput) => {
+    try {
+      if (!a.barcode || a.barcode.trim() === '') {
+        const db = getDatabase()
+        const row = db.prepare("SELECT barcode FROM products WHERE barcode LIKE 'PRD-%' ORDER BY CAST(SUBSTR(barcode, 5) AS INTEGER) DESC LIMIT 1").get() as { barcode: string } | undefined
+        const lastNum = row ? parseInt(row.barcode.replace('PRD-', '')) : 0
+        a.barcode = `PRD-${String(lastNum + 1).padStart(6, '0')}`
+      }
+      const result = products.createProduct(a)
+      auditRepo.createAuditEntry(null, 'create', 'product', result.id, JSON.stringify({ title: a.title, barcode: a.barcode }))
+      return { success: true, data: result }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
   })
-  handleArg<{ id: number; data: Partial<ProductInput> }, ReturnType<typeof products.updateProduct>>('products:update', (a) => products.updateProduct(a.id, a.data))
-  handleArg<{ id: number }, boolean>('products:delete', (a) => products.deleteProduct(a.id))
-  handleArg<{ productId: number; quantityChange: number }, boolean>('products:updateStock', (a) => products.updateStock(a.productId, a.quantityChange))
+  ipcMain.handle('products:update', (_event, a: { id: number; data: Partial<ProductInput> }) => {
+    try {
+      const result = products.updateProduct(a.id, a.data)
+      auditRepo.createAuditEntry(null, 'update', 'product', a.id, JSON.stringify({ fields: Object.keys(a.data) }))
+      return { success: true, data: result }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
+  ipcMain.handle('products:delete', (_event, a: { id: number }) => {
+    try {
+      const result = products.deleteProduct(a.id)
+      auditRepo.createAuditEntry(null, 'delete', 'product', a.id)
+      return { success: true, data: result }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
+  ipcMain.handle('products:updateStock', (_event, a: { productId: number; quantityChange: number }) => {
+    try {
+      const result = products.updateStock(a.productId, a.quantityChange)
+      auditRepo.createAuditEntry(null, 'restock', 'product', a.productId, JSON.stringify({ quantityChange: a.quantityChange }))
+      return { success: true, data: result }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
   handle('products:lowStock', () => products.getLowStockProducts())
   handle('products:loose', () => products.getLooseProducts())
   handle('products:categories', () => products.getProductCategories())
+  ipcMain.handle('products:reportData', () => {
+    try {
+      const db = getDatabase()
+      const byCategory = db.prepare(`
+        SELECT category, COUNT(*) as count,
+               SUM(stock) as totalStock,
+               SUM(stock * purchase_price) as totalValue,
+               SUM(stock * sale_price) as retailValue
+        FROM products WHERE isActive = 1
+        GROUP BY category ORDER BY totalValue DESC
+      `).all()
+      const slowMoving = db.prepare(`
+        SELECT p.id, p.title, p.stock, p.purchase_price, p.category,
+               MAX(si.createdAt) as lastSoldAt
+        FROM products p
+        LEFT JOIN sale_items si ON si.productId = p.id
+        WHERE p.isActive = 1 AND p.stock > 0
+        GROUP BY p.id
+        HAVING lastSoldAt IS NULL OR julianday('now') - julianday(lastSoldAt) > 30
+        ORDER BY (julianday('now') - julianday(lastSoldAt)) DESC
+      `).all()
+      return { success: true, data: { byCategory, slowMoving } }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
 
   // ─── Sales ──────────────────────────────────────────────
-  handleArg<SaleInput, ReturnType<typeof sales.createSale>>('sales:create', (a) => sales.createSale(a))
+  ipcMain.handle('sales:create', (_event, a: SaleInput) => {
+    try {
+      const result = sales.createSale(a)
+      const total = a.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
+      auditRepo.createAuditEntry(null, 'create', 'sale', result.id, JSON.stringify({ total }))
+      return { success: true, data: result }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
   handleArg<{ id: number }, ReturnType<typeof sales.getSaleById>>('sales:getById', (a) => sales.getSaleById(a.id))
   handleArg<{ startDate: string; endDate: string }, ReturnType<typeof sales.getSalesByDateRange>>('sales:getByDateRange', (a) => sales.getSalesByDateRange(a.startDate, a.endDate))
   handleArg<{ date: string }, ReturnType<typeof sales.getDailySalesSummary>>('sales:dailySummary', (a) => sales.getDailySalesSummary(a.date))
@@ -82,8 +135,20 @@ export function registerAllHandlers(): void {
   // ─── Expenses ───────────────────────────────────────────
   handle('expenses:getAll', () => expenses.getAllExpenses())
   handleArg<{ startDate: string; endDate: string }, ReturnType<typeof expenses.getExpensesByDateRange>>('expenses:getByDateRange', (a) => expenses.getExpensesByDateRange(a.startDate, a.endDate))
-  handleArg<ExpenseInput, ReturnType<typeof expenses.createExpense>>('expenses:create', (a) => expenses.createExpense(a))
-  handleArg<{ id: number }, boolean>('expenses:delete', (a) => expenses.deleteExpense(a.id))
+  ipcMain.handle('expenses:create', (_event, a: ExpenseInput) => {
+    try {
+      const result = expenses.createExpense(a)
+      auditRepo.createAuditEntry(null, 'create', 'expense', result.id, JSON.stringify({ category: a.category, amount: a.amount }))
+      return { success: true, data: result }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
+  ipcMain.handle('expenses:delete', (_event, a: { id: number }) => {
+    try {
+      const result = expenses.deleteExpense(a.id)
+      auditRepo.createAuditEntry(null, 'delete', 'expense', a.id)
+      return { success: true, data: result }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
   handle('expenses:categories', () => expenses.getExpenseCategories())
   handle('expenses:total', () => expenses.getTotalExpenses())
 
@@ -113,7 +178,7 @@ export function registerAllHandlers(): void {
     if (result.canceled || !result.filePath) return { success: false, error: 'cancelled' }
     try {
       const db = getDatabase()
-      const tables = ['users', 'products', 'sales', 'sale_items', 'customers', 'customer_ledger', 'expenses', 'suspended_invoices', 'cash_register', 'settings']
+      const tables = ['users', 'products', 'sales', 'sale_items', 'customers', 'customer_ledger', 'expenses', 'suspended_invoices', 'cash_register', 'settings', 'categories', 'audit_log', 'returns']
       const backup: Record<string, any> = {}
       for (const table of tables) {
         backup[table] = db.prepare(`SELECT * FROM ${table}`).all()
@@ -137,7 +202,7 @@ export function registerAllHandlers(): void {
     try {
       const data = JSON.parse(readFileSync(result.filePaths[0], 'utf-8'))
       const db = getDatabase()
-      const tables = ['users', 'products', 'sales', 'sale_items', 'customers', 'customer_ledger', 'expenses', 'suspended_invoices', 'cash_register', 'settings']
+      const tables = ['users', 'products', 'sales', 'sale_items', 'customers', 'customer_ledger', 'expenses', 'suspended_invoices', 'cash_register', 'settings', 'categories', 'audit_log', 'returns']
       const restore = db.transaction(() => {
         for (const table of tables) {
           if (data[table] && Array.isArray(data[table])) {
@@ -168,12 +233,18 @@ export function registerAllHandlers(): void {
   handleArg<{ id: number }, boolean>('categories:delete', (a) => categoriesRepo.deleteCategory(a.id))
 
   // ─── Audit Log ─────────────────────────────────────
-  handleArg<{ entityType?: string; limit?: number }, any>('audit:getAll', (a) => auditRepo.getAuditLog(a.entityType, a.limit || 100))
+  handleArg<{ entityType?: string; limit?: number; startDate?: string; endDate?: string }, any>('audit:getAll', (a) => auditRepo.getAuditLog(a.entityType, a.limit || 100, a.startDate, a.endDate))
   handleArg<{ entityType: string; entityId: number }, any>('audit:getForEntity', (a) => auditRepo.getAuditForEntity(a.entityType, a.entityId))
   handle('audit:stats', () => auditRepo.getAuditStats())
 
   // ─── Returns ─────────────────────────────────────
-  handleArg<{ saleId: number; userId: number; productId: number; quantity: number; reason: string; refundAmount: number }, any>('returns:create', (a) => returnsRepo.createReturn(a.saleId, a.userId, a.productId, a.quantity, a.reason, a.refundAmount))
+  ipcMain.handle('returns:create', (_event, a: { saleId: number; userId: number; productId: number; quantity: number; reason: string; refundAmount: number }) => {
+    try {
+      const result = returnsRepo.createReturn(a.saleId, a.userId, a.productId, a.quantity, a.reason, a.refundAmount)
+      auditRepo.createAuditEntry(a.userId, 'return', 'return', result.id, JSON.stringify({ saleId: a.saleId, productId: a.productId, quantity: a.quantity, refundAmount: a.refundAmount }))
+      return { success: true, data: result }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
   handleArg<{ limit?: number }, any>('returns:list', (a) => returnsRepo.getReturns(a.limit || 100))
   handle('returns:stats', () => returnsRepo.getReturnStats())
 }

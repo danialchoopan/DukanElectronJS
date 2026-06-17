@@ -4,6 +4,7 @@ import { fa } from '../i18n'
 import { formatJalaliDateTime } from '../utils/jalali'
 import ShamsiDateInput from '../components/ShamsiDateInput'
 import Pagination from '../components/Pagination'
+import { useAuthStore } from '../store/authStore'
 
 export default function SalesHistory() {
   const [sales, setSales] = useState<Sale[]>([])
@@ -21,6 +22,7 @@ export default function SalesHistory() {
   const [returnReason, setReturnReason] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
   const isDark = document.documentElement.classList.contains('dark')
+  const user = useAuthStore((s) => s.user)
 
   const loadData = async () => {
     let s: string, e: string
@@ -56,7 +58,7 @@ export default function SalesHistory() {
     const refundAmount = returnItem.item.unitPrice * qty
     const r = await window.api.returns.create({
       saleId: returnItem.sale.id,
-      userId: 1,
+      userId: user?.id || 1,
       productId: returnItem.item.productId,
       quantity: qty,
       reason: returnReason,

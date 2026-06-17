@@ -50,6 +50,7 @@ const api = {
       ipcRenderer.invoke('products:loose'),
     getCategories: (): Promise<IPCResponse<string[]>> =>
       ipcRenderer.invoke('products:categories'),
+    getReportData: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('products:reportData'),
   },
 
   sales: {
@@ -144,8 +145,8 @@ const api = {
   },
 
   audit: {
-    getAll: (entityType?: string, limit?: number): Promise<IPCResponse<any[]>> =>
-      ipcRenderer.invoke('audit:getAll', { entityType, limit }),
+    getAll: (entityType?: string, limit?: number, startDate?: string, endDate?: string): Promise<IPCResponse<any[]>> =>
+      ipcRenderer.invoke('audit:getAll', { entityType, limit, startDate, endDate }),
     getForEntity: (entityType: string, entityId: number): Promise<IPCResponse<any[]>> =>
       ipcRenderer.invoke('audit:getForEntity', { entityType, entityId }),
     getStats: (): Promise<IPCResponse<any>> =>

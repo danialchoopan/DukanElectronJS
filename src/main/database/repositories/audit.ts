@@ -15,12 +15,25 @@ export function createAuditEntry(userId: number | null, action: string, entityTy
   db.prepare('INSERT INTO audit_log (userId, action, entityType, entityId, details) VALUES (?, ?, ?, ?, ?)').run(userId, action, entityType, entityId, details || null)
 }
 
-export function getAuditLog(entityType?: string, limit: number = 50): AuditLog[] {
+export function getAuditLog(entityType?: string, limit: number = 50, startDate?: string, endDate?: string): AuditLog[] {
   const db = getDatabase()
+  const conditions: string[] = []
+  const params: any[] = []
   if (entityType) {
-    return db.prepare('SELECT a.*, u.name as userName FROM audit_log a LEFT JOIN users u ON a.userId = u.id WHERE a.entityType = ? ORDER BY a.createdAt DESC LIMIT ?').all(entityType, limit) as AuditLog[]
+    conditions.push('a.entityType = ?')
+    params.push(entityType)
   }
-  return db.prepare('SELECT a.*, u.name as userName FROM audit_log a LEFT JOIN users u ON a.userId = u.id ORDER BY a.createdAt DESC LIMIT ?').all(limit) as AuditLog[]
+  if (startDate) {
+    conditions.push('a.createdAt >= ?')
+    params.push(startDate)
+  }
+  if (endDate) {
+    conditions.push('a.createdAt <= ?')
+    params.push(endDate)
+  }
+  const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''
+  params.push(limit)
+  return db.prepare(`SELECT a.*, u.name as userName FROM audit_log a LEFT JOIN users u ON a.userId = u.id ${where} ORDER BY a.createdAt DESC LIMIT ?`).all(...params) as AuditLog[]
 }
 
 export function getAuditForEntity(entityType: string, entityId: number): AuditLog[] {

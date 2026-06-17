@@ -4,6 +4,7 @@ import { fa } from '../i18n'
 import { generateReceiptHTML, printContent } from '../utils/receipt'
 import { gregorianToJalali } from '../utils/jalali'
 import Pagination from '../components/Pagination'
+import ShamsiDateInput from '../components/ShamsiDateInput'
 
 export default function Inventory() {
   const [products, setProducts] = useState<Product[]>([])
@@ -15,8 +16,11 @@ export default function Inventory() {
   const [restockQty, setRestockQty] = useState('')
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(10)
-  const [tab, setTab] = useState<'products' | 'audit'>('products')
+  const [tab, setTab] = useState<'products' | 'audit' | 'report'>('products')
   const [auditLog, setAuditLog] = useState<any[]>([])
+  const [auditStartDate, setAuditStartDate] = useState('')
+  const [auditEndDate, setAuditEndDate] = useState('')
+  const [reportData, setReportData] = useState<{ byCategory: any[]; slowMoving: any[] }>({ byCategory: [], slowMoving: [] })
   const [returnStats, setReturnStats] = useState({ totalReturns: 0, totalRefund: 0, todayReturns: 0 })
   const [categories, setCategories] = useState<string[]>([])
 
@@ -41,8 +45,8 @@ export default function Inventory() {
     if (r.success && r.data) setLowStock(r.data)
   }
 
-  const loadAudit = async () => {
-    const r = await window.api.audit.getAll()
+  const loadAudit = async (startDate?: string, endDate?: string) => {
+    const r = await window.api.audit.getAll(undefined, undefined, startDate, endDate)
     if (r.success && r.data) setAuditLog(r.data)
   }
 
@@ -51,7 +55,16 @@ export default function Inventory() {
     if (r.success && r.data) setReturnStats(r.data)
   }
 
-  useEffect(() => { loadProducts(); loadLowStock(); loadAudit(); loadReturnStats() }, [search])
+  const loadReport = async () => {
+    const r = await window.api.products.getReportData()
+    if (r.success && r.data) setReportData(r.data)
+  }
+
+  useEffect(() => { loadProducts(); loadLowStock(); loadReturnStats() }, [search])
+  useEffect(() => {
+    if (tab === 'audit') loadAudit(auditStartDate || undefined, auditEndDate || undefined)
+    if (tab === 'report') loadReport()
+  }, [tab, auditStartDate, auditEndDate])
 
   const handleRestock = async () => {
     if (!selectedProduct || !restockQty) return
@@ -123,11 +136,17 @@ export default function Inventory() {
       <div className="flex gap-2 mb-4">
         <button onClick={() => setTab('products')} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${tab === 'products' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-800 text-gray-400'}`}>انبار</button>
         <button onClick={() => setTab('audit')} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${tab === 'audit' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-800 text-gray-400'}`}>تاریخچه تغییرات</button>
+        <button onClick={() => setTab('report')} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${tab === 'report' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-800 text-gray-400'}`}>گزارش انبار</button>
       </div>
 
       {tab === 'audit' && (
-        <div className="rounded-2xl border overflow-hidden mb-4" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-          <div className="px-4 py-3 font-bold" style={{ borderBottom: `2px solid ${cardBorder}`, color: textPrimary }}>تاریخچه تغییرات انبار ({auditLog.length})</div>
+        <>
+          <div className="flex flex-wrap gap-3 mb-4">
+            <ShamsiDateInput value={auditStartDate} onChange={setAuditStartDate} label="از تاریخ" />
+            <ShamsiDateInput value={auditEndDate} onChange={setAuditEndDate} label="تا تاریخ" />
+          </div>
+          <div className="rounded-2xl border overflow-hidden mb-4" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+            <div className="px-4 py-3 font-bold" style={{ borderBottom: `2px solid ${cardBorder}`, color: textPrimary }}>تاریخچه تغییرات انبار ({auditLog.length})</div>
           <div className="max-h-96 overflow-y-auto">
             {auditLog.map((entry: any) => (
               <div key={entry.id} className="flex items-center justify-between px-4 py-2" style={{ borderBottom: `1px solid ${cardBorder}` }}>
@@ -145,6 +164,7 @@ export default function Inventory() {
             {auditLog.length === 0 && <p className="text-center py-8 text-sm" style={{ color: textSecondary }}>هیچ تغییری ثبت نشده</p>}
           </div>
         </div>
+        </>
       )}
 
       {tab === 'products' && (<>
@@ -276,6 +296,61 @@ export default function Inventory() {
         <Pagination total={filteredProducts.length} pageSize={pageSize} page={page}
           onPageChange={setPage} onPageSizeChange={(s) => { setPageSize(s); setPage(0) }} />
       </>)}
+
+      {tab === 'report' && (
+        <div className="space-y-4">
+          <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+            <div className="px-4 py-3 font-bold" style={{ borderBottom: `2px solid ${cardBorder}`, color: textPrimary }}>ارزش‌گذاری دسته‌بندی</div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+                    <th className="text-right px-4 py-2" style={{ color: textSecondary }}>دسته</th>
+                    <th className="text-center px-4 py-2" style={{ color: textSecondary }}>تعداد</th>
+                    <th className="text-center px-4 py-2" style={{ color: textSecondary }}>موجودی</th>
+                    <th className="text-right px-4 py-2" style={{ color: textSecondary }}>ارزش خرید</th>
+                    <th className="text-right px-4 py-2" style={{ color: textSecondary }}>ارزش فروش</th>
+                    <th className="text-right px-4 py-2" style={{ color: textSecondary }}>سود بالقوه</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reportData.byCategory.map((cat: any, i: number) => (
+                    <tr key={i} style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                      <td className="px-4 py-2 font-medium" style={{ color: textPrimary }}>{cat.category || 'بدون دسته'}</td>
+                      <td className="px-4 py-2 text-center" style={{ color: textPrimary }}>{cat.count}</td>
+                      <td className="px-4 py-2 text-center" style={{ color: textPrimary }}>{cat.totalStock}</td>
+                      <td className="px-4 py-2" style={{ color: textPrimary }}>{(cat.totalValue || 0).toLocaleString('fa-IR')}</td>
+                      <td className="px-4 py-2" style={{ color: textPrimary }}>{(cat.retailValue || 0).toLocaleString('fa-IR')}</td>
+                      <td className="px-4 py-2 font-bold" style={{ color: '#22c55e' }}>{((cat.retailValue || 0) - (cat.totalValue || 0)).toLocaleString('fa-IR')}</td>
+                    </tr>
+                  ))}
+                  {reportData.byCategory.length === 0 && <tr><td colSpan={6} className="text-center py-8" style={{ color: textSecondary }}>داده‌ای موجود نیست</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+            <div className="px-4 py-3 font-bold" style={{ borderBottom: `2px solid ${cardBorder}`, color: textPrimary }}>کالاهای کندفروش ({reportData.slowMoving.length})</div>
+            <div className="max-h-96 overflow-y-auto">
+              {reportData.slowMoving.map((item: any) => (
+                <div key={item.id} className="flex items-center justify-between px-4 py-2" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                  <div className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.lastSoldAt ? '#f59e0b' : '#ef4444' }} />
+                    <span className="text-sm font-medium" style={{ color: textPrimary }}>{item.title}</span>
+                    <span className="text-xs" style={{ color: textSecondary }}>{item.category || '-'}</span>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs" style={{ color: textSecondary }}>
+                    <span>موجودی: <b style={{ color: textPrimary }}>{item.stock}</b></span>
+                    <span>-last sold: <b style={{ color: textPrimary }}>{item.lastSoldAt || 'هرگز'}</b></span>
+                  </div>
+                </div>
+              ))}
+              {reportData.slowMoving.length === 0 && <p className="text-center py-8 text-sm" style={{ color: textSecondary }}>کالای کندفروشی وجود ندارد</p>}
+            </div>
+          </div>
+        </div>
+      )}
 
       {tab === 'audit' && (
         <div className="rounded-2xl border overflow-hidden mt-4" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
