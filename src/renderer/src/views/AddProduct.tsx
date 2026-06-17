@@ -75,7 +75,21 @@ export default function AddProduct() {
     }
     setShowForm(false); setEditProduct(null)
     setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '' })
-    loadProducts(); loadCategories()
+    await loadProducts(); await loadCategories()
+    window.dispatchEvent(new Event('products:refresh'))
+  }
+
+  const handleDelete = async () => {
+    if (!editProduct) return
+    if (!confirm(`آیا از حذف "${editProduct.title}" اطمینان دارید؟\n\nاطلاعات حسابداری حفظ می‌شود ولی کالا از لیست موجودی حذف می‌شود.`)) return
+    const r = await window.api.products.delete(editProduct.id)
+    if (r.success) {
+      showNotif(`${editProduct.title} — ${fa.admin.deleted}`)
+      setShowForm(false); setEditProduct(null)
+      setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '' })
+      await loadProducts()
+      window.dispatchEvent(new Event('products:refresh'))
+    }
   }
 
   const totalPages = Math.ceil(products.length / pageSize)
@@ -179,6 +193,9 @@ export default function AddProduct() {
           <div className="flex gap-2 mt-4">
             <button onClick={handleSubmit} disabled={!form.title || !form.category} className="btn btn-success disabled:opacity-40">{editProduct ? fa.admin.save : fa.admin.create}</button>
             <button onClick={() => { setShowForm(false); setEditProduct(null) }} className="btn btn-danger">{fa.admin.cancel}</button>
+            {editProduct && (
+              <button onClick={handleDelete} className="btn btn-danger ml-auto opacity-70 hover:opacity-100">{fa.admin.delete}</button>
+            )}
           </div>
         </div>
       )}

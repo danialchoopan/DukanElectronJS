@@ -3,11 +3,23 @@ import { useEffect, useState } from 'react'
 import type { Product } from '../../../types'
 import { fa } from '../i18n'
 
-export default function LooseItemsGrid() {
+interface Props {
+  refreshKey?: number
+}
+
+export default function LooseItemsGrid({ refreshKey }: Props) {
   const [looseItems, setLooseItems] = useState<Product[]>([])
   const addItem = useCartStore((s) => s.addItem)
-  useEffect(() => { window.api.products.getLoose().then((r) => { if (r.success && r.data) setLooseItems(r.data) }) }, [])
+
+  const loadLoose = async () => {
+    const r = await window.api.products.getLoose()
+    if (r.success && r.data) setLooseItems(r.data)
+  }
+
+  useEffect(() => { loadLoose() }, [refreshKey])
+
   if (looseItems.length === 0) return null
+
   return (
     <div className="card">
       <h3 className="text-sm font-bold text-gray-400 mb-2">{fa.admin.looseItem}</h3>

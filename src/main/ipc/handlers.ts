@@ -45,8 +45,9 @@ export function registerAllHandlers(): void {
   handleArg<ProductInput, ReturnType<typeof products.createProduct>>('products:create', (a) => {
     if (!a.barcode || a.barcode.trim() === '') {
       const db = require('../database/connection').getDatabase()
-      const row = db.prepare("SELECT COUNT(*) as c FROM products").get() as { c: number }
-      a.barcode = `PRD-${String(row.c + 1).padStart(6, '0')}`
+      const row = db.prepare("SELECT MAX(id) as maxId FROM products").get() as { maxId: number | null }
+      const nextId = (row.maxId || 0) + 1
+      a.barcode = `PRD-${String(nextId).padStart(6, '0')}`
     }
     return products.createProduct(a)
   })

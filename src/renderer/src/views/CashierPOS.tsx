@@ -31,6 +31,7 @@ export default function CashierPOS() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [storeSettings, setStoreSettings] = useState({ storeName: '', storeAddress: '', storePhone: '', receiptFooter: '' })
   const [fullyPaid, setFullyPaid] = useState(true)
+  const [productRefreshKey, setProductRefreshKey] = useState(0)
   const barcodeRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -40,6 +41,12 @@ export default function CashierPOS() {
   }, [])
 
   const showNotif = useCallback((msg: string) => { setNotification(msg); setTimeout(() => setNotification(''), 3000) }, [])
+
+  useEffect(() => {
+    const handler = () => setProductRefreshKey((k) => k + 1)
+    window.addEventListener('products:refresh', handler)
+    return () => window.removeEventListener('products:refresh', handler)
+  }, [])
 
   const handleBarcodeScan = useCallback(async (barcode: string) => {
     const result = await window.api.products.getByBarcode(barcode)
@@ -211,12 +218,12 @@ export default function CashierPOS() {
           )}
         </div>
 
-        <LooseItemsGrid />
+        <LooseItemsGrid refreshKey={productRefreshKey} />
         <PopularItems onProductAdd={(p) => {
           const ok = addItem({ productId: p.id, title: p.title, unitPrice: p.sale_price, purchasePrice: p.purchase_price, maxStock: p.stock, imageBase64: p.imageBase64 || "" })
           if (ok) showNotif(`${p.title} — ${p.sale_price.toLocaleString('fa-IR')} ${fa.common.toman}`)
           else { showNotif(lastError); clearError() }
-        }} />
+        }} refreshKey={productRefreshKey} />
         <CartTable items={items} />
 
         <div className="flex gap-3 text-[10px]" style={{ color: 'var(--text-muted)' }}>
