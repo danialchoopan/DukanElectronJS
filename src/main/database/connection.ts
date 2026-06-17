@@ -51,7 +51,7 @@ function initializeDatabase(db: Database.Database): void {
       barcode TEXT UNIQUE,
       title TEXT NOT NULL,
       description TEXT DEFAULT '',
-      imageUrl TEXT DEFAULT '',
+      imageBase64 TEXT DEFAULT '',
       category TEXT NOT NULL DEFAULT '',
       unit TEXT NOT NULL DEFAULT 'number' CHECK(unit IN ('number', 'weight')),
       purchase_price REAL NOT NULL DEFAULT 0,

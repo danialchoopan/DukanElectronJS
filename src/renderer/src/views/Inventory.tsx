@@ -3,6 +3,7 @@ import type { Product } from '../../../types'
 import { fa } from '../i18n'
 import { generateReceiptHTML, printContent } from '../utils/receipt'
 import { gregorianToJalali } from '../utils/jalali'
+import Pagination from '../components/Pagination'
 
 export default function Inventory() {
   const [products, setProducts] = useState<Product[]>([])
@@ -12,6 +13,8 @@ export default function Inventory() {
   const [filterStock, setFilterStock] = useState('all')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [restockQty, setRestockQty] = useState('')
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
   const [categories, setCategories] = useState<string[]>([])
 
   const isDark = document.documentElement.classList.contains('dark')
@@ -224,6 +227,9 @@ export default function Inventory() {
           </tbody>
         </table>
       </div>
+
+      <Pagination total={filteredProducts.length} pageSize={pageSize} page={page}
+        onPageChange={setPage} onPageSizeChange={(s) => { setPageSize(s); setPage(0) }} />
     </div>
   )
 }

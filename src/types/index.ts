@@ -11,7 +11,7 @@ export interface Product {
   isLoose: boolean
   isActive: boolean
   description: string
-  imageUrl: string
+  imageBase64: string
   createdAt: string
   updatedAt: string
 }
@@ -27,7 +27,7 @@ export interface ProductInput {
   minStock?: number
   isLoose?: boolean
   description?: string
-  imageUrl?: string
+  imageBase64?: string
 }
 
 export interface User {
@@ -46,6 +46,7 @@ export interface CartItem {
   purchasePrice: number
   quantity: number
   maxStock: number
+  imageBase64: string
 }
 
 export interface SaleItem {

@@ -25,7 +25,14 @@ export default function CartTable({ items }: Props) {
           {items.map((item, idx) => (
             <tr key={item.productId} style={{ borderBottom: '1px solid var(--border-color)' }}>
               <td className="px-3 py-2" style={{ color: 'var(--text-muted)' }}>{idx + 1}</td>
-              <td className="px-3 py-2 font-medium" style={{ color: 'var(--text-primary)' }}>{item.title}</td>
+              <td className="px-3 py-2 font-medium" style={{ color: 'var(--text-primary)' }}>
+                <div className="flex items-center gap-2">
+                  {item.imageBase64 && (
+                    <img src={item.imageBase64} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+                  )}
+                  {item.title}
+                </div>
+              </td>
               <td className="px-3 py-2 text-center">
                 <div className="flex items-center justify-center gap-1">
                   <button onClick={() => updateQuantity(item.productId, item.quantity - 1)} className="btn-primary" style={{ padding: '4px 10px', fontSize: '10px', borderRadius: '6px' }}>-</button>

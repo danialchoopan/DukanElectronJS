@@ -46,7 +46,7 @@ export default function CashierPOS() {
     if (result.success && result.data) {
       const product = result.data
       if (product.stock <= 0) { showNotif(`${fa.admin.outOfStock}: ${product.title}`); return }
-      const ok = addItem({ productId: product.id, title: product.title, unitPrice: product.sale_price, purchasePrice: product.purchase_price, maxStock: product.stock })
+      const ok = addItem({ productId: product.id, title: product.title, unitPrice: product.sale_price, purchasePrice: product.purchase_price, maxStock: product.stock, imageBase64: product.imageBase64 || "" })
       if (!ok) { showNotif(lastError); clearError(); return }
       showNotif(`${product.title} — ${product.sale_price.toLocaleString('fa-IR')} ${fa.common.toman}`)
     } else { showNotif(`${barcode} — ${fa.common.noData}`) }
@@ -55,7 +55,7 @@ export default function CashierPOS() {
 
   const handleProductSelect = useCallback((product: Product) => {
     if (product.stock <= 0) { showNotif(`${fa.admin.outOfStock}: ${product.title}`); return }
-    const ok = addItem({ productId: product.id, title: product.title, unitPrice: product.sale_price, purchasePrice: product.purchase_price, maxStock: product.stock })
+    const ok = addItem({ productId: product.id, title: product.title, unitPrice: product.sale_price, purchasePrice: product.purchase_price, maxStock: product.stock, imageBase64: product.imageBase64 || "" })
     if (!ok) { showNotif(lastError); clearError(); return }
     showNotif(`${product.title} — ${product.sale_price.toLocaleString('fa-IR')} ${fa.common.toman}`)
   }, [addItem, showNotif, lastError, clearError])
@@ -213,7 +213,7 @@ export default function CashierPOS() {
 
         <LooseItemsGrid />
         <PopularItems onProductAdd={(p) => {
-          const ok = addItem({ productId: p.id, title: p.title, unitPrice: p.sale_price, purchasePrice: p.purchase_price, maxStock: p.stock })
+          const ok = addItem({ productId: p.id, title: p.title, unitPrice: p.sale_price, purchasePrice: p.purchase_price, maxStock: p.stock, imageBase64: p.imageBase64 || "" })
           if (ok) showNotif(`${p.title} — ${p.sale_price.toLocaleString('fa-IR')} ${fa.common.toman}`)
           else { showNotif(lastError); clearError() }
         }} />

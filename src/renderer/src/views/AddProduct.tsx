@@ -20,7 +20,7 @@ export default function AddProduct() {
   const [pageSize, setPageSize] = useState(10)
   const [form, setForm] = useState({
     barcode: '', title: '', category: '', unit: 'number' as 'number' | 'weight',
-    purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageUrl: '',
+    purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '',
   })
 
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
@@ -51,13 +51,13 @@ export default function AddProduct() {
         barcode: existing.data.barcode, title: existing.data.title, category: existing.data.category,
         unit: existing.data.unit, purchase_price: existing.data.purchase_price, sale_price: existing.data.sale_price,
         stock: existing.data.stock, minStock: existing.data.minStock, isLoose: existing.data.isLoose,
-        description: existing.data.description || '', imageUrl: existing.data.imageUrl || '',
+        description: existing.data.description || '', imageBase64: existing.data.imageBase64 || '',
       })
       setShowForm(true)
       showNotif(`${existing.data.title} — ${fa.admin.edit}`)
     } else {
       setEditProduct(null)
-      setForm({ barcode: code, title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageUrl: '' })
+      setForm({ barcode: code, title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '' })
       setShowForm(true)
       showNotif(`${fa.admin.addProduct} — ${code}`)
     }
@@ -74,7 +74,7 @@ export default function AddProduct() {
       if (r.success) showNotif(`${form.title} — ${fa.admin.create}`)
     }
     setShowForm(false); setEditProduct(null)
-    setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageUrl: '' })
+    setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '' })
     loadProducts(); loadCategories()
   }
 
@@ -90,7 +90,7 @@ export default function AddProduct() {
 
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold" style={{ color: textPrimary }}>{fa.admin.addProduct}</h2>
-        <button onClick={() => { setEditProduct(null); setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageUrl: '' }); setShowForm(true) }} className="btn btn-primary text-sm">+ {fa.admin.addProduct}</button>
+        <button onClick={() => { setEditProduct(null); setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '' }); setShowForm(true) }} className="btn btn-primary text-sm">+ {fa.admin.addProduct}</button>
       </div>
 
       {/* Search */}
@@ -146,8 +146,30 @@ export default function AddProduct() {
               <textarea value={form.description || ''} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} className="input-field text-sm" rows={2} placeholder="توضیحات محصول..." />
             </div>
             <div className="col-span-2">
-              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>آدرس تصویر (URL)</label>
-              <input value={form.imageUrl || ''} onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))} className="input-field text-sm" placeholder="https://..." />
+              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>تصویر محصول</label>
+              <div className="flex gap-3 items-start">
+                <div className="flex-1">
+                  <input type="file" accept="image/*" onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      const reader = new FileReader()
+                      reader.onload = (ev) => {
+                        const base64 = ev.target?.result as string
+                        setForm((f) => ({ ...f, imageBase64: base64 }))
+                      }
+                      reader.readAsDataURL(file)
+                    }
+                  }} className="input-field text-sm file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-blue-500 file:text-white" />
+                </div>
+                {form.imageBase64 && (
+                  <div className="w-16 h-16 rounded-lg overflow-hidden border flex-shrink-0">
+                    <img src={form.imageBase64} alt="preview" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                {form.imageBase64 && (
+                  <button onClick={() => setForm((f) => ({ ...f, imageBase64: '' }))} className="text-xs px-2 py-1 rounded" style={{ color: '#ef4444' }}>حذف</button>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-2 pt-2">
               <input type="checkbox" checked={form.isLoose} onChange={(e) => setForm((f) => ({ ...f, isLoose: e.target.checked }))} className="w-4 h-4" />
@@ -252,7 +274,7 @@ export default function AddProduct() {
 
   function startEdit(p: Product) {
     setEditProduct(p)
-    setForm({ barcode: p.barcode, title: p.title, category: p.category, unit: p.unit, purchase_price: p.purchase_price, sale_price: p.sale_price, stock: p.stock, minStock: p.minStock, isLoose: p.isLoose, description: p.description || '', imageUrl: p.imageUrl || '' })
+    setForm({ barcode: p.barcode, title: p.title, category: p.category, unit: p.unit, purchase_price: p.purchase_price, sale_price: p.sale_price, stock: p.stock, minStock: p.minStock, isLoose: p.isLoose, description: p.description || '', imageBase64: p.imageBase64 || '' })
     setShowForm(true)
   }
 }
