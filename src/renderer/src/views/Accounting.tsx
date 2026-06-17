@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import type { Expense, Sale } from '../../../types'
 import { fa } from '../i18n'
-import { formatJalaliShort, gregorianToJalali, getTodayGregorian } from '../utils/jalali'
+import { formatJalaliShort, getTodayGregorian, gregorianToJalali } from '../utils/jalali'
 import ShamsiDateInput from '../components/ShamsiDateInput'
 import { generateReceiptHTML, printContent } from '../utils/receipt'
+import Pagination from '../components/Pagination'
 
 export default function Accounting() {
   const [tab, setTab] = useState<'expenses' | 'profit'>('expenses')
@@ -13,6 +14,8 @@ export default function Accounting() {
   const [endDate, setEndDate] = useState('')
   const [showExpenseForm, setShowExpenseForm] = useState(false)
   const [form, setForm] = useState({ category: '', description: '', amount: 0, date: getTodayGregorian() })
+  const [expensePage, setExpensePage] = useState(0)
+  const [expensePageSize, setExpensePageSize] = useState(10)
 
   const isDark = document.documentElement.classList.contains('dark')
   const cardBg = isDark ? '#1e293b' : '#ffffff'
@@ -245,7 +248,7 @@ export default function Accounting() {
                 </tr>
               </thead>
               <tbody>
-                {expenses.map((e) => (
+                {expenses.slice(expensePage * expensePageSize, (expensePage + 1) * expensePageSize).map((e) => (
                   <tr key={e.id} style={{ borderBottom: `1px solid ${cardBorder}` }}
                     onMouseEnter={(ev) => (ev.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.03)')}
                     onMouseLeave={(ev) => (ev.currentTarget.style.backgroundColor = 'transparent')}>
@@ -266,6 +269,8 @@ export default function Accounting() {
               </tbody>
             </table>
           </div>
+          <Pagination total={expenses.length} pageSize={expensePageSize} page={expensePage}
+            onPageChange={setExpensePage} onPageSizeChange={(s) => { setExpensePageSize(s); setExpensePage(0) }} />
         </>
       )}
     </div>
