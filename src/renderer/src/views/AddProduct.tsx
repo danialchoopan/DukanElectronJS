@@ -20,7 +20,7 @@ export default function AddProduct() {
   const [pageSize, setPageSize] = useState(10)
   const [form, setForm] = useState({
     barcode: '', title: '', category: '', unit: 'number' as 'number' | 'weight',
-    purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false,
+    purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageUrl: '',
   })
 
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
@@ -51,12 +51,13 @@ export default function AddProduct() {
         barcode: existing.data.barcode, title: existing.data.title, category: existing.data.category,
         unit: existing.data.unit, purchase_price: existing.data.purchase_price, sale_price: existing.data.sale_price,
         stock: existing.data.stock, minStock: existing.data.minStock, isLoose: existing.data.isLoose,
+        description: existing.data.description || '', imageUrl: existing.data.imageUrl || '',
       })
       setShowForm(true)
       showNotif(`${existing.data.title} — ${fa.admin.edit}`)
     } else {
       setEditProduct(null)
-      setForm({ barcode: code, title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false })
+      setForm({ barcode: code, title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageUrl: '' })
       setShowForm(true)
       showNotif(`${fa.admin.addProduct} — ${code}`)
     }
@@ -73,7 +74,7 @@ export default function AddProduct() {
       if (r.success) showNotif(`${form.title} — ${fa.admin.create}`)
     }
     setShowForm(false); setEditProduct(null)
-    setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false })
+    setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageUrl: '' })
     loadProducts(); loadCategories()
   }
 
@@ -89,7 +90,7 @@ export default function AddProduct() {
 
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold" style={{ color: textPrimary }}>{fa.admin.addProduct}</h2>
-        <button onClick={() => { setEditProduct(null); setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false }); setShowForm(true) }} className="btn btn-primary text-sm">+ {fa.admin.addProduct}</button>
+        <button onClick={() => { setEditProduct(null); setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageUrl: '' }); setShowForm(true) }} className="btn btn-primary text-sm">+ {fa.admin.addProduct}</button>
       </div>
 
       {/* Search */}
@@ -136,7 +137,19 @@ export default function AddProduct() {
               <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.stock}</label>
               <input type="number" value={form.stock || ''} onChange={(e) => setForm((f) => ({ ...f, stock: +e.target.value }))} className="input-field text-sm" />
             </div>
-            <div className="flex items-center gap-2 pt-5">
+            <div>
+              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>حداقل موجودی (هشدار)</label>
+              <input type="number" value={form.minStock || ''} onChange={(e) => setForm((f) => ({ ...f, minStock: +e.target.value }))} className="input-field text-sm" placeholder="0" />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>توضیحات / یادداشت</label>
+              <textarea value={form.description || ''} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} className="input-field text-sm" rows={2} placeholder="توضیحات محصول..." />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>آدرس تصویر (URL)</label>
+              <input value={form.imageUrl || ''} onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))} className="input-field text-sm" placeholder="https://..." />
+            </div>
+            <div className="flex items-center gap-2 pt-2">
               <input type="checkbox" checked={form.isLoose} onChange={(e) => setForm((f) => ({ ...f, isLoose: e.target.checked }))} className="w-4 h-4" />
               <label className="text-sm" style={{ color: textSecondary }}>{fa.admin.looseItem}</label>
             </div>
@@ -239,7 +252,7 @@ export default function AddProduct() {
 
   function startEdit(p: Product) {
     setEditProduct(p)
-    setForm({ barcode: p.barcode, title: p.title, category: p.category, unit: p.unit, purchase_price: p.purchase_price, sale_price: p.sale_price, stock: p.stock, minStock: p.minStock, isLoose: p.isLoose })
+    setForm({ barcode: p.barcode, title: p.title, category: p.category, unit: p.unit, purchase_price: p.purchase_price, sale_price: p.sale_price, stock: p.stock, minStock: p.minStock, isLoose: p.isLoose, description: p.description || '', imageUrl: p.imageUrl || '' })
     setShowForm(true)
   }
 }

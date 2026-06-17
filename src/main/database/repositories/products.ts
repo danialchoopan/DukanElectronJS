@@ -53,11 +53,13 @@ export function getProductCategories(): string[] {
 export function createProduct(input: ProductInput): Product {
   const db = getDatabase()
   const result = db.prepare(`
-    INSERT INTO products (barcode, title, category, unit, purchase_price, sale_price, stock, minStock, isLoose)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO products (barcode, title, description, imageUrl, category, unit, purchase_price, sale_price, stock, minStock, isLoose)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     input.barcode || null,
     input.title,
+    input.description || '',
+    input.imageUrl || '',
     input.category || '',
     input.unit || 'number',
     input.purchase_price,
@@ -77,12 +79,14 @@ export function updateProduct(id: number, input: Partial<ProductInput>): Product
   const merged = { ...existing, ...input }
   db.prepare(`
     UPDATE products
-    SET barcode = ?, title = ?, category = ?, unit = ?, purchase_price = ?, sale_price = ?,
+    SET barcode = ?, title = ?, description = ?, imageUrl = ?, category = ?, unit = ?, purchase_price = ?, sale_price = ?,
         stock = ?, minStock = ?, isLoose = ?, updatedAt = datetime('now', 'localtime')
     WHERE id = ?
   `).run(
     merged.barcode || null,
     merged.title,
+    merged.description || '',
+    merged.imageUrl || '',
     merged.category || '',
     merged.unit,
     merged.purchase_price,
@@ -122,6 +126,8 @@ function formatProduct(row: Record<string, unknown>): Product {
     id: row.id as number,
     barcode: (row.barcode as string) ?? '',
     title: row.title as string,
+    description: (row.description as string) ?? '',
+    imageUrl: (row.imageUrl as string) ?? '',
     category: row.category as string,
     unit: row.unit as 'number' | 'weight',
     purchase_price: row.purchase_price as number,

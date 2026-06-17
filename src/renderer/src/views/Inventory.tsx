@@ -56,6 +56,8 @@ export default function Inventory() {
     return true
   })
 
+  const outOfStock = products.filter(p => p.stock <= 0)
+
   const totalStockValue = filteredProducts.reduce((a, p) => a + (p.stock * p.purchase_price), 0)
   const totalRetailValue = filteredProducts.reduce((a, p) => a + (p.stock * p.sale_price), 0)
   const totalProfit = totalRetailValue - totalStockValue
@@ -113,16 +115,33 @@ export default function Inventory() {
         ))}
       </div>
 
-      {lowStock.length > 0 && (
+      {outOfStock.length > 0 && (
         <div className="rounded-2xl p-4 mb-4 border-2" style={{ backgroundColor: isDark ? '#450a0a' : '#fee2e2', borderColor: '#ef4444' }}>
           <h3 className="font-bold mb-2 flex items-center gap-2" style={{ color: '#ef4444' }}>
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            موجودی تمام شده — {outOfStock.length} کالا
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {outOfStock.map((p) => (
+              <button key={p.id} onClick={() => { setSelectedProduct(p); setRestockQty('') }}
+                className="px-3 py-1.5 rounded-lg text-sm font-bold" style={{ backgroundColor: '#fecaca', color: '#991b1b' }}>
+                {p.title}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {lowStock.length > 0 && (
+        <div className="rounded-2xl p-4 mb-4 border-2" style={{ backgroundColor: isDark ? '#451a03' : '#fef3c7', borderColor: '#f59e0b' }}>
+          <h3 className="font-bold mb-2 flex items-center gap-2" style={{ color: '#d97706' }}>
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            {lowStock.length} کالای کم‌موجودی
+            موجودی کم — {lowStock.length} کالا
           </h3>
           <div className="flex flex-wrap gap-2">
             {lowStock.map((p) => (
               <button key={p.id} onClick={() => { setSelectedProduct(p); setRestockQty('') }}
-                className="px-3 py-1.5 rounded-lg text-sm font-bold" style={{ backgroundColor: '#fecaca', color: '#991b1b' }}>
+                className="px-3 py-1.5 rounded-lg text-sm font-bold" style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>
                 {p.title} ({p.stock})
               </button>
             ))}

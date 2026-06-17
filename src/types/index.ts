@@ -10,6 +10,8 @@ export interface Product {
   minStock: number
   isLoose: boolean
   isActive: boolean
+  description: string
+  imageUrl: string
   createdAt: string
   updatedAt: string
 }
@@ -24,6 +26,8 @@ export interface ProductInput {
   stock: number
   minStock?: number
   isLoose?: boolean
+  description?: string
+  imageUrl?: string
 }
 
 export interface User {
