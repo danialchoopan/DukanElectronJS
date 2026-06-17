@@ -120,6 +120,7 @@ export interface Expense {
   description: string
   amount: number
   date: string
+  imageBase64?: string
   createdAt: string
 }
 
@@ -128,6 +129,7 @@ export interface ExpenseInput {
   description: string
   amount: number
   date: string
+  imageBase64?: string
 }
 
 export interface SuspendedInvoice {

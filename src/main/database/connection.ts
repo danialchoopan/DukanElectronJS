@@ -268,6 +268,12 @@ function initializeDatabase(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_journal_lines_account ON journal_entry_lines(accountId);
   `)
 
+  try {
+    db.prepare('ALTER TABLE expenses ADD COLUMN imageBase64 TEXT DEFAULT ""').run()
+  } catch (e) {
+    // Column already exists
+  }
+
   const defaults: Record<string, string> = {
     storeName: 'فروشگاه من',
     storeAddress: '',
