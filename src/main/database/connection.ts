@@ -78,6 +78,16 @@ function initializeDatabase(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(name);
     CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
 
+    CREATE TABLE IF NOT EXISTS categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      parent_id INTEGER DEFAULT NULL,
+      createdAt TEXT DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (parent_id) REFERENCES categories(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_id);
+
     CREATE TABLE IF NOT EXISTS sales (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       invoiceNumber TEXT UNIQUE NOT NULL,

@@ -130,6 +130,19 @@ const api = {
       ipcRenderer.invoke('settings:set', { key, value }),
   },
 
+  categories: {
+    getAll: (): Promise<IPCResponse<any[]>> =>
+      ipcRenderer.invoke('categories:getAll'),
+    getTree: (): Promise<IPCResponse<any[]>> =>
+      ipcRenderer.invoke('categories:getTree'),
+    create: (data: { name: string; parentId?: number }): Promise<IPCResponse<any>> =>
+      ipcRenderer.invoke('categories:create', data),
+    update: (id: number, name: string): Promise<IPCResponse<boolean>> =>
+      ipcRenderer.invoke('categories:update', { id, name }),
+    delete: (id: number): Promise<IPCResponse<boolean>> =>
+      ipcRenderer.invoke('categories:delete', { id }),
+  },
+
   backup: {
     export: (): Promise<IPCResponse<string>> =>
       ipcRenderer.invoke('backup:export'),

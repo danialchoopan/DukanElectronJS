@@ -14,7 +14,7 @@ export default function AddProduct() {
   const [showForm, setShowForm] = useState(false)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
   const [products, setProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<string[]>([])
+  const [categories, setCategories] = useState<{ id: number; name: string; parentId: number | null }[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(10)
@@ -35,8 +35,10 @@ export default function AddProduct() {
     if (r.success && r.data) { setProducts(r.data); setPage(0) }
   }
   const loadCategories = async () => {
-    const r = await window.api.products.getCategories()
-    if (r.success && r.data) setCategories(r.data)
+    const r = await window.api.categories.getAll()
+    if (r.success && r.data) {
+      setCategories(r.data)
+    }
   }
 
   useEffect(() => { loadProducts(); loadCategories() }, [searchQuery])
@@ -117,7 +119,7 @@ export default function AddProduct() {
                 className="input-field text-sm" style={{ borderColor: !form.category ? '#ef4444' : undefined }}>
                 <option value="">-- انتخاب دسته‌بندی --</option>
                 {categories.map((c) => (
-                  <option key={c} value={c}>{c.includes(' > ') ? `  ↳ ${c.split(' > ')[1]}` : c}</option>
+                  <option key={c.id} value={c.name}>{c.parentId ? `↳ ${c.name}` : c.name}</option>
                 ))}
               </select>
               {!form.category && <p className="text-[10px] mt-1" style={{ color: '#ef4444' }}>انتخاب دسته‌بندی الزامی است</p>}
@@ -150,11 +152,11 @@ export default function AddProduct() {
       {categories.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           <button onClick={() => { setSearchQuery(''); setPage(0) }} className="px-3 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: !searchQuery ? '#3b82f6' : 'var(--bg-tertiary)', color: !searchQuery ? '#fff' : 'var(--text-secondary)' }}>همه ({products.length})</button>
-          {categories.map((c) => {
-            const count = products.filter((p) => p.category === c).length
+          {categories.map((cat) => {
+            const count = products.filter((p) => p.category === cat.name).length
             return (
-              <button key={c} onClick={() => { setSearchQuery(c); setPage(0) }} className="px-3 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: searchQuery === c ? '#3b82f6' : 'var(--bg-tertiary)', color: searchQuery === c ? '#fff' : 'var(--text-secondary)' }}>
-                {c} ({count})
+              <button key={cat.id} onClick={() => { setSearchQuery(cat.name); setPage(0) }} className="px-3 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: searchQuery === cat.name ? '#3b82f6' : 'var(--bg-tertiary)', color: searchQuery === cat.name ? '#fff' : 'var(--text-secondary)' }}>
+                {cat.name} ({count})
               </button>
             )
           })}

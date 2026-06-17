@@ -2,12 +2,19 @@ import { useState, useEffect } from 'react'
 import { useSettingsStore } from '../store/settingsStore'
 import { fa } from '../i18n'
 
+interface Category {
+  id: number
+  name: string
+  parentId: number | null
+  createdAt: string
+}
+
 export default function Categories() {
   const theme = useSettingsStore((s) => s.theme)
   const isDark = theme === 'dark'
-  const [categories, setCategories] = useState<{ name: string; fullName: string; count: number }[]>([])
-  const [selectedCat, setSelectedCat] = useState<string | null>(null)
+  const [categories, setCategories] = useState<Category[]>([])
   const [newCatName, setNewCatName] = useState('')
+  const [selectedCat, setSelectedCat] = useState<Category | null>(null)
   const [renameInput, setRenameInput] = useState('')
   const [notification, setNotification] = useState('')
 
@@ -19,63 +26,38 @@ export default function Categories() {
   const showNotif = (msg: string) => { setNotification(msg); setTimeout(() => setNotification(''), 3000) }
 
   const loadCategories = async () => {
-    const r = await window.api.products.getAll()
-    if (r.success && r.data) {
-      const catMap: Record<string, number> = {}
-      r.data.forEach((p) => {
-        if (p.category && p.category.trim()) {
-          catMap[p.category.trim()] = (catMap[p.category.trim()] || 0) + 1
-        }
-      })
-      setCategories(Object.entries(catMap).map(([name, count]) => ({ name, fullName: name, count })).sort((a, b) => a.name.localeCompare(b.name)))
-    }
+    const r = await window.api.categories.getAll()
+    if (r.success && r.data) setCategories(r.data)
   }
 
   useEffect(() => { loadCategories() }, [])
 
-  const parentCategories = categories.filter(c => !c.fullName.includes(' > '))
-  const subcategories = selectedCat ? categories.filter(c => c.fullName.startsWith(selectedCat + ' > ')) : []
+  const parentCategories = categories.filter(c => !c.parentId)
+  const subcategories = selectedCat ? categories.filter(c => c.parentId === selectedCat.id) : []
 
-  const handleAddSubcategory = async () => {
-    if (!newCatName.trim() || !selectedCat) return
-    const fullName = `${selectedCat} > ${newCatName.trim()}`
-    if (categories.some(c => c.fullName === fullName)) { showNotif('این زیردسته قبلاً وجود دارد'); return }
-    const r = await window.api.products.getAll()
-    if (r.success && r.data && r.data.length > 0) {
-      const p = r.data[0]
-      await window.api.products.update(p.id, { category: fullName })
-      await window.api.products.update(p.id, { category: '' })
-    }
-    showNotif(`زیردسته "${fullName}" اضافه شد`)
+  const handleAddCategory = async () => {
+    const name = newCatName.trim()
+    if (!name) return
+    if (categories.some(c => c.name === name)) { showNotif('این دسته‌بندی قبلاً وجود دارد'); return }
+    await window.api.categories.create({ name, parentId: selectedCat?.id || undefined })
+    showNotif(`"${name}" اضافه شد`)
     setNewCatName(''); loadCategories()
   }
 
-  const handleRenameCategory = async (oldName: string) => {
-    if (!renameInput.trim() || renameInput.trim() === oldName) return
-    const r = await window.api.products.getAll()
-    if (r.success && r.data) {
-      for (const p of r.data) {
-        if (p.category === oldName) await window.api.products.update(p.id, { category: renameInput.trim() })
-      }
-      showNotif(`"${oldName}" به "${renameInput.trim()}" تغییر کرد`)
-      setSelectedCat(null); setRenameInput(''); loadCategories()
-    }
+  const handleRenameCategory = async () => {
+    if (!selectedCat || !renameInput.trim() || renameInput.trim() === selectedCat.name) return
+    await window.api.categories.update(selectedCat.id, renameInput.trim())
+    showNotif(`"${selectedCat.name}" به "${renameInput.trim()}" تغییر کرد`)
+    setSelectedCat(null); setRenameInput(''); loadCategories()
   }
 
-  const handleDeleteCategory = async (catName: string) => {
-    if (!confirm(`آیا از حذف "${catName}" اطمینان دارید؟`)) return
-    const r = await window.api.products.getAll()
-    if (r.success && r.data) {
-      for (const p of r.data) {
-        if (p.category === catName || p.category.startsWith(catName + ' > ')) {
-          await window.api.products.update(p.id, { category: '' })
-        }
-      }
-      showNotif(`"${catName}" حذف شد`); setSelectedCat(null); loadCategories()
-    }
+  const handleDeleteCategory = async (cat: Category) => {
+    if (!confirm(`آیا از حذف "${cat.name}" اطمینان دارید؟`)) return
+    await window.api.categories.delete(cat.id)
+    showNotif(`"${cat.name}" حذف شد`)
+    if (selectedCat?.id === cat.id) setSelectedCat(null)
+    loadCategories()
   }
-
-  const selectedCatData = categories.find(c => c.fullName === selectedCat)
 
   return (
     <div className="h-full p-4 overflow-auto">
@@ -86,25 +68,27 @@ export default function Categories() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Main Categories */}
         <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-          <h3 className="font-bold mb-3 text-sm" style={{ color: textPrimary }}>دسته‌بندی‌ها ({parentCategories.length})</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-sm" style={{ color: textPrimary }}>دسته‌بندی‌ها ({parentCategories.length})</h3>
+            <button onClick={() => { setSelectedCat(null); setNewCatName('') }} className="btn btn-primary text-xs">+ افزودن</button>
+          </div>
           <div className="space-y-1 max-h-[600px] overflow-y-auto">
             {parentCategories.map((cat) => {
-              const isActive = selectedCat === cat.fullName
-              const subs = categories.filter(c => c.fullName.startsWith(cat.fullName + ' > '))
+              const isActive = selectedCat?.id === cat.id
+              const subs = categories.filter(c => c.parentId === cat.id)
               return (
-                <div key={cat.fullName}>
+                <div key={cat.id}>
                   <div className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all ${isActive ? 'ring-2 ring-blue-500' : ''}`}
                     style={{ backgroundColor: isActive ? 'rgba(59,130,246,0.1)' : 'var(--bg-tertiary)' }}
-                    onClick={() => { setSelectedCat(isActive ? null : cat.fullName); setRenameInput(cat.fullName || '') }}>
+                    onClick={() => { setSelectedCat(isActive ? null : cat); setRenameInput(cat.name) }}>
                     <div className="flex items-center gap-2">
                       <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold"
                         style={{ backgroundColor: isActive ? '#3b82f6' : 'var(--bg-card)', color: isActive ? '#fff' : textSecondary }}>
-                        {cat.count}
+                        {subs.length}
                       </span>
                       <span className="text-sm font-bold" style={{ color: textPrimary }}>{cat.name}</span>
-                      {subs.length > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: 'var(--bg-card)', color: textSecondary }}>{subs.length} زیردسته</span>}
                     </div>
-                    <button onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat.fullName) }}
+                    <button onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat) }}
                       className="text-[10px] px-1.5 py-0.5 rounded hover:bg-red-100" style={{ color: '#ef4444' }}>×</button>
                   </div>
                 </div>
@@ -116,68 +100,48 @@ export default function Categories() {
 
         {/* Category Details */}
         <div className="lg:col-span-2 rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-          {selectedCatData ? (
+          {selectedCat ? (
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{selectedCatData.fullName}</h3>
-                  <p className="text-sm" style={{ color: textSecondary }}>{selectedCatData.count} محصول + {subcategories.length} زیردسته</p>
+                  <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{selectedCat.name}</h3>
+                  <p className="text-sm" style={{ color: textSecondary }}>{subcategories.length} زیردسته</p>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => handleDeleteCategory(selectedCatData.fullName)} className="btn btn-danger text-sm">{fa.admin.delete}</button>
-                </div>
+                <button onClick={() => handleDeleteCategory(selectedCat)} className="btn btn-danger text-sm">{fa.admin.delete}</button>
               </div>
 
-              {/* Rename */}
               <div className="rounded-xl p-3 mb-4" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
                 <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>تغییر نام</label>
                 <div className="flex gap-2">
                   <input value={renameInput} onChange={(e) => setRenameInput(e.target.value)} className="input-field text-sm flex-1"
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleRenameCategory(selectedCatData.fullName) }} />
-                  <button onClick={() => handleRenameCategory(selectedCatData.fullName)} disabled={renameInput === selectedCatData.fullName || !renameInput.trim()}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleRenameCategory() }} />
+                  <button onClick={handleRenameCategory} disabled={renameInput === selectedCat.name || !renameInput.trim()}
                     className="btn btn-primary text-sm disabled:opacity-40">{fa.admin.save}</button>
                 </div>
               </div>
 
-              {/* Add Subcategory */}
               <div className="rounded-xl p-3 mb-4" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
                 <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>افزودن زیردسته</label>
                 <div className="flex gap-2">
                   <input value={newCatName} onChange={(e) => setNewCatName(e.target.value)} className="input-field text-sm flex-1"
-                    placeholder="نام زیردسته" onKeyDown={(e) => { if (e.key === 'Enter' && newCatName.trim()) handleAddSubcategory() }} />
-                  <button onClick={handleAddSubcategory} disabled={!newCatName.trim()} className="btn btn-success text-sm disabled:opacity-40">افزودن</button>
+                    placeholder="نام زیردسته" onKeyDown={(e) => { if (e.key === 'Enter' && newCatName.trim()) handleAddCategory() }} />
+                  <button onClick={handleAddCategory} disabled={!newCatName.trim()} className="btn btn-success text-sm disabled:opacity-40">+ افزودن</button>
                 </div>
               </div>
 
-              {/* Subcategories */}
-              <div className="mb-4">
-                <h4 className="text-sm font-bold mb-2" style={{ color: textPrimary }}>زیردسته‌ها ({subcategories.length})</h4>
-                {subcategories.length > 0 ? (
-                  <div className="space-y-1">
-                    {subcategories.map((sub) => (
-                      <div key={sub.fullName} className="flex items-center justify-between p-2 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm" style={{ color: textPrimary }}>{sub.name.replace(selectedCatData.fullName + ' > ', '')}</span>
-                          <span className="text-[10px]" style={{ color: textSecondary }}>({sub.count} محصول)</span>
-                        </div>
-                        <button onClick={() => handleDeleteCategory(sub.fullName)} className="text-xs px-1.5 py-0.5 rounded hover:bg-red-100" style={{ color: '#ef4444' }}>×</button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm py-2" style={{ color: textSecondary }}>هنوز زیردسته‌ای اضافه نشده</p>
-                )}
-              </div>
-
-              {/* Add subcategory quick input */}
-              <div className="rounded-xl p-3" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-                <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>افزودن زیردسته جدید</label>
-                <div className="flex gap-2">
-                  <input value={newCatName} onChange={(e) => setNewCatName(e.target.value)} className="input-field text-sm flex-1"
-                    placeholder="نام زیردسته" onKeyDown={(e) => { if (e.key === 'Enter' && newCatName.trim()) handleAddSubcategory() }} />
-                  <button onClick={handleAddSubcategory} disabled={!newCatName.trim()} className="btn btn-success text-sm disabled:opacity-40">+ افزودن</button>
+              <h4 className="text-sm font-bold mb-2" style={{ color: textPrimary }}>زیردسته‌ها ({subcategories.length})</h4>
+              {subcategories.length > 0 ? (
+                <div className="space-y-1">
+                  {subcategories.map((sub) => (
+                    <div key={sub.id} className="flex items-center justify-between p-2 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                      <span className="text-sm" style={{ color: textPrimary }}>{sub.name}</span>
+                      <button onClick={() => handleDeleteCategory(sub)} className="text-xs px-1.5 py-0.5 rounded hover:bg-red-100" style={{ color: '#ef4444' }}>×</button>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              ) : (
+                <p className="text-sm py-2" style={{ color: textSecondary }}>هنوز زیردسته‌ای اضافه نشده</p>
+              )}
             </div>
           ) : (
             <div className="flex items-center justify-center h-full min-h-[300px]">

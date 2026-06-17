@@ -8,6 +8,7 @@ import * as settingsRepo from '../database/repositories/settings'
 import * as customers from '../database/repositories/customers'
 import * as expenses from '../database/repositories/expenses'
 import * as cashRegister from '../database/repositories/cashRegister'
+import * as categoriesRepo from '../database/repositories/categories'
 import { isFirstRun, getDatabase } from '../database/connection'
 import { writeFileSync, readFileSync } from 'fs'
 
@@ -148,4 +149,11 @@ export function registerAllHandlers(): void {
       return { success: false, error: err instanceof Error ? err.message : String(err) }
     }
   })
+
+  // ─── Categories ─────────────────────────────────────
+  handle('categories:getAll', () => categoriesRepo.getAllCategories())
+  handle('categories:getTree', () => categoriesRepo.getCategoryTree())
+  handleArg<{ name: string; parentId?: number }, any>('categories:create', (a) => categoriesRepo.createCategory(a.name, a.parentId))
+  handleArg<{ id: number; name: string }, boolean>('categories:update', (a) => { categoriesRepo.updateCategory(a.id, a.name); return true })
+  handleArg<{ id: number }, boolean>('categories:delete', (a) => categoriesRepo.deleteCategory(a.id))
 }
