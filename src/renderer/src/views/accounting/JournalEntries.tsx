@@ -35,9 +35,33 @@ export default function JournalEntries() {
 
   const toggleExpand = (id: number) => setExpandedId(expandedId === id ? null : id)
 
+  const totalDebit = entries.reduce((s: number, e: any) => s + (e.lines?.reduce((ls: number, l: any) => ls + l.debit, 0) || 0), 0)
+  const totalCredit = entries.reduce((s: number, e: any) => s + (e.lines?.reduce((ls: number, l: any) => ls + l.credit, 0) || 0), 0)
+
   return (
     <div>
       <h3 className="text-lg font-bold mb-4" style={{ color: textPrimary }}>{fa.accounting.journal.title}</h3>
+
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="rounded-xl p-3 border flex items-center gap-3" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" className="w-5 h-5 flex-shrink-0">
+            <line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" />
+          </svg>
+          <div>
+            <div className="text-[10px]" style={{ color: textSecondary }}>{fa.accounting.journal.debit}</div>
+            <div className="text-sm font-bold font-mono" style={{ color: '#22c55e' }}>{totalDebit.toLocaleString('fa-IR')}</div>
+          </div>
+        </div>
+        <div className="rounded-xl p-3 border flex items-center gap-3" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" className="w-5 h-5 flex-shrink-0">
+            <line x1="12" y1="5" x2="12" y2="19" /><polyline points="19 12 12 19 5 12" />
+          </svg>
+          <div>
+            <div className="text-[10px]" style={{ color: textSecondary }}>{fa.accounting.journal.credit}</div>
+            <div className="text-sm font-bold font-mono" style={{ color: '#ef4444' }}>{totalCredit.toLocaleString('fa-IR')}</div>
+          </div>
+        </div>
+      </div>
 
       <div className="flex flex-wrap gap-3 mb-4">
         <ShamsiDateInput value={startDate} onChange={setStartDate} label={fa.dashboard.dateFrom} />

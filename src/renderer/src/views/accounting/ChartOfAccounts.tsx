@@ -79,11 +79,25 @@ export default function ChartOfAccounts() {
 
   const types = ['all', 'asset', 'liability', 'equity', 'income', 'expense']
 
+  const typeCounts = types.filter(t => t !== 'all').reduce((acc, t) => {
+    acc[t] = allAccounts.filter(a => a.type === t).length
+    return acc
+  }, {} as Record<string, number>)
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.accounts.title}</h3>
         <button onClick={openAdd} className="btn-primary text-sm">+ {fa.accounting.accounts.addAccount}</button>
+      </div>
+
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {types.filter(t => t !== 'all').map(t => (
+          <div key={t} className="rounded-xl px-3 py-1.5 text-xs font-bold flex items-center gap-1.5"
+            style={{ backgroundColor: typeColors[t]?.bg, color: typeColors[t]?.fg }}>
+            {fa.accounting.accounts.types[t as keyof typeof fa.accounting.accounts.types]}: {typeCounts[t] || 0}
+          </div>
+        ))}
       </div>
 
       <div className="flex gap-2 mb-3">

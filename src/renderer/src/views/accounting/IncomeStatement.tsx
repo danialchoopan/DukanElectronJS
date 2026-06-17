@@ -22,15 +22,25 @@ export default function IncomeStatement() {
 
   if (!data) return null
 
+  const revenue = data.totalRevenue || 1
+
   const Section = ({ title, items, total, color }: { title: string; items: any[]; total: number; color: string }) => (
     <div className="mb-4">
       <div className="text-sm font-bold mb-2" style={{ color: textPrimary }}>{title}</div>
-      {items.map((item, i) => (
-        <div key={i} className="flex justify-between px-4 py-1.5" style={{ borderBottom: `1px solid ${cardBorder}` }}>
-          <span className="text-sm" style={{ color: textSecondary }}>{item.accountCode} - {item.accountName}</span>
-          <span className="text-sm font-mono font-bold" style={{ color: textPrimary }}>{item.amount.toLocaleString('fa-IR')}</span>
-        </div>
-      ))}
+      {items.map((item, i) => {
+        const pct = (item.amount / revenue) * 100
+        return (
+          <div key={i} className="px-4 py-1.5" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+            <div className="flex justify-between mb-1">
+              <span className="text-sm" style={{ color: textSecondary }}>{item.accountCode} - {item.accountName}</span>
+              <span className="text-sm font-mono font-bold" style={{ color: textPrimary }}>{item.amount.toLocaleString('fa-IR')}</span>
+            </div>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#0f172a' : '#f1f5f9' }}>
+              <div className="h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: color }} />
+            </div>
+          </div>
+        )
+      })}
       <div className="flex justify-between px-4 py-2 font-bold" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
         <span className="text-sm" style={{ color }}>{title}</span>
         <span className="text-sm font-mono" style={{ color }}>{total.toLocaleString('fa-IR')}</span>

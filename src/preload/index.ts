@@ -191,6 +191,7 @@ const api = {
   },
   accounting: {
     migrate: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('accounting:migrate'),
+    seedDemo: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('accounting:seedDemo'),
   },
 
   backup: {

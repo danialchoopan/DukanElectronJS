@@ -15,6 +15,7 @@ import * as accountsRepo from '../database/repositories/accounts'
 import * as journalRepo from '../database/repositories/journal'
 import * as periodsRepo from '../database/repositories/periods'
 import * as reportsRepo from '../database/repositories/reports'
+import * as seedRepo from '../database/repositories/seed'
 import { isFirstRun, getDatabase } from '../database/connection'
 import { writeFileSync, readFileSync } from 'fs'
 
@@ -307,4 +308,7 @@ export function registerAllHandlers(): void {
     }
     return true
   })
+
+  // ─── Seed Demo Data ──────────────────────────────────────
+  handle('accounting:seedDemo', () => seedRepo.seedDemoData())
 }

@@ -49,22 +49,37 @@ export default function TrialBalance() {
             </tr>
           </thead>
           <tbody>
-            {rows.filter((r: any) => r.totalDebit !== 0 || r.totalCredit !== 0).map((r: any) => (
-              <tr key={r.accountId} style={{ borderBottom: `1px solid ${cardBorder}` }}>
-                <td className="px-4 py-2">
-                  <span className="text-xs font-mono font-bold mr-2" style={{ color: typeColors[r.accountType] || textSecondary }}>{r.accountCode}</span>
-                  <span style={{ color: textPrimary }}>{r.accountName}</span>
-                </td>
-                <td className="px-4 py-2 text-center">
-                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: typeColors[r.accountType] || textSecondary }}>
-                    {fa.accounting.accounts.types[r.accountType as keyof typeof fa.accounting.accounts.types] || r.accountType}
-                  </span>
-                </td>
-                <td className="px-4 py-2 text-left font-mono" style={{ color: r.totalDebit > 0 ? '#22c55e' : textSecondary }}>{r.totalDebit > 0 ? r.totalDebit.toLocaleString('fa-IR') : '-'}</td>
-                <td className="px-4 py-2 text-left font-mono" style={{ color: r.totalCredit > 0 ? '#ef4444' : textSecondary }}>{r.totalCredit > 0 ? r.totalCredit.toLocaleString('fa-IR') : '-'}</td>
-                <td className="px-4 py-2 text-left font-mono font-bold" style={{ color: r.balance >= 0 ? '#22c55e' : '#ef4444' }}>{Math.abs(r.balance).toLocaleString('fa-IR')}</td>
-              </tr>
-            ))}
+            {rows.filter((r: any) => r.totalDebit !== 0 || r.totalCredit !== 0).map((r: any) => {
+              const maxRow = Math.max(r.totalDebit, r.totalCredit, 1)
+              const debitPct = (r.totalDebit / maxRow) * 100
+              const creditPct = (r.totalCredit / maxRow) * 100
+              return (
+                <tr key={r.accountId} style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                  <td className="px-4 py-2">
+                    <span className="text-xs font-mono font-bold mr-2" style={{ color: typeColors[r.accountType] || textSecondary }}>{r.accountCode}</span>
+                    <span style={{ color: textPrimary }}>{r.accountName}</span>
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: typeColors[r.accountType] || textSecondary }}>
+                      {fa.accounting.accounts.types[r.accountType as keyof typeof fa.accounting.accounts.types] || r.accountType}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2 text-left font-mono" style={{ color: r.totalDebit > 0 ? '#22c55e' : textSecondary }}>
+                    <div className="flex items-center gap-2">
+                      <span className="flex-shrink-0 w-20 text-left">{r.totalDebit > 0 ? r.totalDebit.toLocaleString('fa-IR') : '-'}</span>
+                      {r.totalDebit > 0 && <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#0f172a' : '#f1f5f9' }}><div className="h-full rounded-full" style={{ width: `${debitPct}%`, backgroundColor: '#22c55e' }} /></div>}
+                    </div>
+                  </td>
+                  <td className="px-4 py-2 text-left font-mono" style={{ color: r.totalCredit > 0 ? '#ef4444' : textSecondary }}>
+                    <div className="flex items-center gap-2">
+                      <span className="flex-shrink-0 w-20 text-left">{r.totalCredit > 0 ? r.totalCredit.toLocaleString('fa-IR') : '-'}</span>
+                      {r.totalCredit > 0 && <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#0f172a' : '#f1f5f9' }}><div className="h-full rounded-full" style={{ width: `${creditPct}%`, backgroundColor: '#ef4444' }} /></div>}
+                    </div>
+                  </td>
+                  <td className="px-4 py-2 text-left font-mono font-bold" style={{ color: r.balance >= 0 ? '#22c55e' : '#ef4444' }}>{Math.abs(r.balance).toLocaleString('fa-IR')}</td>
+                </tr>
+              )
+            })}
             <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', borderTop: `2px solid ${cardBorder}` }}>
               <td className="px-4 py-3 font-bold" colSpan={2} style={{ color: textPrimary }}>{fa.accounting.trialBalance.totals}</td>
               <td className="px-4 py-3 text-left font-mono font-bold" style={{ color: '#22c55e' }}>{totalDebit.toLocaleString('fa-IR')}</td>

@@ -39,11 +39,31 @@ export default function BalanceSheet() {
 
   const isBalanced = Math.abs(data.totalAssets - data.totalLiabilitiesAndEquity) < 0.01
 
+  const maxSide = Math.max(data.totalAssets, data.totalLiabilitiesAndEquity, 1)
+  const assetPct = (data.totalAssets / maxSide) * 100
+  const levPct = (data.totalLiabilitiesAndEquity / maxSide) * 100
+
   return (
     <div>
       <h3 className="text-lg font-bold mb-4" style={{ color: textPrimary }}>{fa.accounting.balanceSheet.title}</h3>
       <div className="flex gap-3 mb-4">
         <ShamsiDateInput value={asOfDate} onChange={setAsOfDate} label="تا تاریخ" />
+      </div>
+
+      <div className="rounded-2xl border p-4 mb-4" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-bold" style={{ color: '#3b82f6' }}>{fa.accounting.balanceSheet.totalAssets}: {data.totalAssets.toLocaleString('fa-IR')}</span>
+          <span className="text-xs font-bold" style={{ color: '#a855f7' }}>{fa.accounting.balanceSheet.totalLiabilitiesAndEquity}: {data.totalLiabilitiesAndEquity.toLocaleString('fa-IR')}</span>
+        </div>
+        <div className="h-4 rounded-full overflow-hidden flex" style={{ backgroundColor: isDark ? '#0f172a' : '#f1f5f9' }}>
+          <div className="h-full rounded-l-full" style={{ width: `${assetPct}%`, backgroundColor: '#3b82f6' }} />
+          <div className="h-full rounded-r-full" style={{ width: `${levPct}%`, backgroundColor: '#a855f7' }} />
+        </div>
+        <div className="flex justify-center mt-1.5">
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isBalanced ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            {isBalanced ? fa.accounting.trialBalance.isBalanced : fa.accounting.trialBalance.isNotBalanced}
+          </span>
+        </div>
       </div>
 
       <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
