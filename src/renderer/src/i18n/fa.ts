@@ -1,5 +1,5 @@
 export const fa = {
-  app: { title: 'صندوق فروشگاه', loading: 'در حال بارگذاری...' },
+  app: { title: 'حسابداری', loading: 'در حال بارگذاری...' },
   auth: {
     enterPin: 'رمز عبور را وارد کنید',
     selectUser: 'کاربر مورد نظر را انتخاب کنید',

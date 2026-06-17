@@ -3,6 +3,7 @@ import { fa } from '../i18n'
 import { formatJalaliDateTime, gregorianToJalali } from '../utils/jalali'
 import { generateReceiptHTML, printContent } from '../utils/receipt'
 import ShamsiDateInput from '../components/ShamsiDateInput'
+import Pagination from '../components/Pagination'
 
 export default function Dashboard() {
   const [sales, setSales] = useState<any[]>([])
@@ -12,6 +13,8 @@ export default function Dashboard() {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [selectedSale, setSelectedSale] = useState<any>(null)
+  const [salesPage, setSalesPage] = useState(0)
+  const [salesPageSize, setSalesPageSize] = useState(10)
 
   const isDark = document.documentElement.classList.contains('dark')
   const cardBg = isDark ? '#1e293b' : '#ffffff'
@@ -58,6 +61,7 @@ export default function Dashboard() {
   const cashTotal = sales.filter((s: any) => s.paymentMethod === 'cash').reduce((a: number, s: any) => a + s.total_amount, 0)
   const cardTotal = sales.filter((s: any) => s.paymentMethod === 'card').reduce((a: number, s: any) => a + s.total_amount, 0)
   const ledgerTotal = sales.filter((s: any) => s.paymentMethod === 'ledger').reduce((a: number, s: any) => a + s.total_amount, 0)
+  const pagedSales = sales.slice(salesPage * salesPageSize, (salesPage + 1) * salesPageSize)
 
   const getShamsiToday = () => {
     const d = new Date()
@@ -166,7 +170,7 @@ export default function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {sales.map((s) => (
+            {pagedSales.map((s) => (
               <tr key={s.id} className="cursor-pointer transition-all" style={{ borderBottom: `1px solid ${cardBorder}` }}
                 onClick={() => setSelectedSale(s)}
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.03)')}
@@ -186,12 +190,15 @@ export default function Dashboard() {
                 <td className="px-4 py-2 text-xs" style={{ color: textSecondary }}>{formatJalaliDateTime(s.createdAt)}</td>
               </tr>
             ))}
-            {sales.length === 0 && (
+            {pagedSales.length === 0 && (
               <tr><td colSpan={6} className="text-center py-8" style={{ color: textSecondary }}>{fa.dashboard.noData}</td></tr>
             )}
           </tbody>
         </table>
       </div>
+
+      <Pagination total={sales.length} pageSize={salesPageSize} page={salesPage}
+        onPageChange={setSalesPage} onPageSizeChange={(s) => { setSalesPageSize(s); setSalesPage(0) }} />
 
       {selectedSale && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setSelectedSale(null)}>
