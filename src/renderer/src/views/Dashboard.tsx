@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [performance, setPerformance] = useState<any[]>([])
   const [topProducts, setTopProducts] = useState<any[]>([])
   const [totalExpenses, setTotalExpenses] = useState(0)
+  const [returnStats, setReturnStats] = useState({ totalReturns: 0, totalRefund: 0, todayReturns: 0 })
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [selectedSale, setSelectedSale] = useState<any>(null)
@@ -40,11 +41,12 @@ export default function Dashboard() {
       e = '2099-12-31T23:59:59'
     }
 
-    const [sl, perf, tp, exp] = await Promise.all([
+    const [sl, perf, tp, exp, ret] = await Promise.all([
       window.api.sales.getByDateRange(s, e),
       window.api.sales.getUserPerformance(startDate || undefined, endDate ? endDate + 'T23:59:59' : undefined),
       window.api.sales.getTopProducts(startDate || undefined, endDate ? endDate + 'T23:59:59' : undefined),
       window.api.expenses.getTotal(),
+      window.api.returns.getStats(),
     ])
 
     if (sl.success && sl.data) {
@@ -53,6 +55,7 @@ export default function Dashboard() {
     if (perf.success && perf.data) setPerformance(perf.data)
     if (tp.success && tp.data) setTopProducts(tp.data)
     if (exp.success && exp.data !== undefined) setTotalExpenses(exp.data)
+    if (ret.success && ret.data) setReturnStats(ret.data)
   }
 
   useEffect(() => { loadData() }, [startDate, endDate])
@@ -77,6 +80,7 @@ export default function Dashboard() {
     { label: fa.dashboard.card, value: `${cardTotal.toLocaleString('fa-IR')}`, color: '#3b82f6', bg: isDark ? '#0c1e3a' : '#dbeafe' },
     { label: fa.dashboard.ledger, value: `${ledgerTotal.toLocaleString('fa-IR')}`, color: '#a855f7', bg: isDark ? '#2e1065' : '#f3e8ff' },
     { label: fa.dashboard.expenses, value: `${totalExpenses.toLocaleString('fa-IR')}`, color: '#ef4444', bg: isDark ? '#450a0a' : '#fee2e2' },
+    { label: 'مرجوعی', value: `${returnStats.totalReturns}`, color: '#f59e0b', bg: isDark ? '#451a03' : '#fef3c7' },
   ]
 
   return (
@@ -95,7 +99,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-6 gap-3 mb-6">
+      <div className="grid grid-cols-7 gap-3 mb-6">
         {stats.map((s, i) => (
           <div key={i} className="rounded-2xl p-4 text-center border" style={{ backgroundColor: s.bg, borderColor: cardBorder }}>
             <div className="text-xs font-medium mb-1" style={{ color: textSecondary }}>{s.label}</div>

@@ -15,6 +15,9 @@ export default function Inventory() {
   const [restockQty, setRestockQty] = useState('')
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(10)
+  const [tab, setTab] = useState<'products' | 'audit'>('products')
+  const [auditLog, setAuditLog] = useState<any[]>([])
+  const [returnStats, setReturnStats] = useState({ totalReturns: 0, totalRefund: 0, todayReturns: 0 })
   const [categories, setCategories] = useState<string[]>([])
 
   const isDark = document.documentElement.classList.contains('dark')
@@ -38,7 +41,17 @@ export default function Inventory() {
     if (r.success && r.data) setLowStock(r.data)
   }
 
-  useEffect(() => { loadProducts(); loadLowStock() }, [search])
+  const loadAudit = async () => {
+    const r = await window.api.audit.getAll()
+    if (r.success && r.data) setAuditLog(r.data)
+  }
+
+  const loadReturnStats = async () => {
+    const r = await window.api.returns.getStats()
+    if (r.success && r.data) setReturnStats(r.data)
+  }
+
+  useEffect(() => { loadProducts(); loadLowStock(); loadAudit(); loadReturnStats() }, [search])
 
   const handleRestock = async () => {
     if (!selectedProduct || !restockQty) return
@@ -99,27 +112,57 @@ export default function Inventory() {
     <div className="h-full p-4 overflow-auto">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold" style={{ color: textPrimary }}>{fa.nav.inventory}</h2>
-        <button onClick={handlePrintReport} className="btn-primary text-sm flex items-center gap-1">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-          چاپ گزارش
-        </button>
+        <div className="flex gap-2">
+          <button onClick={handlePrintReport} className="btn-primary text-sm flex items-center gap-1">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            چاپ گزارش
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-3 mb-4">
-        {[
-          { label: fa.admin.products, value: filteredProducts.length, color: textPrimary, bg: cardBg },
-          { label: fa.admin.outOfStock, value: filteredProducts.filter(p => p.stock <= 0).length, color: '#ef4444', bg: isDark ? '#450a0a' : '#fee2e2' },
-          { label: 'ارزش خرید', value: `${totalStockValue.toLocaleString('fa-IR')}`, color: '#f59e0b', bg: isDark ? '#451a03' : '#fef3c7' },
-          { label: 'سود بالقوه', value: `${totalProfit.toLocaleString('fa-IR')}`, color: '#22c55e', bg: isDark ? '#052e16' : '#dcfce7' },
-        ].map((s, i) => (
-          <div key={i} className="rounded-xl p-3 text-center border" style={{ backgroundColor: s.bg, borderColor: cardBorder }}>
-            <div className="text-xs font-medium" style={{ color: textSecondary }}>{s.label}</div>
-            <div className="text-xl font-bold mt-1" style={{ color: s.color }}>{s.value}</div>
+      <div className="flex gap-2 mb-4">
+        <button onClick={() => setTab('products')} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${tab === 'products' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-800 text-gray-400'}`}>انبار</button>
+        <button onClick={() => setTab('audit')} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${tab === 'audit' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-800 text-gray-400'}`}>تاریخچه تغییرات</button>
+      </div>
+
+      {tab === 'audit' && (
+        <div className="rounded-2xl border overflow-hidden mb-4" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+          <div className="px-4 py-3 font-bold" style={{ borderBottom: `2px solid ${cardBorder}`, color: textPrimary }}>تاریخچه تغییرات انبار ({auditLog.length})</div>
+          <div className="max-h-96 overflow-y-auto">
+            {auditLog.map((entry: any) => (
+              <div key={entry.id} className="flex items-center justify-between px-4 py-2" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                <div className="flex items-center gap-3">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.action === 'delete' ? '#ef4444' : entry.action === 'restock' ? '#22c55e' : '#3b82f6' }} />
+                  <span className="text-sm font-medium" style={{ color: textPrimary }}>{entry.action}</span>
+                  <span className="text-xs" style={{ color: textSecondary }}>{entry.entityType}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs" style={{ color: textSecondary }}>{entry.userName || '-'}</span>
+                  <span className="text-xs" style={{ color: textSecondary }}>{entry.createdAt}</span>
+                </div>
+              </div>
+            ))}
+            {auditLog.length === 0 && <p className="text-center py-8 text-sm" style={{ color: textSecondary }}>هیچ تغییری ثبت نشده</p>}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div className="flex gap-4 mb-4">
+      {tab === 'products' && (<>
+        <div className="grid grid-cols-4 gap-3 mb-4">
+          {[
+            { label: fa.admin.products, value: filteredProducts.length, color: textPrimary, bg: cardBg },
+            { label: fa.admin.outOfStock, value: filteredProducts.filter(p => p.stock <= 0).length, color: '#ef4444', bg: isDark ? '#450a0a' : '#fee2e2' },
+            { label: 'ارزش خرید', value: `${totalStockValue.toLocaleString('fa-IR')}`, color: '#f59e0b', bg: isDark ? '#451a03' : '#fef3c7' },
+            { label: 'سود بالقوه', value: `${totalProfit.toLocaleString('fa-IR')}`, color: '#22c55e', bg: isDark ? '#052e16' : '#dcfce7' },
+          ].map((s, i) => (
+            <div key={i} className="rounded-xl p-3 text-center border" style={{ backgroundColor: s.bg, borderColor: cardBorder }}>
+              <div className="text-xs font-medium" style={{ color: textSecondary }}>{s.label}</div>
+              <div className="text-xl font-bold mt-1" style={{ color: s.color }}>{s.value}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-4 mb-4">
           {outOfStock.length > 0 && (
             <div className="flex-1 rounded-2xl p-4 border-2" style={{ backgroundColor: isDark ? '#450a0a' : '#fee2e2', borderColor: '#ef4444' }}>
               <h3 className="font-bold mb-2 flex items-center gap-2" style={{ color: '#ef4444' }}>
@@ -155,83 +198,97 @@ export default function Inventory() {
           )}
         </div>
 
-      {selectedProduct && (
-        <div className="rounded-2xl p-4 mb-4 border-2" style={{ backgroundColor: cardBg, borderColor: '#3b82f6' }}>
-          <h3 className="font-bold mb-3" style={{ color: textPrimary }}> تامین موجودی :  {selectedProduct.title}</h3>
-          <div className="flex gap-3 items-end">
-            <div>
-              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>موجودی فعلی: {selectedProduct.stock}</label>
-              <input type="number" value={restockQty} onChange={(e) => setRestockQty(e.target.value)} className="input-field text-sm" placeholder="تعداد" />
+        {selectedProduct && (
+          <div className="rounded-2xl p-4 mb-4 border-2" style={{ backgroundColor: cardBg, borderColor: '#3b82f6' }}>
+            <h3 className="font-bold mb-3" style={{ color: textPrimary }}> تامین موجودی :  {selectedProduct.title}</h3>
+            <div className="flex gap-3 items-end">
+              <div>
+                <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>موجودی فعلی: {selectedProduct.stock}</label>
+                <input type="number" value={restockQty} onChange={(e) => setRestockQty(e.target.value)} className="input-field text-sm" placeholder="تعداد" />
+              </div>
+              <button onClick={handleRestock} disabled={!restockQty || parseInt(restockQty) <= 0} className="btn-success disabled:opacity-40">+ افزودن</button>
+              <button onClick={() => setSelectedProduct(null)} className="text-sm px-3 py-2 rounded-xl font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: btnColor }}>{fa.admin.cancel}</button>
             </div>
-            <button onClick={handleRestock} disabled={!restockQty || parseInt(restockQty) <= 0} className="btn-success disabled:opacity-40">+ افزودن</button>
-            <button onClick={() => setSelectedProduct(null)} className="text-sm px-3 py-2 rounded-xl font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: btnColor }}>{fa.admin.cancel}</button>
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-3 mb-4">
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={fa.admin.search} className="input-field flex-1 min-w-[200px]" />
+          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="input-field w-40 text-sm">
+            <option value="all">همه دسته‌ها</option>
+            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={filterStock} onChange={(e) => setFilterStock(e.target.value)} className="input-field w-40 text-sm">
+            <option value="all">همه موجودی</option>
+            <option value="in">موجود</option>
+            <option value="low">کم‌موجودی</option>
+            <option value="out">تمام شده</option>
+          </select>
+        </div>
+
+        <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>ID</th>
+                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.barcode}</th>
+                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.title}</th>
+                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.category}</th>
+                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.stock}</th>
+                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.purchasePrice}</th>
+                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.salePrice}</th>
+                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>ارزش</th>
+                <th className="px-4 py-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {pagedProducts.map((p) => {
+                const isZero = p.stock <= 0
+                const isLow = p.stock > 0 && p.stock <= p.minStock
+                const rowBg = isZero ? (isDark ? 'rgba(239,68,68,0.08)' : 'rgba(239,68,68,0.05)') : isLow ? (isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.05)') : 'transparent'
+                return (
+                <tr key={p.id} style={{ borderBottom: `1px solid ${cardBorder}`, backgroundColor: rowBg }}
+                  onMouseEnter={(e) => { if (!isZero && !isLow) e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.03)' }}
+                  onMouseLeave={(e) => { if (!isZero && !isLow) e.currentTarget.style.backgroundColor = 'transparent' }}>
+                  <td className="px-4 py-2" style={{ color: textSecondary }}>{p.id}</td>
+                  <td className="px-4 py-2 font-mono text-xs" style={{ color: textPrimary }}>{p.barcode || '-'}</td>
+                  <td className="px-4 py-2 font-medium" style={{ color: textPrimary }}>{p.title}</td>
+                  <td className="px-4 py-2" style={{ color: textSecondary }}>{p.category || '-'}</td>
+                  <td className="px-4 py-2">
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{
+                      backgroundColor: p.stock <= 0 ? '#fecaca' : p.stock <= p.minStock ? '#fef3c7' : '#dcfce7',
+                      color: p.stock <= 0 ? '#991b1b' : p.stock <= p.minStock ? '#92400e' : '#166534',
+                    }}>{p.stock}</span>
+                  </td>
+                  <td className="px-4 py-2" style={{ color: textPrimary }}>{p.purchase_price.toLocaleString('fa-IR')}</td>
+                  <td className="px-4 py-2" style={{ color: textPrimary }}>{(p.stock * p.purchase_price).toLocaleString('fa-IR')}</td>
+                  <td className="px-4 py-2">
+                    <button onClick={() => { setSelectedProduct(p); setRestockQty('') }} className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: '#22c55e' }}>+ تامین مجدد</button>
+                  </td>
+                </tr>
+                )
+              })}
+              {pagedProducts.length === 0 && <tr><td colSpan={9} className="text-center py-8" style={{ color: textSecondary }}>{fa.admin.noProducts}</td></tr>}
+            </tbody>
+          </table>
+        </div>
+
+        <Pagination total={filteredProducts.length} pageSize={pageSize} page={page}
+          onPageChange={setPage} onPageSizeChange={(s) => { setPageSize(s); setPage(0) }} />
+      </>)}
+
+      {tab === 'audit' && (
+        <div className="rounded-2xl border overflow-hidden mt-4" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+          <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: `2px solid ${cardBorder}` }}>
+            <span className="font-bold" style={{ color: textPrimary }}>آمار مرجوعی</span>
+            <div className="flex gap-4 text-sm">
+              <span style={{ color: textSecondary }}>کل مرجوعی: <b style={{ color: textPrimary }}>{returnStats.totalReturns}</b></span>
+              <span style={{ color: textSecondary }}>مبلغ بازگشت: <b style={{ color: '#ef4444' }}>{returnStats.totalRefund.toLocaleString('fa-IR')} تومان</b></span>
+              <span style={{ color: textSecondary }}>امروز: <b style={{ color: '#f59e0b' }}>{returnStats.todayReturns}</b></span>
+            </div>
           </div>
         </div>
       )}
-
-      <div className="flex flex-wrap gap-3 mb-4">
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={fa.admin.search} className="input-field flex-1 min-w-[200px]" />
-        <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="input-field w-40 text-sm">
-          <option value="all">همه دسته‌ها</option>
-          {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <select value={filterStock} onChange={(e) => setFilterStock(e.target.value)} className="input-field w-40 text-sm">
-          <option value="all">همه موجودی</option>
-          <option value="in">موجود</option>
-          <option value="low">کم‌موجودی</option>
-          <option value="out">تمام شده</option>
-        </select>
-      </div>
-
-      <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-        <table className="w-full text-sm">
-          <thead>
-            <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>ID</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.barcode}</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.title}</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.category}</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.stock}</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.purchasePrice}</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.salePrice}</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>ارزش</th>
-              <th className="px-4 py-2"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {pagedProducts.map((p) => {
-              const isZero = p.stock <= 0
-              const isLow = p.stock > 0 && p.stock <= p.minStock
-              const rowBg = isZero ? (isDark ? 'rgba(239,68,68,0.08)' : 'rgba(239,68,68,0.05)') : isLow ? (isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.05)') : 'transparent'
-              return (
-              <tr key={p.id} style={{ borderBottom: `1px solid ${cardBorder}`, backgroundColor: rowBg }}
-                onMouseEnter={(e) => { if (!isZero && !isLow) e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.03)' }}
-                onMouseLeave={(e) => { if (!isZero && !isLow) e.currentTarget.style.backgroundColor = 'transparent' }}>
-                <td className="px-4 py-2" style={{ color: textSecondary }}>{p.id}</td>
-                <td className="px-4 py-2 font-mono text-xs" style={{ color: textPrimary }}>{p.barcode || '-'}</td>
-                <td className="px-4 py-2 font-medium" style={{ color: textPrimary }}>{p.title}</td>
-                <td className="px-4 py-2" style={{ color: textSecondary }}>{p.category || '-'}</td>
-                <td className="px-4 py-2">
-                  <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{
-                    backgroundColor: p.stock <= 0 ? '#fecaca' : p.stock <= p.minStock ? '#fef3c7' : '#dcfce7',
-                    color: p.stock <= 0 ? '#991b1b' : p.stock <= p.minStock ? '#92400e' : '#166534',
-                  }}>{p.stock}</span>
-                </td>
-                <td className="px-4 py-2" style={{ color: textPrimary }}>{p.purchase_price.toLocaleString('fa-IR')}</td>
-                <td className="px-4 py-2" style={{ color: textPrimary }}>{(p.stock * p.purchase_price).toLocaleString('fa-IR')}</td>
-                <td className="px-4 py-2">
-                  <button onClick={() => { setSelectedProduct(p); setRestockQty('') }} className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: '#22c55e' }}>+ تامین مجدد</button>
-                </td>
-              </tr>
-              )
-            })}
-            {pagedProducts.length === 0 && <tr><td colSpan={9} className="text-center py-8" style={{ color: textSecondary }}>{fa.admin.noProducts}</td></tr>}
-          </tbody>
-        </table>
-      </div>
-
-      <Pagination total={filteredProducts.length} pageSize={pageSize} page={page}
-        onPageChange={setPage} onPageSizeChange={(s) => { setPageSize(s); setPage(0) }} />
     </div>
   )
 }

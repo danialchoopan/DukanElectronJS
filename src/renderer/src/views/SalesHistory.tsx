@@ -16,6 +16,9 @@ export default function SalesHistory() {
   const [returnedIds, setReturnedIds] = useState<Set<number>>(new Set())
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(10)
+  const [returnItem, setReturnItem] = useState<{ sale: Sale; item: any } | null>(null)
+  const [returnQty, setReturnQty] = useState('')
+  const [returnReason, setReturnReason] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
   const isDark = document.documentElement.classList.contains('dark')
 
@@ -29,7 +32,16 @@ export default function SalesHistory() {
     if (r.success && r.data) setSales(r.data)
   }
 
-  useEffect(() => { loadData() }, [startDate, endDate])
+  useEffect(() => { loadData(); loadReturns() }, [startDate, endDate])
+
+  const loadReturns = async () => {
+    const r = await window.api.returns.list()
+    if (r.success && r.data) {
+      const ids = new Set<number>()
+      r.data.forEach((ret: any) => ids.add(ret.saleId))
+      setReturnedIds(ids)
+    }
+  }
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'F2') { e.preventDefault(); searchRef.current?.focus() } }
@@ -37,7 +49,28 @@ export default function SalesHistory() {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
-  const handleReturn = (sale: Sale) => { setReturnedIds((prev) => new Set(prev).add(sale.id)); setSelectedSale(null) }
+  const handleReturnItem = async () => {
+    if (!returnItem || !returnQty || !returnReason) return
+    const qty = parseInt(returnQty)
+    if (qty <= 0 || qty > returnItem.item.quantity) return
+    const refundAmount = returnItem.item.unitPrice * qty
+    const r = await window.api.returns.create({
+      saleId: returnItem.sale.id,
+      userId: 1,
+      productId: returnItem.item.productId,
+      quantity: qty,
+      reason: returnReason,
+      refundAmount,
+    })
+    if (r.success) {
+      setReturnItem(null)
+      setReturnQty('')
+      setReturnReason('')
+      setSelectedSale(null)
+      loadData()
+      loadReturns()
+    }
+  }
 
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
@@ -199,6 +232,7 @@ export default function SalesHistory() {
                     <th className="text-center px-3 py-2" style={{ color: textSecondary }}>تعداد</th>
                     <th className="text-right px-3 py-2" style={{ color: textSecondary }}>قیمت واحد</th>
                     <th className="text-right px-3 py-2" style={{ color: textSecondary }}>جمع</th>
+                    {!returnedIds.has(selectedSale.id) && <th className="px-3 py-2"></th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -208,6 +242,12 @@ export default function SalesHistory() {
                       <td className="px-3 py-2 text-center" style={{ color: textPrimary }}>{item.quantity}</td>
                       <td className="px-3 py-2 text-right" style={{ color: textPrimary }}>{item.unitPrice.toLocaleString('fa-IR')}</td>
                       <td className="px-3 py-2 text-right font-bold" style={{ color: textPrimary }}>{item.subtotal.toLocaleString('fa-IR')}</td>
+                      {!returnedIds.has(selectedSale.id) && (
+                        <td className="px-3 py-2 text-center">
+                          <button onClick={() => { setReturnItem({ sale: selectedSale, item }); setReturnQty(String(item.quantity)); setReturnReason('') }}
+                            className="text-[10px] font-bold px-2 py-1 rounded-lg" style={{ backgroundColor: isDark ? '#451a03' : '#fef3c7', color: '#92400e' }}>مرجوع</button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -221,10 +261,40 @@ export default function SalesHistory() {
 
             <div className="flex gap-2">
               <button onClick={() => { window.print() }} className="btn btn-primary flex-1 py-2.5">چاپ فاکتور</button>
-              {!returnedIds.has(selectedSale.id) && (
-                <button onClick={() => handleReturn(selectedSale)} className="btn btn-danger flex-1 py-2.5">بازگشت</button>
-              )}
               <button onClick={() => setSelectedSale(null)} className="btn btn-gray flex-1 py-2.5">{fa.common.close}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {returnItem && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setReturnItem(null)}>
+          <div className="rounded-2xl p-6 max-w-md w-full mx-4 border-2" style={{ backgroundColor: cardBg, borderColor: '#ef4444' }} onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-bold text-lg mb-4" style={{ color: '#ef4444' }}>مرجوع کالا</h3>
+            <div className="rounded-xl p-3 mb-4" style={{ backgroundColor: isDark ? '#451a03' : '#fef3c7' }}>
+              <div className="text-sm font-bold" style={{ color: textPrimary }}>{returnItem.item.productTitle}</div>
+              <div className="text-xs mt-1" style={{ color: textSecondary }}>تعداد خریداری شده: {returnItem.item.quantity} — قیمت واحد: {returnItem.item.unitPrice.toLocaleString('fa-IR')}</div>
+            </div>
+            <div className="space-y-3 mb-4">
+              <div>
+                <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>تعداد مرجوع</label>
+                <input type="number" min="1" max={returnItem.item.quantity} value={returnQty} onChange={(e) => setReturnQty(e.target.value)} className="input-field text-sm" />
+              </div>
+              <div>
+                <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>دلیل مرجوعی</label>
+                <input type="text" value={returnReason} onChange={(e) => setReturnReason(e.target.value)} className="input-field text-sm" placeholder="مثال: کالای معیوب" />
+              </div>
+              {returnQty && parseInt(returnQty) > 0 && (
+                <div className="rounded-xl p-3" style={{ backgroundColor: isDark ? '#450a0a' : '#fee2e2' }}>
+                  <div className="text-xs" style={{ color: textSecondary }}>مبلغ بازگشتی</div>
+                  <div className="text-lg font-bold" style={{ color: '#ef4444' }}>{(returnItem.item.unitPrice * parseInt(returnQty)).toLocaleString('fa-IR')} تومان</div>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={handleReturnItem} disabled={!returnQty || !returnReason || parseInt(returnQty) <= 0 || parseInt(returnQty) > returnItem.item.quantity}
+                className="btn btn-danger flex-1 py-2.5 disabled:opacity-40">تایید مرجوعی</button>
+              <button onClick={() => setReturnItem(null)} className="btn btn-gray flex-1 py-2.5">{fa.common.close}</button>
             </div>
           </div>
         </div>
