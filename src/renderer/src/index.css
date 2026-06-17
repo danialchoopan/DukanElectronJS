@@ -32,16 +32,21 @@
 @tailwind utilities;
 
 @layer base {
-  * {
+  body {
+    font-family: 'Vazirmatn', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .no-select {
     -webkit-user-select: none;
     user-select: none;
-    font-family: 'Vazirmatn', 'Segoe UI', system-ui, sans-serif;
   }
 
   input, textarea, select {
     -webkit-user-select: text;
     user-select: text;
     font-family: 'Vazirmatn', 'Segoe UI', system-ui, sans-serif;
+    pointer-events: auto;
+    cursor: text;
   }
 
   :focus {

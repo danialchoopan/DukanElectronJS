@@ -31,7 +31,7 @@ export default function TitleBar({ currentView, onNavigate }: Props) {
   ]
 
   return (
-    <div className="drag flex items-center justify-between px-4 h-12 select-none" style={{ backgroundColor: navBg, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` }}>
+    <div className="drag flex items-center justify-between px-4 h-12 no-select" style={{ backgroundColor: navBg, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` }}>
       <div className="flex items-center gap-1 no-drag">
         {navItems.map((item) => {
           if (item.adminOnly && user?.role !== 'admin') return null
