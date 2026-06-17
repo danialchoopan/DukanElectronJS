@@ -41,6 +41,7 @@ export interface CartItem {
   unitPrice: number
   purchasePrice: number
   quantity: number
+  maxStock: number
 }
 
 export interface SaleItem {

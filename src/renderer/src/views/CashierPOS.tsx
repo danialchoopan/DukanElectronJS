@@ -18,7 +18,7 @@ import { fa } from "../i18n"
 
 export default function CashierPOS() {
   const user = useAuthStore((s) => s.user)
-  const { items, addItem, clearCart, getSubtotal } = useCartStore()
+  const { items, addItem, clearCart, getSubtotal, lastError, clearError } = useCartStore()
   const slots = useSuspendStore((s) => s.slots)
   const setSlot = useSuspendStore((s) => s.setSlot)
   const clearSlot = useSuspendStore((s) => s.clearSlot)
@@ -46,17 +46,19 @@ export default function CashierPOS() {
     if (result.success && result.data) {
       const product = result.data
       if (product.stock <= 0) { showNotif(`${fa.admin.outOfStock}: ${product.title}`); return }
-      addItem({ productId: product.id, title: product.title, unitPrice: product.sale_price, purchasePrice: product.purchase_price })
+      const ok = addItem({ productId: product.id, title: product.title, unitPrice: product.sale_price, purchasePrice: product.purchase_price, maxStock: product.stock })
+      if (!ok) { showNotif(lastError); clearError(); return }
       showNotif(`${product.title} — ${product.sale_price.toLocaleString('fa-IR')} ${fa.common.toman}`)
     } else { showNotif(`${barcode} — ${fa.common.noData}`) }
     setShowWebcam(false)
-  }, [addItem, showNotif])
+  }, [addItem, showNotif, lastError, clearError])
 
   const handleProductSelect = useCallback((product: Product) => {
     if (product.stock <= 0) { showNotif(`${fa.admin.outOfStock}: ${product.title}`); return }
-    addItem({ productId: product.id, title: product.title, unitPrice: product.sale_price, purchasePrice: product.purchase_price })
+    const ok = addItem({ productId: product.id, title: product.title, unitPrice: product.sale_price, purchasePrice: product.purchase_price, maxStock: product.stock })
+    if (!ok) { showNotif(lastError); clearError(); return }
     showNotif(`${product.title} — ${product.sale_price.toLocaleString('fa-IR')} ${fa.common.toman}`)
-  }, [addItem, showNotif])
+  }, [addItem, showNotif, lastError, clearError])
 
   const [pendingPayment, setPendingPayment] = useState<{ method: 'cash' | 'card' | 'ledger'; customerPaid?: number } | null>(null)
 
@@ -211,8 +213,9 @@ export default function CashierPOS() {
 
         <LooseItemsGrid />
         <PopularItems onProductAdd={(p) => {
-          addItem({ productId: p.id, title: p.title, unitPrice: p.sale_price, purchasePrice: p.purchase_price })
-          showNotif(`${p.title} — ${p.sale_price.toLocaleString('fa-IR')} ${fa.common.toman}`)
+          const ok = addItem({ productId: p.id, title: p.title, unitPrice: p.sale_price, purchasePrice: p.purchase_price, maxStock: p.stock })
+          if (ok) showNotif(`${p.title} — ${p.sale_price.toLocaleString('fa-IR')} ${fa.common.toman}`)
+          else { showNotif(lastError); clearError() }
         }} />
         <CartTable items={items} />
 
