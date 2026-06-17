@@ -42,7 +42,14 @@ export function registerAllHandlers(): void {
   handleArg<{ id: number }, ReturnType<typeof products.getProductById>>('products:getById', (a) => products.getProductById(a.id))
   handleArg<{ barcode: string }, ReturnType<typeof products.getProductByBarcode>>('products:getByBarcode', (a) => products.getProductByBarcode(a.barcode))
   handleArg<{ query: string }, ReturnType<typeof products.searchProducts>>('products:search', (a) => products.searchProducts(a.query))
-  handleArg<ProductInput, ReturnType<typeof products.createProduct>>('products:create', (a) => products.createProduct(a))
+  handleArg<ProductInput, ReturnType<typeof products.createProduct>>('products:create', (a) => {
+    if (!a.barcode || a.barcode.trim() === '') {
+      const db = require('../database/connection').getDatabase()
+      const row = db.prepare("SELECT COUNT(*) as c FROM products").get() as { c: number }
+      a.barcode = `PRD-${String(row.c + 1).padStart(6, '0')}`
+    }
+    return products.createProduct(a)
+  })
   handleArg<{ id: number; data: Partial<ProductInput> }, ReturnType<typeof products.updateProduct>>('products:update', (a) => products.updateProduct(a.id, a.data))
   handleArg<{ id: number }, boolean>('products:delete', (a) => products.deleteProduct(a.id))
   handleArg<{ productId: number; quantityChange: number }, boolean>('products:updateStock', (a) => products.updateStock(a.productId, a.quantityChange))

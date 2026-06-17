@@ -107,8 +107,8 @@ export default function AddProduct() {
           </div>
           <div className="grid grid-cols-4 gap-3">
             <div>
-              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.barcode} <span className="text-xs opacity-50">(اختیاری)</span></label>
-              <input value={form.barcode} onChange={(e) => setForm((f) => ({ ...f, barcode: e.target.value }))} className="input-field text-sm font-mono" placeholder="اختیاری" />
+              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.barcode} <span className="text-xs opacity-50">(اختیاری - خودکار تولید می‌شود)</span></label>
+              <input value={form.barcode} onChange={(e) => setForm((f) => ({ ...f, barcode: e.target.value }))} className="input-field text-sm font-mono" placeholder="خالی = خودکار" />
             </div>
             <div className="col-span-2">
               <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.title} *</label>
