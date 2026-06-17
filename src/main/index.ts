@@ -3,6 +3,7 @@ import { join } from 'path'
 import { registerAllHandlers } from './ipc/handlers'
 import { getDatabase, closeDatabase } from './database/connection'
 import { seedDatabase } from './database/seed'
+import { readFileSync } from 'fs'
 import { appendFileSync } from 'fs'
 
 let mainWindow: BrowserWindow | null = null
@@ -127,7 +128,7 @@ function buildMenu(): void {
         { label: 'Dev Tools', accelerator: 'F12', role: 'toggleDevTools' },
         { type: 'separator' },
         { label: 'View Error Log', click: () => {
-          try { const log = require('fs').readFileSync(getLogPath(), 'utf-8'); dialog.showMessageBox(mainWindow!, { type: 'info', title: 'Error Log', message: log || 'No errors logged.' }) }
+          try { const log = readFileSync(getLogPath(), 'utf-8'); dialog.showMessageBox(mainWindow!, { type: 'info', title: 'Error Log', message: log || 'No errors logged.' }) }
           catch { dialog.showMessageBox(mainWindow!, { type: 'info', title: 'Error Log', message: 'No errors logged.' }) }
         }},
       ],
