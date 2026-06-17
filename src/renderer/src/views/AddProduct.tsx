@@ -91,9 +91,11 @@ export default function AddProduct() {
     }
   }
 
-  const handleDelete = async () => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  const handleDeleteConfirm = async () => {
     if (!editProduct) return
-    if (!confirm(`آیا از حذف "${editProduct.title}" اطمینان دارید؟\n\nاطلاعات حسابداری حفظ می‌شود ولی کالا از لیست موجودی حذف می‌شود.`)) return
+    setShowDeleteConfirm(false)
     const r = await window.api.products.delete(editProduct.id)
     if (r.success) {
       showNotif(`${editProduct.title} — ${fa.admin.deleted}`)
@@ -114,6 +116,24 @@ export default function AddProduct() {
       )}
       {showWebcam && <WebcamScanner onScan={handleBarcodeScanned} onClose={() => setShowWebcam(false)} />}
 
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+          <div className="card p-6 max-w-sm w-full text-center">
+            <h3 className="text-lg font-bold mb-2" style={{ color: textPrimary }}>{fa.admin.delete}؟</h3>
+            <p className="text-sm mb-4" style={{ color: textSecondary }}>
+              آیا از حذف "{editProduct?.title}" اطمینان دارید؟
+            </p>
+            <p className="text-xs mb-4" style={{ color: '#f59e0b' }}>
+              اطلاعات حسابداری حفظ می‌شود ولی کالا از لیست موجودی حذف می‌شود.
+            </p>
+            <div className="flex gap-2">
+              <button onClick={handleDeleteConfirm} className="btn btn-danger flex-1">حذف</button>
+              <button onClick={() => setShowDeleteConfirm(false)} className="btn btn-primary flex-1">{fa.admin.cancel}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold" style={{ color: textPrimary }}>{fa.admin.addProduct}</h2>
         <button onClick={() => { setEditProduct(null); setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '' }); setShowForm(true) }} className="btn btn-primary text-sm">+ {fa.admin.addProduct}</button>
@@ -126,7 +146,7 @@ export default function AddProduct() {
 
       {/* Product Form */}
       {showForm && (
-        <div className="rounded-2xl p-5 mb-4 border-2" style={{ backgroundColor: cardBg, borderColor: '#3b82f6' }}>
+        <div key={editProduct ? `edit-${editProduct.id}` : 'new'} className="rounded-2xl p-5 mb-4 border-2" style={{ backgroundColor: cardBg, borderColor: '#3b82f6' }}>
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold" style={{ color: textPrimary }}>{editProduct ? fa.admin.edit : fa.admin.addProduct}</h3>
             <button onClick={() => { setShowForm(false); setEditProduct(null) }} className="text-xl" style={{ color: textSecondary }}>&times;</button>
@@ -138,7 +158,7 @@ export default function AddProduct() {
             </div>
             <div className="col-span-2">
               <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.title} *</label>
-              <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="input-field text-sm" />
+              <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="input-field text-sm" autoFocus />
             </div>
             <div>
               <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.category} *</label>
@@ -206,7 +226,7 @@ export default function AddProduct() {
             <button onClick={handleSubmit} disabled={!form.title || !form.category} className="btn btn-success disabled:opacity-40">{editProduct ? fa.admin.save : fa.admin.create}</button>
             <button onClick={() => { setShowForm(false); setEditProduct(null) }} className="btn btn-danger">{fa.admin.cancel}</button>
             {editProduct && (
-              <button onClick={handleDelete} className="btn btn-danger ml-auto opacity-70 hover:opacity-100">{fa.admin.delete}</button>
+              <button onClick={() => setShowDeleteConfirm(true)} className="btn btn-danger ml-auto opacity-70 hover:opacity-100">{fa.admin.delete}</button>
             )}
           </div>
         </div>
