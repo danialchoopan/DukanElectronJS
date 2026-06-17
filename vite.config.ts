@@ -5,6 +5,7 @@ import electronRenderer from 'vite-plugin-electron-renderer'
 import { resolve } from 'path'
 
 export default defineConfig({
+  publicDir: 'src/renderer/public',
   plugins: [
     react(),
     electron([
