@@ -64,6 +64,7 @@ export default function Inventory() {
   const totalStockValue = filteredProducts.reduce((a, p) => a + (p.stock * p.purchase_price), 0)
   const totalRetailValue = filteredProducts.reduce((a, p) => a + (p.stock * p.sale_price), 0)
   const totalProfit = totalRetailValue - totalStockValue
+  const pagedProducts = filteredProducts.slice(page * pageSize, (page + 1) * pageSize)
 
   const handlePrintReport = () => {
     const now = new Date()
@@ -196,7 +197,7 @@ export default function Inventory() {
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.map((p) => {
+            {pagedProducts.map((p) => {
               const isZero = p.stock <= 0
               const isLow = p.stock > 0 && p.stock <= p.minStock
               const rowBg = isZero ? (isDark ? 'rgba(239,68,68,0.08)' : 'rgba(239,68,68,0.05)') : isLow ? (isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.05)') : 'transparent'
@@ -223,7 +224,7 @@ export default function Inventory() {
               </tr>
               )
             })}
-            {filteredProducts.length === 0 && <tr><td colSpan={9} className="text-center py-8" style={{ color: textSecondary }}>{fa.admin.noProducts}</td></tr>}
+            {pagedProducts.length === 0 && <tr><td colSpan={9} className="text-center py-8" style={{ color: textSecondary }}>{fa.admin.noProducts}</td></tr>}
           </tbody>
         </table>
       </div>

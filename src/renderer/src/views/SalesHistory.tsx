@@ -3,6 +3,7 @@ import type { Sale } from '../../../types'
 import { fa } from '../i18n'
 import { formatJalaliDateTime } from '../utils/jalali'
 import ShamsiDateInput from '../components/ShamsiDateInput'
+import Pagination from '../components/Pagination'
 
 export default function SalesHistory() {
   const [sales, setSales] = useState<Sale[]>([])
@@ -13,6 +14,8 @@ export default function SalesHistory() {
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [returnedIds, setReturnedIds] = useState<Set<number>>(new Set())
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
   const searchRef = useRef<HTMLInputElement>(null)
   const isDark = document.documentElement.classList.contains('dark')
 
@@ -55,6 +58,7 @@ export default function SalesHistory() {
   })
 
   const totalRevenue = filteredSales.filter(s => !returnedIds.has(s.id)).reduce((sum, s) => sum + s.total_amount, 0)
+  const pagedSales = filteredSales.slice(page * pageSize, (page + 1) * pageSize)
 
   return (
     <div className="h-full p-4 overflow-auto">
@@ -122,7 +126,7 @@ export default function SalesHistory() {
             </tr>
           </thead>
           <tbody>
-            {filteredSales.map((s, idx) => {
+            {pagedSales.map((s, idx) => {
               const isReturned = returnedIds.has(s.id)
               return (
                 <tr key={s.id} className="transition-all cursor-pointer" style={{ borderBottom: `1px solid ${cardBorder}`, backgroundColor: isReturned ? 'rgba(245,158,11,0.08)' : 'transparent' }}
@@ -148,10 +152,13 @@ export default function SalesHistory() {
                 </tr>
               )
             })}
-            {filteredSales.length === 0 && <tr><td colSpan={9} className="text-center py-12" style={{ color: textSecondary }}>{fa.dashboard.noData}</td></tr>}
+            {pagedSales.length === 0 && <tr><td colSpan={9} className="text-center py-12" style={{ color: textSecondary }}>{fa.dashboard.noData}</td></tr>}
           </tbody>
         </table>
       </div>
+
+      <Pagination total={filteredSales.length} pageSize={pageSize} page={page}
+        onPageChange={setPage} onPageSizeChange={(s) => { setPageSize(s); setPage(0) }} />
 
       {selectedSale && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setSelectedSale(null)}>
