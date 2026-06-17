@@ -1,0 +1,284 @@
+1. Chart of Accounts & General Ledger
+
+**Current State:** Basic chart with fixed accounts, no flexibility.
+
+**Required Enhancements:**
+- Build a fully customizable Chart of Accounts where users can:
+  - Create, edit, and delete accounts (Assets, Liabilities, Equity, Income, Expenses)
+  - Assign account codes/numbering (flexible numbering system)
+  - Set account types and sub-account hierarchies
+  - Mark accounts as active/inactive
+- Implement Double-Entry Accounting System:
+  - Every transaction must affect at least two accounts (debit/credit)
+  - System must enforce debit = credit before saving
+  - Provide validation for unbalanced entries
+- Fiscal Periods Management:
+  - Allow users to define fiscal year start date (e.g., March 21 for Iranian calendar)
+  - Create monthly, quarterly, and annual periods
+  - Ability to close periods (lock transactions in closed periods)
+  - Ability to reopen periods with admin override
+- Trial Balance Report:
+  - Real-time report showing all account balances
+  - Filter by date range and account type
+  - Export to Excel and PDF
+  - Show debit/credit columns with totals that match
+
+**Priority: CRITICAL (Foundation of the system)**
+
+---
+
+### 2. Accounts Receivable & Payable Management
+
+**Current State:** No proper tracking of customer/supplier balances.
+
+**Required Enhancements:**
+- Customer & Supplier Master Database:
+  - Full contact information (name, phone, email, address, tax ID)
+  - Opening balance entry
+  - Transaction history view
+  - Account statement generation
+- Invoicing & Bill Tracking:
+  - Create sales invoices with line items, tax, discounts
+  - Record purchase bills from suppliers
+  - Assign due dates and payment terms (e.g., Net 15, Net 30)
+  - Invoice numbering: automatic with custom prefix (e.g., INV-2026-0001)
+  - Support for Credit Notes and Debit Notes
+- Aging Reports:
+  - AR Aging: Show what customers owe you by aging buckets (0-30, 31-60, 61-90, 90+ days)
+  - AP Aging: Show what you owe suppliers by aging buckets
+  - Color-coded for easy identification (green = current, yellow = 30+, red = 60+)
+- Partial Payments & Payment Tracking:
+  - Accept partial payments on invoices
+  - Automatically track remaining balance
+  - Link payments to specific invoices
+  - Support for multiple payment methods (cash, check, bank transfer, credit card)
+- Early Payment Discounts:
+  - Define discount terms (e.g., 2% discount if paid within 10 days)
+  - Auto-calculate discount on early payment
+
+**Priority: HIGH (Core daily operations)**
+
+---
+
+### 3. Cash & Bank Management
+
+**Current State:** Basic cash in/out without bank reconciliation.
+
+**Required Enhancements:**
+- Multi-Bank Account Support:
+  - Add multiple bank accounts (checking, savings, merchant accounts)
+  - Starting balance entry for each account
+  - Transfer funds between accounts
+- Check Management:
+  - Register received checks from customers (with check number, bank, date)
+  - Register issued checks to suppliers
+  - Check status tracking: Pending, Cleared, Bounced, Void
+  - Auto-reconcile checks when they clear the bank
+- Bank Reconciliation:
+  - Upload or manually enter bank statement transactions
+  - Match system transactions with bank statement (auto-matching by amount and date)
+  - Flag discrepancies for manual review
+  - Generate reconciliation reports showing differences
+- Petty Cash Management:
+  - Create petty cash accounts with assigned custodians
+  - Record daily expenses (with receipt attachments - see image upload feature)
+  - Replenish petty cash when low
+  - Track balance per petty cash account
+- Cash Flow Forecasting:
+  - Project future cash inflows (based on due invoices)
+  - Project future cash outflows (based on due bills)
+  - Show projected daily/weekly cash position
+  - Alert when cash is projected to fall below threshold
+
+**Priority: HIGH (Essential for financial control)**
+
+---
+
+### 4. Sales & Purchase Management
+
+**Current State:** Basic invoice creation without proper integration.
+
+**Required Enhancements:**
+- Professional Invoice Templates:
+  - Sales Invoice (standard format with logo, address, tax info)
+  - Purchase Order (for ordering from suppliers)
+  - Proforma/Quotation (before sale)
+  - Credit Note (for returns/refunds)
+  - Debit Note (for additional charges)
+  - Customizable templates (users can add logo, customize layout)
+- Line Item Management:
+  - Add products/services with description, quantity, unit price, discount
+  - Support for multiple tax rates (e.g., 0%, 5%, 9%, VAT)
+  - Subtotal, tax total, shipping, and grand total
+  - Show discount as percentage or fixed amount
+- Incidental Costs Handling:
+  - Add shipping, insurance, customs, handling fees to purchase invoices
+  - Allocate these costs to product cost (affects inventory valuation)
+  - Show cost breakdown on purchase details
+- Multi-Currency Support:
+  - Set base currency (default)
+  - Create invoices in foreign currencies
+  - Auto-update exchange rates (or manual entry)
+  - Show equivalent amount in base currency
+  - Track gains/losses from currency fluctuations
+- Pricing Tiers:
+  - Define price levels: Retail, Wholesale, VIP, Promotional
+  - Assign specific prices to customer groups
+  - Auto-select appropriate price tier when customer is selected
+- Auto-Email Invoices:
+  - Send invoices directly from the app via email
+  - Use customizable email templates
+  - Support for attachments (PDF invoice)
+  - Track if invoice was viewed/opened
+- Multiple UOM (Units of Measure):
+  - Define UOM conversions (e.g., 1 Carton = 12 Pieces)
+  - Purchase in one UOM, sell in another
+  - Auto-convert on invoices
+
+**Priority: HIGH (Primary business operations)**
+
+---
+
+### 5. Financial Reporting & Analytics
+
+**Current State:** Very limited reports, mostly manual Excel exports.
+
+**Required Enhancements:**
+- Profit & Loss Statement (Income Statement):
+  - Show revenues, COGS, gross profit, expenses, net profit
+  - Comparative: Current period vs. previous period
+  - Filter by date range, cost center, project
+  - Percentage of revenue calculations
+- Balance Sheet:
+  - Assets = Liabilities + Equity structure
+  - Current assets, fixed assets, current liabilities, long-term liabilities
+  - Show retained earnings
+  - Comparative with previous periods
+- Cash Flow Statement:
+  - Operating activities (cash from customers, paid to suppliers)
+  - Investing activities (purchase of assets, sale of assets)
+  - Financing activities (loans, equity, dividends)
+  - Direct or indirect method (choose one)
+- Executive Dashboard:
+  - Real-time KPIs: Today's Sales, Month-to-Date Revenue, Outstanding AR, Current Cash Balance
+  - Charts: Revenue trend (monthly), Expense breakdown (pie chart), Cash flow (bar chart)
+  - Quick links to reports and actions
+  - Customizable widgets (users can choose what to show)
+- Comparative Reports:
+  - Month-over-Month comparison
+  - Year-over-Year comparison
+  - Budget vs. Actual comparison (if budget module exists)
+  - Show variance and variance percentage
+- Cost Center / Project Tracking:
+  - Assign transactions to departments (Sales, Marketing, R&D, etc.)
+  - Track expenses by project/job
+  - Generate profit per department or project
+  - Allocate indirect costs (overhead allocation)
+
+**Priority: HIGH (Decision-making tool)**
+
+---
+
+### 6. Advanced Features & Automation
+
+**Current State:** Manual entries for everything, no automation.
+
+**Required Enhancements:**
+- Recurring Transactions:
+  - Define recurring entries (rent, salaries, insurance, subscriptions)
+  - Set frequency: Monthly, Quarterly, Annual, Custom
+  - Auto-generate entries on scheduled dates
+  - Option to auto-post or require approval
+- Fixed Assets Management:
+  - Register fixed assets with purchase date, cost, useful life, salvage value
+  - Auto-calculate depreciation: Straight-line, Declining Balance, Sum-of-Years
+  - Track accumulated depreciation and net book value
+  - Generate asset schedule report
+  - Disposal/sale of assets with gain/loss tracking
+- Multi-Currency Management (Advanced):
+  - Real-time exchange rate updates from API (e.g., currencylayer, Fixer.io)
+  - Revaluation of foreign currency accounts at period end
+  - Realized vs. Unrealized gains/losses
+  - Historical rate tracking for audit trail
+- VAT / Tax Management:
+  - Define tax rates (e.g., 0%, 5%, 9%, 13%)
+  - Apply tax per line item or on total
+  - Record tax liability (output VAT on sales, input VAT on purchases)
+  - Generate VAT return report (summary of tax collected vs. paid)
+  - Submit VAT reports in required format (country-specific)
+- User Role Permissions (RBAC):
+  - Predefined roles: Admin, Accountant, Sales Rep, Warehouse Manager, Viewer
+  - Custom roles with granular permissions:
+    - View: Read-only access
+    - Create: Can add new records
+    - Edit: Can modify existing records
+    - Delete: Can delete records
+    - Approve: Can approve/post transactions
+  - Restrict access to reports based on role
+- Audit Trail:
+  - Log all user actions: Create, Update, Delete, View (sensitive data)
+  - Record: Timestamp, User ID, Action, Affected Record, Old Value, New Value
+  - Searchable audit log with filters (date, user, action type)
+  - Immutable logs (cannot be deleted or modified)
+  - Export audit trail for compliance
+
+**Priority: MEDIUM-HIGH (Differentiator features)**
+
+---
+
+### 7. Integrations & Connectivity
+
+**Current State:** Standalone system, no integrations.
+
+**Required Enhancements:**
+- Inventory Module Integration:
+  - Automatic COGS calculation when items are sold
+  - Real-time inventory updates on sales/purchases/returns
+  - Inventory valuation: FIFO, Weighted Average, LIFO (choose standard)
+  - Reconcile inventory accounts in GL
+- E-commerce Integration:
+  - Sync sales orders from [Shopify / WooCommerce / Magento / Custom API]
+  - Auto-create invoices in system when order is placed
+  - Sync inventory levels to online store
+  - Sync customer data
+- Payment Gateway Integration:
+  - Auto-record online payments from [Stripe / PayPal / Zarinpal / others]
+  - Match payments to invoices
+  - Auto-reconcile with bank statement
+- Export / Reporting Tools:
+  - Export reports to PDF (professional formatting with company logo)
+  - Export to Excel (with formulas and pivot tables ready)
+  - CSV export for data migration
+- API Access (if needed):
+  - RESTful API for external integrations
+  - API documentation
+  - Rate limiting and authentication
+
+**Priority: MEDIUM (Important for modern business)**
+
+---
+
+### 8. Enhanced Invoice Image Upload (New Feature - to be added)
+
+**Current State:** No image upload capability.
+
+**Required Enhancements:**
+- Image Upload for Invoices/Expenses:
+  - Users can upload images of physical invoices (JPG, PNG, GIF, PDF - if supported)
+  - Drag-and-drop interface in the invoice form
+  - Multiple image support per invoice
+  - Image preview before saving
+- Image Storage:
+  - Option 1: Store as Base64 in database (simple, but increases DB size)
+  - Option 2: Store as files in application data folder (recommended)
+  - Create thumbnails (150x150) for list view performance
+- Image Display:
+  - Thumbnail view in invoice list with attachment indicator (📎)
+  - "Show Details" button opens modal/drawer with:
+    - Full invoice data (left panel)
+    - Invoice image(s) (right panel or gallery)
+  - Image zoom, rotate, download functionality
+  - Lightbox for full-screen viewing
+- Image Search (Future / Nice-to-have):
+  - OCR integration to extract text from images
+  - Search by text found in invoice image

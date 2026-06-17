@@ -180,3 +180,86 @@ export interface IPCResponse<T> {
   data?: T
   error?: string
 }
+
+export type AccountType = 'asset' | 'liability' | 'equity' | 'income' | 'expense'
+
+export interface Account {
+  id: number; code: string; name: string; type: AccountType
+  parentId: number | null; isActive: boolean; description: string; createdAt: string
+}
+
+export interface CreateAccountInput {
+  code: string; name: string; type: AccountType
+  parentId?: number | null; description?: string
+}
+
+export interface AccountTreeNode {
+  account: Account; children: AccountTreeNode[]
+}
+
+export interface FiscalPeriod {
+  id: number; name: string; startDate: string; endDate: string
+  isClosed: boolean; closedAt: string | null; closedBy: number | null; createdAt: string
+}
+
+export interface JournalEntry {
+  id: number; entryDate: string; description: string
+  referenceType: string | null; referenceId: number | null
+  fiscalPeriodId: number | null; isPosted: boolean
+  createdBy: number | null; createdAt: string
+}
+
+export interface JournalLine {
+  id: number; entryId: number; accountId: number
+  debit: number; credit: number; description: string
+}
+
+export interface JournalEntryWithLines extends JournalEntry {
+  lines: JournalLine[]
+}
+
+export interface TrialBalanceRow {
+  accountId: number; accountCode: string; accountName: string; accountType: string
+  totalDebit: number; totalCredit: number; balance: number
+}
+
+export interface LedgerRow {
+  entryDate: string; description: string; referenceType: string
+  debit: number; credit: number; balance: number
+}
+
+export interface ProfitLossLine {
+  accountCode: string; accountName: string; amount: number
+}
+
+export interface ProfitLossReport {
+  revenue: ProfitLossLine[]; totalRevenue: number
+  cogs: ProfitLossLine[]; totalCogs: number; grossProfit: number
+  operatingExpenses: ProfitLossLine[]; totalOperatingExpenses: number
+  netProfit: number
+}
+
+export interface BalanceSheetSection {
+  accountCode: string; accountName: string; amount: number
+}
+
+export interface BalanceSheetReport {
+  currentAssets: BalanceSheetSection[]; totalCurrentAssets: number
+  longTermAssets: BalanceSheetSection[]; totalLongTermAssets: number
+  totalAssets: number
+  currentLiabilities: BalanceSheetSection[]; totalCurrentLiabilities: number
+  longTermLiabilities: BalanceSheetSection[]; totalLongTermLiabilities: number
+  totalLiabilities: number
+  equityItems: BalanceSheetSection[]; totalEquity: number
+  totalLiabilitiesAndEquity: number
+}
+
+export interface ARAgingRow {
+  customerId: number; customerName: string; phone: string
+  current: number; days31to60: number; days61to90: number; over90: number; total: number
+}
+
+export interface ARAgingReport {
+  rows: ARAgingRow[]
+  totals: { current: number; days31to60: number; days61to90: number; over90: number; total: number }
+}

@@ -1,4 +1,5 @@
 import { getDatabase } from '../connection'
+import { postReturnJournal } from './journal'
 
 export interface Return {
   id: number
@@ -22,7 +23,9 @@ export function createReturn(saleId: number, userId: number, productId: number, 
   if (saleId) {
     db.prepare('UPDATE sales SET total_amount = total_amount - ?, totalNetProfit = totalNetProfit - ? WHERE id = ?').run(refundAmount, refundAmount, saleId)
   }
-  return db.prepare('SELECT r.*, s.invoiceNumber as saleInvoiceNumber, p.title as productTitle, u.name as userName FROM returns r LEFT JOIN sales s ON r.saleId = s.id LEFT JOIN products p ON r.productId = p.id LEFT JOIN users u ON r.userId = u.id WHERE r.id = ?').get(result.lastInsertRowid) as Return
+  const returnId = result.lastInsertRowid as number
+  postReturnJournal(returnId, new Date().toISOString().slice(0, 10), refundAmount)
+  return db.prepare('SELECT r.*, s.invoiceNumber as saleInvoiceNumber, p.title as productTitle, u.name as userName FROM returns r LEFT JOIN sales s ON r.saleId = s.id LEFT JOIN products p ON r.productId = p.id LEFT JOIN users u ON r.userId = u.id WHERE r.id = ?').get(returnId) as Return
 }
 
 export function getReturns(limit: number = 100): Return[] {

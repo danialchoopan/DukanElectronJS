@@ -162,6 +162,37 @@ const api = {
       ipcRenderer.invoke('returns:stats'),
   },
 
+  accounts: {
+    getAll: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('accounts:getAll'),
+    getTree: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('accounts:getTree'),
+    getById: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('accounts:getById', { id }),
+    getByType: (type: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('accounts:getByType', { type }),
+    create: (data: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('accounts:create', data),
+    update: (id: number, data: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('accounts:update', { id, data }),
+    delete: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('accounts:delete', { id }),
+    toggleActive: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('accounts:toggleActive', { id }),
+  },
+  journal: {
+    getEntries: (filters: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('journal:entries', filters),
+    getById: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('journal:getById', { id }),
+    create: (data: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('journal:create', data),
+    getTrialBalance: (startDate?: string, endDate?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('journal:trialBalance', { startDate, endDate }),
+    getLedger: (accountId: number, startDate?: string, endDate?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('journal:ledger', { accountId, startDate, endDate }),
+  },
+  reports: {
+    getProfitLoss: (startDate?: string, endDate?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('reports:profitLoss', { startDate, endDate }),
+    getBalanceSheet: (asOfDate?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('reports:balanceSheet', { asOfDate }),
+    getARAging: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('reports:arAging'),
+  },
+  periods: {
+    getAll: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('periods:getAll'),
+    getActive: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('periods:getActive'),
+    close: (id: number, userId: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('periods:close', { id, userId }),
+  },
+  accounting: {
+    migrate: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('accounting:migrate'),
+  },
+
   backup: {
     export: (): Promise<IPCResponse<string>> =>
       ipcRenderer.invoke('backup:export'),

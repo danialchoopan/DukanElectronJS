@@ -211,6 +211,61 @@ function initializeDatabase(db: Database.Database): void {
 
     CREATE INDEX IF NOT EXISTS idx_returns_sale ON returns(saleId);
     CREATE INDEX IF NOT EXISTS idx_returns_status ON returns(status);
+
+    CREATE TABLE IF NOT EXISTS fiscal_periods (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      startDate TEXT NOT NULL,
+      endDate TEXT NOT NULL,
+      isClosed INTEGER NOT NULL DEFAULT 0,
+      closedAt TEXT,
+      closedBy INTEGER,
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (closedBy) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS accounts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL CHECK(type IN ('asset', 'liability', 'equity', 'income', 'expense')),
+      parentId INTEGER DEFAULT NULL,
+      isActive INTEGER NOT NULL DEFAULT 1,
+      description TEXT DEFAULT '',
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (parentId) REFERENCES accounts(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_accounts_type ON accounts(type);
+    CREATE INDEX IF NOT EXISTS idx_accounts_code ON accounts(code);
+
+    CREATE TABLE IF NOT EXISTS journal_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      entryDate TEXT NOT NULL,
+      description TEXT NOT NULL,
+      referenceType TEXT,
+      referenceId INTEGER,
+      fiscalPeriodId INTEGER,
+      isPosted INTEGER NOT NULL DEFAULT 1,
+      createdBy INTEGER,
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (fiscalPeriodId) REFERENCES fiscal_periods(id),
+      FOREIGN KEY (createdBy) REFERENCES users(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_journal_date ON journal_entries(entryDate);
+    CREATE INDEX IF NOT EXISTS idx_journal_ref ON journal_entries(referenceType, referenceId);
+
+    CREATE TABLE IF NOT EXISTS journal_entry_lines (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      entryId INTEGER NOT NULL,
+      accountId INTEGER NOT NULL,
+      debit REAL NOT NULL DEFAULT 0,
+      credit REAL NOT NULL DEFAULT 0,
+      description TEXT DEFAULT '',
+      FOREIGN KEY (entryId) REFERENCES journal_entries(id) ON DELETE CASCADE,
+      FOREIGN KEY (accountId) REFERENCES accounts(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_journal_lines_entry ON journal_entry_lines(entryId);
+    CREATE INDEX IF NOT EXISTS idx_journal_lines_account ON journal_entry_lines(accountId);
   `)
 
   const defaults: Record<string, string> = {
@@ -225,5 +280,60 @@ function initializeDatabase(db: Database.Database): void {
   const insert = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)')
   for (const [k, v] of Object.entries(defaults)) {
     insert.run(k, v)
+  }
+
+  // Seed chart of accounts if empty
+  const accountCount = (db.prepare('SELECT COUNT(*) as count FROM accounts').get() as { count: number }).count
+  if (accountCount === 0) {
+    const insertAccount = db.prepare('INSERT INTO accounts (code, name, type, parentId) VALUES (?, ?, ?, ?)')
+    const accounts: [string, string, string, number | null][] = [
+      ['1000', 'دارایی\u200cهای جاری', 'asset', null],
+      ['1100', 'صندوق نقدی', 'asset', null],
+      ['1200', 'بانک', 'asset', null],
+      ['1300', 'موجودی کالا', 'asset', null],
+      ['1400', 'حساب\u200cهای دریافتنی', 'asset', null],
+      ['2000', 'بدهی\u200cهای جاری', 'liability', null],
+      ['2100', 'حساب\u200cهای پرداختنی', 'liability', null],
+      ['3000', 'سرمایه', 'equity', null],
+      ['3100', 'سرمایه صاحب کسب\u200cوکار', 'equity', null],
+      ['3200', 'سود انباشته', 'equity', null],
+      ['4000', 'درآمدها', 'income', null],
+      ['4100', 'فروش کالا', 'income', null],
+      ['5000', 'بهای تمام شده کالا', 'expense', null],
+      ['5100', 'بهای تمام شده فروش', 'expense', null],
+      ['6000', 'هزینه\u200cهای عملیاتی', 'expense', null],
+      ['6100', 'اجاره', 'expense', null],
+      ['6200', 'قبوض', 'expense', null],
+      ['6300', 'حقوق و دستمزد', 'expense', null],
+      ['6400', 'لوازم و ملزومات', 'expense', null],
+      ['6500', 'تعمیرات', 'expense', null],
+      ['6600', 'حمل\u200cونقل', 'expense', null],
+      ['6700', 'سایر هزینه\u200cها', 'expense', null],
+    ]
+    const seedAccounts = db.transaction(() => {
+      const ids: Record<string, number> = {}
+      for (const [code, name, type, _parent] of accounts) {
+        const r = insertAccount.run(code, name, type, null)
+        ids[code] = r.lastInsertRowid as number
+      }
+      const updateParent = db.prepare('UPDATE accounts SET parentId = ? WHERE id = ?')
+      updateParent.run(ids['1000'], ids['1100'])
+      updateParent.run(ids['1000'], ids['1200'])
+      updateParent.run(ids['1000'], ids['1300'])
+      updateParent.run(ids['1000'], ids['1400'])
+      updateParent.run(ids['2000'], ids['2100'])
+      updateParent.run(ids['3000'], ids['3100'])
+      updateParent.run(ids['3000'], ids['3200'])
+      updateParent.run(ids['4000'], ids['4100'])
+      updateParent.run(ids['5000'], ids['5100'])
+      updateParent.run(ids['6000'], ids['6100'])
+      updateParent.run(ids['6000'], ids['6200'])
+      updateParent.run(ids['6000'], ids['6300'])
+      updateParent.run(ids['6000'], ids['6400'])
+      updateParent.run(ids['6000'], ids['6500'])
+      updateParent.run(ids['6000'], ids['6600'])
+      updateParent.run(ids['6000'], ids['6700'])
+    })
+    seedAccounts()
   }
 }

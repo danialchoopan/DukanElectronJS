@@ -1,5 +1,6 @@
 import { getDatabase } from '../connection'
 import type { Expense, ExpenseInput } from '../../../types'
+import { postExpenseJournal } from './journal'
 
 export function getAllExpenses(): Expense[] {
   const db = getDatabase()
@@ -23,7 +24,9 @@ export function createExpense(input: ExpenseInput): Expense {
   const db = getDatabase()
   const result = db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)')
     .run(input.category, input.description, input.amount, input.date)
-  return { id: result.lastInsertRowid as number, ...input, createdAt: new Date().toISOString() }
+  const expenseId = result.lastInsertRowid as number
+  postExpenseJournal(expenseId, input.date, input.amount, input.category)
+  return { id: expenseId, ...input, createdAt: new Date().toISOString() }
 }
 
 export function deleteExpense(id: number): boolean {

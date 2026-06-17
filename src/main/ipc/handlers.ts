@@ -11,6 +11,10 @@ import * as cashRegister from '../database/repositories/cashRegister'
 import * as categoriesRepo from '../database/repositories/categories'
 import * as auditRepo from '../database/repositories/audit'
 import * as returnsRepo from '../database/repositories/returns'
+import * as accountsRepo from '../database/repositories/accounts'
+import * as journalRepo from '../database/repositories/journal'
+import * as periodsRepo from '../database/repositories/periods'
+import * as reportsRepo from '../database/repositories/reports'
 import { isFirstRun, getDatabase } from '../database/connection'
 import { writeFileSync, readFileSync } from 'fs'
 
@@ -178,7 +182,7 @@ export function registerAllHandlers(): void {
     if (result.canceled || !result.filePath) return { success: false, error: 'cancelled' }
     try {
       const db = getDatabase()
-      const tables = ['users', 'products', 'sales', 'sale_items', 'customers', 'customer_ledger', 'expenses', 'suspended_invoices', 'cash_register', 'settings', 'categories', 'audit_log', 'returns']
+      const tables = ['users', 'products', 'sales', 'sale_items', 'customers', 'customer_ledger', 'expenses', 'suspended_invoices', 'cash_register', 'settings', 'categories', 'audit_log', 'returns', 'accounts', 'fiscal_periods', 'journal_entries', 'journal_entry_lines']
       const backup: Record<string, any> = {}
       for (const table of tables) {
         backup[table] = db.prepare(`SELECT * FROM ${table}`).all()
@@ -202,7 +206,7 @@ export function registerAllHandlers(): void {
     try {
       const data = JSON.parse(readFileSync(result.filePaths[0], 'utf-8'))
       const db = getDatabase()
-      const tables = ['users', 'products', 'sales', 'sale_items', 'customers', 'customer_ledger', 'expenses', 'suspended_invoices', 'cash_register', 'settings', 'categories', 'audit_log', 'returns']
+      const tables = ['users', 'products', 'sales', 'sale_items', 'customers', 'customer_ledger', 'expenses', 'suspended_invoices', 'cash_register', 'settings', 'categories', 'audit_log', 'returns', 'accounts', 'fiscal_periods', 'journal_entries', 'journal_entry_lines']
       const restore = db.transaction(() => {
         for (const table of tables) {
           if (data[table] && Array.isArray(data[table])) {
@@ -247,4 +251,60 @@ export function registerAllHandlers(): void {
   })
   handleArg<{ limit?: number }, any>('returns:list', (a) => returnsRepo.getReturns(a.limit || 100))
   handle('returns:stats', () => returnsRepo.getReturnStats())
+
+  // ─── Accounts (Chart of Accounts) ────────────────────
+  handle('accounts:getAll', () => accountsRepo.getAllAccounts())
+  handle('accounts:getTree', () => accountsRepo.getAccountTree())
+  handleArg<{ id: number }, any>('accounts:getById', (a) => accountsRepo.getAccountById(a.id))
+  handleArg<{ type: string }, any>('accounts:getByType', (a) => accountsRepo.getAccountsByType(a.type as any))
+  handleArg<{ code: string; name: string; type: string; parentId?: number | null; description?: string }, any>('accounts:create', (a) => accountsRepo.createAccount(a as any))
+  handleArg<{ id: number; data: { code?: string; name?: string; type?: string; parentId?: number | null; description?: string } }, any>('accounts:update', (a) => accountsRepo.updateAccount(a.id, a.data as any))
+  handleArg<{ id: number }, boolean>('accounts:delete', (a) => accountsRepo.deleteAccount(a.id))
+  handleArg<{ id: number }, boolean>('accounts:toggleActive', (a) => accountsRepo.toggleAccountActive(a.id))
+
+  // ─── Journal Entries ─────────────────────────────────
+  handleArg<{ startDate?: string; endDate?: string; referenceType?: string; limit?: number; offset?: number }, any>('journal:entries', (a) => journalRepo.getJournalEntries(a))
+  handleArg<{ id: number }, any>('journal:getById', (a) => journalRepo.getJournalEntryById(a.id))
+  handleArg<{ entryDate: string; description: string; lines: { accountId: number; debit: number; credit: number; description?: string }[] }, any>('journal:create', (a) => journalRepo.createJournalEntry({ ...a, referenceType: 'manual' }))
+  handleArg<{ startDate?: string; endDate?: string }, any>('journal:trialBalance', (a) => journalRepo.getTrialBalance(a.startDate, a.endDate))
+  handleArg<{ accountId: number; startDate?: string; endDate?: string }, any>('journal:ledger', (a) => journalRepo.getGeneralLedger(a.accountId, a.startDate, a.endDate))
+
+  // ─── Financial Reports ───────────────────────────────
+  handleArg<{ startDate?: string; endDate?: string }, any>('reports:profitLoss', (a) => reportsRepo.generateProfitLoss(a.startDate, a.endDate))
+  handleArg<{ asOfDate?: string }, any>('reports:balanceSheet', (a) => reportsRepo.generateBalanceSheet(a.asOfDate))
+  handle('reports:arAging', () => reportsRepo.generateARAging())
+
+  // ─── Fiscal Periods ──────────────────────────────────
+  handle('periods:getAll', () => periodsRepo.getAllPeriods())
+  handle('periods:getActive', () => periodsRepo.getActivePeriod())
+  handleArg<{ id: number; userId: number }, boolean>('periods:close', (a) => periodsRepo.closePeriod(a.id, a.userId))
+
+  // ─── Accounting Migration ────────────────────────────
+  handle('accounting:migrate', () => {
+    const db = getDatabase()
+    const existingJE = db.prepare('SELECT COUNT(*) as c FROM journal_entries').get() as { c: number }
+    if (existingJE.c > 0) return false
+
+    // Backfill sales
+    const allSales = db.prepare('SELECT * FROM sales').all() as any[]
+    const allSaleItems = db.prepare('SELECT * FROM sale_items').all() as any[]
+    for (const sale of allSales) {
+      const items = allSaleItems.filter((si: any) => si.saleId === sale.id)
+      journalRepo.postSaleJournal(sale.id, sale.createdAt?.slice(0, 10) || new Date().toISOString().slice(0, 10), {
+        items: items.map((i: any) => ({ purchasePrice: i.purchasePrice, quantity: i.quantity })),
+        total_amount: sale.total_amount, paymentMethod: sale.paymentMethod
+      })
+    }
+    // Backfill expenses
+    const allExpenses = db.prepare('SELECT * FROM expenses').all() as any[]
+    for (const exp of allExpenses) {
+      journalRepo.postExpenseJournal(exp.id, exp.date || new Date().toISOString().slice(0, 10), exp.amount, exp.category)
+    }
+    // Backfill returns
+    const allReturns = db.prepare('SELECT * FROM returns').all() as any[]
+    for (const ret of allReturns) {
+      journalRepo.postReturnJournal(ret.id, ret.createdAt?.slice(0, 10) || new Date().toISOString().slice(0, 10), ret.refundAmount)
+    }
+    return true
+  })
 }

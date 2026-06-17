@@ -4,6 +4,7 @@ import { decrementStock } from './products'
 import { getAutoRounding } from './settings'
 import { updateCustomerBalance, addLedgerEntry } from './customers'
 import { roundToNearest, calculateLineSubtotal, calculateLineProfit } from '../../utils/math'
+import { postSaleJournal } from './journal'
 
 export function createSale(input: SaleInput): Sale {
   const db = getDatabase()
@@ -57,6 +58,12 @@ export function createSale(input: SaleInput): Sale {
   })
 
   const saleId = createSaleTx()
+
+  postSaleJournal(saleId, new Date().toISOString().slice(0, 10), {
+    items: input.items.map(i => ({ purchasePrice: i.purchasePrice, quantity: i.quantity })),
+    total_amount, paymentMethod: input.paymentMethod
+  })
+
   return getSaleById(saleId)!
 }
 
