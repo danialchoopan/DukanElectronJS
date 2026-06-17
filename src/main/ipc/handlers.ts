@@ -9,6 +9,8 @@ import * as customers from '../database/repositories/customers'
 import * as expenses from '../database/repositories/expenses'
 import * as cashRegister from '../database/repositories/cashRegister'
 import * as categoriesRepo from '../database/repositories/categories'
+import * as auditRepo from '../database/repositories/audit'
+import * as returnsRepo from '../database/repositories/returns'
 import { isFirstRun, getDatabase } from '../database/connection'
 import { writeFileSync, readFileSync } from 'fs'
 
@@ -164,4 +166,14 @@ export function registerAllHandlers(): void {
   handleArg<{ name: string; parentId?: number }, any>('categories:create', (a) => categoriesRepo.createCategory(a.name, a.parentId))
   handleArg<{ id: number; name: string }, boolean>('categories:update', (a) => { categoriesRepo.updateCategory(a.id, a.name); return true })
   handleArg<{ id: number }, boolean>('categories:delete', (a) => categoriesRepo.deleteCategory(a.id))
+
+  // ─── Audit Log ─────────────────────────────────────
+  handleArg<{ entityType?: string; limit?: number }, any>('audit:getAll', (a) => auditRepo.getAuditLog(a.entityType, a.limit || 100))
+  handleArg<{ entityType: string; entityId: number }, any>('audit:getForEntity', (a) => auditRepo.getAuditForEntity(a.entityType, a.entityId))
+  handle('audit:stats', () => auditRepo.getAuditStats())
+
+  // ─── Returns ─────────────────────────────────────
+  handleArg<{ saleId: number; userId: number; productId: number; quantity: number; reason: string; refundAmount: number }, any>('returns:create', (a) => returnsRepo.createReturn(a.saleId, a.userId, a.productId, a.quantity, a.reason, a.refundAmount))
+  handleArg<{ limit?: number }, any>('returns:list', (a) => returnsRepo.getReturns(a.limit || 100))
+  handle('returns:stats', () => returnsRepo.getReturnStats())
 }

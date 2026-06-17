@@ -143,6 +143,24 @@ const api = {
       ipcRenderer.invoke('categories:delete', { id }),
   },
 
+  audit: {
+    getAll: (entityType?: string, limit?: number): Promise<IPCResponse<any[]>> =>
+      ipcRenderer.invoke('audit:getAll', { entityType, limit }),
+    getForEntity: (entityType: string, entityId: number): Promise<IPCResponse<any[]>> =>
+      ipcRenderer.invoke('audit:getForEntity', { entityType, entityId }),
+    getStats: (): Promise<IPCResponse<any>> =>
+      ipcRenderer.invoke('audit:stats'),
+  },
+
+  returns: {
+    create: (data: { saleId: number; userId: number; productId: number; quantity: number; reason: string; refundAmount: number }): Promise<IPCResponse<any>> =>
+      ipcRenderer.invoke('returns:create', data),
+    list: (limit?: number): Promise<IPCResponse<any[]>> =>
+      ipcRenderer.invoke('returns:list', { limit }),
+    getStats: (): Promise<IPCResponse<any>> =>
+      ipcRenderer.invoke('returns:stats'),
+  },
+
   backup: {
     export: (): Promise<IPCResponse<string>> =>
       ipcRenderer.invoke('backup:export'),

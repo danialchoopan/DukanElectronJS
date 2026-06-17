@@ -119,43 +119,45 @@ export default function Inventory() {
         ))}
       </div>
 
-      {outOfStock.length > 0 && (
-        <div className="rounded-2xl p-4 mb-4 border-2" style={{ backgroundColor: isDark ? '#450a0a' : '#fee2e2', borderColor: '#ef4444' }}>
-          <h3 className="font-bold mb-2 flex items-center gap-2" style={{ color: '#ef4444' }}>
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-            موجودی تمام شده — {outOfStock.length} کالا
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {outOfStock.map((p) => (
-              <button key={p.id} onClick={() => { setSelectedProduct(p); setRestockQty('') }}
-                className="px-3 py-1.5 rounded-lg text-sm font-bold" style={{ backgroundColor: '#fecaca', color: '#991b1b' }}>
-                {p.title}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="flex gap-4 mb-4">
+          {outOfStock.length > 0 && (
+            <div className="flex-1 rounded-2xl p-4 border-2" style={{ backgroundColor: isDark ? '#450a0a' : '#fee2e2', borderColor: '#ef4444' }}>
+              <h3 className="font-bold mb-2 flex items-center gap-2" style={{ color: '#ef4444' }}>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                موجودی تمام شده — {outOfStock.length} کالا
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {outOfStock.map((p) => (
+                  <button key={p.id} onClick={() => { setSelectedProduct(p); setRestockQty('') }}
+                    className="px-3 py-1.5 rounded-lg text-sm font-bold" style={{ backgroundColor: '#fecaca', color: '#991b1b' }}>
+                    {p.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
-      {lowStock.length > 0 && (
-        <div className="rounded-2xl p-4 mb-4 border-2" style={{ backgroundColor: isDark ? '#451a03' : '#fef3c7', borderColor: '#f59e0b' }}>
-          <h3 className="font-bold mb-2 flex items-center gap-2" style={{ color: '#d97706' }}>
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            موجودی کم — {lowStock.length} کالا
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {lowStock.map((p) => (
-              <button key={p.id} onClick={() => { setSelectedProduct(p); setRestockQty('') }}
-                className="px-3 py-1.5 rounded-lg text-sm font-bold" style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>
-                {p.title} ({p.stock})
-              </button>
-            ))}
-          </div>
+          {lowStock.length > 0 && (
+            <div className="flex-1 rounded-2xl p-4 border-2" style={{ backgroundColor: isDark ? '#451a03' : '#fef3c7', borderColor: '#f59e0b' }}>
+              <h3 className="font-bold mb-2 flex items-center gap-2" style={{ color: '#d97706' }}>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                موجودی کم — {lowStock.length} کالا
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {lowStock.map((p) => (
+                  <button key={p.id} onClick={() => { setSelectedProduct(p); setRestockQty('') }}
+                    className="px-3 py-1.5 rounded-lg text-sm font-bold" style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>
+                    {p.title} ({p.stock})
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      )}
 
       {selectedProduct && (
         <div className="rounded-2xl p-4 mb-4 border-2" style={{ backgroundColor: cardBg, borderColor: '#3b82f6' }}>
-          <h3 className="font-bold mb-3" style={{ color: textPrimary }}>ریستاک: {selectedProduct.title}</h3>
+          <h3 className="font-bold mb-3" style={{ color: textPrimary }}> تامین موجودی :  {selectedProduct.title}</h3>
           <div className="flex gap-3 items-end">
             <div>
               <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>موجودی فعلی: {selectedProduct.stock}</label>
@@ -218,7 +220,7 @@ export default function Inventory() {
                 <td className="px-4 py-2" style={{ color: textPrimary }}>{p.purchase_price.toLocaleString('fa-IR')}</td>
                 <td className="px-4 py-2" style={{ color: textPrimary }}>{(p.stock * p.purchase_price).toLocaleString('fa-IR')}</td>
                 <td className="px-4 py-2">
-                  <button onClick={() => { setSelectedProduct(p); setRestockQty('') }} className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: '#22c55e' }}>+ ریستاک</button>
+                  <button onClick={() => { setSelectedProduct(p); setRestockQty('') }} className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: '#22c55e' }}>+ تامین مجدد</button>
                 </td>
               </tr>
               )

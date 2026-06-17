@@ -179,6 +179,38 @@ function initializeDatabase(db: Database.Database): void {
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId INTEGER,
+      action TEXT NOT NULL,
+      entityType TEXT NOT NULL,
+      entityId INTEGER,
+      details TEXT,
+      createdAt TEXT DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (userId) REFERENCES users(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_log(entityType, entityId);
+    CREATE INDEX IF NOT EXISTS idx_audit_date ON audit_log(createdAt);
+
+    CREATE TABLE IF NOT EXISTS returns (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      saleId INTEGER,
+      userId INTEGER,
+      productId INTEGER,
+      quantity INTEGER,
+      reason TEXT,
+      refundAmount REAL,
+      status TEXT DEFAULT 'pending',
+      createdAt TEXT DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (saleId) REFERENCES sales(id),
+      FOREIGN KEY (userId) REFERENCES users(id),
+      FOREIGN KEY (productId) REFERENCES products(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_returns_sale ON returns(saleId);
+    CREATE INDEX IF NOT EXISTS idx_returns_status ON returns(status);
   `)
 
   const defaults: Record<string, string> = {
