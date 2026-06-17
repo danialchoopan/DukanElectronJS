@@ -116,7 +116,9 @@ export default function AddProduct() {
               <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
                 className="input-field text-sm" style={{ borderColor: !form.category ? '#ef4444' : undefined }}>
                 <option value="">-- انتخاب دسته‌بندی --</option>
-                {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+                {categories.map((c) => (
+                  <option key={c} value={c}>{c.includes(' > ') ? `  ↳ ${c.split(' > ')[1]}` : c}</option>
+                ))}
               </select>
               {!form.category && <p className="text-[10px] mt-1" style={{ color: '#ef4444' }}>انتخاب دسته‌بندی الزامی است</p>}
             </div>
