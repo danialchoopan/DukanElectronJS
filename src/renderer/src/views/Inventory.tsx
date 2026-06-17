@@ -216,12 +216,9 @@ export default function Inventory() {
                   }}>{p.stock}</span>
                 </td>
                 <td className="px-4 py-2" style={{ color: textPrimary }}>{p.purchase_price.toLocaleString('fa-IR')}</td>
-                <td className="px-4 py-2 font-bold" style={{ color: textPrimary }}>{p.sale_price.toLocaleString('fa-IR')}</td>
                 <td className="px-4 py-2" style={{ color: textPrimary }}>{(p.stock * p.purchase_price).toLocaleString('fa-IR')}</td>
-                <td className="px-4 py-2 flex gap-1">
-                  <button onClick={() => window.location.hash = '#edit-' + p.id} className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: '#3b82f6' }}>ویرایش</button>
-                  <button onClick={async () => { if (confirm(`آیا از حذف "${p.title}" اطمینان دارید؟\nاطلاعات حسابداری حفظ می‌شود.`)) { await window.api.products.delete(p.id); loadProducts(); loadLowStock() } }} className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: '#ef4444' }}>حذف</button>
-                  <button onClick={() => { setSelectedProduct(p); setRestockQty('') }} className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: '#22c55e' }}>+ ریستاک</button>
+                <td className="px-4 py-2">
+                  <button onClick={() => { setSelectedProduct(p); setRestockQty('') }} className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: '#22c55e' }}>+ ریستاک</button>
                 </td>
               </tr>
               )
