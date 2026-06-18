@@ -54,14 +54,23 @@ function LocationIcon({ color }: { color: string }) {
 
 function ArrowIcon({ color }: { color: string }) {
   return (
-    <svg className="w-5 h-5 rotate-180" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <line x1="5" y1="12" x2="19" y2="12" />
       <polyline points="12 5 19 12 12 19" />
     </svg>
   )
 }
 
+function CheckIcon({ color }: { color: string }) {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  )
+}
+
 export default function SetupWizard({ onComplete }: { onComplete: () => void }) {
+  const [step, setStep] = useState(1)
   const [lang, setLang] = useState<'fa' | 'en'>('fa')
   const [theme, setTheme] = useState<'dark' | 'light'>('light')
   const [shopName, setShopName] = useState('')
@@ -93,8 +102,12 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
     setAdminPinConfirm(val)
   }, [])
 
-  const handleSubmit = async () => {
+  const handleNext = () => {
     if (!shopName.trim()) return
+    setStep(2)
+  }
+
+  const handleSubmit = async () => {
     if (adminPin.length < 4) {
       setPinError(lang === 'fa' ? 'رمز باید حداقل ۴ رقم باشد' : 'PIN must be at least 4 digits')
       return
@@ -131,6 +144,17 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
 
   const handlePinInput = (e: React.ChangeEvent<HTMLInputElement>, index: number, val: string, setVal: (v: string) => void, refs: React.MutableRefObject<(HTMLInputElement | null)[]>) => {
     const digit = e.target.value.replace(/\D/g, '')
+    
+    // Allow clearing the input
+    if (e.target.value === '') {
+      const arr = val.split('')
+      arr[index] = ''
+      const newVal = arr.join('')
+      setVal(newVal)
+      if (index > 0) refs.current[index - 1]?.focus()
+      return
+    }
+    
     if (digit) {
       const arr = val.split('')
       arr[index] = digit
@@ -156,7 +180,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
     <div className="h-screen w-screen flex items-center justify-center p-4 overflow-hidden" style={{ background: bg, direction: 'rtl' }}>
       <div className="w-full max-w-5xl rounded-xl shadow-sm overflow-hidden flex flex-col md:flex-row-reverse" style={{ background: cardBg, border: cardBorder, backdropFilter: isDark ? 'blur(12px)' : undefined }}>
 
-        {/* Brand Panel (Right in RTL) */}
+        {/* Brand Panel - Always visible */}
         <div className="md:w-1/2 flex flex-col items-center justify-center text-center relative overflow-hidden p-8" style={{ background: brandBg }}>
           <div className="z-10 flex flex-col items-center gap-6">
             <LogoIcon size={128} />
@@ -166,6 +190,36 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
             <p className="text-lg max-w-sm" style={{ color: subtitleColor, fontFamily: "'Noto Sans', sans-serif" }}>
               {lang === 'fa' ? 'نرم‌افزار جامع مالی و حسابداری برای مدیریت هوشمند کسب‌وکارهای مدرن.' : 'Comprehensive financial and accounting software for smart business management.'}
             </p>
+            
+            {/* Step Indicator - with labels */}
+            <div className="flex flex-col items-center gap-3 mt-4 w-full">
+              <div className="flex gap-3 w-full max-w-[200px]">
+                <div className="flex-1 flex flex-col items-center gap-1">
+                  <div 
+                    className={`w-full h-1.5 rounded-full transition-all duration-300 ${step === 1 ? 'opacity-100' : 'opacity-30'}`}
+                    style={{ background: step === 1 ? colors.primary : colors.outline }}
+                  />
+                  <span className="text-[10px] font-medium" style={{ color: step === 1 ? colors.primary : subtitleColor, opacity: step === 1 ? 1 : 0.5 }}>
+                    {lang === 'fa' ? 'اطلاعات' : 'Info'}
+                  </span>
+                </div>
+                <div className="flex-1 flex flex-col items-center gap-1">
+                  <div 
+                    className={`w-full h-1.5 rounded-full transition-all duration-300 ${step === 2 ? 'opacity-100' : 'opacity-30'}`}
+                    style={{ background: step === 2 ? colors.primary : colors.outline }}
+                  />
+                  <span className="text-[10px] font-medium" style={{ color: step === 2 ? colors.primary : subtitleColor, opacity: step === 2 ? 1 : 0.5 }}>
+                    {lang === 'fa' ? 'رمز عبور' : 'PIN'}
+                  </span>
+                </div>
+              </div>
+              <span className="text-xs" style={{ color: subtitleColor, opacity: 0.5 }}>
+                {step === 1 
+                  ? (lang === 'fa' ? 'مرحله ۱ از ۲' : 'Step 1 of 2')
+                  : (lang === 'fa' ? 'مرحله ۲ از ۲' : 'Step 2 of 2')
+                }
+              </span>
+            </div>
           </div>
           <div className="absolute inset-0 opacity-5 pointer-events-none">
             <div className="absolute -right-24 -top-24 w-64 h-64 rounded-full" style={{ background: '#007bb9' }} />
@@ -173,191 +227,279 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
           </div>
         </div>
 
-        {/* Form Panel (Left in RTL) */}
-        <div className="md:w-1/2 p-8 md:p-16 flex flex-col justify-center overflow-y-auto">
-          <div className="mb-6">
-            <h2 className="text-2xl font-semibold mb-1" style={{ color: titleColor, fontFamily: "'IBM Plex Sans', sans-serif" }}>
-              {lang === 'fa' ? 'راه‌اندازی فروشگاه' : 'Store Setup'}
-            </h2>
-            <p className="text-sm" style={{ color: subtitleColor }}>
-              {lang === 'fa' ? 'اطلاعات پایه کسب‌وکار خود را برای شروع ثبت کنید.' : 'Enter your basic business details to get started.'}
-            </p>
-          </div>
-
-          {/* Language & Theme Toggles */}
-          <div className="flex gap-3 mb-5">
-            <div className="flex-1">
-              <label className="text-xs font-medium mb-1 block" style={{ color: subtitleColor }}>{ui.setup.selectLanguage}</label>
-              <div className="flex rounded-lg overflow-hidden" style={{ border: inputBorder }}>
-                <button onClick={() => switchLang('fa')} className="flex-1 py-1.5 text-xs font-bold transition-all"
-                  style={{ background: lang === 'fa' ? colors.primary : 'transparent', color: lang === 'fa' ? '#fff' : subtitleColor }}>
-                  فارسی
-                </button>
-                <button onClick={() => switchLang('en')} className="flex-1 py-1.5 text-xs font-bold transition-all"
-                  style={{ background: lang === 'en' ? colors.primary : 'transparent', color: lang === 'en' ? '#fff' : subtitleColor }}>
-                  English
-                </button>
-              </div>
-            </div>
-            <div className="flex-1">
-              <label className="text-xs font-medium mb-1 block" style={{ color: subtitleColor }}>{ui.setup.selectTheme}</label>
-              <div className="flex rounded-lg overflow-hidden" style={{ border: inputBorder }}>
-                <button onClick={() => setTheme('light')} className="flex-1 py-1.5 text-xs font-bold transition-all"
-                  style={{ background: !isDark ? colors.primary : 'transparent', color: !isDark ? '#fff' : subtitleColor }}>
-                  {lang === 'fa' ? 'روشن' : 'Light'}
-                </button>
-                <button onClick={() => setTheme('dark')} className="flex-1 py-1.5 text-xs font-bold transition-all"
-                  style={{ background: isDark ? colors.primary : 'transparent', color: isDark ? '#fff' : subtitleColor }}>
-                  {lang === 'fa' ? 'تاریک' : 'Dark'}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleSubmit() }}>
-            {/* Shop Name */}
-            <div>
-              <label className="text-xs font-medium mb-1 block" style={{ color: subtitleColor }}>
-                {lang === 'fa' ? 'نام فروشگاه یا واحد تجاری' : 'Store or business name'}
-              </label>
-              <div className="relative">
-                <StoreIcon color={colors.outline} />
-                <input
-                  value={shopName}
-                  onChange={(e) => setShopName(e.target.value)}
-                  className="w-full py-2.5 pr-10 rounded-lg text-sm outline-none transition-colors"
-                  style={{ background: inputBg, border: inputBorder, color: inputColor, fontFamily: "'Noto Sans', sans-serif" }}
-                  placeholder={lang === 'fa' ? 'مثال: فروشگاه تراز' : 'e.g. My Store'}
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><StoreIcon color={colors.outline} /></div>
-              </div>
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="text-xs font-medium mb-1 block" style={{ color: subtitleColor }}>{ui.setup.shopPhone}</label>
-              <div className="relative">
-                <input
-                  value={shopPhone}
-                  onChange={(e) => setShopPhone(e.target.value.replace(/[^\d]/g, ''))}
-                  className="w-full py-2.5 pr-10 pl-10 rounded-lg text-sm outline-none transition-colors text-left"
-                  style={{ background: inputBg, border: inputBorder, color: inputColor, fontFamily: "'Noto Sans', sans-serif" }}
-                  dir="ltr"
-                  placeholder="0912 000 0000"
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><CallIcon color={colors.outline} /></div>
-              </div>
-            </div>
-
-            {/* Address */}
-            <div>
-              <label className="text-xs font-medium mb-1 block" style={{ color: subtitleColor }}>{ui.setup.shopAddress}</label>
-              <div className="relative">
-                <textarea
-                  value={shopAddress}
-                  onChange={(e) => setShopAddress(e.target.value)}
-                  className="w-full py-2.5 pr-10 rounded-lg text-sm outline-none transition-colors resize-none"
-                  style={{ background: inputBg, border: inputBorder, color: inputColor, minHeight: 56, fontFamily: "'Noto Sans', sans-serif" }}
-                  placeholder={lang === 'fa' ? 'خیابان، کوچه، پلاک...' : 'Street, alley, number...'}
-                  rows={2}
-                />
-                <div className="absolute right-3 top-3 pointer-events-none"><LocationIcon color={colors.outline} /></div>
-              </div>
-            </div>
-
-            {/* PIN */}
-            <div>
-              <label className="text-xs font-medium mb-2 block" style={{ color: subtitleColor }}>
-                {lang === 'fa' ? 'رمز عبور ۴ رقمی (PIN)' : '4-digit PIN'}
-              </label>
-              <div className="flex flex-row-reverse gap-3 justify-start">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <input
-                    key={`pin-${i}`}
-                    ref={(el) => { pinRefs.current[i] = el }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={adminPin[i] || ''}
-                    onChange={(e) => handlePinInput(e, i, adminPin, handlePinChange, pinRefs)}
-                    onKeyDown={(e) => handlePinKeyDown(e, i, pinRefs)}
-                    className="w-14 h-16 text-center text-2xl font-bold rounded-xl outline-none transition-all"
-                    style={{
-                      background: pinBg,
-                      border: pinBorder,
-                      color: colors.primary,
-                    }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = colors.primary; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(0,97,148,0.1)' }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = isDark ? 'rgba(191,199,210,0.2)' : '#bfc7d2'; e.currentTarget.style.boxShadow = 'none' }}
-                  />
-                ))}
-              </div>
-              <p className="text-xs mt-1.5" style={{ color: subtitleColor, opacity: 0.7 }}>
-                {lang === 'fa' ? 'این رمز برای ورود سریع به اپلیکیشن استفاده خواهد شد.' : 'This PIN is used for quick app login.'}
-              </p>
-            </div>
-
-            {/* PIN Confirm */}
-            <div>
-              <label className="text-xs font-medium mb-2 block" style={{ color: subtitleColor }}>
-                {lang === 'fa' ? 'تأیید رمز عبور' : 'Confirm PIN'}
-              </label>
-              <div className="flex flex-row-reverse gap-3 justify-start">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <input
-                    key={`pinconf-${i}`}
-                    ref={(el) => { pinConfirmRefs.current[i] = el }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={adminPinConfirm[i] || ''}
-                    onChange={(e) => handlePinInput(e, i, adminPinConfirm, handlePinConfirmChange, pinConfirmRefs)}
-                    onKeyDown={(e) => handlePinKeyDown(e, i, pinConfirmRefs)}
-                    className="w-14 h-16 text-center text-2xl font-bold rounded-xl outline-none transition-all"
-                    style={{
-                      background: pinBg,
-                      border: adminPinConfirm[i] ? `2px solid ${colors.primary}` : pinBorder,
-                      color: colors.primary,
-                    }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = colors.primary; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(0,97,148,0.1)' }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = adminPinConfirm[i] ? colors.primary : (isDark ? 'rgba(191,199,210,0.2)' : '#bfc7d2'); e.currentTarget.style.boxShadow = 'none' }}
-                  />
-                ))}
-              </div>
-              {pinError && <p className="text-xs mt-1.5" style={{ color: '#ba1a1a' }}>{pinError}</p>}
-              {adminPin && adminPinConfirm && adminPin === adminPinConfirm && adminPin.length >= 4 && (
-                <p className="text-xs mt-1.5" style={{ color: '#22c55e' }}>
-                  {lang === 'fa' ? 'رمزها مطابقت دارند' : 'PINs match'}
+        {/* Form Panel */}
+        <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center overflow-y-auto">
+          {step === 1 ? (
+            // Step 1: Store Information
+            <>
+              <div className="mb-8">
+                <h2 className="text-2xl font-semibold mb-1" style={{ color: titleColor, fontFamily: "'IBM Plex Sans', sans-serif" }}>
+                  {lang === 'fa' ? 'اطلاعات فروشگاه' : 'Store Information'}
+                </h2>
+                <p className="text-sm" style={{ color: subtitleColor, opacity: 0.7 }}>
+                  {lang === 'fa' ? 'اطلاعات فروشگاه خود را وارد کنید' : 'Enter your store information'}
                 </p>
-              )}
-            </div>
+              </div>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={!shopName.trim() || adminPin.length < 4 || submitting}
-              className="w-full py-3 rounded-xl font-semibold text-base flex items-center justify-center gap-2 transition-all disabled:opacity-40 mt-4"
-              style={{ background: colors.primary, color: colors.onPrimary, fontFamily: "'IBM Plex Sans', sans-serif", boxShadow: '0 4px 16px rgba(0,97,148,0.3)' }}
-            >
-              {submitting ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  {lang === 'fa' ? 'ایجاد حساب کاربری' : 'Create Account'}
-                  <ArrowIcon color={colors.onPrimary} />
-                </>
-              )}
-            </button>
-          </form>
+              {/* Language & Theme Toggles */}
+              <div className="flex gap-3 mb-6">
+                <div className="flex-1">
+                  <label className="text-xs font-medium mb-1.5 block" style={{ color: subtitleColor }}>{ui.setup.selectLanguage}</label>
+                  <div className="flex rounded-lg overflow-hidden" style={{ border: inputBorder }}>
+                    <button onClick={() => switchLang('fa')} className="flex-1 py-2 text-xs font-bold transition-all"
+                      style={{ background: lang === 'fa' ? colors.primary : 'transparent', color: lang === 'fa' ? '#fff' : subtitleColor }}>
+                      فارسی
+                    </button>
+                    <button onClick={() => switchLang('en')} className="flex-1 py-2 text-xs font-bold transition-all"
+                      style={{ background: lang === 'en' ? colors.primary : 'transparent', color: lang === 'en' ? '#fff' : subtitleColor }}>
+                      English
+                    </button>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs font-medium mb-1.5 block" style={{ color: subtitleColor }}>{ui.setup.selectTheme}</label>
+                  <div className="flex rounded-lg overflow-hidden" style={{ border: inputBorder }}>
+                    <button onClick={() => setTheme('light')} className="flex-1 py-2 text-xs font-bold transition-all"
+                      style={{ background: !isDark ? colors.primary : 'transparent', color: !isDark ? '#fff' : subtitleColor }}>
+                      {lang === 'fa' ? 'روشن' : 'Light'}
+                    </button>
+                    <button onClick={() => setTheme('dark')} className="flex-1 py-2 text-xs font-bold transition-all"
+                      style={{ background: isDark ? colors.primary : 'transparent', color: isDark ? '#fff' : subtitleColor }}>
+                      {lang === 'fa' ? 'تاریک' : 'Dark'}
+                    </button>
+                  </div>
+                </div>
+              </div>
 
-          <div className="mt-6 pt-4 text-center" style={{ borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : '#bfc7d2'}` }}>
-            <p className="text-xs" style={{ color: subtitleColor }}>
-              {lang === 'fa' ? 'قبلاً ثبت‌نام کرده‌اید؟ ' : 'Already registered? '}
-              <button onClick={onComplete} className="font-bold hover:underline" style={{ color: colors.primary }}>
-                {lang === 'fa' ? 'وارد شوید' : 'Log in'}
+              <div className="space-y-5">
+                {/* Shop Name */}
+                <div>
+                  <label className="text-xs font-medium mb-1.5 block" style={{ color: subtitleColor }}>
+                    {lang === 'fa' ? 'نام فروشگاه یا واحد تجاری' : 'Store or business name'}
+                  </label>
+                  <div className="relative">
+                    <input
+                      value={shopName}
+                      onChange={(e) => setShopName(e.target.value)}
+                      className="w-full py-3 pr-10 rounded-lg text-sm outline-none transition-all focus:ring-2"
+                      style={{ 
+                        background: inputBg, 
+                        border: inputBorder, 
+                        color: inputColor, 
+                        fontFamily: "'Noto Sans', sans-serif",
+                        paddingRight: '2.5rem'
+                      }}
+                      placeholder={lang === 'fa' ? 'مثال: فروشگاه تراز' : 'e.g. My Store'}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleNext() }}
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <StoreIcon color={colors.outline} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="text-xs font-medium mb-1.5 block" style={{ color: subtitleColor }}>{ui.setup.shopPhone}</label>
+                  <div className="relative">
+                    <input
+                      value={shopPhone}
+                      onChange={(e) => setShopPhone(e.target.value.replace(/[^\d]/g, ''))}
+                      className="w-full py-3 px-10 rounded-lg text-sm outline-none transition-all focus:ring-2 text-center"
+                      style={{ 
+                        background: inputBg, 
+                        border: inputBorder, 
+                        color: inputColor, 
+                        fontFamily: "'Noto Sans', sans-serif",
+                      }}
+                      dir="ltr"
+                      placeholder="00 000 0000"
+                    />
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <CallIcon color={colors.outline} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div>
+                  <label className="text-xs font-medium mb-1.5 block" style={{ color: subtitleColor }}>{ui.setup.shopAddress}</label>
+                  <div className="relative">
+                    <textarea
+                      value={shopAddress}
+                      onChange={(e) => setShopAddress(e.target.value)}
+                      className="w-full py-3 pr-10 rounded-lg text-sm outline-none transition-all resize-none focus:ring-2"
+                      style={{ 
+                        background: inputBg, 
+                        border: inputBorder, 
+                        color: inputColor, 
+                        minHeight: 64, 
+                        fontFamily: "'Noto Sans', sans-serif",
+                        paddingRight: '2.5rem'
+                      }}
+                      placeholder={lang === 'fa' ? 'خیابان، کوچه، پلاک...' : 'Street, alley, number...'}
+                      rows={2}
+                    />
+                    <div className="absolute right-3 top-3 pointer-events-none">
+                      <LocationIcon color={colors.outline} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Next Button */}
+              <button
+                onClick={handleNext}
+                disabled={!shopName.trim()}
+                className="w-full py-3.5 rounded-xl font-semibold text-base flex items-center justify-center gap-2 transition-all disabled:opacity-40 hover:scale-[1.02] active:scale-[0.98] mt-6"
+                style={{ 
+                  background: colors.primary, 
+                  color: colors.onPrimary, 
+                  fontFamily: "'IBM Plex Sans', sans-serif", 
+                  boxShadow: '0 4px 16px rgba(0,97,148,0.3)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {lang === 'fa' ? 'مرحله بعد' : 'Next'}
+                <ArrowIcon color={colors.onPrimary} />
               </button>
-            </p>
-          </div>
+            </>
+          ) : (
+            // Step 2: PIN Setup
+            <>
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-1">
+                  <button 
+                    onClick={() => setStep(1)}
+                    className="p-1 rounded-lg transition-all hover:bg-black/5"
+                    style={{ color: subtitleColor }}
+                  >
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                  </button>
+                  <h2 className="text-2xl font-semibold" style={{ color: titleColor, fontFamily: "'IBM Plex Sans', sans-serif" }}>
+                    {lang === 'fa' ? 'تنظیم رمز عبور' : 'Set Password'}
+                  </h2>
+                </div>
+                <p className="text-sm mr-8" style={{ color: subtitleColor, opacity: 0.7 }}>
+                  {lang === 'fa' ? 'یک رمز ۴ رقمی برای ورود سریع انتخاب کنید' : 'Choose a 4-digit PIN for quick login'}
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                {/* PIN */}
+                <div>
+                  <label className="text-xs font-medium mb-2 block" style={{ color: subtitleColor }}>
+                    {lang === 'fa' ? 'رمز عبور ۴ رقمی (PIN)' : '4-digit PIN'}
+                  </label>
+                  <div className="flex flex-row-reverse gap-3 justify-center">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <input
+                        key={`pin-${i}`}
+                        ref={(el) => { pinRefs.current[i] = el }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={adminPin[i] || ''}
+                        onChange={(e) => handlePinInput(e, i, adminPin, handlePinChange, pinRefs)}
+                        onKeyDown={(e) => handlePinKeyDown(e, i, pinRefs)}
+                        className="w-14 h-16 text-center text-2xl font-bold rounded-xl outline-none transition-all focus:ring-2"
+                        style={{
+                          background: pinBg,
+                          border: pinBorder,
+                          color: colors.primary,
+                        }}
+                        onFocus={(e) => { 
+                          e.currentTarget.style.borderColor = colors.primary; 
+                          e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,97,148,0.15)' 
+                        }}
+                        onBlur={(e) => { 
+                          e.currentTarget.style.borderColor = isDark ? 'rgba(191,199,210,0.2)' : '#bfc7d2'; 
+                          e.currentTarget.style.boxShadow = 'none' 
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs mt-2 text-center" style={{ color: subtitleColor, opacity: 0.7 }}>
+                    {lang === 'fa' ? 'این رمز برای ورود سریع به اپلیکیشن استفاده خواهد شد.' : 'This PIN is used for quick app login.'}
+                  </p>
+                </div>
+
+                {/* PIN Confirm */}
+                <div>
+                  <label className="text-xs font-medium mb-2 block" style={{ color: subtitleColor }}>
+                    {lang === 'fa' ? 'تأیید رمز عبور' : 'Confirm PIN'}
+                  </label>
+                  <div className="flex flex-row-reverse gap-3 justify-center">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <input
+                        key={`pinconf-${i}`}
+                        ref={(el) => { pinConfirmRefs.current[i] = el }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={adminPinConfirm[i] || ''}
+                        onChange={(e) => handlePinInput(e, i, adminPinConfirm, handlePinConfirmChange, pinConfirmRefs)}
+                        onKeyDown={(e) => handlePinKeyDown(e, i, pinConfirmRefs)}
+                        className="w-14 h-16 text-center text-2xl font-bold rounded-xl outline-none transition-all focus:ring-2"
+                        style={{
+                          background: pinBg,
+                          border: adminPinConfirm[i] ? `2px solid ${colors.primary}` : pinBorder,
+                          color: colors.primary,
+                        }}
+                        onFocus={(e) => { 
+                          e.currentTarget.style.borderColor = colors.primary; 
+                          e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,97,148,0.15)' 
+                        }}
+                        onBlur={(e) => { 
+                          e.currentTarget.style.borderColor = adminPinConfirm[i] ? colors.primary : (isDark ? 'rgba(191,199,210,0.2)' : '#bfc7d2'); 
+                          e.currentTarget.style.boxShadow = 'none' 
+                        }}
+                      />
+                    ))}
+                  </div>
+                  {pinError && (
+                    <div className="mt-2 flex items-center justify-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#ba1a1a' }} />
+                      <p className="text-xs" style={{ color: '#ba1a1a' }}>{pinError}</p>
+                    </div>
+                  )}
+                  {adminPin && adminPinConfirm && adminPin === adminPinConfirm && adminPin.length >= 4 && (
+                    <div className="mt-2 flex items-center justify-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#22c55e' }} />
+                      <p className="text-xs" style={{ color: '#22c55e' }}>
+                        {lang === 'fa' ? '✓ رمزها مطابقت دارند' : '✓ PINs match'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Create Account Button */}
+              <button
+                onClick={handleSubmit}
+                disabled={adminPin.length < 4 || adminPin !== adminPinConfirm || submitting}
+                className="w-full py-3.5 rounded-xl font-semibold text-base flex items-center justify-center gap-2 transition-all disabled:opacity-40 hover:scale-[1.02] active:scale-[0.98] mt-6"
+                style={{ 
+                  background: colors.primary, 
+                  color: colors.onPrimary, 
+                  fontFamily: "'IBM Plex Sans', sans-serif", 
+                  boxShadow: '0 4px 16px rgba(0,97,148,0.3)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {submitting ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    {lang === 'fa' ? 'ایجاد حساب کاربری' : 'Create Account'}
+                    <CheckIcon color={colors.onPrimary} />
+                  </>
+                )}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

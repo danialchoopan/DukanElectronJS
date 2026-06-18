@@ -43,11 +43,13 @@ function SmallLogoIcon({ size = 48 }: { size?: number }) {
   )
 }
 
-function LockIcon({ className, color }: { className?: string; color: string }) {
+function AdminIcon({ className, color }: { className?: string; color: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0110 0v4" />
+      <path d="M12 15v3m-3-6h6m-3-3V6" />
+      <rect x="3" y="3" width="18" height="18" rx="3" />
+      <circle cx="12" cy="11" r="2" />
+      <path d="M8 21v-1a4 4 0 018 0v1" />
     </svg>
   )
 }
@@ -79,35 +81,6 @@ function ArrowIcon({ className, color }: { className?: string; color: string }) 
   )
 }
 
-function ShieldIcon({ className, color }: { className?: string; color: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
-  )
-}
-
-function ChartIcon({ className, color }: { className?: string; color: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="20" x2="18" y2="10" />
-      <line x1="12" y1="20" x2="12" y2="4" />
-      <line x1="6" y1="20" x2="6" y2="14" />
-    </svg>
-  )
-}
-
-function AdminIcon({ className, color }: { className?: string; color: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 15v3m-3-6h6m-3-3V6" />
-      <rect x="3" y="3" width="18" height="18" rx="3" />
-      <circle cx="12" cy="11" r="2" />
-      <path d="M8 21v-1a4 4 0 018 0v1" />
-    </svg>
-  )
-}
-
 function PersonIcon({ className, color }: { className?: string; color: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -117,7 +90,7 @@ function PersonIcon({ className, color }: { className?: string; color: string })
   )
 }
 
-function AccountGrid({
+function AccountList({
   users,
   selectedUserId,
   onSelect,
@@ -129,7 +102,7 @@ function AccountGrid({
   isDark: boolean
 }) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="flex flex-col gap-2">
       {users.map((u) => {
         const isActive = u.id === selectedUserId
         return (
@@ -137,7 +110,7 @@ function AccountGrid({
             key={u.id}
             type="button"
             onClick={() => onSelect(u)}
-            className="relative text-right p-4 rounded-xl transition-all cursor-pointer flex flex-col gap-1"
+            className="w-full text-right p-3 rounded-xl transition-all cursor-pointer flex items-center gap-3"
             style={isDark ? {
               background: isActive ? 'rgba(0, 97, 148, 0.2)' : 'rgba(35, 49, 68, 0.6)',
               border: isActive ? '2px solid #93ccff' : '1px solid rgba(255, 255, 255, 0.1)',
@@ -147,35 +120,37 @@ function AccountGrid({
               border: isActive ? `2px solid ${colors.primary}` : `1px solid ${colors.outlineVariant}`,
             }}
           >
-            <div className="flex justify-between items-center w-full mb-1">
+            <div className="flex-shrink-0">
               {u.role === 'admin' ? (
                 <AdminIcon className="w-6 h-6" color={isDark ? (isActive ? colors.inversePrimary : colors.outline) : colors.primary} />
               ) : (
                 <PersonIcon className="w-6 h-6" color={isDark ? (isActive ? colors.inversePrimary : colors.outline) : colors.secondary} />
               )}
-              <div
-                className="w-2 h-2 rounded-full"
-                style={{
-                  background: isDark
-                    ? (isActive ? colors.secondaryFixed : colors.outline)
-                    : (isActive ? colors.primary : colors.outlineVariant),
-                  opacity: isDark ? (isActive ? 1 : 0.3) : 1,
-                  boxShadow: isDark && isActive ? '0 0 8px #89f5e7' : 'none',
-                }}
-              />
             </div>
-            <span
-              className="text-[14px] leading-[20px] font-medium"
+            <div className="flex-1">
+              <span
+                className="text-[14px] leading-[20px] font-medium block"
+                style={{
+                  color: isDark ? '#fdfcff' : colors.onSurface,
+                  fontFamily: "'IBM Plex Sans', sans-serif",
+                }}
+              >
+                {u.name}
+              </span>
+              <span className="text-[12px]" style={{ color: isDark ? '#d5e3fc' : colors.onSurfaceVariant }}>
+                {u.role === 'admin' ? fa.admin.admin : fa.admin.cashier}
+              </span>
+            </div>
+            <div
+              className="w-2 h-2 rounded-full flex-shrink-0"
               style={{
-                color: isDark ? '#fdfcff' : colors.onSurface,
-                fontFamily: "'IBM Plex Sans', sans-serif",
+                background: isDark
+                  ? (isActive ? colors.secondaryFixed : colors.outline)
+                  : (isActive ? colors.primary : colors.outlineVariant),
+                opacity: isDark ? (isActive ? 1 : 0.3) : 1,
+                boxShadow: isDark && isActive ? '0 0 8px #89f5e7' : 'none',
               }}
-            >
-              {u.name}
-            </span>
-            <span className="text-[12px]" style={{ color: isDark ? '#d5e3fc' : colors.onSurfaceVariant }}>
-              {u.role === 'admin' ? fa.admin.admin : fa.admin.cashier}
-            </span>
+            />
           </button>
         )
       })}
@@ -188,17 +163,17 @@ interface LayoutProps {
   selectedUser: User | null
   error: string
   loading: boolean
-  password: string
-  showPassword: boolean
+  pin: string
+  showPin: boolean
   onSelectUser: (u: User) => void
   onSubmit: (e: React.FormEvent) => void
-  setPassword: (v: string) => void
-  setShowPassword: (v: boolean) => void
-  passwordRef: React.RefObject<HTMLInputElement>
+  setPin: (v: string) => void
+  setShowPin: (v: boolean) => void
+  pinRefs: React.MutableRefObject<(HTMLInputElement | null)[]>
   isDark: boolean
 }
 
-function UnifiedLayout({ users, selectedUser, error, loading, password, showPassword, onSelectUser, onSubmit, setPassword, setShowPassword, passwordRef, isDark }: LayoutProps) {
+function UnifiedLayout({ users, selectedUser, error, loading, pin, showPin, onSelectUser, onSubmit, setPin, setShowPin, pinRefs, isDark }: LayoutProps) {
   const ui = t()
 
   const brandCardBlur = 'blur(12px)'
@@ -226,13 +201,36 @@ function UnifiedLayout({ users, selectedUser, error, loading, password, showPass
   const footerBorder = isDark ? '1px solid rgba(255,255,255,0.05)' : `1px solid ${colors.outlineVariant}`
   const footerText = isDark ? '#d5e3fc' : colors.onSurfaceVariant
 
+  const handlePinInput = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const digit = e.target.value.replace(/\D/g, '')
+    if (digit) {
+      const arr = pin.split('')
+      arr[index] = digit
+      const newVal = arr.join('').slice(0, 4)
+      setPin(newVal)
+      if (index < 3) pinRefs.current[index + 1]?.focus()
+    } else if (e.target.value === '') {
+      const arr = pin.split('')
+      arr[index] = ''
+      const newVal = arr.join('')
+      setPin(newVal)
+      if (index > 0) pinRefs.current[index - 1]?.focus()
+    }
+  }
+
+  const handlePinKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Backspace' && !(e.target as HTMLInputElement).value && index > 0) {
+      pinRefs.current[index - 1]?.focus()
+    }
+  }
+
   return (
     <>
       <main className="relative z-10 w-full max-w-[1200px] px-8 grid grid-cols-12 gap-6 items-center">
         <section className="hidden lg:flex col-span-5 flex-col items-start text-right pr-12">
-          <div className="mb-12">
+          <div className="mb-6">
             <LogoIcon size={96} />
-            <h1 className="text-[32px] leading-[48px] font-bold mt-4 mb-2" style={{ color: titleColor, fontFamily: "'IBM Plex Sans', sans-serif" }}>
+            <h1 className="text-[32px] leading-[48px] font-bold mt-4 mb-1" style={{ color: titleColor, fontFamily: "'IBM Plex Sans', sans-serif" }}>
               {ui.app.title}
             </h1>
             <p className="text-[18px] leading-[28px]" style={{ color: subtitleColor }}>
@@ -240,25 +238,61 @@ function UnifiedLayout({ users, selectedUser, error, loading, password, showPass
             </p>
           </div>
           <div className="flex flex-col gap-4 w-full">
-            <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: featureBg, backdropFilter: brandCardBlur, border: featureBorder }}>
-              <div className="p-2 rounded-lg" style={{ background: featureShieldBg }}>
-                <ShieldIcon className="w-6 h-6" color={colors.inversePrimary} />
-              </div>
-              <div>
-                <h3 className="text-[14px] leading-[20px] font-medium" style={{ color: featureTextPrimary, fontFamily: "'IBM Plex Sans', sans-serif" }}>امنیت در سطح بانکی</h3>
-                <p className="text-[12px]" style={{ color: featureTextSecondary }}>داده‌های مالی شما با پیشرفته‌ترین پروتکل‌ها رمزنگاری می‌شوند.</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: featureBg, backdropFilter: brandCardBlur, border: featureBorder }}>
-              <div className="p-2 rounded-lg" style={{ background: featureChartBg }}>
-                <ChartIcon className="w-6 h-6" color={colors.secondaryFixed} />
-              </div>
-              <div>
-                <h3 className="text-[14px] leading-[20px] font-medium" style={{ color: featureTextPrimary, fontFamily: "'IBM Plex Sans', sans-serif" }}>گزارش‌های بلادرنگ</h3>
-                <p className="text-[12px]" style={{ color: featureTextSecondary }}>دسترسی آنی به ترازنامه‌ها و تحلیل‌های سود و زیان.</p>
-              </div>
-            </div>
-          </div>
+  {/* Advanced Inventory Management */}
+  <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: featureBg, backdropFilter: brandCardBlur, border: featureBorder }}>
+    <div className="p-2 rounded-lg" style={{ background: featureShieldBg }}>
+      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke={isDark ? colors.inversePrimary : colors.primary} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+        <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" />
+      </svg>
+    </div>
+    <div>
+      <h3 className="text-[14px] leading-[20px] font-medium" style={{ color: featureTextPrimary, fontFamily: "'IBM Plex Sans', sans-serif" }}>
+        انبارداری پیشرفته
+      </h3>
+      <p className="text-[12px]" style={{ color: featureTextSecondary }}>
+        مدیریت هوشمند موجودی کالا، رهگیری ورود و خروج، هشدار موجودی کم و انبار گردانی خودکار.
+      </p>
+    </div>
+  </div>
+
+  {/* Advanced Sales & Accounting */}
+  <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: featureBg, backdropFilter: brandCardBlur, border: featureBorder }}>
+    <div className="p-2 rounded-lg" style={{ background: featureChartBg }}>
+      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke={isDark ? colors.secondaryFixed : colors.secondary} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+        <circle cx="12" cy="12" r="4" />
+      </svg>
+    </div>
+    <div>
+      <h3 className="text-[14px] leading-[20px] font-medium" style={{ color: featureTextPrimary, fontFamily: "'IBM Plex Sans', sans-serif" }}>
+        فروش و حسابداری پیشرفته
+      </h3>
+      <p className="text-[12px]" style={{ color: featureTextSecondary }}>
+        صدور فاکتور، ثبت تراکنش‌های مالی، گزارش سود و زیان، ترازنامه و مدیریت کامل حساب‌ها.
+      </p>
+    </div>
+  </div>
+
+  {/* Customer Debt Management */}
+  <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: featureBg, backdropFilter: brandCardBlur, border: featureBorder }}>
+    <div className="p-2 rounded-lg" style={{ background: featureShieldBg }}>
+      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke={isDark ? colors.inversePrimary : colors.primary} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+        <circle cx="12" cy="12" r="4" />
+        <path d="M8 12h8" />
+      </svg>
+    </div>
+    <div>
+      <h3 className="text-[14px] leading-[20px] font-medium" style={{ color: featureTextPrimary, fontFamily: "'IBM Plex Sans', sans-serif" }}>
+        مدیریت بدهی مشتریان
+      </h3>
+      <p className="text-[12px]" style={{ color: featureTextSecondary }}>
+        ثبت و پیگیری مطالبات، سررسید پرداخت‌ها، اعلان بدهی و گزارش‌های جامع از وضعیت مالی مشتریان.
+      </p>
+    </div>
+  </div>
+</div>
         </section>
 
         <section className="col-span-12 lg:col-span-7 flex justify-center">
@@ -278,47 +312,58 @@ function UnifiedLayout({ users, selectedUser, error, loading, password, showPass
             </div>
 
             <div className="mb-6">
-              <AccountGrid users={users} selectedUserId={selectedUser?.id ?? null} onSelect={onSelectUser} isDark={isDark} />
+              <AccountList users={users} selectedUserId={selectedUser?.id ?? null} onSelect={onSelectUser} isDark={isDark} />
             </div>
 
             {selectedUser && (
               <form onSubmit={onSubmit} className="space-y-5">
                 <div className="space-y-2">
                   <label className="text-[14px] leading-[20px] font-medium block pr-1" style={{ color: labelColor, fontFamily: "'IBM Plex Sans', sans-serif" }}>
-                    گذرواژه
+                    رمز ۴ رقمی (PIN)
                   </label>
-                  <div className="relative">
-                    <input
-                      ref={passwordRef}
-                      className="w-full rounded-lg py-3 px-12 focus:ring-2 focus:ring-[#006194] focus:border-transparent transition-all placeholder:text-[#707881] text-left ltr"
-                      style={{
-                        background: inputBg,
-                        border: inputBorder,
-                        color: inputText,
-                      }}
-                      placeholder="••••••••"
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <LockIcon className="w-5 h-5" color={colors.outline} />
-                    </div>
+                  <div className="flex flex-row-reverse gap-3 justify-center">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <input
+                        key={`pin-${i}`}
+                        ref={(el) => { pinRefs.current[i] = el }}
+                        type={showPin ? 'text' : 'password'}
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={pin[i] || ''}
+                        onChange={(e) => handlePinInput(e, i)}
+                        onKeyDown={(e) => handlePinKeyDown(e, i)}
+                        className="w-14 h-16 text-center text-2xl font-bold rounded-xl outline-none transition-all focus:ring-2"
+                        style={{
+                          background: inputBg,
+                          border: pin[i] ? `2px solid ${colors.primary}` : inputBorder,
+                          color: inputText,
+                        }}
+                        onFocus={(e) => { 
+                          e.currentTarget.style.borderColor = colors.primary; 
+                          e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,97,148,0.15)' 
+                        }}
+                        onBlur={(e) => { 
+                          e.currentTarget.style.borderColor = pin[i] ? colors.primary : (isDark ? 'rgba(112,120,129,0.3)' : colors.outlineVariant); 
+                          e.currentTarget.style.boxShadow = 'none' 
+                        }}
+                      />
+                    ))}
                     <button
                       type="button"
-                      className="absolute inset-y-0 left-0 flex items-center pl-3 transition-colors"
-                      onClick={() => setShowPassword(!showPassword)}
+                      className="flex items-center justify-center w-10 h-16 rounded-xl transition-colors"
+                      style={{ color: colors.outline }}
+                      onClick={() => setShowPin(!showPin)}
                     >
-                      {showPassword ? (
+                      {showPin ? (
                         <EyeOffIcon className="w-5 h-5" color={colors.outline} />
                       ) : (
                         <EyeIcon className="w-5 h-5" color={colors.outline} />
                       )}
                     </button>
                   </div>
-                  <div className="flex justify-between items-center px-1 mt-1">
-                    <a className="text-[12px] hover:underline" style={{ color: colors.inversePrimary }} href="#" onClick={(e) => e.preventDefault()}>فراموشی رمز عبور؟</a>
-                  </div>
+                  <p className="text-xs text-center" style={{ color: subtitleColor, opacity: 0.7 }}>
+                    {fa.auth.defaultPin}
+                  </p>
                 </div>
 
                 {error && (
@@ -327,14 +372,15 @@ function UnifiedLayout({ users, selectedUser, error, loading, password, showPass
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || pin.length < 4}
                   className="w-full text-[24px] leading-[36px] font-semibold py-3 rounded-xl transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-3"
                   style={{
-                    background: loading ? colors.primaryContainer : colors.primary,
+                    background: loading || pin.length < 4 ? colors.primaryContainer : colors.primary,
                     color: colors.onPrimary,
                     fontFamily: "'IBM Plex Sans', sans-serif",
                     boxShadow: '0 4px 16px rgba(0, 97, 148, 0.2)',
-                    opacity: loading ? 0.7 : 1,
+                    opacity: loading || pin.length < 4 ? 0.7 : 1,
+                    cursor: loading || pin.length < 4 ? 'not-allowed' : 'pointer',
                   }}
                 >
                   {loading ? (
@@ -350,7 +396,7 @@ function UnifiedLayout({ users, selectedUser, error, loading, password, showPass
             )}
 
             {!selectedUser && (
-              <p className="text-center text-[12px] mt-2" style={{ color: subtitleColor }}>{fa.auth.defaultPin}</p>
+              <p className="text-center text-[12px] mt-2" style={{ color: subtitleColor }}>لطفاً یک حساب کاربری انتخاب کنید</p>
             )}
           </div>
         </section>
@@ -373,13 +419,13 @@ export default function LockScreen() {
   const theme = useSettingsStore((s) => s.theme)
   const [users, setUsers] = useState<User[]>([])
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [pin, setPin] = useState('')
+  const [showPin, setShowPin] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const ui = t()
   const isDark = theme === 'dark'
-  const passwordRef = useRef<HTMLInputElement>(null)
+  const pinRefs = useRef<(HTMLInputElement | null)[]>([])
 
   const selectedUser = users.find((u) => u.id === selectedUserId) || null
 
@@ -389,8 +435,15 @@ export default function LockScreen() {
     })
   }, [])
 
+  useEffect(() => {
+    // Auto-login when PIN reaches 4 digits
+    if (pin.length === 4 && selectedUser) {
+      handleLogin(pin)
+    }
+  }, [pin])
+
   const handleLogin = async (pw: string) => {
-    if (!selectedUser || !pw) return
+    if (!selectedUser || pw.length < 4) return
     setLoading(true); setError('')
     const result = await window.api.auth.login(pw)
     if (result.success && result.data) {
@@ -399,6 +452,8 @@ export default function LockScreen() {
       if (suspendsResult.success && suspendsResult.data) loadSuspendSlots(suspendsResult.data)
     } else {
       setError(result.error || ui.auth.invalidPin)
+      setPin('')
+      pinRefs.current[0]?.focus()
       setTimeout(() => setError(''), 2000)
     }
     setLoading(false)
@@ -406,15 +461,15 @@ export default function LockScreen() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedUser) return
-    handleLogin(password)
+    if (!selectedUser || pin.length < 4) return
+    handleLogin(pin)
   }
 
   const handleSelectUser = (u: User) => {
     setSelectedUserId(u.id)
-    setPassword('')
+    setPin('')
     setError('')
-    setTimeout(() => passwordRef.current?.focus(), 100)
+    setTimeout(() => pinRefs.current[0]?.focus(), 100)
   }
 
   return (
@@ -442,13 +497,13 @@ export default function LockScreen() {
         selectedUser={selectedUser}
         error={error}
         loading={loading}
-        password={password}
-        showPassword={showPassword}
+        pin={pin}
+        showPin={showPin}
         onSelectUser={handleSelectUser}
         onSubmit={handleSubmit}
-        setPassword={setPassword}
-        setShowPassword={setShowPassword}
-        passwordRef={passwordRef}
+        setPin={setPin}
+        setShowPin={setShowPin}
+        pinRefs={pinRefs}
         isDark={isDark}
       />
     </div>

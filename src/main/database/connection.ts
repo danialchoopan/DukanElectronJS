@@ -30,9 +30,8 @@ export function closeDatabase(): void {
 
 export function isFirstRun(): boolean {
   const db = getDatabase()
-  const userCount = (db.prepare('SELECT COUNT(*) as c FROM users').get() as { c: number }).c
-  const productCount = (db.prepare('SELECT COUNT(*) as c FROM products WHERE isActive = 1').get() as { c: number }).c
-  return userCount <= 1 && productCount === 0
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'isSetupComplete'").get() as { value: string } | undefined
+  return !row || row.value !== 'true'
 }
 
 function initializeDatabase(db: Database.Database): void {
