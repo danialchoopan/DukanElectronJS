@@ -13,7 +13,7 @@ export interface Category {
 
 export function getAllCategories(): Category[] {
   const db = getDatabase()
-  const cats = db.prepare('SELECT *, is_active as isActive FROM categories ORDER BY level, name').all() as Category[]
+  const cats = db.prepare('SELECT *, is_active as isActive, parent_id as parentId FROM categories ORDER BY level, name').all() as Category[]
   const counts = db.prepare('SELECT category, COUNT(*) as c FROM products WHERE isActive = 1 GROUP BY category').all() as { category: string; c: number }[]
   const countMap = new Map(counts.map(r => [r.category, r.c]))
   return cats.map(c => ({ ...c, productCount: countMap.get(c.name) || 0 }))
@@ -29,7 +29,7 @@ export function getSubcategories(parentId: number): Category[] {
 
 export function getCategoryById(id: number): Category | undefined {
   const db = getDatabase()
-  const cat = db.prepare('SELECT *, is_active as isActive FROM categories WHERE id = ?').get(id) as Category | undefined
+  const cat = db.prepare('SELECT *, is_active as isActive, parent_id as parentId FROM categories WHERE id = ?').get(id) as Category | undefined
   if (!cat) return undefined
   const count = db.prepare('SELECT COUNT(*) as c FROM products WHERE category = ? AND isActive = 1').get(cat.name) as { c: number }
   return { ...cat, productCount: count.c }
