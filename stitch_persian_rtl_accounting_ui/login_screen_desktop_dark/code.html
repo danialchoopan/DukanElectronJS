@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ورود به سیستم | تراز نوین</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Noto+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-low": "#eff4ff",
+                    "inverse-primary": "#93ccff",
+                    "secondary-fixed": "#89f5e7",
+                    "surface-container-highest": "#d5e3fc",
+                    "outline": "#707881",
+                    "on-primary-container": "#fdfcff",
+                    "primary-fixed-dim": "#93ccff",
+                    "on-tertiary-fixed-variant": "#6b3b00",
+                    "on-tertiary-fixed": "#2d1600",
+                    "surface": "#f8f9ff",
+                    "on-surface-variant": "#3f4850",
+                    "on-secondary-fixed": "#00201d",
+                    "inverse-surface": "#233144",
+                    "surface-container": "#e6eeff",
+                    "on-primary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "on-primary-fixed": "#001d31",
+                    "surface-variant": "#d5e3fc",
+                    "on-secondary-fixed-variant": "#005049",
+                    "error": "#ba1a1a",
+                    "on-error-container": "#93000a",
+                    "on-background": "#0d1c2e",
+                    "surface-bright": "#f8f9ff",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#007bb9",
+                    "primary": "#006194",
+                    "secondary": "#006a61",
+                    "tertiary": "#894d00",
+                    "on-surface": "#0d1c2e"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "gutter": "16px",
+                    "lg": "24px",
+                    "xl": "48px",
+                    "xs": "4px",
+                    "sm": "8px",
+                    "margin-mobile": "16px",
+                    "margin-desktop": "32px",
+                    "md": "16px"
+            },
+            "fontFamily": {
+                    "headline-md": ["IBM Plex Sans"],
+                    "headline-lg": ["IBM Plex Sans"],
+                    "numeric-data": ["IBM Plex Sans"],
+                    "label-sm": ["IBM Plex Sans"],
+                    "body-lg": ["Noto Sans"],
+                    "body-md": ["Noto Sans"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "48px", "fontWeight": "700"}],
+                    "numeric-data": ["20px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0d1c2e; /* Mapping to on-background for deep dark theme */
+            color: #fdfcff;
+            font-family: 'Noto Sans', sans-serif;
+            overflow-x: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(35, 49, 68, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .account-card-active {
+            border: 2px solid #93ccff;
+            background: rgba(0, 97, 148, 0.2);
+        }
+        .gradient-bg {
+            background: radial-gradient(circle at 10% 20%, rgba(0, 97, 148, 0.15) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 80%, rgba(0, 106, 97, 0.1) 0%, transparent 40%);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center gradient-bg relative">
+<!-- Decorative Atmospheric Elements -->
+<div class="absolute top-0 right-0 w-1/2 h-full opacity-20 pointer-events-none overflow-hidden">
+<div class="absolute -top-24 -right-24 w-[600px] h-[600px] bg-primary rounded-full blur-[120px]"></div>
+</div>
+<!-- Main Login Container -->
+<main class="relative z-10 w-full max-w-[1200px] px-margin-desktop grid grid-cols-12 gap-lg items-center">
+<!-- Right Column: Brand Identity & Message -->
+<section class="hidden lg:flex col-span-5 flex-col items-start text-right pr-xl">
+<div class="mb-xl">
+<img alt="تراز نوین" class="w-24 h-24 mb-md" src="https://lh3.googleusercontent.com/aida/AP1WRLsnou6haWyFZMgZduFxNhEEme9NbGDprALH7_zuKUnsiT7WZDykbZ9O1cfPMYSlJgV5gN7Z2f3K6pbemgkkzf7IB7ziXD5awV4BF8AAppOPu4UV1uj5R2_KJFoVd3_blnZTeiWXEdQbByRf-3Dsk9mE1qUlWXvMYjZK_egngSoisMrq5dSRoSCyYKzFKdSgyUAjYnySHj5YCK-Hhz-X1myDyxgERnLwv1xgRgh8F4c5A5N930968cyUftvB"/>
+<h1 class="font-headline-lg text-headline-lg text-inverse-primary mb-sm">تراز نوین</h1>
+<p class="font-body-lg text-body-lg text-surface-variant max-w-md">نرم‌افزار جامع مالی و حسابداری با تمرکز بر دقت، شفافیت و مدیریت هوشمند جریان‌های نقدی شما.</p>
+</div>
+<div class="flex flex-col gap-md w-full">
+<div class="glass-card p-md rounded-xl flex items-center gap-md">
+<div class="bg-primary/20 p-sm rounded-lg">
+<span class="material-symbols-outlined text-inverse-primary" data-icon="shield">shield</span>
+</div>
+<div>
+<h3 class="font-label-sm text-label-sm text-on-primary-container">امنیت در سطح بانکی</h3>
+<p class="text-[12px] text-surface-variant">داده‌های مالی شما با پیشرفته‌ترین پروتکل‌ها رمزنگاری می‌شوند.</p>
+</div>
+</div>
+<div class="glass-card p-md rounded-xl flex items-center gap-md">
+<div class="bg-secondary/20 p-sm rounded-lg">
+<span class="material-symbols-outlined text-secondary-fixed" data-icon="analytics">analytics</span>
+</div>
+<div>
+<h3 class="font-label-sm text-label-sm text-on-primary-container">گزارش‌های بلادرنگ</h3>
+<p class="text-[12px] text-surface-variant">دسترسی آنی به ترازنامه‌ها و تحلیل‌های سود و زیان.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Left Column: Login Form -->
+<section class="col-span-12 lg:col-span-7 flex justify-center">
+<div class="glass-card w-full max-w-[520px] rounded-xl p-xl shadow-2xl">
+<div class="flex justify-between items-center mb-xl">
+<div>
+<h2 class="font-headline-md text-headline-md text-primary-fixed-dim">خوش آمدید</h2>
+<p class="font-body-md text-body-md text-surface-variant">جهت ورود به سیستم، حساب کاربری خود را انتخاب کنید.</p>
+</div>
+<div class="lg:hidden">
+<img alt="Logo" class="w-12 h-12" src="https://lh3.googleusercontent.com/aida/AP1WRLsnou6haWyFZMgZduFxNhEEme9NbGDprALH7_zuKUnsiT7WZDykbZ9O1cfPMYSlJgV5gN7Z2f3K6pbemgkkzf7IB7ziXD5awV4BF8AAppOPu4UV1uj5R2_KJFoVd3_blnZTeiWXEdQbByRf-3Dsk9mE1qUlWXvMYjZK_egngSoisMrq5dSRoSCyYKzFKdSgyUAjYnySHj5YCK-Hhz-X1myDyxgERnLwv1xgRgh8F4c5A5N930968cyUftvB"/>
+</div>
+</div>
+<!-- Account Selection Bento -->
+<div class="grid grid-cols-2 gap-md mb-xl">
+<button class="account-card-active group relative text-right p-md rounded-xl transition-all hover:bg-surface-container-variant flex flex-col gap-xs cursor-pointer" onclick="selectAccount(this)">
+<div class="flex justify-between items-center w-full mb-xs">
+<span class="material-symbols-outlined text-inverse-primary" data-icon="person">person</span>
+<div class="w-2 h-2 rounded-full bg-secondary-fixed shadow-[0_0_8px_#89f5e7]"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-primary-container">مدیریت کل (ادمین)</span>
+<span class="text-[12px] text-surface-variant">آخرین بازدید: ۱۰ دقیقه پیش</span>
+</button>
+<button class="glass-card group relative text-right p-md rounded-xl transition-all hover:bg-surface-container-low/10 flex flex-col gap-xs cursor-pointer" onclick="selectAccount(this)">
+<div class="flex justify-between items-center w-full mb-xs">
+<span class="material-symbols-outlined text-outline" data-icon="account_balance">account_balance</span>
+<div class="w-2 h-2 rounded-full bg-outline opacity-30"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-primary-container">واحد حسابداری</span>
+<span class="text-[12px] text-surface-variant">آخرین بازدید: دیروز</span>
+</button>
+</div>
+<!-- Login Fields -->
+<form class="space-y-lg" onsubmit="return false;">
+<div class="space-y-sm">
+<label class="font-label-sm text-label-sm text-surface-variant block pr-xs">گذرواژه</label>
+<div class="relative">
+<input class="w-full bg-inverse-surface/50 border-outline/30 text-on-primary-container rounded-lg py-md px-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-outline text-left ltr" id="password-input" placeholder="••••••••" type="password"/>
+<div class="absolute inset-y-0 right-0 flex items-center pr-md pointer-events-none">
+<span class="material-symbols-outlined text-outline" data-icon="lock">lock</span>
+</div>
+<button class="absolute inset-y-0 left-0 flex items-center pl-md text-outline hover:text-inverse-primary transition-colors" onclick="togglePassword()" type="button">
+<span class="material-symbols-outlined" data-icon="visibility" id="eye-icon">visibility</span>
+</button>
+</div>
+<div class="flex justify-between items-center px-xs mt-xs">
+<a class="text-[12px] text-inverse-primary hover:underline" href="#">فراموشی رمز عبور؟</a>
+<div class="flex items-center gap-xs">
+<span class="text-[12px] text-surface-variant">ذخیره نشست</span>
+<input class="rounded-xs bg-inverse-surface border-outline/30 text-primary focus:ring-primary" type="checkbox"/>
+</div>
+</div>
+</div>
+<button class="w-full bg-primary hover:bg-primary-container text-on-primary font-headline-md text-headline-md py-md rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-primary/20 flex items-center justify-center gap-md" type="submit">
+<span>ورود به سیستم</span>
+<span class="material-symbols-outlined rotate-180" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<!-- Divider -->
+<div class="flex items-center gap-md my-xl opacity-30">
+<div class="h-[1px] flex-1 bg-outline"></div>
+<span class="font-label-sm text-label-sm text-surface-variant">یا استفاده از</span>
+<div class="h-[1px] flex-1 bg-outline"></div>
+</div>
+<!-- Biometric Options -->
+<div class="grid grid-cols-2 gap-md">
+<button class="flex items-center justify-center gap-sm glass-card hover:bg-surface-container-low/10 py-md rounded-xl transition-all" type="button">
+<span class="material-symbols-outlined text-secondary-fixed" data-icon="fingerprint">fingerprint</span>
+<span class="font-label-sm text-label-sm text-on-primary-container">اثر انگشت</span>
+</button>
+<button class="flex items-center justify-center gap-sm glass-card hover:bg-surface-container-low/10 py-md rounded-xl transition-all" type="button">
+<span class="material-symbols-outlined text-inverse-primary" data-icon="face">face</span>
+<span class="font-label-sm text-label-sm text-on-primary-container">تشخیص چهره</span>
+</button>
+</div>
+</form>
+<p class="text-center mt-xl text-[12px] text-surface-variant">
+                    کاربر جدید هستید؟ <a class="text-secondary-fixed hover:underline" href="#">درخواست دسترسی به واحد IT</a>
+</p>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="absolute bottom-0 w-full py-md px-margin-desktop flex justify-between items-center border-t border-outline/10 glass-card">
+<p class="font-label-sm text-label-sm text-surface-variant opacity-60">© ۱۴۰۲ تمام حقوق برای تراز نوین محفوظ است</p>
+<div class="flex gap-lg">
+<a class="font-label-sm text-label-sm text-surface-variant hover:text-inverse-primary transition-colors" href="#">قوانین و مقررات</a>
+<a class="font-label-sm text-label-sm text-surface-variant hover:text-inverse-primary transition-colors" href="#">تماس با پشتیبانی</a>
+</div>
+</footer>
+<script>
+        function togglePassword() {
+            const input = document.getElementById('password-input');
+            const icon = document.getElementById('eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility_off';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility';
+            }
+        }
+
+        function selectAccount(element) {
+            // Remove active classes from all siblings
+            const parent = element.parentElement;
+            const buttons = parent.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.classList.remove('account-card-active');
+                btn.classList.add('glass-card');
+                // Adjust icons and status indicators
+                const indicator = btn.querySelector('.rounded-full');
+                if(indicator) {
+                    indicator.classList.remove('bg-secondary-fixed', 'shadow-[0_0_8px_#89f5e7]');
+                    indicator.classList.add('bg-outline', 'opacity-30');
+                }
+                const icon = btn.querySelector('.material-symbols-outlined');
+                if(icon) {
+                    icon.classList.remove('text-inverse-primary');
+                    icon.classList.add('text-outline');
+                }
+            });
+
+            // Add active class to selected
+            element.classList.add('account-card-active');
+            element.classList.remove('glass-card');
+            
+            const indicator = element.querySelector('.rounded-full');
+            if(indicator) {
+                indicator.classList.add('bg-secondary-fixed', 'shadow-[0_0_8px_#89f5e7]');
+                indicator.classList.remove('bg-outline', 'opacity-30');
+            }
+            const icon = element.querySelector('.material-symbols-outlined');
+            if(icon) {
+                icon.classList.add('text-inverse-primary');
+                icon.classList.remove('text-outline');
+            }
+        }
+    </script>
+</body></html>

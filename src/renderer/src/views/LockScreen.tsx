@@ -97,33 +97,6 @@ function ChartIcon({ className, color }: { className?: string; color: string }) 
   )
 }
 
-function FingerprintIcon({ className, color }: { className?: string; color: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 018 4" />
-      <path d="M5 19.5C5.5 18 6 15 6 12c0-2.2.9-4.2 2.3-5.7" />
-      <path d="M12 12a2 2 0 100-4 2 2 0 000 4z" />
-      <path d="M16.2 7.8C15.3 9.2 14 11 14 14c0 1.1-.4 2.1-1 2.8" />
-      <path d="M18 12c0 2.7-1.1 5.2-3 7" />
-      <path d="M20 15c-.5 1.3-1.2 2.5-2 3.5" />
-      <path d="M7.5 18C6.5 16.5 5.7 14.8 5 12.5" />
-      <path d="M17 21c-1.2-.8-2.2-2-2.8-3.5" />
-      <path d="M8.5 16.5c1.5 1.5 2.5 3.5 2.5 5.5" />
-    </svg>
-  )
-}
-
-function FaceIcon({ className, color }: { className?: string; color: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="10" r="1" fill={color} />
-      <circle cx="15" cy="10" r="1" fill={color} />
-      <path d="M9 15a3.5 3.5 0 006 0" />
-      <rect x="3" y="3" width="18" height="18" rx="9" />
-    </svg>
-  )
-}
-
 function AdminIcon({ className, color }: { className?: string; color: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -249,9 +222,6 @@ function UnifiedLayout({ users, selectedUser, error, loading, password, showPass
 
   const labelColor = isDark ? '#d5e3fc' : colors.onSurfaceVariant
 
-  const biometricBg = isDark ? 'rgba(35, 49, 68, 0.6)' : '#ffffff'
-  const biometricBorder = isDark ? '1px solid rgba(255, 255, 255, 0.1)' : `1px solid ${colors.outlineVariant}`
-
   const footerBg = isDark ? 'rgba(35, 49, 68, 0.6)' : '#ffffff'
   const footerBorder = isDark ? '1px solid rgba(255,255,255,0.05)' : `1px solid ${colors.outlineVariant}`
   const footerText = isDark ? '#d5e3fc' : colors.onSurfaceVariant
@@ -376,34 +346,12 @@ function UnifiedLayout({ users, selectedUser, error, loading, password, showPass
                     </>
                   )}
                 </button>
-
-                <div className="flex items-center gap-4 my-4 opacity-30">
-                  <div className="h-[1px] flex-1" style={{ background: colors.outline }} />
-                  <span className="text-[14px] leading-[20px] font-medium" style={{ color: labelColor, fontFamily: "'IBM Plex Sans', sans-serif" }}>یا استفاده از</span>
-                  <div className="h-[1px] flex-1" style={{ background: colors.outline }} />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <button type="button" className="flex items-center justify-center gap-2 py-3 rounded-xl transition-all hover:scale-[0.98]" style={{ background: biometricBg, border: biometricBorder, backdropFilter: isDark ? 'blur(12px)' : undefined }}>
-                    <FingerprintIcon className="w-5 h-5" color={colors.secondaryFixed} />
-                    <span className="text-[14px] leading-[20px] font-medium" style={{ color: featureTextPrimary, fontFamily: "'IBM Plex Sans', sans-serif" }}>اثر انگشت</span>
-                  </button>
-                  <button type="button" className="flex items-center justify-center gap-2 py-3 rounded-xl transition-all hover:scale-[0.98]" style={{ background: biometricBg, border: biometricBorder, backdropFilter: isDark ? 'blur(12px)' : undefined }}>
-                    <FaceIcon className="w-5 h-5" color={colors.inversePrimary} />
-                    <span className="text-[14px] leading-[20px] font-medium" style={{ color: featureTextPrimary, fontFamily: "'IBM Plex Sans', sans-serif" }}>تشخیص چهره</span>
-                  </button>
-                </div>
               </form>
             )}
 
             {!selectedUser && (
               <p className="text-center text-[12px] mt-2" style={{ color: subtitleColor }}>{fa.auth.defaultPin}</p>
             )}
-
-            <p className="text-center mt-6 text-[12px]" style={{ color: subtitleColor }}>
-              کاربر جدید هستید؟{' '}
-              <a className="hover:underline" style={{ color: colors.secondaryFixed }} href="#" onClick={(e) => e.preventDefault()}>درخواست دسترسی</a>
-            </p>
           </div>
         </section>
       </main>
@@ -411,7 +359,6 @@ function UnifiedLayout({ users, selectedUser, error, loading, password, showPass
       <footer className="absolute bottom-0 w-full py-3 px-8 flex justify-between items-center" style={{ background: footerBg, backdropFilter: isDark ? 'blur(12px)' : undefined, borderTop: footerBorder }}>
         <p className="text-[14px] leading-[20px] font-medium opacity-60" style={{ color: footerText, fontFamily: "'IBM Plex Sans', sans-serif" }}>© تمامی حقوق برای {ui.app.title} محفوظ است</p>
         <div className="flex gap-6">
-          <a className="text-[14px] leading-[20px] font-medium hover:underline transition-colors" style={{ color: footerText }} href="#" onClick={(e) => e.preventDefault()}>قوانین و مقررات</a>
           <a className="text-[14px] leading-[20px] font-medium hover:underline transition-colors" style={{ color: footerText }} href="#" onClick={(e) => e.preventDefault()}>تماس با پشتیبانی</a>
         </div>
       </footer>

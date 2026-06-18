@@ -8,6 +8,7 @@ release/
 
 # Logs
 *.log
+.mimocode
 npm-debug.log*
 
 # OS files

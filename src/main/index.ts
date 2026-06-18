@@ -2,7 +2,6 @@ import { app, BrowserWindow, Menu, globalShortcut, dialog } from 'electron'
 import { join } from 'path'
 import { registerAllHandlers } from './ipc/handlers'
 import { getDatabase, closeDatabase } from './database/connection'
-import { seedDatabase } from './database/seed'
 import { readFileSync } from 'fs'
 import { appendFileSync } from 'fs'
 
@@ -36,7 +35,7 @@ process.on('unhandledRejection', (reason: any) => {
 
 app.whenReady().then(() => {
   getDatabase()
-  seedDatabase()
+  // seedDatabase()
   registerAllHandlers()
   createWindow()
 
