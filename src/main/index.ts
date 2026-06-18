@@ -5,7 +5,7 @@ import { getDatabase, closeDatabase } from './database/connection'
 import { readFileSync } from 'fs'
 import { appendFileSync } from 'fs'
 // Uncomment to auto-seed on first run:
-// import { seedDatabase } from './database/seed'
+import { seedDatabase } from './database/seed'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -37,7 +37,7 @@ process.on('unhandledRejection', (reason: any) => {
 
 app.whenReady().then(() => {
   getDatabase()
-  // seedDatabase()
+  seedDatabase()
   registerAllHandlers()
   createWindow()
 
