@@ -531,36 +531,106 @@ export default function Inventory() {
 
       {tab === 'report' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-3 mb-4">
+          {/* KPI Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
               <div className="flex items-center gap-2 mb-2">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-                  <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: isDark ? 'rgba(59,130,246,0.15)' : '#dbeafe' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" className="w-4 h-4"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+                </div>
                 <span className="text-xs font-medium" style={{ color: textSecondary }}>ارزش خرید کل</span>
               </div>
               <div className="text-xl font-bold font-mono" style={{ color: '#3b82f6' }}>{totalStockValue.toLocaleString('fa-IR')}</div>
             </div>
             <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
               <div className="flex items-center gap-2 mb-2">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" />
-                </svg>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: isDark ? 'rgba(34,197,94,0.15)' : '#dcfce7' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" className="w-4 h-4"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>
+                </div>
                 <span className="text-xs font-medium" style={{ color: textSecondary }}>ارزش فروش کل</span>
               </div>
               <div className="text-xl font-bold font-mono" style={{ color: '#22c55e' }}>{totalRetailValue.toLocaleString('fa-IR')}</div>
             </div>
             <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
               <div className="flex items-center gap-2 mb-2">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-                  <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
-                </svg>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: isDark ? 'rgba(16,185,129,0.15)' : '#d1fae5' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" className="w-4 h-4"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
+                </div>
                 <span className="text-xs font-medium" style={{ color: textSecondary }}>سود بالقوه</span>
               </div>
               <div className="text-xl font-bold font-mono" style={{ color: '#10b981' }}>{totalProfit.toLocaleString('fa-IR')}</div>
+              <div className="text-[10px] mt-1" style={{ color: textSecondary }}>{totalStockValue > 0 ? Math.round((totalProfit / totalStockValue) * 100) : 0}% حاشیه سود</div>
+            </div>
+            <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: isDark ? 'rgba(245,158,11,0.15)' : '#fef3c7' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" className="w-4 h-4"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+                </div>
+                <span className="text-xs font-medium" style={{ color: textSecondary }}>کالاهای کندفروش</span>
+              </div>
+              <div className="text-xl font-bold font-mono" style={{ color: '#f59e0b' }}>{reportData.slowMoving.length.toLocaleString('fa-IR')}</div>
+              <div className="text-[10px] mt-1" style={{ color: textSecondary }}>{reportData.slowMoving.filter((s: any) => !s.lastSoldAt).length} هرگز فروخته نشده</div>
             </div>
           </div>
 
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Category Donut Chart */}
+            <div className="rounded-2xl p-5 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+              <h3 className="text-sm font-bold mb-4" style={{ color: textPrimary }}>ترکیب ارزش دسته‌بندی‌ها</h3>
+              {reportData.byCategory.length > 0 ? (
+                <div className="flex items-center gap-6">
+                  <svg viewBox="0 0 42 42" className="w-32 h-32 flex-shrink-0">
+                    <circle cx="21" cy="21" r="15.9" fill="transparent" stroke={isDark ? '#334155' : '#e2e8f0'} strokeWidth="5" />
+                    {(() => {
+                      const totalVal = reportData.byCategory.reduce((s: number, c: any) => s + (c.totalValue || 0), 0) || 1
+                      let offset = 0
+                      return reportData.byCategory.slice(0, 7).map((cat: any, i: number) => {
+                        const pct = ((cat.totalValue || 0) / totalVal) * 100
+                        const dashOffset = 25 - offset
+                        offset += pct
+                        return <circle key={i} cx="21" cy="21" r="15.9" fill="transparent" stroke={donutColors[i % donutColors.length]} strokeWidth="5" strokeDasharray={`${pct} ${100 - pct}`} strokeDashoffset={dashOffset} />
+                      })
+                    })()}
+                  </svg>
+                  <div className="flex-1 space-y-2">
+                    {reportData.byCategory.slice(0, 5).map((cat: any, i: number) => (
+                      <div key={i} className="flex items-center gap-2 text-xs">
+                        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: donutColors[i % donutColors.length] }} />
+                        <span className="flex-1 truncate" style={{ color: textPrimary }}>{cat.category || 'بدون دسته'}</span>
+                        <span className="font-mono font-bold" style={{ color: textSecondary }}>{((cat.totalValue || 0) / (totalStockValue || 1) * 100).toFixed(0)}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-center py-8 text-sm" style={{ color: textSecondary }}>داده‌ای موجود نیست</p>
+              )}
+            </div>
+
+            {/* Category Bar Chart */}
+            <div className="rounded-2xl p-5 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+              <h3 className="text-sm font-bold mb-4" style={{ color: textPrimary }}>ارزش خرید بر اساس دسته</h3>
+              <svg viewBox="0 0 300 180" className="w-full h-44">
+                {reportData.byCategory.slice(0, 5).map((cat: any, i: number) => {
+                  const maxVal = Math.max(...reportData.byCategory.map((c: any) => c.totalValue || 0), 1)
+                  const barH = ((cat.totalValue || 0) / maxVal) * 130
+                  const x = 20 + i * 56
+                  const label = (cat.category || '?').length > 6 ? (cat.category || '?').slice(0, 6) + '..' : (cat.category || '?')
+                  return (
+                    <g key={i}>
+                      <rect x={x} y={145 - barH} width={40} height={barH} rx={4} fill={donutColors[i % donutColors.length]} opacity={0.85} />
+                      <text x={x + 20} y={140 - barH} textAnchor="middle" fill={textPrimary} fontSize="7" fontWeight="bold" fontFamily="'IBM Plex Sans'">{(cat.totalValue || 0).toLocaleString('fa-IR')}</text>
+                      <text x={x + 20} y={158} textAnchor="middle" fill={textSecondary} fontSize="7" fontFamily="'IBM Plex Sans'">{label}</text>
+                    </g>
+                  )
+                })}
+                <line x1="10" y1="145" x2="295" y2="145" stroke={isDark ? '#334155' : '#e2e8f0'} strokeWidth="1" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Category Valuation Table */}
           <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
             <div className="px-4 py-3 font-bold flex items-center gap-2" style={{ borderBottom: `2px solid ${cardBorder}`, color: textPrimary }}>
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -573,41 +643,58 @@ export default function Inventory() {
                 <thead>
                   <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
                     <th className="text-right px-4 py-2" style={{ color: textSecondary }}>دسته</th>
-                    <th className="text-center px-4 py-2" style={{ color: textSecondary }}>تعداد</th>
-                    <th className="text-center px-4 py-2" style={{ color: textSecondary }}>موجودی</th>
-                    <th className="text-right px-4 py-2" style={{ color: textSecondary }}>ارزش خرید</th>
-                    <th className="text-right px-4 py-2" style={{ color: textSecondary }}>ارزش فروش</th>
-                    <th className="text-right px-4 py-2" style={{ color: textSecondary }}>سود بالقوه</th>
-                    <th className="px-4 py-2" style={{ color: textSecondary }}>visual</th>
+                    <th className="text-center px-3 py-2" style={{ color: textSecondary }}>تعداد کالا</th>
+                    <th className="text-center px-3 py-2" style={{ color: textSecondary }}>موجودی</th>
+                    <th className="text-right px-3 py-2" style={{ color: textSecondary }}>ارزش خرید</th>
+                    <th className="text-right px-3 py-2" style={{ color: textSecondary }}>ارزش فروش</th>
+                    <th className="text-right px-3 py-2" style={{ color: textSecondary }}>سود</th>
+                    <th className="text-center px-3 py-2" style={{ color: textSecondary }}>حاشیه</th>
+                    <th className="px-3 py-2" style={{ width: 120 }}></th>
                   </tr>
                 </thead>
                 <tbody>
                   {reportData.byCategory.map((cat: any, i: number) => {
                     const catValue = cat.totalValue || 0
-                    const catProfit = (cat.retailValue || 0) - catValue
+                    const catRetail = cat.retailValue || 0
+                    const catProfit = catRetail - catValue
+                    const catMargin = catRetail > 0 ? Math.round((catProfit / catRetail) * 100) : 0
                     const maxCatValue = Math.max(...reportData.byCategory.map((c: any) => c.totalValue || 0), 1)
                     return (
-                    <tr key={i} style={{ borderBottom: `1px solid ${cardBorder}` }}>
-                      <td className="px-4 py-2 font-medium" style={{ color: textPrimary }}>{cat.category || 'بدون دسته'}</td>
-                      <td className="px-4 py-2 text-center" style={{ color: textPrimary }}>{cat.count}</td>
-                      <td className="px-4 py-2 text-center" style={{ color: textPrimary }}>{cat.totalStock}</td>
-                      <td className="px-4 py-2" style={{ color: textPrimary }}>{catValue.toLocaleString('fa-IR')}</td>
-                      <td className="px-4 py-2" style={{ color: textPrimary }}>{(cat.retailValue || 0).toLocaleString('fa-IR')}</td>
-                      <td className="px-4 py-2 font-bold" style={{ color: '#22c55e' }}>{catProfit.toLocaleString('fa-IR')}</td>
-                      <td className="px-4 py-2 w-32">
+                    <tr key={i} style={{ borderBottom: `1px solid ${cardBorder}` }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.03)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}>
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: donutColors[i % donutColors.length] }} />
+                          <span className="font-medium" style={{ color: textPrimary }}>{cat.category || 'بدون دسته'}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2.5 text-center font-mono" style={{ color: textPrimary }}>{cat.count}</td>
+                      <td className="px-3 py-2.5 text-center font-mono" style={{ color: textPrimary }}>{cat.totalStock}</td>
+                      <td className="px-3 py-2.5 font-mono" style={{ color: textPrimary }}>{catValue.toLocaleString('fa-IR')}</td>
+                      <td className="px-3 py-2.5 font-mono" style={{ color: textSecondary }}>{catRetail.toLocaleString('fa-IR')}</td>
+                      <td className="px-3 py-2.5 font-mono font-bold" style={{ color: catProfit > 0 ? '#22c55e' : '#ef4444' }}>{catProfit.toLocaleString('fa-IR')}</td>
+                      <td className="px-3 py-2.5 text-center">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{
+                          backgroundColor: catMargin > 20 ? (isDark ? 'rgba(34,197,94,0.15)' : '#dcfce7') : catMargin > 10 ? (isDark ? 'rgba(245,158,11,0.15)' : '#fef3c7') : (isDark ? 'rgba(239,68,68,0.15)' : '#fee2e2'),
+                          color: catMargin > 20 ? '#22c55e' : catMargin > 10 ? '#f59e0b' : '#ef4444',
+                        }}>%{catMargin}</span>
+                      </td>
+                      <td className="px-3 py-2.5">
                         <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#334155' : '#e2e8f0' }}>
-                          <div className="h-full rounded-full" style={{ width: `${(catValue / maxCatValue) * 100}%`, backgroundColor: donutColors[i % donutColors.length] }} />
+                          <div className="h-full rounded-full transition-all" style={{ width: `${(catValue / maxCatValue) * 100}%`, backgroundColor: donutColors[i % donutColors.length] }} />
                         </div>
                       </td>
                     </tr>
                     )
                   })}
-                  {reportData.byCategory.length === 0 && <tr><td colSpan={7} className="text-center py-8" style={{ color: textSecondary }}>داده‌ای موجود نیست</td></tr>}
+                  {reportData.byCategory.length === 0 && <tr><td colSpan={8} className="text-center py-8" style={{ color: textSecondary }}>داده‌ای موجود نیست</td></tr>}
                 </tbody>
               </table>
             </div>
           </div>
 
+          {/* Slow-Moving Items */}
           <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
             <div className="px-4 py-3 font-bold flex items-center gap-2" style={{ borderBottom: `2px solid ${cardBorder}`, color: textPrimary }}>
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -617,28 +704,44 @@ export default function Inventory() {
               کالاهای کندفروش ({reportData.slowMoving.length})
             </div>
             <div className="max-h-96 overflow-y-auto">
-              {reportData.slowMoving.map((item: any) => (
-                <div key={item.id} className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+              {reportData.slowMoving.map((item: any) => {
+                const daysSince = item.lastSoldAt ? Math.floor((Date.now() - new Date(item.lastSoldAt).getTime()) / 86400000) : null
+                const neverSold = !item.lastSoldAt
+                return (
+                <div key={item.id} className="px-4 py-3 transition-all" style={{ borderBottom: `1px solid ${cardBorder}` }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(245,158,11,0.05)' : 'rgba(245,158,11,0.03)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}>
                   <div className="flex items-center gap-3">
-                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.lastSoldAt ? '#f59e0b' : '#ef4444' }} />
-                    <span className="text-sm font-medium" style={{ color: textPrimary }}>{item.title}</span>
-                    <span className="text-xs" style={{ color: textSecondary }}>{item.category || '-'}</span>
-                  </div>
-                  <div className="flex items-center gap-4 text-xs" style={{ color: textSecondary }}>
-                    <span>موجودی: <b className="font-mono" style={{ color: textPrimary }}>{item.stock}</b></span>
-                    {item.lastSoldAt ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>
-                        آخرین فروش: {item.lastSoldAt}
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: neverSold ? (isDark ? 'rgba(239,68,68,0.15)' : '#fee2e2') : (isDark ? 'rgba(245,158,11,0.15)' : '#fef3c7') }}>
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke={neverSold ? '#ef4444' : '#f59e0b'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium" style={{ color: textPrimary }}>{item.title}</div>
+                      <div className="text-xs" style={{ color: textSecondary }}>{item.category || 'بدون دسته'}</div>
+                    </div>
+                    <div className="flex items-center gap-4 flex-shrink-0">
+                      <div className="text-center">
+                        <div className="text-[10px]" style={{ color: textSecondary }}>موجودی</div>
+                        <div className="text-sm font-bold font-mono" style={{ color: textPrimary }}>{item.stock}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-[10px]" style={{ color: textSecondary }}>ارزش</div>
+                        <div className="text-xs font-mono" style={{ color: textPrimary }}>{(item.stock * item.purchase_price).toLocaleString('fa-IR')}</div>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{
+                        backgroundColor: neverSold ? (isDark ? 'rgba(239,68,68,0.15)' : '#fee2e2') : (isDark ? 'rgba(245,158,11,0.15)' : '#fef3c7'),
+                        color: neverSold ? '#ef4444' : '#f59e0b',
+                      }}>
+                        {neverSold ? 'هرگز فروخته نشده' : `${daysSince} روز پیش`}
                       </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: '#fecaca', color: '#991b1b' }}>
-                        هرگز فروخته نشده
-                      </span>
-                    )}
+                    </div>
                   </div>
                 </div>
-              ))}
-              {reportData.slowMoving.length === 0 && <p className="text-center py-8 text-sm" style={{ color: textSecondary }}>کالای کندفروشی وجود ندارد</p>}
+                )
+              })}
+              {reportData.slowMoving.length === 0 && <p className="text-center py-12 text-sm" style={{ color: textSecondary }}>کالای کندفروشی وجود ندارد</p>}
             </div>
           </div>
         </div>
