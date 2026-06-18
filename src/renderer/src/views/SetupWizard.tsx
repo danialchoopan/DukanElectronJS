@@ -57,30 +57,12 @@ function SmartphoneIcon({ color, className }: { color: string; className?: strin
   )
 }
 
-function LocationIcon({ color, className }: { color: string; className?: string }) {
-  return (
-    <svg className={className ?? 'w-5 h-5'} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-      <circle cx="12" cy="10" r="3" />
-    </svg>
-  )
-}
-
 function HelpIcon({ color, className }: { color: string; className?: string }) {
   return (
     <svg className={className ?? 'w-5 h-5'} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10" />
       <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
       <line x1="12" y1="17" x2="12" y2="17" />
-    </svg>
-  )
-}
-
-function ArrowLeftIcon({ color, className }: { color: string; className?: string }) {
-  return (
-    <svg className={className ?? 'w-5 h-5'} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="5" y1="12" x2="19" y2="12" />
-      <polyline points="12 5 19 12 12 19" />
     </svg>
   )
 }
@@ -184,7 +166,6 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
   const [lang, setLang] = useState<'fa' | 'en'>('fa')
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [shopName, setShopName] = useState('')
-  const [shopAddress, setShopAddress] = useState('')
   const [shopPhone, setShopPhone] = useState('')
   const [shopPhone2, setShopPhone2] = useState('')
   const [adminPin, setAdminPin] = useState('')
@@ -227,7 +208,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
     setSubmitting(true)
     await Promise.all([
       window.api.settings.set('storeName', shopName || (lang === 'fa' ? 'فروشگاه من' : 'My Store')),
-      window.api.settings.set('storeAddress', shopAddress),
+      window.api.settings.set('storeAddress', ''),
       window.api.settings.set('storePhone', shopPhone),
       window.api.settings.set('businessType', 'supermarket'),
       window.api.settings.set('autoRounding', '500'),
@@ -244,326 +225,121 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
     onComplete()
   }
 
-  if (isDark) {
-    return (
-      <div className="h-screen w-screen flex flex-col overflow-hidden" style={{ background: colors.onSurface, direction: 'rtl' }}>
-        {/* Top Header Bar */}
-        <header className="flex flex-row-reverse items-center justify-between px-32 py-4 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <LogoIcon size={36} />
-            <span className="text-xl font-bold" style={{ color: colors.inversePrimary }}>{ui.app.title}</span>
-          </div>
-          <div className="flex items-center gap-2 cursor-pointer opacity-70 hover:opacity-100 transition-opacity">
-            <HelpIcon color={colors.inversePrimary} className="w-5 h-5" />
-            <span className="text-sm" style={{ color: colors.inversePrimary }}>{ui.nav.help}</span>
-          </div>
-        </header>
+  const bg = isDark ? colors.onSurface : colors.surface
+  const headerBg = isDark ? colors.glassDark : '#ffffff'
+  const headerBorder = isDark ? `1px solid rgba(191, 199, 210, 0.2)` : `1px solid ${colors.outlineVariant}`
+  const headerText = isDark ? colors.inversePrimary : colors.primary
 
-        {/* Center Content */}
-        <div className="flex-1 flex items-center justify-center px-4 overflow-y-auto">
-          <div
-            className="w-full max-w-[560px] rounded-xl p-12"
-            style={{
-              background: colors.glassDark,
-              backdropFilter: 'blur(12px)',
-              border: `1px solid rgba(191, 199, 210, 0.2)`,
-            }}
-          >
-            {/* Title */}
-            <h1 className="text-center text-[32px] font-bold mb-3" style={{ color: colors.inverseOnSurface }}>
-              {lang === 'fa' ? 'تنظیمات اولیه فروشگاه' : 'Initial Store Setup'}
-            </h1>
-            <p className="text-center text-sm mb-8" style={{ color: colors.outline }}>
-              {lang === 'fa' ? 'لطفاً مشخصات اصلی کسب\u200Cوکار خود را برای شروع به کار در سیستم وارد کنید.' : 'Enter your business details to get started with the system.'}
-            </p>
+  const cardBg = isDark ? colors.glassDark : 'rgba(255, 255, 255, 0.9)'
+  const cardBorder = isDark ? `1px solid rgba(191, 199, 210, 0.2)` : `1px solid ${colors.outlineVariant}`
 
-            {/* Language & Theme Toggles */}
-            <div className="flex gap-3 mb-6">
-              <div className="flex-1">
-                <label className="text-xs font-semibold mb-1.5 block" style={{ color: colors.outline }}>{ui.setup.selectLanguage}</label>
-                <div className="flex rounded-xl overflow-hidden" style={{ border: `1px solid rgba(191, 199, 210, 0.2)` }}>
-                  <button
-                    onClick={() => switchLang('fa')}
-                    className="flex-1 py-2 text-sm font-bold transition-all"
-                    style={{
-                      background: lang === 'fa' ? colors.primary : 'transparent',
-                      color: lang === 'fa' ? colors.onPrimary : colors.outline,
-                    }}
-                  >
-                    فارسی
-                  </button>
-                  <button
-                    onClick={() => switchLang('en')}
-                    className="flex-1 py-2 text-sm font-bold transition-all"
-                    style={{
-                      background: lang === 'en' ? colors.primary : 'transparent',
-                      color: lang === 'en' ? colors.onPrimary : colors.outline,
-                    }}
-                  >
-                    English
-                  </button>
-                </div>
-              </div>
-              <div className="flex-1">
-                <label className="text-xs font-semibold mb-1.5 block" style={{ color: colors.outline }}>{ui.setup.selectTheme}</label>
-                <div className="flex rounded-xl overflow-hidden" style={{ border: `1px solid rgba(191, 199, 210, 0.2)` }}>
-                  <button
-                    onClick={() => setTheme('dark')}
-                    className="flex-1 py-2 text-sm font-bold transition-all"
-                    style={{
-                      background: isDark ? colors.primary : 'transparent',
-                      color: isDark ? colors.onPrimary : colors.outline,
-                    }}
-                  >
-                    {lang === 'fa' ? 'تاریک' : 'Dark'}
-                  </button>
-                  <button
-                    onClick={() => setTheme('light')}
-                    className="flex-1 py-2 text-sm font-bold transition-all"
-                    style={{
-                      background: !isDark ? colors.primary : 'transparent',
-                      color: !isDark ? colors.onPrimary : colors.outline,
-                    }}
-                  >
-                    {lang === 'fa' ? 'روشن' : 'Light'}
-                  </button>
-                </div>
-              </div>
-            </div>
+  const titleText = isDark ? colors.inverseOnSurface : colors.onSurface
+  const subtitleText = isDark ? colors.outline : colors.onSurfaceVariant
+  const labelText = isDark ? colors.inverseOnSurface : colors.onSurface
+  const outlineText = isDark ? colors.outline : colors.onSurfaceVariant
 
-            {/* Shop Name - bottom-border-2 style */}
-            <div className="mb-5">
-              <label className="text-sm font-semibold mb-2 block" style={{ color: colors.inverseOnSurface }}>
-                {ui.setup.shopName}
-              </label>
-              <div className="relative">
-                <StoreIcon color={colors.primary} className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  value={shopName}
-                  onChange={(e) => setShopName(e.target.value)}
-                  className="w-full h-14 bg-transparent outline-none text-base font-medium pr-4 pl-10"
-                  style={{
-                    color: colors.inverseOnSurface,
-                    borderBottom: `2px solid ${colors.outlineVariant}`,
-                    background: 'rgba(204, 219, 243, 0.06)',
-                    borderRadius: '0 0 8px 8px',
-                  }}
-                  placeholder={lang === 'fa' ? 'نام فروشگاه' : 'Store name'}
-                />
-              </div>
-            </div>
+  const inputBg = isDark ? 'rgba(204, 219, 243, 0.06)' : colors.surfaceContainerLow
+  const inputBorder = isDark ? `2px solid ${colors.outlineVariant}` : `2px solid ${colors.outlineVariant}`
+  const inputColor = isDark ? colors.inverseOnSurface : colors.onSurface
 
-            {/* Two Phone Fields Side by Side */}
-            <div className="grid grid-cols-2 gap-4 mb-5">
-              <div>
-                <label className="text-sm font-semibold mb-2 block" style={{ color: colors.inverseOnSurface }}>
-                  {lang === 'fa' ? 'شماره تماس ثابت' : 'Landline'}
-                </label>
-                <div className="relative">
-                  <CallIcon color={colors.primary} className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    value={shopPhone}
-                    onChange={(e) => setShopPhone(e.target.value.replace(/[^\d]/g, ''))}
-                    className="w-full h-14 bg-transparent outline-none text-base font-medium pr-4 pl-10"
-                    style={{
-                      color: colors.inverseOnSurface,
-                      borderBottom: `2px solid ${colors.outlineVariant}`,
-                      background: 'rgba(204, 219, 243, 0.06)',
-                      borderRadius: '0 0 8px 8px',
-                    }}
-                    dir="ltr"
-                    placeholder={lang === 'fa' ? 'شماره ثابت' : 'Landline'}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-semibold mb-2 block" style={{ color: colors.inverseOnSurface }}>
-                  {lang === 'fa' ? 'شماره همراه' : 'Mobile'}
-                </label>
-                <div className="relative">
-                  <SmartphoneIcon color={colors.primary} className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    value={shopPhone2}
-                    onChange={(e) => setShopPhone2(e.target.value.replace(/[^\d]/g, ''))}
-                    className="w-full h-14 bg-transparent outline-none text-base font-medium pr-4 pl-10"
-                    style={{
-                      color: colors.inverseOnSurface,
-                      borderBottom: `2px solid ${colors.outlineVariant}`,
-                      background: 'rgba(204, 219, 243, 0.06)',
-                      borderRadius: '0 0 8px 8px',
-                    }}
-                    dir="ltr"
-                    placeholder={lang === 'fa' ? 'شماره همراه' : 'Mobile'}
-                  />
-                </div>
-              </div>
-            </div>
+  const toggleBorder = isDark ? `1px solid rgba(191, 199, 210, 0.2)` : `1px solid ${colors.outlineVariant}`
+  const toggleActiveBg = colors.primary
+  const toggleInactiveBg = 'transparent'
+  const toggleActiveColor = colors.onPrimary
+  const toggleInactiveColor = isDark ? colors.outline : colors.onSurfaceVariant
 
-            {/* PIN */}
-            <div className="mb-5 text-center">
-              <label className="text-sm font-semibold mb-3 block" style={{ color: colors.inverseOnSurface }}>
-                {lang === 'fa' ? 'تعیین رمز عبور سریع (۴ رقمی)' : 'Set Quick PIN (4 digits)'}
-              </label>
-              <PinInputRow pin={adminPin} setPin={handlePinChange} pinRefs={pinRefs} size="lg" isDark={true} />
-              <p className="text-xs mt-2" style={{ color: colors.outline }}>
-                {lang === 'fa' ? 'این کد برای ورود سریع و تایید تراکنش\u200Cها استفاده خواهد شد.' : 'This code is used for quick login and transaction confirmation.'}
-              </p>
-            </div>
+  const footerBg = isDark ? colors.inverseSurface : '#ffffff'
+  const footerBorder = isDark ? 'none' : `1px solid ${colors.outlineVariant}`
+  const footerText = isDark ? colors.outline : colors.onSurfaceVariant
 
-            {/* PIN Confirm */}
-            <div className="mb-6 text-center">
-              <label className="text-sm font-semibold mb-3 block" style={{ color: colors.inverseOnSurface }}>
-                {lang === 'fa' ? 'تأیید رمز عبور' : 'Confirm PIN'}
-              </label>
-              <PinInputRow pin={adminPinConfirm} setPin={handlePinConfirmChange} pinRefs={pinConfirmRefs} size="lg" isDark={true} />
-              {pinError && <p className="text-xs mt-2" style={{ color: '#ef4444' }}>{pinError}</p>}
-              {adminPin && adminPinConfirm && adminPin === adminPinConfirm && adminPin.length >= 4 && (
-                <p className="text-xs mt-2" style={{ color: '#22c55e' }}>
-                  {lang === 'fa' ? 'رمزها مطابقت دارند' : 'PINs match'}
-                </p>
-              )}
-            </div>
-
-            {/* Submit */}
-            <button
-              onClick={handleSubmit}
-              disabled={!shopName.trim() || adminPin.length < 4 || submitting}
-              className="w-full h-14 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all disabled:opacity-40"
-              style={{
-                background: colors.primary,
-                color: colors.onPrimary,
-              }}
-            >
-              {submitting ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  {lang === 'fa' ? 'ثبت و ورود به داشبورد' : 'Save & Enter Dashboard'}
-                  <ArrowLeftRotateIcon color={colors.onPrimary} />
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Footer Bar */}
-        <footer
-          className="flex flex-row-reverse items-center justify-between px-32 py-3 flex-shrink-0"
-          style={{ background: colors.inverseSurface }}
-        >
-          <span className="text-xs" style={{ color: colors.outline }}>
-            {lang === 'fa' ? '© ۲۰۲۵ حسابداری. تمامی حقوق محفوظ است.' : '© 2025 Accounting. All rights reserved.'}
-          </span>
-          <div className="flex items-center gap-4">
-            <button className="text-xs hover:underline" style={{ color: colors.inversePrimary }}>
-              {lang === 'fa' ? 'قوانین و مقررات' : 'Terms'}
-            </button>
-            <button className="text-xs hover:underline" style={{ color: colors.inversePrimary }}>
-              {lang === 'fa' ? 'تماس با پشتیبانی' : 'Support'}
-            </button>
-          </div>
-        </footer>
-      </div>
-    )
-  }
-
-  // ===== LIGHT MODE =====
   return (
-    <div className="h-screen w-screen flex flex-row-reverse overflow-hidden" style={{ background: colors.surface, direction: 'rtl' }}>
-      {/* RIGHT HALF — Brand Section */}
-      <div
-        className="hidden md:flex flex-1 flex-col items-center justify-center relative overflow-hidden"
-        style={{ background: colors.surfaceContainerLow, padding: '48px' }}
-      >
-        {/* Decorative circles */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-16 -right-16 w-[200px] h-[200px] rounded-full opacity-5" style={{ background: colors.primary }} />
-          <div className="absolute top-1/3 -left-12 w-[160px] h-[160px] rounded-full opacity-5" style={{ background: colors.secondary }} />
-          <div className="absolute -bottom-12 right-1/4 w-[180px] h-[180px] rounded-full opacity-5" style={{ background: colors.primary }} />
+    <div className="h-screen w-screen flex flex-col overflow-hidden" style={{ background: bg, direction: 'rtl' }}>
+      {/* Top Header Bar */}
+      <header className="flex flex-row-reverse items-center justify-between px-32 py-4 flex-shrink-0" style={{ background: headerBg, borderBottom: headerBorder, backdropFilter: isDark ? 'blur(12px)' : undefined }}>
+        <div className="flex items-center gap-3">
+          <LogoIcon size={36} />
+          <span className="text-xl font-bold" style={{ color: headerText }}>{ui.app.title}</span>
         </div>
+        <div className="flex items-center gap-2 cursor-pointer opacity-70 hover:opacity-100 transition-opacity">
+          <HelpIcon color={headerText} className="w-5 h-5" />
+          <span className="text-sm" style={{ color: headerText }}>{ui.nav.help}</span>
+        </div>
+      </header>
 
-        <div className="relative z-10 text-center">
-          <div className="mx-auto mb-6">
-            <LogoIcon size={96} />
-          </div>
-          <h1 className="text-4xl font-bold mb-3" style={{ color: colors.primary }}>
-            {ui.app.title}
-          </h1>
-          <p className="text-sm max-w-xs mx-auto leading-relaxed" style={{ color: colors.onSurfaceVariant }}>
-            {lang === 'fa' ? 'نرم\u200Cافزار جامع مالی و حسابداری برای مدیریت هوشمند کسب\u200Cوکارهای مدرن.' : 'Comprehensive financial and accounting software for smart management of modern businesses.'}
-          </p>
+      {/* Mobile Brand Header */}
+      <div className="md:hidden text-center py-4 flex-shrink-0">
+        <div className="mx-auto mb-2">
+          <LogoIcon size={48} />
         </div>
+        <h1 className="text-2xl font-bold" style={{ color: headerText }}>
+          {ui.app.title}
+        </h1>
       </div>
 
-      {/* LEFT HALF — Form Section */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10 overflow-y-auto" style={{ background: '#ffffff' }}>
-        {/* Mobile brand header */}
-        <div className="md:hidden text-center mb-6 flex-shrink-0">
-          <div className="mx-auto mb-3">
-            <LogoIcon size={48} />
-          </div>
-          <h1 className="text-2xl font-bold" style={{ color: colors.primary }}>
-            {ui.app.title}
-          </h1>
-        </div>
-
-        <div className="w-full max-w-md space-y-4 flex-shrink-0">
+      {/* Center Content */}
+      <div className="flex-1 flex items-center justify-center px-4 overflow-y-auto">
+        <div
+          className="w-full max-w-[560px] rounded-xl p-12"
+          style={{
+            background: cardBg,
+            backdropFilter: 'blur(12px)',
+            border: cardBorder,
+          }}
+        >
           {/* Title */}
-          <div className="mb-2">
-            <h2 className="text-xl font-bold" style={{ color: colors.onSurface }}>
-              {lang === 'fa' ? 'راه\u200Cاندازی فروشگاه' : 'Store Setup'}
-            </h2>
-            <p className="text-sm mt-1" style={{ color: colors.onSurfaceVariant }}>
-              {lang === 'fa' ? 'اطلاعات پایه کسب\u200Cوکار خود را برای شروع ثبت کنید.' : 'Enter your business details to get started.'}
-            </p>
-          </div>
+          <h1 className="text-center text-[32px] font-bold mb-3" style={{ color: titleText }}>
+            {lang === 'fa' ? 'تنظیمات اولیه فروشگاه' : 'Initial Store Setup'}
+          </h1>
+          <p className="text-center text-sm mb-8" style={{ color: subtitleText }}>
+            {lang === 'fa' ? 'لطفاً مشخصات اصلی کسب\u200Cوکار خود را برای شروع به کار در سیستم وارد کنید.' : 'Enter your business details to get started with the system.'}
+          </p>
 
           {/* Language & Theme Toggles */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold mb-1.5 block" style={{ color: colors.onSurfaceVariant }}>{ui.setup.selectLanguage}</label>
-              <div className="flex rounded-xl overflow-hidden" style={{ border: `1px solid ${colors.outlineVariant}` }}>
+          <div className="flex gap-3 mb-6">
+            <div className="flex-1">
+              <label className="text-xs font-semibold mb-1.5 block" style={{ color: outlineText }}>{ui.setup.selectLanguage}</label>
+              <div className="flex rounded-xl overflow-hidden" style={{ border: toggleBorder }}>
                 <button
                   onClick={() => switchLang('fa')}
-                  className="flex-1 py-2.5 text-sm font-bold transition-all"
+                  className="flex-1 py-2 text-sm font-bold transition-all"
                   style={{
-                    background: lang === 'fa' ? colors.primary : 'transparent',
-                    color: lang === 'fa' ? colors.onPrimary : colors.onSurfaceVariant,
+                    background: lang === 'fa' ? toggleActiveBg : toggleInactiveBg,
+                    color: lang === 'fa' ? toggleActiveColor : toggleInactiveColor,
                   }}
                 >
                   فارسی
                 </button>
                 <button
                   onClick={() => switchLang('en')}
-                  className="flex-1 py-2.5 text-sm font-bold transition-all"
+                  className="flex-1 py-2 text-sm font-bold transition-all"
                   style={{
-                    background: lang === 'en' ? colors.primary : 'transparent',
-                    color: lang === 'en' ? colors.onPrimary : colors.onSurfaceVariant,
+                    background: lang === 'en' ? toggleActiveBg : toggleInactiveBg,
+                    color: lang === 'en' ? toggleActiveColor : toggleInactiveColor,
                   }}
                 >
                   English
                 </button>
               </div>
             </div>
-            <div>
-              <label className="text-xs font-semibold mb-1.5 block" style={{ color: colors.onSurfaceVariant }}>{ui.setup.selectTheme}</label>
-              <div className="flex rounded-xl overflow-hidden" style={{ border: `1px solid ${colors.outlineVariant}` }}>
+            <div className="flex-1">
+              <label className="text-xs font-semibold mb-1.5 block" style={{ color: outlineText }}>{ui.setup.selectTheme}</label>
+              <div className="flex rounded-xl overflow-hidden" style={{ border: toggleBorder }}>
                 <button
                   onClick={() => setTheme('dark')}
-                  className="flex-1 py-2.5 text-sm font-bold transition-all"
+                  className="flex-1 py-2 text-sm font-bold transition-all"
                   style={{
-                    background: !isDark ? colors.primary : 'transparent',
-                    color: !isDark ? colors.onPrimary : colors.onSurfaceVariant,
+                    background: isDark ? toggleActiveBg : toggleInactiveBg,
+                    color: isDark ? toggleActiveColor : toggleInactiveColor,
                   }}
                 >
                   {lang === 'fa' ? 'تاریک' : 'Dark'}
                 </button>
                 <button
                   onClick={() => setTheme('light')}
-                  className="flex-1 py-2.5 text-sm font-bold transition-all"
+                  className="flex-1 py-2 text-sm font-bold transition-all"
                   style={{
-                    background: isDark ? colors.primary : 'transparent',
-                    color: isDark ? colors.onPrimary : colors.onSurfaceVariant,
+                    background: !isDark ? toggleActiveBg : toggleInactiveBg,
+                    color: !isDark ? toggleActiveColor : toggleInactiveColor,
                   }}
                 >
                   {lang === 'fa' ? 'روشن' : 'Light'}
@@ -573,75 +349,90 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
           </div>
 
           {/* Shop Name */}
-          <div>
-            <label className="text-xs font-semibold mb-1.5 block" style={{ color: colors.onSurfaceVariant }}>
+          <div className="mb-5">
+            <label className="text-sm font-semibold mb-2 block" style={{ color: labelText }}>
               {ui.setup.shopName}
             </label>
-            <div className="flex items-center gap-2 rounded-lg px-3 py-2.5" style={{ border: `1px solid ${colors.outlineVariant}` }}>
-              <StoreIcon color={colors.primary} />
+            <div className="relative">
+              <StoreIcon color={colors.primary} className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 value={shopName}
                 onChange={(e) => setShopName(e.target.value)}
-                className="flex-1 bg-transparent outline-none text-sm font-medium"
-                style={{ color: colors.onSurface }}
+                className="w-full h-14 bg-transparent outline-none text-base font-medium pr-4 pl-10"
+                style={{
+                  color: inputColor,
+                  borderBottom: inputBorder,
+                  background: inputBg,
+                  borderRadius: '0 0 8px 8px',
+                }}
                 placeholder={lang === 'fa' ? 'نام فروشگاه' : 'Store name'}
               />
             </div>
           </div>
 
-          {/* Phone */}
-          <div>
-            <label className="text-xs font-semibold mb-1.5 block" style={{ color: colors.onSurfaceVariant }}>
-              {lang === 'fa' ? 'شماره تماس' : 'Phone'}
-            </label>
-            <div className="flex items-center gap-2 rounded-lg px-3 py-2.5" style={{ border: `1px solid ${colors.outlineVariant}` }}>
-              <CallIcon color={colors.primary} />
-              <input
-                value={shopPhone}
-                onChange={(e) => setShopPhone(e.target.value.replace(/[^\d]/g, ''))}
-                className="flex-1 bg-transparent outline-none text-sm font-medium"
-                style={{ color: colors.onSurface }}
-                dir="ltr"
-                placeholder={lang === 'fa' ? 'شماره تلفن' : 'Phone number'}
-              />
+          {/* Two Phone Fields Side by Side */}
+          <div className="grid grid-cols-2 gap-4 mb-5">
+            <div>
+              <label className="text-sm font-semibold mb-2 block" style={{ color: labelText }}>
+                {lang === 'fa' ? 'شماره تماس ثابت' : 'Landline'}
+              </label>
+              <div className="relative">
+                <CallIcon color={colors.primary} className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  value={shopPhone}
+                  onChange={(e) => setShopPhone(e.target.value.replace(/[^\d]/g, ''))}
+                  className="w-full h-14 bg-transparent outline-none text-base font-medium pr-4 pl-10"
+                  style={{
+                    color: inputColor,
+                    borderBottom: inputBorder,
+                    background: inputBg,
+                    borderRadius: '0 0 8px 8px',
+                  }}
+                  dir="ltr"
+                  placeholder={lang === 'fa' ? 'شماره ثابت' : 'Landline'}
+                />
+              </div>
             </div>
-          </div>
-
-          {/* Address */}
-          <div>
-            <label className="text-xs font-semibold mb-1.5 block" style={{ color: colors.onSurfaceVariant }}>
-              {ui.setup.shopAddress}
-            </label>
-            <div className="flex items-start gap-2 rounded-lg px-3 py-2.5" style={{ border: `1px solid ${colors.outlineVariant}` }}>
-              <LocationIcon color={colors.primary} className="w-5 h-5 mt-0.5 flex-shrink-0" />
-              <textarea
-                value={shopAddress}
-                onChange={(e) => setShopAddress(e.target.value)}
-                className="flex-1 bg-transparent outline-none text-sm font-medium resize-none"
-                style={{ color: colors.onSurface, minHeight: 60 }}
-                placeholder={lang === 'fa' ? 'آدرس فروشگاه' : 'Store address'}
-                rows={2}
-              />
+            <div>
+              <label className="text-sm font-semibold mb-2 block" style={{ color: labelText }}>
+                {lang === 'fa' ? 'شماره همراه' : 'Mobile'}
+              </label>
+              <div className="relative">
+                <SmartphoneIcon color={colors.primary} className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  value={shopPhone2}
+                  onChange={(e) => setShopPhone2(e.target.value.replace(/[^\d]/g, ''))}
+                  className="w-full h-14 bg-transparent outline-none text-base font-medium pr-4 pl-10"
+                  style={{
+                    color: inputColor,
+                    borderBottom: inputBorder,
+                    background: inputBg,
+                    borderRadius: '0 0 8px 8px',
+                  }}
+                  dir="ltr"
+                  placeholder={lang === 'fa' ? 'شماره همراه' : 'Mobile'}
+                />
+              </div>
             </div>
           </div>
 
           {/* PIN */}
-          <div className="text-center">
-            <label className="text-sm font-semibold mb-2 block" style={{ color: colors.onSurface }}>
-              {lang === 'fa' ? 'رمز عبور ۴ رقمی (PIN)' : '4-digit PIN'}
+          <div className="mb-5 text-center">
+            <label className="text-sm font-semibold mb-3 block" style={{ color: labelText }}>
+              {lang === 'fa' ? 'تعیین رمز عبور سریع (۴ رقمی)' : 'Set Quick PIN (4 digits)'}
             </label>
-            <PinInputRow pin={adminPin} setPin={handlePinChange} pinRefs={pinRefs} size="sm" isDark={false} />
-            <p className="text-xs mt-2" style={{ color: colors.onSurfaceVariant }}>
+            <PinInputRow pin={adminPin} setPin={handlePinChange} pinRefs={pinRefs} size="lg" isDark={isDark} />
+            <p className="text-xs mt-2" style={{ color: outlineText }}>
               {lang === 'fa' ? 'این کد برای ورود سریع و تایید تراکنش\u200Cها استفاده خواهد شد.' : 'This code is used for quick login and transaction confirmation.'}
             </p>
           </div>
 
           {/* PIN Confirm */}
-          <div className="text-center">
-            <label className="text-sm font-semibold mb-2 block" style={{ color: colors.onSurface }}>
+          <div className="mb-6 text-center">
+            <label className="text-sm font-semibold mb-3 block" style={{ color: labelText }}>
               {lang === 'fa' ? 'تأیید رمز عبور' : 'Confirm PIN'}
             </label>
-            <PinInputRow pin={adminPinConfirm} setPin={handlePinConfirmChange} pinRefs={pinConfirmRefs} size="sm" isDark={false} />
+            <PinInputRow pin={adminPinConfirm} setPin={handlePinConfirmChange} pinRefs={pinConfirmRefs} size="lg" isDark={isDark} />
             {pinError && <p className="text-xs mt-2" style={{ color: '#ef4444' }}>{pinError}</p>}
             {adminPin && adminPinConfirm && adminPin === adminPinConfirm && adminPin.length >= 4 && (
               <p className="text-xs mt-2" style={{ color: '#22c55e' }}>
@@ -654,38 +445,41 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
           <button
             onClick={handleSubmit}
             disabled={!shopName.trim() || adminPin.length < 4 || submitting}
-            className="w-full py-3.5 rounded-full font-bold text-base flex items-center justify-center gap-2 transition-all disabled:opacity-40"
+            className="w-full h-14 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all disabled:opacity-40"
             style={{
-              background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryContainer})`,
+              background: colors.primary,
               color: colors.onPrimary,
-              boxShadow: '0 4px 16px rgba(0, 97, 148, 0.35)',
             }}
           >
             {submitting ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
-                {lang === 'fa' ? 'ایجاد حساب کاربری' : 'Create Account'}
-                <ArrowLeftIcon color={colors.onPrimary} />
+                {lang === 'fa' ? 'ثبت و ورود به داشبورد' : 'Save & Enter Dashboard'}
+                <ArrowLeftRotateIcon color={colors.onPrimary} />
               </>
             )}
           </button>
-
-          {/* Footer */}
-          <div className="border-t pt-4 text-center" style={{ borderColor: colors.outlineVariant }}>
-            <p className="text-sm" style={{ color: colors.onSurfaceVariant }}>
-              {lang === 'fa' ? 'قبلاً ثبت\u200Cنام کرده\u200Cاید؟ ' : 'Already registered? '}
-              <button
-                onClick={onComplete}
-                className="font-bold hover:underline"
-                style={{ color: colors.primary }}
-              >
-                {lang === 'fa' ? 'وارد شوید' : 'Log in'}
-              </button>
-            </p>
-          </div>
         </div>
       </div>
+
+      {/* Footer Bar */}
+      <footer
+        className="flex flex-row-reverse items-center justify-between px-32 py-3 flex-shrink-0"
+        style={{ background: footerBg, borderTop: footerBorder }}
+      >
+        <span className="text-xs" style={{ color: footerText }}>
+          {lang === 'fa' ? '© ۲۰۲۵ حسابداری. تمامی حقوق محفوظ است.' : '© 2025 Accounting. All rights reserved.'}
+        </span>
+        <div className="flex items-center gap-4">
+          <button className="text-xs hover:underline" style={{ color: isDark ? colors.inversePrimary : colors.primary }}>
+            {lang === 'fa' ? 'قوانین و مقررات' : 'Terms'}
+          </button>
+          <button className="text-xs hover:underline" style={{ color: isDark ? colors.inversePrimary : colors.primary }}>
+            {lang === 'fa' ? 'تماس با پشتیبانی' : 'Support'}
+          </button>
+        </div>
+      </footer>
     </div>
   )
 }
