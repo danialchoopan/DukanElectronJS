@@ -203,11 +203,49 @@ export default function Inventory() {
     },
   ]
 
+  const auditActionLabels: Record<string, string> = {
+    create: 'ایجاد',
+    update: 'ویرایش',
+    delete: 'حذف',
+    restock: 'تامین موجودی',
+    return: 'مرجوعی',
+    sale: 'فروش',
+  }
+  const auditEntityLabels: Record<string, string> = {
+    product: 'کالا',
+    sale: 'فاکتور',
+    expense: 'هزینه',
+    return: 'مرجوعی',
+  }
   const auditActionColors: Record<string, { bg: string; fg: string }> = {
-    create: { bg: '#dcfce7', fg: '#166534' },
-    update: { bg: '#dbeafe', fg: '#1e40af' },
-    delete: { bg: '#fecaca', fg: '#991b1b' },
-    restock: { bg: '#d1fae5', fg: '#065f46' },
+    create: { bg: isDark ? 'rgba(34,197,94,0.15)' : '#dcfce7', fg: '#166534' },
+    update: { bg: isDark ? 'rgba(59,130,246,0.15)' : '#dbeafe', fg: '#1e40af' },
+    delete: { bg: isDark ? 'rgba(239,68,68,0.15)' : '#fecaca', fg: '#991b1b' },
+    restock: { bg: isDark ? 'rgba(16,185,129,0.15)' : '#d1fae5', fg: '#065f46' },
+    return: { bg: isDark ? 'rgba(245,158,11,0.15)' : '#fef3c7', fg: '#92400e' },
+    sale: { bg: isDark ? 'rgba(168,85,247,0.15)' : '#f3e8ff', fg: '#7e22ce' },
+  }
+  const auditActionDotColors: Record<string, string> = {
+    create: '#22c55e',
+    update: '#3b82f6',
+    delete: '#ef4444',
+    restock: '#10b981',
+    return: '#f59e0b',
+    sale: '#a855f7',
+  }
+
+  function formatAuditDetail(entry: any): string {
+    try {
+      const details = entry.details ? JSON.parse(entry.details) : null
+      if (!details) return ''
+      if (entry.action === 'create' && entry.entityType === 'product') return details.title || details.barcode || ''
+      if (entry.action === 'create' && entry.entityType === 'expense') return details.category ? `${details.category} — ${details.amount?.toLocaleString('fa-IR')} تومان` : ''
+      if (entry.action === 'create' && entry.entityType === 'sale') return details.total ? `${details.total.toLocaleString('fa-IR')} تومان` : ''
+      if (entry.action === 'restock') return details.quantityChange ? `${details.quantityChange > 0 ? '+' : ''}${details.quantityChange} عدد` : ''
+      if (entry.action === 'return') return details.quantity ? `${details.quantity} عدد — ${details.refundAmount?.toLocaleString('fa-IR')} تومان` : ''
+      if (entry.action === 'update' && details.fields) return `فیلدها: ${details.fields.join(', ')}`
+      return ''
+    } catch { return '' }
   }
 
   const tabs = [
@@ -693,28 +731,46 @@ export default function Inventory() {
               </svg>
               تاریخچه تغییرات ({filteredAuditLog.length})
             </div>
-            <div className="max-h-96 overflow-y-auto">
+            <div className="max-h-[500px] overflow-y-auto">
               {filteredAuditLog.map((entry: any) => {
                 const actionStyle = auditActionColors[entry.action] || { bg: isDark ? '#1e293b' : '#f8fafc', fg: textPrimary }
+                const detail = formatAuditDetail(entry)
+                const entityLabel = auditEntityLabels[entry.entityType] || entry.entityType
+                const actionLabel = auditActionLabels[entry.action] || entry.action
+                const dotColor = auditActionDotColors[entry.action] || '#6b7280'
                 return (
-                <div key={entry.id} className="flex items-center justify-between px-4 py-3 transition-all" style={{ borderBottom: `1px solid ${cardBorder}` }}
+                <div key={entry.id} className="px-4 py-3 transition-all" style={{ borderBottom: `1px solid ${cardBorder}` }}
                   onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.03)' }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}>
-                  <div className="flex items-center gap-3">
-                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: entry.action === 'delete' ? '#ef4444' : entry.action === 'restock' ? '#22c55e' : entry.action === 'create' ? '#3b82f6' : '#f59e0b' }} />
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: actionStyle.bg, color: actionStyle.fg }}>
-                      {entry.action}
-                    </span>
-                    <span className="text-sm font-medium" style={{ color: textPrimary }}>{entry.entityType}</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-xs" style={{ color: textSecondary }}>{entry.userName || '-'}</span>
-                    <span className="text-xs font-mono" style={{ color: textSecondary }}>{entry.createdAt}</span>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: actionStyle.bg }}>
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: dotColor }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: actionStyle.bg, color: actionStyle.fg }}>
+                          {actionLabel}
+                        </span>
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+                          {entityLabel}
+                        </span>
+                      </div>
+                      <div className="text-sm font-medium" style={{ color: textPrimary }}>
+                        {entry.entityName || `${entityLabel} #${entry.entityId}`}
+                      </div>
+                      {detail && (
+                        <div className="text-xs mt-0.5" style={{ color: textSecondary }}>{detail}</div>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end flex-shrink-0 gap-0.5">
+                      <span className="text-xs font-medium" style={{ color: textSecondary }}>{entry.userName || 'سیستم'}</span>
+                      <span className="text-[10px] font-mono" style={{ color: textSecondary }}>{entry.createdAt}</span>
+                    </div>
                   </div>
                 </div>
                 )
               })}
-              {filteredAuditLog.length === 0 && <p className="text-center py-8 text-sm" style={{ color: textSecondary }}>هیچ تغییری ثبت نشده</p>}
+              {filteredAuditLog.length === 0 && <p className="text-center py-12 text-sm" style={{ color: textSecondary }}>هیچ تغییری ثبت نشده</p>}
             </div>
           </div>
         </>

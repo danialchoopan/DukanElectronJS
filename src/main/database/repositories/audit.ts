@@ -7,6 +7,7 @@ export interface AuditLog {
   entityType: string
   entityId: number | null
   details: string
+  entityName: string | null
   createdAt: string
 }
 
@@ -33,7 +34,20 @@ export function getAuditLog(entityType?: string, limit: number = 50, startDate?:
   }
   const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''
   params.push(limit)
-  return db.prepare(`SELECT a.*, u.name as userName FROM audit_log a LEFT JOIN users u ON a.userId = u.id ${where} ORDER BY a.createdAt DESC LIMIT ?`).all(...params) as AuditLog[]
+  return db.prepare(`
+    SELECT a.*, u.name as userName,
+      CASE
+        WHEN a.entityType = 'product' THEN (SELECT title FROM products WHERE id = a.entityId)
+        WHEN a.entityType = 'sale' THEN (SELECT invoiceNumber FROM sales WHERE id = a.entityId)
+        WHEN a.entityType = 'expense' THEN (SELECT description FROM expenses WHERE id = a.entityId)
+        WHEN a.entityType = 'return' THEN (SELECT reason FROM returns WHERE id = a.entityId)
+        ELSE NULL
+      END as entityName
+    FROM audit_log a
+    LEFT JOIN users u ON a.userId = u.id
+    ${where}
+    ORDER BY a.createdAt DESC LIMIT ?
+  `).all(...params) as AuditLog[]
 }
 
 export function getAuditForEntity(entityType: string, entityId: number): AuditLog[] {
