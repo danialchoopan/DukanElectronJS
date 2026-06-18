@@ -220,6 +220,7 @@ export default function CashierPOS() {
 
         <LooseItemsGrid refreshKey={productRefreshKey} />
         <PopularItems onProductAdd={(p) => {
+          if (p.stock <= 0) { showNotif(`${fa.admin.outOfStock}: ${p.title}`); return }
           const ok = addItem({ productId: p.id, title: p.title, unitPrice: p.sale_price, purchasePrice: p.purchase_price, maxStock: p.stock, imageBase64: p.imageBase64 || "" })
           if (ok) showNotif(`${p.title} — ${p.sale_price.toLocaleString('fa-IR')} ${fa.common.toman}`)
           else { showNotif(lastError); clearError() }
