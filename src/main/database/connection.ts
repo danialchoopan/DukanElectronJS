@@ -287,6 +287,12 @@ function initializeDatabase(db: Database.Database): void {
     // Column already exists
   }
 
+  try {
+    db.prepare('ALTER TABLE expenses ADD COLUMN images TEXT DEFAULT "[]"').run()
+  } catch (e) {
+    // Column already exists
+  }
+
   const defaults: Record<string, string> = {
     storeName: 'فروشگاه من',
     storeAddress: '',

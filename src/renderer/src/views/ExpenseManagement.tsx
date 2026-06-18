@@ -14,6 +14,7 @@ export default function ExpenseManagement() {
     description: '',
     amount: 0,
     date: getTodayGregorian(),
+    images: [] as string[],
     imageBase64: '',
   })
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null)
@@ -42,7 +43,7 @@ export default function ExpenseManagement() {
     if (!form.category || !form.description || form.amount <= 0) return
     await window.api.expenses.create(form)
     setShowForm(false)
-    setForm({ category: '', description: '', amount: 0, date: getTodayGregorian(), imageBase64: '' })
+    setForm({ category: '', description: '', amount: 0, date: getTodayGregorian(), images: [], imageBase64: '' })
     load()
   }
 
@@ -53,13 +54,21 @@ export default function ExpenseManagement() {
   }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      setForm({ ...form, imageBase64: reader.result as string })
-    }
-    reader.readAsDataURL(file)
+    const files = e.target.files
+    if (!files) return
+    const newImages = [...(form.images || [])]
+    Array.from(files).forEach(file => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        newImages.push(reader.result as string)
+        setForm(f => ({ ...f, images: [...newImages] }))
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const removeImage = (index: number) => {
+    setForm(f => ({ ...f, images: f.images.filter((_, i) => i !== index) }))
   }
 
   const categories = Object.values(fa.expense.categories)
@@ -95,7 +104,7 @@ export default function ExpenseManagement() {
                 className="input-field text-sm w-full"
               >
                 <option value="">...</option>
-                {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+                {categories.map((c, i) => <option key={i} value={c}>{c}</option>)}
               </select>
             </div>
             <div>
@@ -128,26 +137,31 @@ export default function ExpenseManagement() {
             <input
               type="file"
               accept="image/*"
+              multiple
               onChange={handleImageUpload}
               className="text-sm"
               style={{ color: textSecondary }}
             />
-            {form.imageBase64 && (
-              <div className="mt-2 flex items-center gap-3">
-                <img src={form.imageBase64} alt="" className="w-20 h-20 rounded-lg object-cover" style={{ border: `1px solid ${cardBorder}` }} />
-                <button
-                  onClick={() => setForm((f) => ({ ...f, imageBase64: '' }))}
-                  className="text-xs font-bold px-2 py-1 rounded"
-                  style={{ color: '#ef4444' }}
-                >
-                  {fa.expense.removeImage}
-                </button>
+            {form.images.length > 0 && (
+              <div className="mt-2 flex gap-2 flex-wrap">
+                {form.images.map((img, idx) => (
+                  <div key={idx} className="relative inline-block">
+                    <img src={img} alt="" className="w-20 h-20 rounded-lg object-cover" style={{ border: `1px solid ${cardBorder}` }} />
+                    <button
+                      onClick={() => removeImage(idx)}
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-white text-xs font-bold flex items-center justify-center"
+                      style={{ backgroundColor: '#ef4444' }}
+                    >
+                      x
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
           <div className="flex gap-2 mt-3">
             <button onClick={handleSubmit} className="px-4 py-2 rounded-lg text-sm font-bold text-white" style={{ backgroundColor: '#22c55e' }}>{fa.admin.create}</button>
-            <button onClick={() => { setShowForm(false); setForm({ category: '', description: '', amount: 0, date: getTodayGregorian(), imageBase64: '' }) }} className="px-4 py-2 rounded-lg text-sm font-bold" style={{ backgroundColor: cardBorder, color: textPrimary }}>{fa.expense.cancel}</button>
+            <button onClick={() => { setShowForm(false); setForm({ category: '', description: '', amount: 0, date: getTodayGregorian(), images: [], imageBase64: '' }) }} className="px-4 py-2 rounded-lg text-sm font-bold" style={{ backgroundColor: cardBorder, color: textPrimary }}>{fa.expense.cancel}</button>
           </div>
         </div>
       )}
@@ -179,7 +193,7 @@ export default function ExpenseManagement() {
                 <td className="px-3 py-2" style={{ color: textPrimary }}>{ex.description}</td>
                 <td className="px-3 py-2 font-bold" style={{ color: '#ef4444' }}>{ex.amount.toLocaleString('fa-IR')}</td>
                 <td className="px-3 py-2 text-center">
-                  {ex.imageBase64 ? (
+                  {(ex.images?.length || ex.imageBase64) ? (
                     <svg className="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke={textSecondary} strokeWidth="2">
                       <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
                     </svg>
@@ -246,12 +260,14 @@ function DetailModal({ expense, onClose, isDark, cardBg, cardBorder, textPrimary
 }) {
   const [zoom, setZoom] = useState(1)
   const [rotation, setRotation] = useState(0)
-  const image = expense.imageBase64 || ''
+  const [imageIndex, setImageIndex] = useState(0)
+  const images = expense.images?.length ? expense.images : (expense.imageBase64 ? [expense.imageBase64] : [])
+  const image = images[imageIndex] || ''
 
   const handleDownload = () => {
     const link = document.createElement('a')
     link.href = image
-    link.download = 'invoice.jpg'
+    link.download = `invoice-${imageIndex + 1}.jpg`
     link.click()
   }
 
@@ -264,7 +280,7 @@ function DetailModal({ expense, onClose, isDark, cardBg, cardBorder, textPrimary
       <tr><th>${fa.expense.category}</th><td>${expense.category}</td></tr>
       <tr><th>${fa.expense.description}</th><td>${expense.description}</td></tr>
       <tr><th>${fa.expense.amount}</th><td>${expense.amount.toLocaleString('fa-IR')} ${fa.common.toman}</td></tr></table>
-      ${image ? `<img src="${image}" />` : ''}
+      ${images.map(img => `<img src="${img}" />`).join('')}
     </body></html>`)
     win.document.close()
     win.print()
@@ -299,15 +315,45 @@ function DetailModal({ expense, onClose, isDark, cardBg, cardBorder, textPrimary
             </div>
           </div>
           <div>
-            {image ? (
+            {images.length > 0 ? (
               <div>
-                <div className="rounded-lg overflow-hidden border mb-2 flex items-center justify-center" style={{ borderColor: cardBorder, backgroundColor: isDark ? '#0f172a' : '#f8fafc', minHeight: 250, maxHeight: 400 }}>
+                <div className="relative rounded-lg overflow-hidden border mb-2 flex items-center justify-center" style={{ borderColor: cardBorder, backgroundColor: isDark ? '#0f172a' : '#f8fafc', minHeight: 250, maxHeight: 400 }}>
+                  {images.length > 1 && (
+                    <>
+                      <button
+                        onClick={() => setImageIndex(i => i > 0 ? i - 1 : images.length - 1)}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center z-10 font-bold text-lg"
+                        style={{ backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff' }}
+                      >
+                        &#8594;
+                      </button>
+                      <button
+                        onClick={() => setImageIndex(i => i < images.length - 1 ? i + 1 : 0)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center z-10 font-bold text-lg"
+                        style={{ backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff' }}
+                      >
+                        &#8592;
+                      </button>
+                    </>
+                  )}
                   <img
                     src={image}
                     alt=""
                     style={{ transform: `scale(${zoom}) rotate(${rotation}deg)`, transition: 'transform 0.2s', maxWidth: '100%', maxHeight: '380px', objectFit: 'contain' }}
                   />
                 </div>
+                {images.length > 1 && (
+                  <div className="flex justify-center gap-1 mb-2">
+                    {images.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setImageIndex(idx)}
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: idx === imageIndex ? '#3b82f6' : cardBorder }}
+                      />
+                    ))}
+                  </div>
+                )}
                 <div className="flex gap-1 flex-wrap">
                   <button onClick={() => setZoom((z) => Math.min(z + 0.25, 3))} className="px-2 py-1 rounded text-xs font-bold" style={{ backgroundColor: cardBorder, color: textPrimary }}>{fa.expense.zoomIn}</button>
                   <button onClick={() => setZoom((z) => Math.max(z - 0.25, 0.25))} className="px-2 py-1 rounded text-xs font-bold" style={{ backgroundColor: cardBorder, color: textPrimary }}>{fa.expense.zoomOut}</button>

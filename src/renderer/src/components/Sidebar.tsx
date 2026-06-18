@@ -27,7 +27,6 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
     { key: 'inventory', label: ui.nav.inventory, icon: <BoxIcon /> },
     { key: 'accounting', label: ui.nav.accounting, icon: <CalculatorIcon /> },
     { key: 'customers', label: ui.nav.customers, icon: <UsersIcon className="w-5 h-5" /> },
-    { key: 'expenses', label: fa.nav.expenses, icon: <ReceiptIcon /> },
     { key: 'admin', label: ui.nav.admin, icon: <SettingsIcon className="w-5 h-5" />, adminOnly: true },
     { key: 'help', label: fa.nav.help, icon: <HelpIcon /> },
   ]
@@ -88,4 +87,3 @@ function BoxIcon() { return <svg className="w-5 h-5" viewBox="0 0 24 24" fill="n
 function CalculatorIcon() { return <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><line x1="8" y1="10" x2="8" y2="10.01"/><line x1="12" y1="10" x2="12" y2="10.01"/><line x1="16" y1="10" x2="16" y2="10.01"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/><line x1="8" y1="18" x2="8" y2="18.01"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg> }
 function HelpIcon() { return <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> }
 function StoreLogo() { return <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> }
-function ReceiptIcon() { return <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 2v20l2-1.5L8 21l2 1.5L12 21l2 1.5L16 21l2 1.5 2-1.5L22 22V2l-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5L10 2 8 3.5 6 2 4 2z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg> }

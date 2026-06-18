@@ -17,7 +17,10 @@ import * as periodsRepo from '../database/repositories/periods'
 import * as reportsRepo from '../database/repositories/reports'
 import * as seedRepo from '../database/repositories/seed'
 import { isFirstRun, getDatabase } from '../database/connection'
-import { writeFileSync, readFileSync } from 'fs'
+import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'fs'
+import { join } from 'path'
+import { randomBytes } from 'crypto'
+import { app } from 'electron'
 
 function handle<T>(channel: string, fn: () => T): void {
   ipcMain.handle(channel, (_event) => {
@@ -156,6 +159,19 @@ export function registerAllHandlers(): void {
   })
   handle('expenses:categories', () => expenses.getExpenseCategories())
   handle('expenses:total', () => expenses.getTotalExpenses())
+
+  ipcMain.handle('expenses:saveImage', (_event, arg: { base64: string; expenseId: number }) => {
+    try {
+      const imagesDir = join(app.getPath('userData'), 'expense-images')
+      if (!existsSync(imagesDir)) mkdirSync(imagesDir, { recursive: true })
+      const ext = arg.base64.startsWith('data:image/png') ? '.png' : '.jpg'
+      const filename = `expense-${arg.expenseId}-${randomBytes(8).toString('hex')}${ext}`
+      const base64Data = arg.base64.replace(/^data:image\/\w+;base64,/, '')
+      const filePath = join(imagesDir, filename)
+      writeFileSync(filePath, Buffer.from(base64Data, 'base64'))
+      return { success: true, data: filename }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
 
   // ─── Cash Register ──────────────────────────────────────
   handle('cashRegister:getToday', () => cashRegister.getTodayRegister())

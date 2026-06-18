@@ -102,6 +102,8 @@ const api = {
       ipcRenderer.invoke('expenses:categories'),
     getTotal: (): Promise<IPCResponse<number>> =>
       ipcRenderer.invoke('expenses:total'),
+    saveImage: (data: { base64: string; expenseId: number }): Promise<IPCResponse<string>> =>
+      ipcRenderer.invoke('expenses:saveImage', data),
   },
 
   cashRegister: {

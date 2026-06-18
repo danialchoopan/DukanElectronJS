@@ -7,7 +7,6 @@ import CashierPOS from './views/CashierPOS'
 import Dashboard from './views/Dashboard'
 import AdminPanel from './views/AdminPanel'
 import CustomerManagement from './views/CustomerManagement'
-import ExpenseManagement from './views/ExpenseManagement'
 import SalesHistory from './views/SalesHistory'
 import AddProduct from './views/AddProduct'
 import Accounting from './views/Accounting'
@@ -58,7 +57,6 @@ export default function App() {
         {currentView === 'inventory' && <Inventory />}
         {currentView === 'accounting' && <Accounting />}
         {currentView === 'customers' && <CustomerManagement />}
-        {currentView === 'expenses' && <ExpenseManagement />}
         {currentView === 'admin' && user.role === 'admin' && <AdminPanel />}
         {currentView === 'help' && <Help />}
       </div>
