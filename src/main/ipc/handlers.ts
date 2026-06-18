@@ -223,14 +223,14 @@ export function registerAllHandlers(): void {
     }
   })
 
-  ipcMain.handle('backup:create', () => backupService.createBackup())
-  ipcMain.handle('backup:auto', () => backupService.autoBackup())
-  ipcMain.handle('backup:list', () => backupService.listBackups())
-  ipcMain.handle('backup:stats', () => backupService.getBackupStats())
-  ipcMain.handle('backup:integrity', (_event, arg: { path?: string }) => backupService.checkIntegrity(arg?.path))
-  ipcMain.handle('backup:verify', (_event, arg: { path: string }) => backupService.verifyBackup(arg.path))
-  ipcMain.handle('backup:restore', (_event, arg: { path: string }) => backupService.restoreBackup(arg.path))
-  ipcMain.handle('backup:cleanup', (_event, arg: { keepCount?: number }) => backupService.cleanupBackups(arg?.keepCount || 30))
+  ipcMain.handle('backup:create', () => { try { return { success: true, data: backupService.createBackup() } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
+  ipcMain.handle('backup:auto', () => { try { return { success: true, data: backupService.autoBackup() } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
+  ipcMain.handle('backup:list', () => { try { return { success: true, data: backupService.listBackups() } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
+  ipcMain.handle('backup:stats', () => { try { return { success: true, data: backupService.getBackupStats() } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
+  ipcMain.handle('backup:integrity', (_event, arg: { path?: string }) => { try { return { success: true, data: backupService.checkIntegrity(arg?.path) } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
+  ipcMain.handle('backup:verify', (_event, arg: { path: string }) => { try { return { success: true, data: backupService.verifyBackup(arg.path) } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
+  ipcMain.handle('backup:restore', (_event, arg: { path: string }) => { try { return { success: true, data: backupService.restoreBackup(arg.path) } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
+  ipcMain.handle('backup:cleanup', (_event, arg: { keepCount?: number }) => { try { return { success: true, data: backupService.cleanupBackups(arg?.keepCount || 30) } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
 
   // ─── Categories ─────────────────────────────────────
   handle('categories:getAll', () => categoriesRepo.getAllCategories())
