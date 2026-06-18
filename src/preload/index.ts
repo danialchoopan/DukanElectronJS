@@ -138,10 +138,14 @@ const api = {
       ipcRenderer.invoke('categories:getTree'),
     create: (data: { name: string; parentId?: number }): Promise<IPCResponse<any>> =>
       ipcRenderer.invoke('categories:create', data),
-    update: (id: number, name: string): Promise<IPCResponse<boolean>> =>
-      ipcRenderer.invoke('categories:update', { id, name }),
-    delete: (id: number): Promise<IPCResponse<boolean>> =>
+    update: (id: number, data: { name?: string; slug?: string; isActive?: boolean }): Promise<IPCResponse<boolean>> =>
+      ipcRenderer.invoke('categories:update', { id, data }),
+    delete: (id: number): Promise<IPCResponse<any>> =>
       ipcRenderer.invoke('categories:delete', { id }),
+    toggleActive: (id: number): Promise<IPCResponse<any>> =>
+      ipcRenderer.invoke('categories:toggleActive', { id }),
+    getDescendants: (id: number): Promise<IPCResponse<any>> =>
+      ipcRenderer.invoke('categories:descendants', { id }),
   },
 
   audit: {

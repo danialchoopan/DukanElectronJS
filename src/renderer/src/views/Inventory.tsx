@@ -94,31 +94,9 @@ export default function Inventory() {
   const totalRetailValue = filteredProducts.reduce((a, p) => a + (p.stock * p.sale_price), 0)
   const totalProfit = totalRetailValue - totalStockValue
   const lowStockCount = filteredProducts.filter(p => p.stock > 0 && p.stock <= p.minStock).length
-  const inStockCount = filteredProducts.filter(p => p.stock > p.minStock).length
-  const outOfStockCount = filteredProducts.filter(p => p.stock <= 0).length
   const pagedProducts = filteredProducts.slice(page * pageSize, (page + 1) * pageSize)
 
   const donutColors = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#8b5cf6', '#14b8a6']
-  const categoryGroups = filteredProducts.reduce<Record<string, { count: number; stockValue: number }>>((acc, p) => {
-    const cat = p.category || 'بدون دسته'
-    if (!acc[cat]) acc[cat] = { count: 0, stockValue: 0 }
-    acc[cat].count++
-    acc[cat].stockValue += p.stock * p.purchase_price
-    return acc
-  }, {})
-  const categorySegments = Object.entries(categoryGroups).map(([category, data]) => ({
-    category,
-    value: data.stockValue,
-    count: data.count,
-  })).filter(s => s.value > 0)
-  const donutTotal = categorySegments.reduce((s, seg) => s + seg.value, 0)
-
-  const barData = [
-    { label: 'موجود', value: inStockCount, color: '#22c55e' },
-    { label: 'کم\u200cموجودی', value: lowStockCount, color: '#f59e0b' },
-    { label: 'تمام شده', value: outOfStockCount, color: '#ef4444' },
-  ]
-  const barMax = Math.max(...barData.map(b => b.value), 1)
 
   const filteredAuditLog = auditFilter === 'all' ? auditLog : auditLog.filter((e) => e.action === auditFilter)
   const todayStr = new Date().toISOString().slice(0, 10)
@@ -308,12 +286,20 @@ export default function Inventory() {
       <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
         {tabs.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${tab === t.key ? 'bg-blue-600 text-white shadow-lg' : ''}`}
-            style={tab !== t.key ? {
-              backgroundColor: isDark ? '#1e293b' : '#f8fafc',
-              color: textSecondary,
-              border: `1px solid ${cardBorder}`,
-            } : undefined}>
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${tab === t.key ? 'shadow-lg' : ''}`}
+            style={
+              tab === t.key 
+                ? {
+                    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                    color: '#ffffff',
+                    boxShadow: '0 4px 12px rgba(59,130,246,0.3)',
+                  }
+                : {
+                    backgroundColor: isDark ? '#1e293b' : '#f8fafc',
+                    color: textSecondary,
+                    border: `1px solid ${cardBorder}`,
+                  }
+            }>
             {t.icon}
             {t.label}
           </button>
@@ -333,62 +319,7 @@ export default function Inventory() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-          <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-            <div className="text-sm font-bold mb-4" style={{ color: textPrimary }}>ترکیب ارزش موجودی بر اساس دسته</div>
-            {donutTotal > 0 ? (
-              <div className="flex flex-col items-center">
-                <svg viewBox="0 0 42 42" className="w-40 h-40">
-                  <circle cx="21" cy="21" r="15.9" fill="transparent" stroke={cardBorder} strokeWidth="5" />
-                  {categorySegments.map((seg, i) => {
-                    const pct = (seg.value / donutTotal) * 100
-                    const offset = categorySegments.slice(0, i).reduce((s, x) => s + (x.value / donutTotal) * 100, 0)
-                    return (
-                      <circle key={i} cx="21" cy="21" r="15.9" fill="transparent"
-                        stroke={donutColors[i % donutColors.length]} strokeWidth="5"
-                        strokeDasharray={`${pct} ${100 - pct}`}
-                        strokeDashoffset={`${25 - offset}`} />
-                    )
-                  })}
-                </svg>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 justify-center">
-                  {categorySegments.map((seg, i) => (
-                    <div key={i} className="flex items-center gap-1.5 text-xs" style={{ color: textSecondary }}>
-                      <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: donutColors[i % donutColors.length] }} />
-                      {seg.category}
-                      <span className="font-mono" style={{ color: textPrimary }}>{seg.count}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <p className="text-center py-8 text-sm" style={{ color: textSecondary }}>{fa.dashboard.noData}</p>
-            )}
-          </div>
-
-          <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-            <div className="text-sm font-bold mb-4" style={{ color: textPrimary }}>وضعیت موجودی</div>
-            {barMax > 0 ? (
-              <svg viewBox="0 0 300 150" className="w-full h-40">
-                {barData.map((bar, i) => {
-                  const barHeight = (bar.value / barMax) * 120
-                  const x = 30 + i * 95
-                  return (
-                    <g key={i}>
-                      <rect x={x} y={130 - barHeight} width={60} height={barHeight} rx={4} fill={bar.color} />
-                      <text x={x + 30} y={145} textAnchor="middle" fill={textSecondary} fontSize="8">{bar.label}</text>
-                      <text x={x + 30} y={125 - barHeight} textAnchor="middle" fill={textPrimary} fontSize="9" fontWeight="bold">
-                        {bar.value}
-                      </text>
-                    </g>
-                  )
-                })}
-              </svg>
-            ) : (
-              <p className="text-center py-8 text-sm" style={{ color: textSecondary }}>{fa.dashboard.noData}</p>
-            )}
-          </div>
-        </div>
+        
 
         {(outOfStock.length > 0 || lowStock.length > 0) && (
           <div className="flex gap-4 mb-4">

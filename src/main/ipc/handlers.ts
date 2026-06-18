@@ -234,8 +234,13 @@ export function registerAllHandlers(): void {
   handle('categories:getAll', () => categoriesRepo.getAllCategories())
   handle('categories:getTree', () => categoriesRepo.getCategoryTree())
   handleArg<{ name: string; parentId?: number }, any>('categories:create', (a) => categoriesRepo.createCategory(a.name, a.parentId))
-  handleArg<{ id: number; name: string }, boolean>('categories:update', (a) => { categoriesRepo.updateCategory(a.id, a.name); return true })
-  handleArg<{ id: number }, boolean>('categories:delete', (a) => categoriesRepo.deleteCategory(a.id))
+  handleArg<{ id: number; data: { name?: string; slug?: string; isActive?: boolean } }, boolean>('categories:update', (a) => categoriesRepo.updateCategory(a.id, a.data))
+  handleArg<{ id: number }, any>('categories:delete', (a) => {
+    const result = categoriesRepo.deleteCategory(a.id)
+    return result
+  })
+  handleArg<{ id: number }, boolean>('categories:toggleActive', (a) => categoriesRepo.toggleCategoryActive(a.id))
+  handleArg<{ id: number }, any>('categories:descendants', (a) => ({ ids: categoriesRepo.getCategoryDescendantIds(a.id) }))
 
   // ─── Audit Log ─────────────────────────────────────
   handleArg<{ entityType?: string; limit?: number; startDate?: string; endDate?: string }, any>('audit:getAll', (a) => auditRepo.getAuditLog(a.entityType, a.limit || 100, a.startDate, a.endDate))

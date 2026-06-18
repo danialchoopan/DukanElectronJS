@@ -267,6 +267,20 @@ function initializeDatabase(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_journal_lines_account ON journal_entry_lines(accountId);
   `)
 
+  try { db.prepare('ALTER TABLE categories ADD COLUMN slug TEXT DEFAULT ""').run() } catch(e) {}
+  try { db.prepare('ALTER TABLE categories ADD COLUMN level INTEGER NOT NULL DEFAULT 0').run() } catch(e) {}
+  try { db.prepare('ALTER TABLE categories ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1').run() } catch(e) {}
+
+  // Populate slug and level for existing categories
+  try {
+    const cats = db.prepare('SELECT id, name, parent_id FROM categories').all() as { id: number; name: string; parent_id: number | null }[]
+    for (const cat of cats) {
+      const slug = cat.name.replace(/\s+/g, '-').toLowerCase()
+      const level = cat.parent_id ? 1 : 0
+      db.prepare('UPDATE categories SET slug = ?, level = ? WHERE id = ?').run(slug, level, cat.id)
+    }
+  } catch(e) {}
+
   try {
     db.prepare('ALTER TABLE expenses ADD COLUMN imageBase64 TEXT DEFAULT ""').run()
   } catch (e) {

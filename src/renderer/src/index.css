@@ -121,39 +121,128 @@
   .input-field::placeholder { color: var(--text-muted); }
   .input-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
 
-  .light .btn-primary,
-  .light .btn-success,
-  .light .btn-danger {
+  /* Ensure buttons keep white text in both themes */
+  .btn-primary,
+  .btn-success,
+  .btn-danger {
     color: #ffffff !important;
     text-shadow: 0 1px 2px rgba(0,0,0,0.25) !important;
   }
 
-  .light .border-b, .light .border-t { border-color: var(--border-color) !important; }
-  .light .bg-gray-800, .light .bg-gray-900, .light .bg-gray-950 { background-color: var(--bg-secondary) !important; }
-  .light .bg-gray-700 { background-color: var(--bg-tertiary) !important; }
-  .light .bg-gray-600 { background-color: #d1d5db !important; }
-  .light .text-gray-400, .light .text-gray-500, .light .text-gray-600 { color: var(--text-secondary) !important; }
-  .light .text-white { color: var(--text-primary) !important; }
-  .light .border-gray-700 { border-color: var(--border-color) !important; }
-  .light .hover\:bg-gray-800:hover { background-color: var(--bg-tertiary) !important; }
-  .light .hover\:bg-gray-700:hover { background-color: var(--bg-tertiary) !important; }
-  .light .hover\:bg-gray-600:hover { background-color: #d1d5db !important; }
-  .light .hover\:bg-gray-900:hover { background-color: var(--bg-tertiary) !important; }
-  .light .bg-black\/60 { background-color: rgba(0,0,0,0.4) !important; }
-  .light .sticky { background-color: var(--bg-secondary) !important; }
-  .light table thead { background-color: #f1f5f9 !important; }
-  .light .shadow-lg { box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04) !important; }
-  .light .ring-2 { box-shadow: none !important; }
+  .light .border-b, 
+  .light .border-t { 
+    border-color: var(--border-color) !important; 
+  }
+  
+  .light .bg-gray-800, 
+  .light .bg-gray-900, 
+  .light .bg-gray-950 { 
+    background-color: var(--bg-secondary) !important; 
+  }
+  
+  .light .bg-gray-700 { 
+    background-color: var(--bg-tertiary) !important; 
+  }
+  
+  .light .bg-gray-600 { 
+    background-color: #d1d5db !important; 
+  }
+  
+  .light .text-gray-400, 
+  .light .text-gray-500, 
+  .light .text-gray-600 { 
+    color: var(--text-secondary) !important; 
+  }
+  
+  /* REMOVED: This was causing the issue */
+  /* .light .text-white { color: var(--text-primary) !important; } */
+  
+  /* Instead, only override text-white for specific cases */
+  .light .text-white:not(.btn-primary):not(.btn-success):not(.btn-danger) {
+    color: var(--text-primary) !important;
+  }
+  
+  .light .border-gray-700 { 
+    border-color: var(--border-color) !important; 
+  }
+  
+  .light .hover\:bg-gray-800:hover { 
+    background-color: var(--bg-tertiary) !important; 
+  }
+  
+  .light .hover\:bg-gray-700:hover { 
+    background-color: var(--bg-tertiary) !important; 
+  }
+  
+  .light .hover\:bg-gray-600:hover { 
+    background-color: #d1d5db !important; 
+  }
+  
+  .light .hover\:bg-gray-900:hover { 
+    background-color: var(--bg-tertiary) !important; 
+  }
+  
+  .light .bg-black\/60 { 
+    background-color: rgba(0,0,0,0.4) !important; 
+  }
+  
+  .light .sticky { 
+    background-color: var(--bg-secondary) !important; 
+  }
+  
+  .light table thead { 
+    background-color: #f1f5f9 !important; 
+  }
+  
+  .light .shadow-lg { 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04) !important; 
+  }
+  
+  .light .ring-2 { 
+    box-shadow: none !important; 
+  }
 
-  .high-contrast { --bg-primary: #000 !important; --bg-secondary: #0a0a0a !important; --bg-tertiary: #1a1a1a !important; --bg-card: #0a0a0a !important; --bg-input: #1a1a1a !important; --border-color: #fff !important; --text-primary: #fff !important; --text-secondary: #e0e0e0 !important; --text-muted: #b0b0b0 !important; }
-  .high-contrast * { border-color: #fff !important; }
+  .high-contrast { 
+    --bg-primary: #000 !important; 
+    --bg-secondary: #0a0a0a !important; 
+    --bg-tertiary: #1a1a1a !important; 
+    --bg-card: #0a0a0a !important; 
+    --bg-input: #1a1a1a !important; 
+    --border-color: #fff !important; 
+    --text-primary: #fff !important; 
+    --text-secondary: #e0e0e0 !important; 
+    --text-muted: #b0b0b0 !important; 
+  }
+  .high-contrast * { 
+    border-color: #fff !important; 
+  }
 
-  table { border-collapse: separate; border-spacing: 0; }
-  table th { font-weight: 700; font-size: 0.75rem; letter-spacing: 0.05em; }
-  table td, table th { padding: 0.5rem 0.75rem; }
+  table { 
+    border-collapse: separate; 
+    border-spacing: 0; 
+  }
+  table th { 
+    font-weight: 700; 
+    font-size: 0.75rem; 
+    letter-spacing: 0.05em; 
+  }
+  table td, 
+  table th { 
+    padding: 0.5rem 0.75rem; 
+  }
 
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { border-radius: 3px; background: #475569; }
-  .light ::-webkit-scrollbar-thumb { background: #9ca3af; }
+  ::-webkit-scrollbar { 
+    width: 6px; 
+    height: 6px; 
+  }
+  ::-webkit-scrollbar-track { 
+    background: transparent; 
+  }
+  ::-webkit-scrollbar-thumb { 
+    border-radius: 3px; 
+    background: #475569; 
+  }
+  .light ::-webkit-scrollbar-thumb { 
+    background: #9ca3af; 
+  }
 }

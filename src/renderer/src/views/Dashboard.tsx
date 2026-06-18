@@ -136,28 +136,28 @@ export default function Dashboard() {
         )}
 
         {topProducts.length > 0 && (
-          <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-            <h3 className="font-bold mb-3" style={{ color: textPrimary }}>{fa.dashboard.topProducts}</h3>
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ borderBottom: `2px solid ${cardBorder}` }}>
-                  <th className="text-right px-2 py-1" style={{ color: textSecondary }}>{fa.admin.title}</th>
-                  <th className="text-right px-2 py-1" style={{ color: textSecondary }}>{fa.pos.qty}</th>
-                  <th className="text-right px-2 py-1" style={{ color: textSecondary }}>{fa.dashboard.totalSales}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topProducts.map((p, i) => (
-                  <tr key={i} style={{ borderBottom: `1px solid ${cardBorder}` }}>
-                    <td className="px-2 py-1.5 font-medium" style={{ color: textPrimary }}>{p.productTitle}</td>
-                    <td className="px-2 py-1.5" style={{ color: textPrimary }}>{p.totalQty}</td>
-                    <td className="px-2 py-1.5 font-bold" style={{ color: textPrimary }}>{p.totalRevenue.toLocaleString('fa-IR')}</td>
+            <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+              <h3 className="font-bold mb-3" style={{ color: textPrimary }}>{fa.dashboard.topProducts}</h3>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr style={{ borderBottom: `2px solid ${cardBorder}` }}>
+                    <th className="text-right px-2 py-1" style={{ color: textSecondary }}>{fa.admin.title}</th>
+                    <th className="text-right px-2 py-1" style={{ color: textSecondary }}>{fa.pos.qty}</th>
+                    <th className="text-right px-2 py-1" style={{ color: textSecondary }}>{fa.dashboard.totalSales}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody>
+                  {topProducts.slice(0, 5).map((p, i) => (
+                    <tr key={i} style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                      <td className="px-2 py-1.5 font-medium" style={{ color: textPrimary }}>{p.productTitle}</td>
+                      <td className="px-2 py-1.5" style={{ color: textPrimary }}>{p.totalQty}</td>
+                      <td className="px-2 py-1.5 font-bold" style={{ color: textPrimary }}>{p.totalRevenue.toLocaleString('fa-IR')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
       </div>
 
       <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
