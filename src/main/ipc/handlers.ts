@@ -16,8 +16,9 @@ import * as journalRepo from '../database/repositories/journal'
 import * as periodsRepo from '../database/repositories/periods'
 import * as reportsRepo from '../database/repositories/reports'
 import * as seedRepo from '../database/repositories/seed'
+import * as backupService from '../database/backup'
 import { isFirstRun, getDatabase } from '../database/connection'
-import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'fs'
+import { writeFileSync, mkdirSync, existsSync, copyFileSync } from 'fs'
 import { join } from 'path'
 import { randomBytes } from 'crypto'
 import { app } from 'electron'
@@ -193,20 +194,14 @@ export function registerAllHandlers(): void {
     const win = BrowserWindow.getFocusedWindow()
     const result = await dialog.showSaveDialog(win!, {
       title: 'ذخیره فایل پشتیبان',
-      defaultPath: `pos-backup-${new Date().toISOString().split('T')[0]}.json`,
-      filters: [{ name: 'JSON', extensions: ['json'] }],
+      defaultPath: `pos-backup-${new Date().toISOString().split('T')[0]}.db`,
+      filters: [{ name: 'SQLite Database', extensions: ['db'] }],
     })
     if (result.canceled || !result.filePath) return { success: false, error: 'cancelled' }
     try {
-      const db = getDatabase()
-      const tables = ['users', 'products', 'sales', 'sale_items', 'customers', 'customer_ledger', 'expenses', 'suspended_invoices', 'cash_register', 'settings', 'categories', 'audit_log', 'returns', 'accounts', 'fiscal_periods', 'journal_entries', 'journal_entry_lines']
-      const backup: Record<string, any> = {}
-      for (const table of tables) {
-        backup[table] = db.prepare(`SELECT * FROM ${table}`).all()
-      }
-      backup._metadata = { version: '1.0', exportDate: new Date().toISOString(), appName: 'SuperMarket POS' }
-      writeFileSync(result.filePath, JSON.stringify(backup, null, 2), 'utf-8')
-      return { success: true, data: result.filePath }
+      copyFileSync(join(app.getPath('userData'), 'pos.db'), result.filePath)
+      const hash = require('crypto').createHash('sha256').update(require('fs').readFileSync(result.filePath)).digest('hex')
+      return { success: true, data: result.filePath, hash }
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : String(err) }
     }
@@ -216,35 +211,26 @@ export function registerAllHandlers(): void {
     const win = BrowserWindow.getFocusedWindow()
     const result = await dialog.showOpenDialog(win!, {
       title: 'انتخاب فایل پشتیبان',
-      filters: [{ name: 'JSON', extensions: ['json'] }],
+      filters: [{ name: 'SQLite Database', extensions: ['db'] }],
       properties: ['openFile'],
     })
     if (result.canceled || !result.filePaths[0]) return { success: false, error: 'cancelled' }
     try {
-      const data = JSON.parse(readFileSync(result.filePaths[0], 'utf-8'))
-      const db = getDatabase()
-      const tables = ['users', 'products', 'sales', 'sale_items', 'customers', 'customer_ledger', 'expenses', 'suspended_invoices', 'cash_register', 'settings', 'categories', 'audit_log', 'returns', 'accounts', 'fiscal_periods', 'journal_entries', 'journal_entry_lines']
-      const restore = db.transaction(() => {
-        for (const table of tables) {
-          if (data[table] && Array.isArray(data[table])) {
-            db.prepare(`DELETE FROM ${table}`).run()
-            if (data[table].length > 0) {
-              const cols = Object.keys(data[table][0])
-              const placeholders = cols.map(() => '?').join(',')
-              const stmt = db.prepare(`INSERT INTO ${table} (${cols.join(',')}) VALUES (${placeholders})`)
-              for (const row of data[table]) {
-                stmt.run(...cols.map((c) => row[c]))
-              }
-            }
-          }
-        }
-      })
-      restore()
+      copyFileSync(result.filePaths[0], join(app.getPath('userData'), 'pos.db'))
       return { success: true }
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : String(err) }
     }
   })
+
+  ipcMain.handle('backup:create', () => backupService.createBackup())
+  ipcMain.handle('backup:auto', () => backupService.autoBackup())
+  ipcMain.handle('backup:list', () => backupService.listBackups())
+  ipcMain.handle('backup:stats', () => backupService.getBackupStats())
+  ipcMain.handle('backup:integrity', (_event, arg: { path?: string }) => backupService.checkIntegrity(arg?.path))
+  ipcMain.handle('backup:verify', (_event, arg: { path: string }) => backupService.verifyBackup(arg.path))
+  ipcMain.handle('backup:restore', (_event, arg: { path: string }) => backupService.restoreBackup(arg.path))
+  ipcMain.handle('backup:cleanup', (_event, arg: { keepCount?: number }) => backupService.cleanupBackups(arg?.keepCount || 30))
 
   // ─── Categories ─────────────────────────────────────
   handle('categories:getAll', () => categoriesRepo.getAllCategories())

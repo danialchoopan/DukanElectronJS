@@ -205,6 +205,14 @@ const api = {
       ipcRenderer.invoke('backup:export'),
     import: (): Promise<IPCResponse<boolean>> =>
       ipcRenderer.invoke('backup:import'),
+    create: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:create'),
+    auto: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:auto'),
+    list: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:list'),
+    stats: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:stats'),
+    integrity: (path?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:integrity', { path }),
+    verify: (path: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:verify', { path }),
+    restore: (path: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:restore', { path }),
+    cleanup: (keepCount?: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:cleanup', { keepCount }),
   },
 
   onNavigate: (callback: (page: string) => void): (() => void) => {

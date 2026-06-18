@@ -195,6 +195,133 @@ function UsersTab() {
   )
 }
 
+function BackupSection() {
+  const [backups, setBackups] = useState<{ name: string; path: string; size: number; timestamp: string; hash: string }[]>([])
+  const [stats, setStats] = useState<{ totalBackups: number; latestBackup: string | null; totalSize: number } | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [integrityResult, setIntegrityResult] = useState<string | null>(null)
+  const isDark = document.documentElement.classList.contains('dark')
+
+  const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
+  const textSecondary = isDark ? '#94a3b8' : '#475569'
+  const cardBorder = isDark ? '#334155' : '#e2e8f0'
+  const inputBg = isDark ? '#0f172a' : '#f8fafc'
+
+  const loadData = async () => {
+    const [listRes, statsRes] = await Promise.all([
+      window.api.backup.list(),
+      window.api.backup.stats(),
+    ])
+    if (listRes.success && listRes.data) setBackups(listRes.data)
+    if (statsRes.success && statsRes.data) setStats(statsRes.data)
+  }
+
+  useEffect(() => { loadData() }, [])
+
+  const handleExport = async () => {
+    setLoading(true)
+    const r = await window.api.backup.export()
+    setLoading(false)
+    if (r.success) { alert(`فایل پشتیبان ذخیره شد:\n${r.data}`); loadData() }
+    else if (r.error !== 'cancelled') alert(`خطا: ${r.error}`)
+  }
+
+  const handleCreateBackup = async () => {
+    setLoading(true)
+    const r = await window.api.backup.create()
+    setLoading(false)
+    if (r.success) alert('پشتیبان جدید ایجاد شد')
+    else alert(`خطا: ${r.error}`)
+    loadData()
+  }
+
+  const handleIntegrity = async () => {
+    setLoading(true)
+    const r = await window.api.backup.integrity()
+    setLoading(false)
+    if (r.success && r.data) {
+      const d = r.data
+      setIntegrityResult(`سلامت: ${d.integrityCheck === 'ok' ? '✓' : '✗'} | خارجی: ${d.foreignKeyCheck} | جداول: ${d.tableCount}`)
+    } else {
+      setIntegrityResult(`خطا: ${r.error}`)
+    }
+  }
+
+  const handleRestore = async (path: string) => {
+    if (!confirm('آیا از بازیابی اطمینان دارید؟ تمام اطلاعات فعلی جایگزین می‌شود.')) return
+    setLoading(true)
+    const r = await window.api.backup.restore(path)
+    setLoading(false)
+    if (r.success) { alert('بازیابی با موفقیت انجام شد!'); window.location.reload() }
+    else alert(`خطا: ${r.error}`)
+  }
+
+  const handleCleanup = async () => {
+    const r = await window.api.backup.cleanup(30)
+    if (r.success && r.data) alert(`${r.data.deleted} پشتیبان قدیمی حذف شد`)
+    loadData()
+  }
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / 1048576).toFixed(1)} MB`
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2 flex-wrap">
+        <button onClick={handleCreateBackup} disabled={loading} className="btn-primary flex-1 py-2 text-sm">
+          + پشتیبان جدید
+        </button>
+        <button onClick={handleExport} disabled={loading} className="flex-1 py-2 rounded-lg font-bold text-sm transition-all" style={{ background: isDark ? '#334155' : '#e2e8f0', color: textSecondary }}>
+          ذخیره در فایل
+        </button>
+        <button onClick={handleIntegrity} disabled={loading} className="flex-1 py-2 rounded-lg font-bold text-sm transition-all" style={{ background: isDark ? '#334155' : '#e2e8f0', color: textSecondary }}>
+          بررسی سلامت
+        </button>
+        <button onClick={handleCleanup} disabled={loading} className="py-2 px-3 rounded-lg font-bold text-sm transition-all" style={{ background: '#fef2f2', color: '#dc2626' }}>
+          پاکسازی
+        </button>
+      </div>
+
+      {stats && (
+        <div className="flex gap-4 text-xs" style={{ color: textSecondary }}>
+          <span>تعداد: {stats.totalBackups}</span>
+          <span>حجم کل: {formatSize(stats.totalSize)}</span>
+        </div>
+      )}
+
+      {integrityResult && (
+        <div className="px-3 py-2 rounded-lg text-xs" style={{ background: inputBg, color: textSecondary }}>
+          {integrityResult}
+        </div>
+      )}
+
+      {backups.length > 0 && (
+        <div className="space-y-1 max-h-48 overflow-auto">
+          {backups.map((b) => (
+            <div key={b.name} className="flex items-center justify-between px-3 py-2 rounded-lg text-xs" style={{ background: inputBg, border: `1px solid ${cardBorder}` }}>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium truncate" style={{ color: textPrimary }}>{b.name}</div>
+                <div style={{ color: textSecondary }}>{new Date(b.timestamp).toLocaleString('fa-IR')} — {formatSize(b.size)}</div>
+              </div>
+              <button onClick={() => handleRestore(b.path)} disabled={loading}
+                className="ml-2 px-2 py-1 rounded text-xs font-bold" style={{ background: '#dcfce7', color: '#166534' }}>
+                بازیابی
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {backups.length === 0 && (
+        <p className="text-xs text-center py-2" style={{ color: textSecondary }}>هنوز پشتیبانی وجود ندارد</p>
+      )}
+    </div>
+  )
+}
+
 function SettingsTab() {
   const [rounding, setRounding] = useState(500)
   const [storeName, setStoreName] = useState('')
@@ -331,29 +458,7 @@ function SettingsTab() {
         <p className="text-sm mb-4" style={{ color: textSecondary }}>
           تمام اطلاعات فروشگاه شامل کالاها، فاکتورها، مشتریان و تنظیمات
         </p>
-        <div className="flex gap-3">
-          <button 
-            onClick={async () => {
-              const r = await window.api.backup.export()
-              if (r.success) alert(`فایل پشتیبان ذخیره شد:\n${r.data}`)
-              else if (r.error !== 'cancelled') alert(`خطا: ${r.error}`)
-            }} 
-            className="btn-primary flex-1 py-3"
-          >
-            ذخیره پشتیبان
-          </button>
-          <button 
-            onClick={async () => {
-              if (!confirm('آیا از بازیابی اطمینان دارید؟ تمام اطلاعات فعلی جایگزین می‌شود.')) return
-              const r = await window.api.backup.import()
-              if (r.success) { alert('بازیابی با موفقیت انجام شد!'); window.location.reload() }
-              else if (r.error !== 'cancelled') alert(`خطا: ${r.error}`)
-            }} 
-            className="btn-success flex-1 py-3"
-          >
-            بازیابی پشتیبان
-          </button>
-        </div>
+        <BackupSection />
       </div>
     </div>
   )

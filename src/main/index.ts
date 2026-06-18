@@ -6,6 +6,7 @@ import { readFileSync } from 'fs'
 import { appendFileSync } from 'fs'
 // Uncomment to auto-seed on first run:
 import { seedDatabase } from './database/seed'
+import { autoBackup } from './database/backup'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -39,6 +40,7 @@ app.whenReady().then(() => {
   getDatabase()
   seedDatabase()
   registerAllHandlers()
+  autoBackup()
   createWindow()
 
   globalShortcut.register('F1', () => { mainWindow?.webContents.send('navigate', 'pos') })
