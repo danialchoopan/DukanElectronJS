@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import ShamsiDateInput from '../../components/ShamsiDateInput'
+import { downloadExcel } from '../../utils/a4Print'
 
 export default function TrialBalance() {
   const [rows, setRows] = useState<any[]>([])
@@ -30,7 +31,17 @@ export default function TrialBalance() {
 
   return (
     <div>
-      <h3 className="text-lg font-bold mb-4" style={{ color: textPrimary }}>{fa.accounting.trialBalance.title}</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.trialBalance.title}</h3>
+        <button onClick={() => {
+          const headers = [fa.accounting.trialBalance.account, fa.accounting.trialBalance.totalDebit, fa.accounting.trialBalance.totalCredit, fa.accounting.trialBalance.balance]
+          const csvRows = rows.filter((r: any) => r.totalDebit !== 0 || r.totalCredit !== 0).map((r: any) => [`${r.accountCode} - ${r.accountName}`, String(r.totalDebit), String(r.totalCredit), String(r.balance)])
+          csvRows.push([fa.accounting.trialBalance.totals, String(totalDebit), String(totalCredit), ''])
+          downloadExcel('trial-balance.csv', headers, csvRows)
+        }} className="text-xs px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+          &#1582;&#1585;&#1608;&#1580;&#1740; &#1575;&#1705;&#1587;&#1604;
+        </button>
+      </div>
 
       <div className="flex flex-wrap gap-3 mb-4">
         <ShamsiDateInput value={startDate} onChange={setStartDate} label={fa.dashboard.dateFrom} />

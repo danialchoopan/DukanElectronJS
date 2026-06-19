@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
+import { downloadExcel } from '../../utils/a4Print'
 
 export default function AccountingDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0)
@@ -108,6 +109,15 @@ export default function AccountingDashboard() {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <button onClick={() => {
+          const headers = ['&#1575;&#1606;&#1578;&#1582;&#1575;&#1576;']
+          const rows = [[fa.accounting.profitLoss.revenue], [totalRevenue.toLocaleString('fa-IR')], [fa.accounting.profitLoss.cogs], [totalCogs.toLocaleString('fa-IR')], [fa.accounting.profitLoss.operatingExpenses], [totalOpEx.toLocaleString('fa-IR')], [netProfit >= 0 ? fa.accounting.profitLoss.netProfit : fa.accounting.profitLoss.netLoss], [Math.abs(netProfit).toLocaleString('fa-IR')]]
+          downloadExcel('accounting-summary.csv', headers, rows)
+        }} className="text-xs px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+          &#1582;&#1585;&#1608;&#1580;&#1740; &#1575;&#1705;&#1587;&#1604;
+        </button>
+      </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {kpis.map((kpi, i) => (
           <div key={i} className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>

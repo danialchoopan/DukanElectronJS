@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import ShamsiDateInput from '../../components/ShamsiDateInput'
+import { printA4Report, downloadExcel } from '../../utils/a4Print'
 
 export default function BalanceSheet() {
   const [data, setData] = useState<any>(null)
@@ -45,7 +46,36 @@ export default function BalanceSheet() {
 
   return (
     <div>
-      <h3 className="text-lg font-bold mb-4" style={{ color: textPrimary }}>{fa.accounting.balanceSheet.title}</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.balanceSheet.title}</h3>
+        <div className="flex gap-2">
+          <button onClick={() => {
+            const headers = [fa.accounting.balanceSheet.title]
+            const rows = [
+              [fa.accounting.balanceSheet.totalAssets, String(data.totalAssets)],
+              [fa.accounting.balanceSheet.totalLiabilities, String(data.totalLiabilities)],
+              [fa.accounting.balanceSheet.totalEquity, String(data.totalEquity)],
+              [fa.accounting.balanceSheet.totalLiabilitiesAndEquity, String(data.totalLiabilitiesAndEquity)]
+            ]
+            downloadExcel('balance-sheet.csv', headers, rows)
+          }} className="text-xs px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+            &#1582;&#1585;&#1608;&#1580;&#1740; &#1575;&#1705;&#1587;&#1604;
+          </button>
+          <button onClick={() => {
+            let html = '<h1>&#1578;&#1585;&#1575;&#1586;&#1606;&#1575;&#1605;&#1607;</h1>'
+            html += `<div class="header-info"><span>&#1578;&#1575;&#1585;&#1740;&#1582;: ${new Date().toLocaleDateString('fa-IR')}</span></div>`
+            html += '<table><thead><tr><th>&#1576;&#1582;&#1588;</th><th>&#1605;&#1576;&#1604;&#1594;</th></tr></thead><tbody>'
+            html += `<tr><td>${fa.accounting.balanceSheet.totalAssets}</td><td>${data.totalAssets.toLocaleString('fa-IR')}</td></tr>`
+            html += `<tr><td>${fa.accounting.balanceSheet.totalLiabilities}</td><td>${data.totalLiabilities.toLocaleString('fa-IR')}</td></tr>`
+            html += `<tr><td>${fa.accounting.balanceSheet.totalEquity}</td><td>${data.totalEquity.toLocaleString('fa-IR')}</td></tr>`
+            html += `<tr><td>${fa.accounting.balanceSheet.totalLiabilitiesAndEquity}</td><td>${data.totalLiabilitiesAndEquity.toLocaleString('fa-IR')}</td></tr>`
+            html += '</tbody></table>'
+            printA4Report(html, fa.accounting.balanceSheet.title)
+          }} className="text-xs px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+            &#1670;&#1575;&#1583; A4
+          </button>
+        </div>
+      </div>
       <div className="flex gap-3 mb-4">
         <ShamsiDateInput value={asOfDate} onChange={setAsOfDate} label="تا تاریخ" />
       </div>

@@ -5,6 +5,8 @@ import { generateReceiptHTML, printContent } from '../utils/receipt'
 import { gregorianToJalali } from '../utils/jalali'
 import Pagination from '../components/Pagination'
 import ShamsiDateInput from '../components/ShamsiDateInput'
+import HelpPopup from '../components/HelpPopup'
+import { printA4Report, downloadExcel } from '../utils/a4Print'
 
 type AuditFilter = 'all' | 'create' | 'update' | 'delete' | 'restock'
 
@@ -133,6 +135,34 @@ export default function Inventory() {
       storeName: 'فروشگاه',
     })
     printContent(html)
+  }
+
+  const handlePrintA4 = () => {
+    let html = '<h1>&#1711;&#1586;&#1575;&#1585;&#1588; &#1605;&#1608;&#1580;&#1608;&#1583;&#1740; &#1575;&#1606;&#1580;&#1575;&#1583;</h1>'
+    html += `<div class="header-info"><span>&#1578;&#1575;&#1585;&#1740;&#1582;: ${new Date().toLocaleDateString('fa-IR')}</span><span>&#1601;&#1585;&#1608;&#1588;&#1711;&#1575;&#1607;</span></div>`
+    html += '<table><thead><tr><th>&#1583;&#1587;&#1578;&#1607;</th><th>&#1578;&#1583;&#1575;&#1583;</th><th>&#1605;&#1608;&#1580;&#1608;&#1583;&#1740;</th><th>&#1575;&#1585;&#1586;&#1588; &#1582;&#1585;&#1740;&#1583;</th><th>&#1575;&#1585;&#1586;&#1588; &#1601;&#1585;&#1608;&#1588;</th><th>&#1587;&#1608;&#1583;</th><th>&#1581;&#1575;&#1588;&#1740;&#1607;</th></tr></thead><tbody>'
+    reportData.byCategory.forEach((cat: any) => {
+      const profit = (cat.retailValue || 0) - (cat.totalValue || 0)
+      const margin = cat.retailValue > 0 ? Math.round((profit / cat.retailValue) * 100) : 0
+      html += `<tr><td>${cat.category || '-'}</td><td>${cat.count}</td><td>${cat.totalStock}</td><td>${(cat.totalValue || 0).toLocaleString('fa-IR')}</td><td>${(cat.retailValue || 0).toLocaleString('fa-IR')}</td><td>${profit.toLocaleString('fa-IR')}</td><td>%${margin}</td></tr>`
+    })
+    html += '</tbody></table>'
+    html += '<h2>&#1705;&#1575;&#1604;&#1607;&#1575;&#1740; &#1705;&#1606;&#1583;&#1601;&#1585;&#1608;&#1588;</h2><table><thead><tr><th>&#1705;&#1575;&#1604;&#1575;</th><th>&#1583;&#1587;&#1578;&#1607;</th><th>&#1605;&#1608;&#1580;&#1608;&#1583;&#1740;</th><th>&#1608;&#1590;&#1593;&#1740;&#1578;</th></tr></thead><tbody>'
+    reportData.slowMoving.forEach((item: any) => {
+      html += `<tr><td>${item.title}</td><td>${item.category || '-'}</td><td>${item.stock}</td><td>${item.lastSoldAt ? '&#1570;&#1582;&#1585;&#1740;&#1606; &#1601;&#1585;&#1608;&#1588;: ' + item.lastSoldAt : '&#1607;&#1585;&#1711;&#1586; &#1601;&#1585;&#1608;&#1588;&#1578;&#1607; &#1606;&#1588;&#1583;&#1607;'}</td></tr>`
+    })
+    html += '</tbody></table>'
+    printA4Report(html, '&#1711;&#1586;&#1575;&#1585;&#1588; &#1605;&#1608;&#1580;&#1608;&#1583;&#1740; &#1575;&#1606;&#1580;&#1575;&#1583;')
+  }
+
+  const handleExcelExport = () => {
+    const headers = ['&#1583;&#1587;&#1578;&#1607;', '&#1578;&#1583;&#1575;&#1583; &#1705;&#1575;&#1604;&#1575;', '&#1605;&#1608;&#1580;&#1608;&#1583;&#1740;', '&#1575;&#1585;&#1586;&#1588; &#1582;&#1585;&#1740;&#1583;', '&#1575;&#1585;&#1586;&#1588; &#1601;&#1585;&#1608;&#1588;', '&#1587;&#1608;&#1583;']
+    const rows = reportData.byCategory.map((cat: any) => [
+      cat.category || '-', cat.count, cat.totalStock,
+      cat.totalValue || 0, cat.retailValue || 0,
+      (cat.retailValue || 0) - (cat.totalValue || 0)
+    ])
+    downloadExcel('inventory-report.csv', headers, rows)
   }
 
   const kpis = [
@@ -268,6 +298,20 @@ export default function Inventory() {
             <line x1="12" y1="22.08" x2="12" y2="12" />
           </svg>
           <h2 className="text-xl font-bold" style={{ color: textPrimary }}>{fa.nav.inventory}</h2>
+          <HelpPopup title="&#1585;&#1575;&#1607;&#1606;&#1605;&#1575;&#1740; &#1575;&#1606;&#1580;&#1575;&#1583;&#1585;&#1740;" sections={[
+            {
+              heading: '&#1605;&#1608;&#1580;&#1608;&#1583;&#1740;',
+              items: ['&#1605;&#1588;&#1575;&#1607;&#1583;&#1607; &#1578;&#1605;&#1575;&#1605; &#1705;&#1575;&#1604;&#1575;&#1607;&#1575; &#1576;&#1575; &#1605;&#1608;&#1580;&#1608;&#1583;&#1740; &#1601;&#1593;&#1604;&#1740;', '&#1601;&#1740;&#1604;&#1578;&#1585; &#1576;&#1585; &#1575;&#1587;&#1576; &#1583;&#1587;&#1578;&#1607;&#8204;&#1576;&#1575;&#1606;&#1583;&#1740; &#1608; &#1608;&#1590;&#1593;&#1740;&#1578; &#1605;&#1608;&#1580;&#1608;&#1583;&#1740;', '&#1578;&#1575;&#1605;&#1740;&#1606; &#1605;&#1608;&#1580;&#1608;&#1583;&#1740; &#1705;&#1575;&#1604;&#1607;&#1575;&#1740; &#1705;&#1605;&#1605;&#1608;&#1580;&#1608;&#1583;&#1740;']
+            },
+            {
+              heading: '&#1711;&#1586;&#1575;&#1585;&#1588; &#1575;&#1606;&#1580;&#1575;&#1583;',
+              items: ['&#1570;&#1605;&#1575;&#1585; &#1705;&#1604; &#1575;&#1585;&#1586;&#1588; &#1582;&#1585;&#1740;&#1583; &#1608; &#1601;&#1585;&#1608;&#1588;', '&#1606;&#1605;&#1608;&#1583;&#1575;&#1585; &#1583;&#1575;&#1583;&#1585;&#1607;&#8204;&#1575;&#1740; &#1578;&#1585;&#1705;&#1740;&#1576; &#1575;&#1583;&#1607;', '&#1705;&#1575;&#1604;&#1607;&#1575;&#1740; &#1705;&#1606;&#1583;&#1601;&#1585;&#1608;&#1588; (&#1576;&#1740;&#1588; &#1575;&#1586; ۳۰ &#1585;&#1608;&#1586; &#1576;&#1583;&#1608;&#1606; &#1601;&#1585;&#1608;&#1588;)', '&#1670;&#1575;&#1583; &#1711;&#1586;&#1575;&#1585;&#1588; &#1575;&#1606;&#1580;&#1575;&#1583;']
+            },
+            {
+              heading: '&#1578;&#1575;&#1585;&#1740;&#1582;&#1606;&#1575;&#1605;&#1607; &#1578;&#1594;&#1740;&#1740;&#1585;&#1575;&#1578;',
+              items: ['&#1578;&#1605;&#1575;&#1605; &#1578;&#1572; &#1605;&#1608;&#1580;&#1608;&#1583; &#1583;&#1575;&#1585; &#1605;&#1740;&#8204;&#1588;&#1608;&#1583;', '&#1740;&#1580;&#1575; &#1583;&#1575;&#1587;&#1578;&#1575;&#1606;, &#1608;&#1740;&#1585;&#1575;&#1740;&#1588;, &#1581;&#1584;&#1601;, &#1578;&#1575;&#1605;&#1740;&#1606; &#1605;&#1584;&#1580;&#1608;&#1593;&#1740; &#1608; &#1605;&#1585;&#1580;&#1608;&#1593;&#1740;', '&#1601;&#1740;&#1604;&#1578;&#1585; &#1578;&#1575;&#1585;&#1740;&#1582;&#1740; &#1608; &#1606;&#1608;&#1593; &#1593;&#1605;&#1604;&#1740;&#1575;&#1578;']
+            }
+          ]} />
         </div>
         <button onClick={handlePrintReport}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
@@ -462,6 +506,25 @@ export default function Inventory() {
 
       {tab === 'report' && (
         <div className="space-y-4">
+          <div className="flex gap-2 justify-end">
+            <button onClick={handlePrintA4}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
+              style={{ backgroundColor: isDark ? '#1e293b' : '#f8fafc', color: textPrimary, border: `1px solid ${cardBorder}` }}>
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" />
+              </svg>
+              &#1670;&#1575;&#1583; A4
+            </button>
+            <button onClick={handleExcelExport}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
+              style={{ backgroundColor: isDark ? '#1e293b' : '#f8fafc', color: textPrimary, border: `1px solid ${cardBorder}` }}>
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+              </svg>
+              &#1582;&#1585;&#1608;&#1580;&#1740; &#1575;&#1705;&#1587;&#1604;
+            </button>
+          </div>
+
           {/* KPI Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>

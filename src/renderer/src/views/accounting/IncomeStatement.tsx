@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import ShamsiDateInput from '../../components/ShamsiDateInput'
+import { printA4Report, downloadExcel } from '../../utils/a4Print'
 
 export default function IncomeStatement() {
   const [data, setData] = useState<any>(null)
@@ -50,7 +51,38 @@ export default function IncomeStatement() {
 
   return (
     <div>
-      <h3 className="text-lg font-bold mb-4" style={{ color: textPrimary }}>{fa.accounting.profitLoss.title}</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.profitLoss.title}</h3>
+        <div className="flex gap-2">
+          <button onClick={() => {
+            const headers = [fa.accounting.profitLoss.title]
+            const csvRows = [
+              [fa.accounting.profitLoss.revenue, String(data.totalRevenue)],
+              [fa.accounting.profitLoss.cogs, String(data.totalCogs)],
+              [fa.accounting.profitLoss.grossProfit, String(data.grossProfit)],
+              [fa.accounting.profitLoss.operatingExpenses, String(data.totalOperatingExpenses)],
+              [data.netProfit >= 0 ? fa.accounting.profitLoss.netProfit : fa.accounting.profitLoss.netLoss, String(Math.abs(data.netProfit))]
+            ]
+            downloadExcel('income-statement.csv', headers, csvRows)
+          }} className="text-xs px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+            &#1582;&#1585;&#1608;&#1580;&#1740; &#1575;&#1705;&#1587;&#1604;
+          </button>
+          <button onClick={() => {
+            let html = '<h1>&#1589;&#1608;&#1585;&#1578; &#1587;&#1608;&#1583; &#1608; &#1586;&#1740;&#1575;&#1606;</h1>'
+            html += `<div class="header-info"><span>&#1578;&#1575;&#1585;&#1740;&#1582;: ${new Date().toLocaleDateString('fa-IR')}</span></div>`
+            html += '<table><thead><tr><th>&#1576;&#1582;&#1588;</th><th>&#1605;&#1576;&#1604;&#1594;</th></tr></thead><tbody>'
+            html += `<tr><td>${fa.accounting.profitLoss.revenue}</td><td>${data.totalRevenue.toLocaleString('fa-IR')}</td></tr>`
+            html += `<tr><td>${fa.accounting.profitLoss.cogs}</td><td>${data.totalCogs.toLocaleString('fa-IR')}</td></tr>`
+            html += `<tr><td>${fa.accounting.profitLoss.grossProfit}</td><td>${data.grossProfit.toLocaleString('fa-IR')}</td></tr>`
+            html += `<tr><td>${fa.accounting.profitLoss.operatingExpenses}</td><td>${data.totalOperatingExpenses.toLocaleString('fa-IR')}</td></tr>`
+            html += `<tr><td>${data.netProfit >= 0 ? fa.accounting.profitLoss.netProfit : fa.accounting.profitLoss.netLoss}</td><td>${Math.abs(data.netProfit).toLocaleString('fa-IR')}</td></tr>`
+            html += '</tbody></table>'
+            printA4Report(html, fa.accounting.profitLoss.title)
+          }} className="text-xs px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+            &#1670;&#1575;&#1583; A4
+          </button>
+        </div>
+      </div>
       <div className="flex gap-3 mb-4">
         <ShamsiDateInput value={startDate} onChange={setStartDate} label={fa.dashboard.dateFrom} />
         <ShamsiDateInput value={endDate} onChange={setEndDate} label={fa.dashboard.dateTo} />
