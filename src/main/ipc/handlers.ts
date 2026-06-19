@@ -187,6 +187,7 @@ export function registerAllHandlers(): void {
 
   // ─── Settings ───────────────────────────────────────────
   handle('settings:getAll', () => settingsRepo.getAllSettings())
+  handleArg<{ key: string }, string | null>('settings:get', (a) => settingsRepo.getSetting(a.key) || null)
   handleArg<{ key: string; value: string }, void>('settings:set', (a) => settingsRepo.setSetting(a.key, a.value))
 
   // ─── Backup/Restore ─────────────────────────────────────

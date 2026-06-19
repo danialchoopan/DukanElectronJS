@@ -2,15 +2,17 @@ import { useState, useEffect } from 'react'
 import type { User } from '../../../types'
 import { fa } from '../i18n'
 import UISettings from './UISettings'
+import ShortcutsSettings from './accounting/ShortcutsSettings'
 
 export default function AdminPanel() {
-  const [tab, setTab] = useState<'users' | 'settings' | 'ui'>('users')
+  const [tab, setTab] = useState<'users' | 'settings' | 'ui' | 'shortcuts'>('users')
   const isDark = document.documentElement.classList.contains('dark')
   
   const tabs: { key: typeof tab; label: string }[] = [
     { key: 'users', label: fa.admin.users },
     { key: 'settings', label: fa.admin.settings },
     { key: 'ui', label: 'ظاهر برنامه' },
+    { key: 'shortcuts', label: 'میانبرها' },
   ]
 
   const bgColor = isDark ? '#0f172a' : '#f1f5f9'
@@ -38,6 +40,7 @@ export default function AdminPanel() {
         {tab === 'users' && <UsersTab />}
         {tab === 'settings' && <SettingsTab />}
         {tab === 'ui' && <UISettings />}
+        {tab === 'shortcuts' && <ShortcutsSettings />}
       </div>
     </div>
   )

@@ -7,8 +7,12 @@ import { appendFileSync } from 'fs'
 // Uncomment to auto-seed on first run:
 import { seedDatabase } from './database/seed'
 import { autoBackup } from './database/backup'
+import * as settingsRepo from './database/repositories/settings'
 
 let mainWindow: BrowserWindow | null = null
+const navigationShortcuts: Record<string, string> = {
+  'F1': 'pos', 'F2': 'inventory', 'F3': 'dashboard', 'F4': 'admin',
+}
 
 function getLogPath(): string {
   const logDir = app.getPath('userData')
@@ -36,17 +40,49 @@ process.on('unhandledRejection', (reason: any) => {
   logError(`Unhandled Rejection: ${reason?.message || reason}`, reason?.stack)
 })
 
+function registerNavigationShortcuts(): void {
+  globalShortcut.unregisterAll()
+  try {
+    const shortcutsRaw = settingsRepo.getSetting('shortcuts')
+    if (shortcutsRaw) {
+      const saved = JSON.parse(shortcutsRaw)
+      const navMap: Record<string, string> = {
+        'navigate:pos': 'F1', 'navigate:inventory': 'F2', 'navigate:dashboard': 'F3',
+        'navigate:admin': 'F4', 'navigate:accounting': 'F8', 'navigate:sales': 'F9',
+        'navigate:categories': 'F10', 'navigate:customers': 'Ctrl+Shift+C', 'navigate:help': 'F12',
+        'global:fullscreen': 'F11',
+      }
+      for (const [action, defaultKey] of Object.entries(navMap)) {
+        const key = saved[action] || defaultKey
+        if (key === 'F11') {
+          globalShortcut.register(key, () => { mainWindow?.setFullScreen(!mainWindow?.isFullScreen()) })
+        } else if (key.startsWith('F')) {
+          const page = action.replace('navigate:', '')
+          globalShortcut.register(key, () => { mainWindow?.webContents.send('navigate', page) })
+        } else {
+          const page = action.replace('navigate:', '')
+          globalShortcut.register(key, () => { mainWindow?.webContents.send('navigate', page) })
+        }
+      }
+    } else {
+      for (const [key, page] of Object.entries(navigationShortcuts)) {
+        globalShortcut.register(key, () => { mainWindow?.webContents.send('navigate', page) })
+      }
+    }
+  } catch {
+    for (const [key, page] of Object.entries(navigationShortcuts)) {
+      globalShortcut.register(key, () => { mainWindow?.webContents.send('navigate', page) })
+    }
+  }
+}
+
 app.whenReady().then(() => {
   getDatabase()
   seedDatabase()
   registerAllHandlers()
   autoBackup()
   createWindow()
-
-  globalShortcut.register('F1', () => { mainWindow?.webContents.send('navigate', 'pos') })
-  globalShortcut.register('F2', () => { mainWindow?.webContents.send('navigate', 'inventory') })
-  globalShortcut.register('F3', () => { mainWindow?.webContents.send('navigate', 'dashboard') })
-  globalShortcut.register('F4', () => { mainWindow?.webContents.send('navigate', 'admin') })
+  registerNavigationShortcuts()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

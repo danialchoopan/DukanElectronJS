@@ -142,6 +142,7 @@ export const fa = {
     darkMode: 'حالت تاریک',
     lightMode: 'حالت روشن',
     appearance: 'ظاهر برنامه',
+    shortcuts: 'میانبرها',
   },
   customer: {
     title: 'مدیریت مشتریان',

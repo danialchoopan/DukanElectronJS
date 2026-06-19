@@ -114,15 +114,26 @@ export default function CashierPOS() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'F4') { e.preventDefault(); handleSuspend() }
-      if (e.key === 'F5') { e.preventDefault(); handleResume(0) }
-      if (e.key === 'F6') { e.preventDefault(); handleResume(1) }
-      if (e.key === 'F7') { e.preventDefault(); handleResume(2) }
       if (e.key === 'Escape') { setShowSuspended(false); setShowWebcam(false) }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [handleSuspend, handleResume])
+  }, [])
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const action = (e as CustomEvent).detail
+      if (action === 'pos:hold') handleSuspend()
+      if (action === 'pos:resume1') handleResume(0)
+      if (action === 'pos:resume2') handleResume(1)
+      if (action === 'pos:resume3') handleResume(2)
+      if (action === 'pos:payCash') handlePaymentComplete('cash')
+      if (action === 'pos:payCard') handlePaymentComplete('card')
+      if (action === 'pos:payLedger') handlePaymentComplete('ledger')
+    }
+    window.addEventListener('pos-shortcut', handler)
+    return () => window.removeEventListener('pos-shortcut', handler)
+  }, [handleSuspend, handleResume, handlePaymentComplete])
 
   const activeCount = slots.filter((s) => s.items.length > 0).length
 

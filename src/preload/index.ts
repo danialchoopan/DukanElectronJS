@@ -129,6 +129,8 @@ const api = {
   settings: {
     getAll: (): Promise<IPCResponse<Record<string, string>>> =>
       ipcRenderer.invoke('settings:getAll'),
+    get: (key: string): Promise<IPCResponse<string | null>> =>
+      ipcRenderer.invoke('settings:get', { key }),
     set: (key: string, value: string): Promise<IPCResponse<void>> =>
       ipcRenderer.invoke('settings:set', { key, value }),
   },
