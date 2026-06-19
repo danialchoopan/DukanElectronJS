@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuthStore } from './store/authStore'
 import { useSettingsStore } from './store/settingsStore'
-import { useShortcutsStore, buildKeyCombo } from './store/shortcutsStore'
+import { useShortcutsStore } from './store/shortcutsStore'
 import { setLanguage } from './i18n'
 import LockScreen from './views/LockScreen'
 import CashierPOS from './views/CashierPOS'
@@ -19,6 +19,12 @@ import Sidebar from './components/Sidebar'
 
 type View = 'pos' | 'dashboard' | 'admin' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'help' | 'categories'
 
+const NAV_MAP: Record<string, View> = {
+  'nav-pos': 'pos', 'nav-inventory': 'inventory', 'nav-dashboard': 'dashboard',
+  'nav-customers': 'customers', 'nav-categories': 'categories', 'nav-accounting': 'accounting',
+  'nav-sales': 'sales', 'nav-addproduct': 'addproduct', 'nav-admin': 'admin', 'nav-help': 'help',
+}
+
 const VIEW_MAP: Record<string, View> = {
   pos: 'pos', inventory: 'inventory', dashboard: 'dashboard', admin: 'admin',
   sales: 'sales', addproduct: 'addproduct', categories: 'categories',
@@ -29,7 +35,7 @@ export default function App() {
   const user = useAuthStore((s) => s.user)
   const [currentView, setCurrentView] = useState<View>('dashboard')
   const [isFirstRun, setIsFirstRun] = useState<boolean | null>(null)
-  const { init: initSettings, language } = useSettingsStore()
+  const { init: initSettings, language, theme, setTheme } = useSettingsStore()
   const { shortcuts, loadFromStorage } = useShortcutsStore()
 
   useEffect(() => {
@@ -49,61 +55,47 @@ export default function App() {
     return cleanup
   }, [])
 
-  const navigateTo = useCallback((view: View) => {
-    setCurrentView(view)
-  }, [])
+  const navigateTo = useCallback((view: View) => setCurrentView(view), [])
 
   useEffect(() => {
     if (!user) return
 
     const handler = (e: KeyboardEvent) => {
       const isInput = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement
-      const combo = buildKeyCombo(e)
+      let combo = ''
+      if (e.ctrlKey || e.metaKey) combo += 'Ctrl+'
+      if (e.shiftKey) combo += 'Shift+'
+      if (e.altKey) combo += 'Alt+'
+      if (e.key.startsWith('F') && e.key.length <= 3) combo += e.key
+      else if (e.key.length === 1) combo += e.key.toUpperCase()
+      else combo += e.key
 
-      const navMap: Record<string, View> = {
-        'navigate:pos': 'pos', 'navigate:inventory': 'inventory', 'navigate:dashboard': 'dashboard',
-        'navigate:customers': 'customers', 'navigate:categories': 'categories', 'navigate:accounting': 'accounting',
-        'navigate:sales': 'sales', 'navigate:admin': 'admin', 'navigate:help': 'help',
-      }
+      const match = shortcuts.find(s => {
+        if (s.key !== combo) return false
+        if (s.view !== 'all' && s.view !== currentView) return false
+        if (isInput && !s.key.startsWith('F') && !s.key.startsWith('Ctrl')) return false
+        return true
+      })
 
-      for (const [action, key] of Object.entries(shortcuts)) {
-        if (key !== combo) continue
-        if (isInput && !combo.startsWith('F') && !combo.startsWith('Ctrl')) continue
-
+      if (match) {
         e.preventDefault()
         e.stopPropagation()
 
-        const act = action as keyof typeof shortcuts
-
-        if (act in navMap && act.startsWith('navigate:')) {
-          navigateTo(navMap[act])
-          return
-        }
-
-        if (act === 'global:toggleTheme') {
-          const settingsStore = useSettingsStore.getState()
-          settingsStore.setTheme(settingsStore.theme === 'dark' ? 'light' : 'dark')
-          return
-        }
-
-        if (act.startsWith('pos:')) {
-          window.dispatchEvent(new CustomEvent('pos-shortcut', { detail: act }))
-          return
-        }
-
-        if (act === 'pos:search') {
-          const searchInput = document.querySelector<HTMLInputElement>('[data-search-input]') ||
-                              document.querySelector<HTMLInputElement>('input[placeholder*="جستجو"]') ||
+        if (NAV_MAP[match.id]) {
+          navigateTo(NAV_MAP[match.id])
+        } else if (match.id === 'global-theme') {
+          setTheme(theme === 'dark' ? 'light' : 'dark')
+        } else if (match.id === 'global-search') {
+          const searchInput = document.querySelector<HTMLInputElement>('input[placeholder*="جستجو"]') ||
                               document.querySelector<HTMLInputElement>('.input-field')
           searchInput?.focus()
-          return
         }
       }
     }
 
     window.addEventListener('keydown', handler, true)
     return () => window.removeEventListener('keydown', handler, true)
-  }, [user, shortcuts, navigateTo])
+  }, [user, shortcuts, currentView, navigateTo, theme, setTheme])
 
   if (isFirstRun === null) return <div className="h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)' }}>Loading...</div>
   if (isFirstRun) return <SetupWizard onComplete={() => setIsFirstRun(false)} />

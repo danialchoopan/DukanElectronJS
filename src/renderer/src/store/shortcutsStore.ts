@@ -1,141 +1,85 @@
 import { create } from 'zustand'
 
-export type ShortcutAction =
-  | 'navigate:pos' | 'navigate:dashboard' | 'navigate:inventory'
-  | 'navigate:accounting' | 'navigate:sales' | 'navigate:categories'
-  | 'navigate:customers' | 'navigate:admin' | 'navigate:help'
-  | 'pos:hold' | 'pos:resume1' | 'pos:resume2' | 'pos:resume3'
-  | 'pos:payCash' | 'pos:payCard' | 'pos:payLedger' | 'pos:search'
-  | 'global:fullscreen' | 'global:toggleTheme'
-
-export type ShortcutMap = Record<ShortcutAction, string>
-
-export const defaultShortcuts: ShortcutMap = {
-  'navigate:pos': 'F1',
-  'navigate:dashboard': 'F3',
-  'navigate:inventory': 'F2',
-  'navigate:accounting': 'F8',
-  'navigate:sales': 'F9',
-  'navigate:categories': 'F10',
-  'navigate:customers': 'Ctrl+Shift+C',
-  'navigate:admin': 'F4',
-  'navigate:help': 'F12',
-  'pos:hold': 'F4',
-  'pos:resume1': 'F5',
-  'pos:resume2': 'F6',
-  'pos:resume3': 'F7',
-  'pos:payCash': 'F8',
-  'pos:payCard': 'F9',
-  'pos:payLedger': 'F10',
-  'pos:search': 'Ctrl+K',
-  'global:fullscreen': 'F11',
-  'global:toggleTheme': 'Ctrl+Shift+T',
+export interface Shortcut {
+  id: string
+  label: string
+  key: string
+  category: string
+  view: string
 }
 
-export const actionLabels: Record<ShortcutAction, string> = {
-  'navigate:pos': 'فروش (POS)',
-  'navigate:dashboard': 'داشبورد',
-  'navigate:inventory': 'انبارداری',
-  'navigate:accounting': 'حسابداری',
-  'navigate:sales': 'آخرین فروش\u200cها',
-  'navigate:categories': 'دسته\u200cبندی\u200cها',
-  'navigate:customers': 'مشتریان',
-  'navigate:admin': 'تنظیمات',
-  'navigate:help': 'راهنما',
-  'pos:hold': 'نگه\u200cداشتن فاکتور',
-  'pos:resume1': 'بازیابی فاکتور \u06f1',
-  'pos:resume2': 'بازیابی فاکتور \u06f2',
-  'pos:resume3': 'بازیابی فاکتور \u06f3',
-  'pos:payCash': 'پرداخت نقدی',
-  'pos:payCard': 'پرداخت کارتی',
-  'pos:payLedger': 'پرداخت نسیه',
-  'pos:search': 'جستجوی کالا',
-  'global:fullscreen': 'تمام\u200cصفحه',
-  'global:toggleTheme': 'تغییر تم',
-}
-
-export const actionLabelsEn: Record<ShortcutAction, string> = {
-  'navigate:pos': 'Sales (POS)',
-  'navigate:dashboard': 'Dashboard',
-  'navigate:inventory': 'Inventory',
-  'navigate:accounting': 'Accounting',
-  'navigate:sales': 'Sales History',
-  'navigate:categories': 'Categories',
-  'navigate:customers': 'Customers',
-  'navigate:admin': 'Settings',
-  'navigate:help': 'Help',
-  'pos:hold': 'Hold Invoice',
-  'pos:resume1': 'Resume Invoice 1',
-  'pos:resume2': 'Resume Invoice 2',
-  'pos:resume3': 'Resume Invoice 3',
-  'pos:payCash': 'Pay Cash',
-  'pos:payCard': 'Pay Card',
-  'pos:payLedger': 'Pay Ledger',
-  'pos:search': 'Search Products',
-  'global:fullscreen': 'Fullscreen',
-  'global:toggleTheme': 'Toggle Theme',
-}
+const DEFAULT_SHORTCUTS: Shortcut[] = [
+  { id: 'nav-pos', label: 'فروش (POS)', key: 'F1', category: 'nav', view: 'all' },
+  { id: 'nav-inventory', label: 'انبارداری', key: 'F2', category: 'nav', view: 'all' },
+  { id: 'nav-dashboard', label: 'داشبورد', key: 'F3', category: 'nav', view: 'all' },
+  { id: 'nav-customers', label: 'مشتریان', key: 'F8', category: 'nav', view: 'all' },
+  { id: 'nav-categories', label: 'دسته‌بندی‌ها', key: 'F9', category: 'nav', view: 'all' },
+  { id: 'nav-accounting', label: 'حسابداری', key: 'F10', category: 'nav', view: 'all' },
+  { id: 'nav-sales', label: 'آخرین فروش‌ها', key: 'Ctrl+1', category: 'nav', view: 'all' },
+  { id: 'nav-addproduct', label: 'افزودن کالا', key: 'Ctrl+2', category: 'nav', view: 'all' },
+  { id: 'nav-admin', label: 'مدیریت', key: 'Ctrl+9', category: 'nav', view: 'all' },
+  { id: 'nav-help', label: 'راهنما', key: 'Ctrl+0', category: 'nav', view: 'all' },
+  { id: 'pos-suspend', label: 'نگه‌داشتن فاکتور', key: 'F4', category: 'pos', view: 'pos' },
+  { id: 'pos-resume1', label: 'بازیابی فاکتور ۱', key: 'F5', category: 'pos', view: 'pos' },
+  { id: 'pos-resume2', label: 'بازیابی فاکتور ۲', key: 'F6', category: 'pos', view: 'pos' },
+  { id: 'pos-resume3', label: 'بازیابی فاکتور ۳', key: 'F7', category: 'pos', view: 'pos' },
+  { id: 'global-search', label: 'جستجو', key: 'Ctrl+K', category: 'global', view: 'all' },
+  { id: 'global-fullscreen', label: 'تمام‌صفحه', key: 'F11', category: 'global', view: 'all' },
+  { id: 'global-theme', label: 'تغییر تم', key: 'Ctrl+Shift+T', category: 'global', view: 'all' },
+]
 
 interface ShortcutsState {
-  shortcuts: ShortcutMap
-  editingAction: ShortcutAction | null
-  setShortcut: (action: ShortcutAction, key: string) => void
-  resetShortcuts: () => void
-  setEditingAction: (action: ShortcutAction | null) => void
+  shortcuts: Shortcut[]
+  editingId: string | null
+  setEditingId: (id: string | null) => void
+  updateShortcut: (id: string, newKey: string) => void
+  saveShortcuts: () => void
+  resetToDefaults: () => void
   loadFromStorage: () => Promise<void>
-  saveToStorage: () => Promise<void>
 }
 
 export const useShortcutsStore = create<ShortcutsState>((set, get) => ({
-  shortcuts: { ...defaultShortcuts },
-  editingAction: null,
+  shortcuts: [...DEFAULT_SHORTCUTS],
+  editingId: null,
 
-  setShortcut: (action, key) => {
-    set((state) => ({ shortcuts: { ...state.shortcuts, [action]: key } }))
+  setEditingId: (id) => set({ editingId: id }),
+
+  updateShortcut: (id, newKey) => {
+    const shortcuts = get().shortcuts.map(s =>
+      s.id === id ? { ...s, key: newKey } : s
+    )
+    set({ shortcuts })
   },
 
-  resetShortcuts: () => {
-    set({ shortcuts: { ...defaultShortcuts } })
+  saveShortcuts: () => {
+    const { shortcuts } = get()
+    window.api.settings.set('shortcuts', JSON.stringify(shortcuts))
   },
 
-  setEditingAction: (action) => set({ editingAction: action }),
+  resetToDefaults: () => {
+    set({ shortcuts: [...DEFAULT_SHORTCUTS] })
+    window.api.settings.set('shortcuts', JSON.stringify(DEFAULT_SHORTCUTS))
+  },
 
   loadFromStorage: async () => {
-    const r = await window.api.settings.getAll()
-    if (r.success && r.data?.shortcuts) {
+    const result = await window.api.settings.getAll()
+    if (result.success && result.data?.shortcuts) {
       try {
-        const saved = JSON.parse(r.data.shortcuts as string)
-        set({ shortcuts: { ...defaultShortcuts, ...saved } })
+        const saved = JSON.parse(result.data.shortcuts as string)
+        if (Array.isArray(saved)) {
+          const merged = DEFAULT_SHORTCUTS.map(d => {
+            const found = saved.find((s: Shortcut) => s.id === d.id)
+            return found ? { ...d, key: found.key } : d
+          })
+          set({ shortcuts: merged })
+        }
       } catch { /* use defaults */ }
     }
   },
-
-  saveToStorage: async () => {
-    const { shortcuts } = get()
-    await window.api.settings.set('shortcuts', JSON.stringify(shortcuts))
-  },
 }))
 
-export function getShortcutDisplayKey(key: string): string {
-  return key
-    .replace('Ctrl+', 'Ctrl\u200e+')
-    .replace('Shift+', 'Shift\u200e+')
-    .replace('Alt+', 'Alt\u200e+')
-}
-
-export function findConflicts(shortcuts: ShortcutMap, action: ShortcutAction, newKey: string): ShortcutAction[] {
-  return (Object.keys(shortcuts) as ShortcutAction[]).filter(
-    (a) => a !== action && shortcuts[a] === newKey
-  )
-}
-
-export function buildKeyCombo(e: KeyboardEvent): string {
-  let combo = ''
-  if (e.ctrlKey || e.metaKey) combo += 'Ctrl+'
-  if (e.shiftKey) combo += 'Shift+'
-  if (e.altKey) combo += 'Alt+'
-  if (e.key.startsWith('F') && e.key.length <= 3) combo += e.key
-  else if (e.key.length === 1) combo += e.key.toUpperCase()
-  else combo += e.key
-  return combo
-}
+export const SHORTCUT_CATEGORIES = [
+  { key: 'nav', label: 'ناوبری' },
+  { key: 'pos', label: 'فروش' },
+  { key: 'global', label: 'عمومی' },
+]

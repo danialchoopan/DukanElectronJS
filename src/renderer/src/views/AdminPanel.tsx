@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import type { User } from '../../../types'
 import { fa } from '../i18n'
 import UISettings from './UISettings'
-import ShortcutsSettings from './accounting/ShortcutsSettings'
+import ShortcutsSettings from './ShortcutsSettings'
 
 export default function AdminPanel() {
   const [tab, setTab] = useState<'users' | 'settings' | 'ui' | 'shortcuts'>('users')
