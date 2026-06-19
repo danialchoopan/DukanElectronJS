@@ -148,9 +148,10 @@ export function registerAllHandlers(): void {
       `).all()
       const slowMoving = db.prepare(`
         SELECT p.id, p.title, p.stock, p.purchase_price, p.category,
-               MAX(si.createdAt) as lastSoldAt
+               MAX(s.createdAt) as lastSoldAt
         FROM products p
         LEFT JOIN sale_items si ON si.productId = p.id
+        LEFT JOIN sales s ON s.id = si.saleId
         WHERE p.isActive = 1 AND p.stock > 0
         GROUP BY p.id
         HAVING lastSoldAt IS NULL OR julianday('now') - julianday(lastSoldAt) > 30
