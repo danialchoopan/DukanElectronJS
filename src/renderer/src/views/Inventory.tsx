@@ -20,6 +20,8 @@ export default function Inventory() {
   const [restockQty, setRestockQty] = useState('')
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(10)
+  const [catPage, setCatPage] = useState(0)
+  const [slowPage, setSlowPage] = useState(0)
   const [tab, setTab] = useState<'products' | 'report' | 'audit'>('products')
   const [auditLog, setAuditLog] = useState<any[]>([])
   const [auditFilter, setAuditFilter] = useState<AuditFilter>('all')
@@ -104,6 +106,11 @@ export default function Inventory() {
   const donutColors = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#8b5cf6', '#14b8a6']
 
   const filteredAuditLog = auditFilter === 'all' ? auditLog : auditLog.filter((e) => e.action === auditFilter)
+
+  const catPageSize = 10
+  const pagedCategories = reportData.byCategory.slice(catPage * catPageSize, (catPage + 1) * catPageSize)
+  const slowPageSize = 10
+  const pagedSlowMoving = reportData.slowMoving.slice(slowPage * slowPageSize, (slowPage + 1) * slowPageSize)
   const todayStr = new Date().toISOString().slice(0, 10)
   const todayAuditCount = auditLog.filter(e => e.createdAt && e.createdAt.startsWith(todayStr)).length
   const auditActionCounts = auditLog.reduce<Record<string, number>>((acc, e) => {
@@ -650,7 +657,7 @@ export default function Inventory() {
                   </tr>
                 </thead>
                 <tbody>
-                  {reportData.byCategory.map((cat: any, i: number) => {
+                  {pagedCategories.map((cat: any, i: number) => {
                     const catValue = cat.totalValue || 0
                     const catRetail = cat.retailValue || 0
                     const catProfit = catRetail - catValue
@@ -689,6 +696,9 @@ export default function Inventory() {
                 </tbody>
               </table>
             </div>
+            <div className="px-3 pb-3">
+              <Pagination total={reportData.byCategory.length} pageSize={catPageSize} page={catPage} onPageChange={setCatPage} onPageSizeChange={() => {}} />
+            </div>
           </div>
 
           {/* Slow-Moving Items */}
@@ -701,7 +711,7 @@ export default function Inventory() {
               کالاهای کندفروش ({reportData.slowMoving.length})
             </div>
             <div className="max-h-96 overflow-y-auto">
-              {reportData.slowMoving.map((item: any) => {
+              {pagedSlowMoving.map((item: any) => {
                 const daysSince = item.lastSoldAt ? Math.floor((Date.now() - new Date(item.lastSoldAt).getTime()) / 86400000) : null
                 const neverSold = !item.lastSoldAt
                 return (
@@ -740,6 +750,11 @@ export default function Inventory() {
               })}
               {reportData.slowMoving.length === 0 && <p className="text-center py-12 text-sm" style={{ color: textSecondary }}>کالای کندفروشی وجود ندارد</p>}
             </div>
+            {reportData.slowMoving.length > slowPageSize && (
+              <div className="px-3 pb-3">
+                <Pagination total={reportData.slowMoving.length} pageSize={slowPageSize} page={slowPage} onPageChange={setSlowPage} onPageSizeChange={() => {}} />
+              </div>
+            )}
           </div>
         </div>
       )}
