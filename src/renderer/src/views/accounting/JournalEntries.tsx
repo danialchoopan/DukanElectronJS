@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import ShamsiDateInput from '../../components/ShamsiDateInput'
 import Pagination from '../../components/Pagination'
+import HelpPopup from '../../components/HelpPopup'
 
 export default function JournalEntries() {
   const [entries, setEntries] = useState<any[]>([])
@@ -40,7 +41,14 @@ export default function JournalEntries() {
 
   return (
     <div>
-      <h3 className="text-lg font-bold mb-4" style={{ color: textPrimary }}>{fa.accounting.journal.title}</h3>
+      <div className="flex items-center gap-3 mb-4">
+        <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.journal.title}</h3>
+        <HelpPopup title="راهنمای روزنامه" sections={[
+          { heading: 'اسناد حسابداری', items: ['هر سند شامل حداقل دو ردیف بدهکار و بستانکار است', 'جمع بدهکار باید با جمع بستانکار برابر باشد', 'اسناد خودکار از فروش، هزینه و مرجوعی ایجاد می‌شوند'] },
+          { heading: 'فیلتر و جستجو', items: ['فیلتر بر اساس تاریخ شمسی', 'فیلتر بر اساس نوع سند (فروش/هزینه/مرجوعی/دستی)', 'کلیک روی سند برای مشاهده ردیف‌ها'] },
+          { heading: 'سند دستی', items: ['با زدن + سند دستی ایجاد کنید', 'مطمئن شوید جمع بدهکار با بستانکار برابر است'] }
+        ]} />
+      </div>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="rounded-xl p-3 border flex items-center gap-3" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>

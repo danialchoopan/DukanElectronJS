@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import ShamsiDateInput from '../../components/ShamsiDateInput'
 import { downloadExcel } from '../../utils/a4Print'
+import HelpPopup from '../../components/HelpPopup'
 
 export default function TrialBalance() {
   const [rows, setRows] = useState<any[]>([])
@@ -32,14 +33,20 @@ export default function TrialBalance() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.trialBalance.title}</h3>
+        <div className="flex items-center gap-3">
+          <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.trialBalance.title}</h3>
+          <HelpPopup title="راهنمای تراز آزمایشی" sections={[
+            { heading: 'تراز آزمایشی چیست؟', items: ['نمایش مانده تمام حساب‌ها در یک نگاه', 'جمع بدهکار باید با جمع بستانکار برابر باشد', 'اگر برابر نباشد، اشکالی در ثبت اسناد وجود دارد'] },
+            { heading: 'نحوه استفاده', items: ['فیلتر تاریخی برای بررسی دوره خاص', 'رنگ‌بندی: سبز=مثبت، قرمز=منفی', 'نمودار نواری نسبت بدهکار به بستانکار'] }
+          ]} />
+        </div>
         <button onClick={() => {
           const headers = [fa.accounting.trialBalance.account, fa.accounting.trialBalance.totalDebit, fa.accounting.trialBalance.totalCredit, fa.accounting.trialBalance.balance]
           const csvRows = rows.filter((r: any) => r.totalDebit !== 0 || r.totalCredit !== 0).map((r: any) => [`${r.accountCode} - ${r.accountName}`, String(r.totalDebit), String(r.totalCredit), String(r.balance)])
           csvRows.push([fa.accounting.trialBalance.totals, String(totalDebit), String(totalCredit), ''])
           downloadExcel('trial-balance.csv', headers, csvRows)
         }} className="text-xs px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
-          &#1582;&#1585;&#1608;&#1580;&#1740; &#1575;&#1705;&#1587;&#1604;
+          خروجی اکسل
         </button>
       </div>
 
