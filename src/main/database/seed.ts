@@ -142,7 +142,7 @@ export function seedDatabase(): void {
 
       if (paymentMethod === 'ledger' && customerId) {
         db.prepare('UPDATE customers SET balance = balance - ? WHERE id = ?').run(subtotal, customerId)
-        db.prepare('INSERT INTO customer_ledger (customerId, saleId, type, amount, description, createdAt) VALUES (?, ?, "sale", ?, ?, ?)').run(customerId, saleId, subtotal, `فاکتور ${invoiceNum}`, saleDate)
+        db.prepare("INSERT INTO customer_ledger (customerId, saleId, type, amount, description, createdAt) VALUES (?, ?, 'sale', ?, ?, ?)").run(customerId, saleId, subtotal, `فاکتور ${invoiceNum}`, saleDate)
       }
     }
   }
