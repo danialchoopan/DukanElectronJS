@@ -18,8 +18,8 @@ function LedgerImage({ src }: { src: string }) {
 }
 
 type DetailTab = 'details' | 'purchases' | 'ledger'
-type LedgerFilter = 'all' | 'charge' | 'payment' | 'sale'
-type DialogMode = null | 'charge' | 'pay' | 'delete' | 'create' | 'edit'
+type LedgerFilter = 'all' | 'charge' | 'payment' | 'sale' | 'debt'
+type DialogMode = null | 'charge' | 'pay' | 'delete' | 'create' | 'edit' | 'addDebt' | 'ledgerDetail'
 
 interface CustomerStats {
   totalCustomers: number
@@ -47,6 +47,11 @@ export default function CustomerManagement() {
   const [chargePayImages, setChargePayImages] = useState<string[]>([])
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [selectedLedgerEntry, setSelectedLedgerEntry] = useState<CustomerLedgerEntry | null>(null)
+  const [ledgerImages, setLedgerImages] = useState<string[]>([])
+  const [imageIndex, setImageIndex] = useState(0)
+  const [imgZoom, setImgZoom] = useState(1)
+  const [imgRotation, setImgRotation] = useState(0)
 
   const isDark = document.documentElement.classList.contains('dark')
   const cardBg = isDark ? '#1e293b' : '#ffffff'
@@ -128,6 +133,47 @@ export default function CustomerManagement() {
     setChargePayDescription('')
     setChargePayImages([])
     setDialog('pay')
+  }
+
+  const openAddDebtDialog = () => {
+    setChargePayAmount('')
+    setChargePayDescription('')
+    setChargePayImages([])
+    setDialog('addDebt')
+  }
+
+  const handleAddDebt = async () => {
+    if (!selected || !chargePayAmount) return
+    const amt = parseFloat(chargePayAmount)
+    if (amt <= 0) return
+    setLoading(true)
+    await window.api.customers.charge(selected.id, -amt, chargePayDescription || `افزودن بدهی: ${chargePayDescription || 'بدون شرح'}`, chargePayImages.length > 0 ? chargePayImages : undefined)
+    setDialog(null)
+    setChargePayAmount('')
+    setChargePayDescription('')
+    setChargePayImages([])
+    await refreshSelected(selected.id)
+    setLoading(false)
+  }
+
+  const openLedgerDetail = async (entry: CustomerLedgerEntry) => {
+    setSelectedLedgerEntry(entry)
+    setImgZoom(1)
+    setImgRotation(0)
+    setImageIndex(0)
+    const resolved: string[] = []
+    if (entry.images && entry.images.length > 0) {
+      for (const img of entry.images) {
+        if (img.startsWith('data:') || img.startsWith('http')) {
+          resolved.push(img)
+        } else {
+          const r = await window.api.products.getImage(img)
+          if (r.success && r.data) resolved.push(r.data as string)
+        }
+      }
+    }
+    setLedgerImages(resolved)
+    setDialog('ledgerDetail')
   }
 
   const handleCharge = async () => {
@@ -431,6 +477,10 @@ export default function CustomerManagement() {
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
                         {fa.customer.payDebt}
                       </button>
+                      <button onClick={openAddDebtDialog} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold" style={{ backgroundColor: `${ERROR}15`, color: ERROR, border: `1px solid ${ERROR}40` }}>
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="19" x2="19" y2="19"/><line x1="5" y1="5" x2="19" y2="5"/><line x1="12" y1="5" x2="12" y2="19"/></svg>
+                        افزودن بدهی
+                      </button>
                       <button onClick={openEditDialog} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold" style={{ backgroundColor: `${PRIMARY}15`, color: PRIMARY, border: `1px solid ${PRIMARY}40` }}>
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         {fa.admin.edit}
@@ -558,7 +608,10 @@ export default function CustomerManagement() {
                           </thead>
                           <tbody>
                             {ledgerWithBalance.map((e) => (
-                              <tr key={e.id} style={{ borderTop: `1px solid ${cardBorder}` }}>
+                              <tr key={e.id} className="cursor-pointer transition-all" style={{ borderTop: `1px solid ${cardBorder}` }}
+                                onClick={() => openLedgerDetail(e)}
+                                onMouseEnter={(ev) => { ev.currentTarget.style.backgroundColor = surfaceHover }}
+                                onMouseLeave={(ev) => { ev.currentTarget.style.backgroundColor = 'transparent' }}>
                                 <td className="px-3 py-2 text-xs" style={{ color: textSecondary }}>{formatJalaliDateTime(e.createdAt)}</td>
                                 <td className="px-3 py-2">
                                   <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{
@@ -796,6 +849,117 @@ export default function CustomerManagement() {
               <button onClick={() => { setDialog(null); setDeleteConfirm(false) }} className="px-4 py-2 rounded-lg text-sm font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
                 {fa.admin.cancel}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {dialog === 'addDebt' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="rounded-xl p-6 w-96" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+            <div className="text-sm font-bold mb-1" style={{ color: ERROR }}>افزودن بدهی — {selected?.name}</div>
+            <div className="text-xs mb-4" style={{ color: textSecondary }}>مانده فعلی: {selected?.balance.toLocaleString('fa-IR')} {fa.common.toman}</div>
+            <div className="mb-3">
+              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>مبلغ بدهی</label>
+              <input type="number" value={chargePayAmount} onChange={(e) => setChargePayAmount(e.target.value)} className="input-field w-full text-sm" placeholder="مبلغ را وارد کنید" autoFocus />
+            </div>
+            <div className="mb-3">
+              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>شرح</label>
+              <input value={chargePayDescription} onChange={(e) => setChargePayDescription(e.target.value)} className="input-field w-full text-sm" placeholder="مثال: فاکتور تلفنی، بدهی قبلی..." />
+            </div>
+            <div className="mb-3">
+              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>تصاویر (اختیاری)</label>
+              <input type="file" accept="image/*" multiple onChange={(e) => { const files = e.target.files; if (!files) return; for (const file of Array.from(files)) { const reader = new FileReader(); reader.onload = (ev) => { const r = ev.target?.result; if (typeof r === 'string') setChargePayImages((prev) => [...prev, r]) }; reader.readAsDataURL(file) } }} className="input-field w-full text-sm" />
+              {chargePayImages.length > 0 && (<div className="flex gap-2 mt-2 flex-wrap">{chargePayImages.map((img, idx) => (<div key={idx} className="relative"><img src={img} alt="" className="w-16 h-16 rounded-lg object-cover" /><button onClick={() => setChargePayImages((prev) => prev.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: ERROR, color: '#fff' }}>✕</button></div>))}</div>)}
+            </div>
+            {chargePayAmount && parseFloat(chargePayAmount) > 0 && (
+              <div className="text-xs mb-3 p-2 rounded-lg" style={{ backgroundColor: `${ERROR}10`, color: ERROR }}>
+                - {parseFloat(chargePayAmount).toLocaleString('fa-IR')} {fa.common.toman} بدهی به مشتری اضافه می‌شود
+              </div>
+            )}
+            <div className="flex gap-2">
+              <button onClick={handleAddDebt} disabled={loading || !chargePayAmount || parseFloat(chargePayAmount) <= 0} className="flex-1 py-2 rounded-lg text-sm font-bold" style={{ backgroundColor: ERROR, color: '#ffffff', opacity: (!chargePayAmount || parseFloat(chargePayAmount) <= 0) ? 0.5 : 1 }}>
+                {loading ? '...' : fa.common.confirm}
+              </button>
+              <button onClick={() => setDialog(null)} className="px-4 py-2 rounded-lg text-sm font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+                {fa.admin.cancel}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {dialog === 'ledgerDetail' && selectedLedgerEntry && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={() => { setDialog(null); setSelectedLedgerEntry(null) }}>
+          <div className="rounded-xl w-full max-w-2xl max-h-[85vh] overflow-auto" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }} onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+              <div className="text-sm font-bold" style={{ color: textPrimary }}>جزئیات تراکنش</div>
+              <button onClick={() => { setDialog(null); setSelectedLedgerEntry(null) }} className="w-7 h-7 rounded-lg flex items-center justify-center text-sm" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>✕</button>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+                  <div className="text-xs" style={{ color: textSecondary }}>تاریخ</div>
+                  <div className="text-sm font-bold" style={{ color: textPrimary }}>{formatJalaliDateTime(selectedLedgerEntry.createdAt)}</div>
+                </div>
+                <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+                  <div className="text-xs" style={{ color: textSecondary }}>نوع</div>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: selectedLedgerEntry.type === 'charge' ? `${SUCCESS}15` : selectedLedgerEntry.type === 'payment' ? '#f59e0b15' : selectedLedgerEntry.type === 'debt' ? `${ERROR}15` : `${PRIMARY}15`, color: selectedLedgerEntry.type === 'charge' ? SUCCESS : selectedLedgerEntry.type === 'payment' ? '#d97706' : selectedLedgerEntry.type === 'debt' ? ERROR : PRIMARY }}>
+                    {selectedLedgerEntry.type === 'charge' ? 'شارژ' : selectedLedgerEntry.type === 'payment' ? 'پرداخت' : selectedLedgerEntry.type === 'debt' ? 'بدهی' : 'فروش'}
+                  </span>
+                </div>
+                <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+                  <div className="text-xs" style={{ color: textSecondary }}>مبلغ</div>
+                  <div className="text-lg font-bold" style={{ color: selectedLedgerEntry.type === 'sale' || selectedLedgerEntry.type === 'debt' ? ERROR : SUCCESS }}>
+                    {selectedLedgerEntry.type === 'sale' || selectedLedgerEntry.type === 'debt' ? '-' : '+'}{selectedLedgerEntry.amount.toLocaleString('fa-IR')} {fa.common.toman}
+                  </div>
+                </div>
+                <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+                  <div className="text-xs" style={{ color: textSecondary }}>مشتری</div>
+                  <div className="text-sm font-bold" style={{ color: textPrimary }}>{selected?.name}</div>
+                </div>
+              </div>
+              {selectedLedgerEntry.description && (
+                <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+                  <div className="text-xs mb-1" style={{ color: textSecondary }}>شرح</div>
+                  <div className="text-sm" style={{ color: textPrimary }}>{selectedLedgerEntry.description}</div>
+                </div>
+              )}
+              {ledgerImages.length > 0 && (
+                <div>
+                  <div className="text-xs font-medium mb-2" style={{ color: textSecondary }}>تصاویر ضمیمه ({ledgerImages.length})</div>
+                  <div className="flex gap-2 mb-3 flex-wrap">
+                    {ledgerImages.map((img, idx) => (
+                      <button key={idx} onClick={() => { setImageIndex(idx); setImgZoom(1); setImgRotation(0) }} className="w-20 h-20 rounded-lg overflow-hidden border-2 transition-all" style={{ borderColor: imageIndex === idx && dialog === 'ledgerDetail' ? PRIMARY : 'transparent' }}>
+                        <img src={img} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                  {ledgerImages[imageIndex] && (
+                    <div>
+                      <div className="rounded-lg overflow-hidden flex items-center justify-center mb-2" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cardBorder}`, minHeight: 200, maxHeight: 350 }}>
+                        <img src={ledgerImages[imageIndex]} alt="" style={{ transform: `scale(${imgZoom}) rotate(${imgRotation}deg)`, transition: 'transform 0.2s', maxWidth: '100%', maxHeight: '330px', objectFit: 'contain' }} />
+                      </div>
+                      <div className="flex gap-1 flex-wrap">
+                        {ledgerImages.length > 1 && (
+                          <>
+                            <button onClick={() => setImageIndex((i) => (i - 1 + ledgerImages.length) % ledgerImages.length)} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textPrimary }}>← قبلی</button>
+                            <button onClick={() => setImageIndex((i) => (i + 1) % ledgerImages.length)} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textPrimary }}>بعدی →</button>
+                          </>
+                        )}
+                        <button onClick={() => setImgZoom((z) => Math.min(z + 0.25, 3))} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textPrimary }}>بزرگنمایی</button>
+                        <button onClick={() => setImgZoom((z) => Math.max(z - 0.25, 0.25))} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textPrimary }}>کوچکنمایی</button>
+                        <button onClick={() => setImgRotation((r) => r + 90)} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textPrimary }}>چرخش</button>
+                        <button onClick={() => { const link = document.createElement('a'); link.href = ledgerImages[imageIndex]; link.download = 'attachment.jpg'; link.click() }} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textPrimary }}>دانلود</button>
+                      </div>
+                      {ledgerImages.length > 1 && <div className="text-xs mt-1 text-center" style={{ color: textSecondary }}>{imageIndex + 1} از {ledgerImages.length}</div>}
+                    </div>
+                  )}
+                </div>
+              )}
+              {!selectedLedgerEntry.description && (!selectedLedgerEntry.images || selectedLedgerEntry.images.length === 0) && (
+                <div className="text-sm text-center py-4" style={{ color: textSecondary }}>توضیحات یا تصویری ثبت نشده</div>
+              )}
             </div>
           </div>
         </div>

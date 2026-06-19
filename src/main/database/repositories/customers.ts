@@ -46,7 +46,7 @@ export function updateCustomerBalance(customerId: number, amountChange: number):
   return result.changes > 0
 }
 
-export function addLedgerEntry(customerId: number, saleId: number | null, type: 'charge' | 'payment' | 'sale', amount: number, description: string, images?: string[]): CustomerLedgerEntry {
+export function addLedgerEntry(customerId: number, saleId: number | null, type: 'charge' | 'payment' | 'sale' | 'debt', amount: number, description: string, images?: string[]): CustomerLedgerEntry {
   const db = getDatabase()
   const imagesJson = JSON.stringify(images || [])
   const result = db.prepare(
@@ -73,7 +73,7 @@ export function getLedgerEntries(customerId: number): CustomerLedgerEntry[] {
       id: r.id as number,
       customerId: r.customerId as number,
       saleId: (r.saleId as number) ?? undefined,
-      type: r.type as 'charge' | 'payment' | 'sale',
+      type: r.type as 'charge' | 'payment' | 'sale' | 'debt',
       amount: r.amount as number,
       description: r.description as string,
       images,

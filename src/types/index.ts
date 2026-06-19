@@ -116,7 +116,7 @@ export interface CustomerLedgerEntry {
   id: number
   customerId: number
   saleId?: number
-  type: 'charge' | 'payment' | 'sale'
+  type: 'charge' | 'payment' | 'sale' | 'debt'
   amount: number
   description: string
   images: string[]
