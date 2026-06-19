@@ -46,11 +46,12 @@ export function updateCustomerBalance(customerId: number, amountChange: number):
   return result.changes > 0
 }
 
-export function addLedgerEntry(customerId: number, saleId: number | null, type: 'charge' | 'payment' | 'sale', amount: number, description: string): CustomerLedgerEntry {
+export function addLedgerEntry(customerId: number, saleId: number | null, type: 'charge' | 'payment' | 'sale', amount: number, description: string, images?: string[]): CustomerLedgerEntry {
   const db = getDatabase()
+  const imagesJson = JSON.stringify(images || [])
   const result = db.prepare(
-    'INSERT INTO customer_ledger (customerId, saleId, type, amount, description) VALUES (?, ?, ?, ?, ?)'
-  ).run(customerId, saleId, type, amount, description)
+    'INSERT INTO customer_ledger (customerId, saleId, type, amount, description, images) VALUES (?, ?, ?, ?, ?, ?)'
+  ).run(customerId, saleId, type, amount, description, imagesJson)
   return {
     id: result.lastInsertRowid as number,
     customerId,
@@ -58,21 +59,27 @@ export function addLedgerEntry(customerId: number, saleId: number | null, type: 
     type,
     amount,
     description,
+    images: images || [],
     createdAt: new Date().toISOString(),
   }
 }
 
 export function getLedgerEntries(customerId: number): CustomerLedgerEntry[] {
   const db = getDatabase()
-  return (db.prepare('SELECT * FROM customer_ledger WHERE customerId = ? ORDER BY createdAt DESC').all(customerId) as Record<string, unknown>[]).map(r => ({
-    id: r.id as number,
-    customerId: r.customerId as number,
-    saleId: (r.saleId as number) ?? undefined,
-    type: r.type as 'charge' | 'payment' | 'sale',
-    amount: r.amount as number,
-    description: r.description as string,
-    createdAt: r.createdAt as string,
-  }))
+  return (db.prepare('SELECT * FROM customer_ledger WHERE customerId = ? ORDER BY createdAt DESC').all(customerId) as Record<string, unknown>[]).map(r => {
+    let images: string[] = []
+    try { images = JSON.parse(r.images as string || '[]') } catch {}
+    return {
+      id: r.id as number,
+      customerId: r.customerId as number,
+      saleId: (r.saleId as number) ?? undefined,
+      type: r.type as 'charge' | 'payment' | 'sale',
+      amount: r.amount as number,
+      description: r.description as string,
+      images,
+      createdAt: r.createdAt as string,
+    }
+  })
 }
 
 export function getCustomerStats(): { totalCustomers: number; totalDebtors: number; totalCreditors: number; totalDebtAmount: number; totalCreditAmount: number } {

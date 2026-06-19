@@ -18,7 +18,7 @@ import * as reportsRepo from '../database/repositories/reports'
 import * as seedRepo from '../database/repositories/seed'
 import * as backupService from '../database/backup'
 import { isFirstRun, getDatabase } from '../database/connection'
-import { writeFileSync, mkdirSync, existsSync, copyFileSync } from 'fs'
+import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync } from 'fs'
 import { join } from 'path'
 import { randomBytes } from 'crypto'
 import { app } from 'electron'
@@ -62,12 +62,35 @@ export function registerAllHandlers(): void {
         a.barcode = `PRD-${String(lastNum + 1).padStart(6, '0')}`
       }
       const result = products.createProduct(a)
+      if (a.imageBase64 && a.imageBase64.startsWith('data:image')) {
+        try {
+          const imagesDir = join(app.getPath('userData'), 'product-images')
+          if (!existsSync(imagesDir)) mkdirSync(imagesDir, { recursive: true })
+          const ext = a.imageBase64.startsWith('data:image/png') ? '.png' : '.jpg'
+          const filename = `product-${result.id}-${randomBytes(8).toString('hex')}${ext}`
+          const base64Data = a.imageBase64.replace(/^data:image\/\w+;base64,/, '')
+          writeFileSync(join(imagesDir, filename), Buffer.from(base64Data, 'base64'))
+          products.updateProduct(result.id, { imageBase64: filename })
+          result.imageBase64 = filename
+        } catch {}
+      }
       auditRepo.createAuditEntry(null, 'create', 'product', result.id, JSON.stringify({ title: a.title, barcode: a.barcode }))
       return { success: true, data: result }
     } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
   })
   ipcMain.handle('products:update', (_event, a: { id: number; data: Partial<ProductInput> }) => {
     try {
+      if (a.data.imageBase64 && a.data.imageBase64.startsWith('data:image')) {
+        try {
+          const imagesDir = join(app.getPath('userData'), 'product-images')
+          if (!existsSync(imagesDir)) mkdirSync(imagesDir, { recursive: true })
+          const ext = a.data.imageBase64.startsWith('data:image/png') ? '.png' : '.jpg'
+          const filename = `product-${a.id}-${randomBytes(8).toString('hex')}${ext}`
+          const base64Data = a.data.imageBase64.replace(/^data:image\/\w+;base64,/, '')
+          writeFileSync(join(imagesDir, filename), Buffer.from(base64Data, 'base64'))
+          a.data.imageBase64 = filename
+        } catch {}
+      }
       const result = products.updateProduct(a.id, a.data)
       auditRepo.createAuditEntry(null, 'update', 'product', a.id, JSON.stringify({ fields: Object.keys(a.data) }))
       return { success: true, data: result }
@@ -89,6 +112,28 @@ export function registerAllHandlers(): void {
   })
   handle('products:lowStock', () => products.getLowStockProducts())
   handle('products:loose', () => products.getLooseProducts())
+  ipcMain.handle('products:saveImage', (_event, arg: { base64: string; productId: number }) => {
+    try {
+      const imagesDir = join(app.getPath('userData'), 'product-images')
+      if (!existsSync(imagesDir)) mkdirSync(imagesDir, { recursive: true })
+      const ext = arg.base64.startsWith('data:image/png') ? '.png' : '.jpg'
+      const filename = `product-${arg.productId}-${randomBytes(8).toString('hex')}${ext}`
+      const base64Data = arg.base64.replace(/^data:image\/\w+;base64,/, '')
+      const filePath = join(imagesDir, filename)
+      writeFileSync(filePath, Buffer.from(base64Data, 'base64'))
+      return { success: true, data: filename }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
+  ipcMain.handle('products:getImage', (_event, arg: { filename: string }) => {
+    try {
+      const filePath = join(app.getPath('userData'), 'product-images', arg.filename)
+      if (!existsSync(filePath)) return { success: false, error: 'File not found' }
+      const data = readFileSync(filePath)
+      const ext = arg.filename.endsWith('.png') ? 'image/png' : 'image/jpeg'
+      const base64 = `data:${ext};base64,${data.toString('base64')}`
+      return { success: true, data: base64 }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
   handle('products:categories', () => products.getProductCategories())
   ipcMain.handle('products:reportData', () => {
     try {
@@ -142,8 +187,18 @@ export function registerAllHandlers(): void {
   handleArg<{ id: number }, any>('customers:purchaseHistory', (a) => customers.getCustomerPurchaseHistory(a.id))
   handle('customers:getAllWithStats', () => customers.getAllCustomersWithStats())
   handleArg<{ id: number }, any>('customers:deleteSoft', (a) => customers.deleteCustomerSoft(a.id))
-  handleArg<{ customerId: number; amount: number }, boolean>('customers:charge', (a) => { customers.updateCustomerBalance(a.customerId, a.amount); customers.addLedgerEntry(a.customerId, null, 'charge', a.amount, 'شارژ حساب'); return true })
-  handleArg<{ customerId: number; amount: number }, boolean>('customers:pay', (a) => { customers.updateCustomerBalance(a.customerId, a.amount); customers.addLedgerEntry(a.customerId, null, 'payment', a.amount, 'پرداخت بدهی'); return true })
+  ipcMain.handle('customers:charge', (_event, a: { customerId: number; amount: number; description?: string; images?: string[] }) => {
+    customers.updateCustomerBalance(a.customerId, a.amount)
+    customers.addLedgerEntry(a.customerId, null, 'charge', a.amount, a.description || 'شارژ حساب', a.images)
+    auditRepo.createAuditEntry(null, 'create', 'customer', a.customerId, JSON.stringify({ type: 'charge', amount: a.amount }))
+    return true
+  })
+  ipcMain.handle('customers:pay', (_event, a: { customerId: number; amount: number; description?: string; images?: string[] }) => {
+    customers.updateCustomerBalance(a.customerId, a.amount)
+    customers.addLedgerEntry(a.customerId, null, 'payment', a.amount, a.description || 'پرداخت بدهی', a.images)
+    auditRepo.createAuditEntry(null, 'create', 'customer', a.customerId, JSON.stringify({ type: 'payment', amount: a.amount }))
+    return true
+  })
   handleArg<{ customerId: number }, ReturnType<typeof customers.getLedgerEntries>>('customers:ledger', (a) => customers.getLedgerEntries(a.customerId))
 
   // ─── Expenses ───────────────────────────────────────────

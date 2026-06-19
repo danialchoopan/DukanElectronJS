@@ -1,8 +1,21 @@
 import { useCartStore } from '../store/cartStore'
 import type { CartItem } from '../../../types'
 import { fa } from '../i18n'
+import { useState, useEffect } from 'react'
+import { getProductImageUrl } from '../utils/productImage'
 
 interface Props { items: CartItem[] }
+
+function CartItemImage({ imageBase64 }: { imageBase64: string }) {
+  const [src, setSrc] = useState(imageBase64 || '')
+  useEffect(() => {
+    if (imageBase64 && !imageBase64.startsWith('data:') && !imageBase64.startsWith('http')) {
+      getProductImageUrl(imageBase64).then(setSrc)
+    }
+  }, [imageBase64])
+  if (!src) return null
+  return <img src={src} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+}
 
 export default function CartTable({ items }: Props) {
   const updateQuantity = useCartStore((s) => s.updateQuantity)
@@ -27,9 +40,7 @@ export default function CartTable({ items }: Props) {
               <td className="px-3 py-2" style={{ color: 'var(--text-muted)' }}>{idx + 1}</td>
               <td className="px-3 py-2 font-medium" style={{ color: 'var(--text-primary)' }}>
                 <div className="flex items-center gap-2">
-                  {item.imageBase64 && (
-                    <img src={item.imageBase64} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
-                  )}
+                  <CartItemImage imageBase64={item.imageBase64 || ''} />
                   {item.title}
                 </div>
               </td>

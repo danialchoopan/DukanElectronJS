@@ -293,8 +293,9 @@ function initializeDatabase(db: Database.Database): void {
     // Column already exists
   }
 
-  try { db.prepare('ALTER TABLE customers ADD COLUMN address TEXT DEFAULT ""').run() } catch(e) {}
-  try { db.prepare('ALTER TABLE customers ADD COLUMN notes TEXT DEFAULT ""').run() } catch(e) {}
+try { db.prepare('ALTER TABLE customers ADD COLUMN address TEXT DEFAULT ""').run() } catch(e) {}
+try { db.prepare('ALTER TABLE customers ADD COLUMN notes TEXT DEFAULT ""').run() } catch(e) {}
+try { db.prepare('ALTER TABLE customer_ledger ADD COLUMN images TEXT DEFAULT "[]"').run() } catch(e) {}
 
   const defaults: Record<string, string> = {
     storeName: 'فروشگاه من',

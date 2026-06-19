@@ -119,6 +119,7 @@ export interface CustomerLedgerEntry {
   type: 'charge' | 'payment' | 'sale'
   amount: number
   description: string
+  images: string[]
   createdAt: string
 }
 

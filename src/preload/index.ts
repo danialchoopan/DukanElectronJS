@@ -51,6 +51,10 @@ const api = {
     getCategories: (): Promise<IPCResponse<string[]>> =>
       ipcRenderer.invoke('products:categories'),
     getReportData: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('products:reportData'),
+    saveImage: (data: { base64: string; productId: number }): Promise<IPCResponse<string>> =>
+      ipcRenderer.invoke('products:saveImage', data),
+    getImage: (filename: string): Promise<IPCResponse<string>> =>
+      ipcRenderer.invoke('products:getImage', { filename }),
   },
 
   sales: {
@@ -81,10 +85,10 @@ const api = {
       ipcRenderer.invoke('customers:update', { id, data }),
     delete: (id: number): Promise<VoidResponse> =>
       ipcRenderer.invoke('customers:delete', { id }),
-    charge: (customerId: number, amount: number): Promise<VoidResponse> =>
-      ipcRenderer.invoke('customers:charge', { customerId, amount }),
-    pay: (customerId: number, amount: number): Promise<VoidResponse> =>
-      ipcRenderer.invoke('customers:pay', { customerId, amount }),
+    charge: (customerId: number, amount: number, description?: string, images?: string[]): Promise<VoidResponse> =>
+      ipcRenderer.invoke('customers:charge', { customerId, amount, description, images }),
+    pay: (customerId: number, amount: number, description?: string, images?: string[]): Promise<VoidResponse> =>
+      ipcRenderer.invoke('customers:pay', { customerId, amount, description, images }),
     getLedger: (customerId: number): Promise<IPCResponse<CustomerLedgerEntry[]>> =>
       ipcRenderer.invoke('customers:ledger', { customerId }),
     getStats: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('customers:stats'),

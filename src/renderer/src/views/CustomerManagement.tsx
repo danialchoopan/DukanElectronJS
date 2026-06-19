@@ -2,8 +2,21 @@ import { useState, useEffect, useCallback } from 'react'
 import type { Customer, CustomerLedgerEntry, Sale } from '../../../types'
 import { fa } from '../i18n'
 import { formatJalaliShort, formatJalaliDateTime } from '../utils/jalali'
+import { getProductImageUrl } from '../utils/productImage'
 
 type FilterType = 'all' | 'debtor' | 'creditor' | 'inactive'
+
+function LedgerImage({ src }: { src: string }) {
+  const [resolved, setResolved] = useState(src || '')
+  useEffect(() => {
+    if (src && !src.startsWith('data:') && !src.startsWith('http')) {
+      getProductImageUrl(src).then(setResolved)
+    }
+  }, [src])
+  if (!resolved) return null
+  return <img src={resolved} alt="" className="w-8 h-8 rounded object-cover cursor-pointer" onClick={() => window.open(resolved, '_blank')} />
+}
+
 type DetailTab = 'details' | 'purchases' | 'ledger'
 type LedgerFilter = 'all' | 'charge' | 'payment' | 'sale'
 type DialogMode = null | 'charge' | 'pay' | 'delete' | 'create' | 'edit'
@@ -30,6 +43,8 @@ export default function CustomerManagement() {
   const [dialog, setDialog] = useState<DialogMode>(null)
   const [form, setForm] = useState({ name: '', phone: '', address: '', notes: '' })
   const [chargePayAmount, setChargePayAmount] = useState('')
+  const [chargePayDescription, setChargePayDescription] = useState('')
+  const [chargePayImages, setChargePayImages] = useState<string[]>([])
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -103,11 +118,15 @@ export default function CustomerManagement() {
 
   const openChargeDialog = () => {
     setChargePayAmount('')
+    setChargePayDescription('')
+    setChargePayImages([])
     setDialog('charge')
   }
 
   const openPayDialog = () => {
     setChargePayAmount('')
+    setChargePayDescription('')
+    setChargePayImages([])
     setDialog('pay')
   }
 
@@ -116,9 +135,11 @@ export default function CustomerManagement() {
     const amt = parseFloat(chargePayAmount)
     if (amt <= 0) return
     setLoading(true)
-    await window.api.customers.charge(selected.id, amt)
+    await window.api.customers.charge(selected.id, amt, chargePayDescription || undefined, chargePayImages.length > 0 ? chargePayImages : undefined)
     setDialog(null)
     setChargePayAmount('')
+    setChargePayDescription('')
+    setChargePayImages([])
     await refreshSelected(selected.id)
     setLoading(false)
   }
@@ -128,9 +149,11 @@ export default function CustomerManagement() {
     const amt = parseFloat(chargePayAmount)
     if (amt <= 0) return
     setLoading(true)
-    await window.api.customers.pay(selected.id, amt)
+    await window.api.customers.pay(selected.id, amt, chargePayDescription || undefined, chargePayImages.length > 0 ? chargePayImages : undefined)
     setDialog(null)
     setChargePayAmount('')
+    setChargePayDescription('')
+    setChargePayImages([])
     await refreshSelected(selected.id)
     setLoading(false)
   }
@@ -548,7 +571,16 @@ export default function CustomerManagement() {
                                 <td className="px-3 py-2 font-bold" style={{ color: e.type === 'sale' ? ERROR : SUCCESS }}>
                                   {e.type === 'sale' ? '-' : '+'}{e.amount.toLocaleString('fa-IR')}
                                 </td>
-                                <td className="px-3 py-2 text-xs" style={{ color: textSecondary }}>{e.description}</td>
+                                <td className="px-3 py-2 text-xs" style={{ color: textSecondary }}>
+                                  {e.description}
+                                  {e.images && e.images.length > 0 && (
+                                    <div className="flex gap-1 mt-1">
+                                      {e.images.map((img: string, idx: number) => (
+                                        <LedgerImage key={idx} src={img} />
+                                      ))}
+                                    </div>
+                                  )}
+                                </td>
                                 <td className="px-3 py-2 font-bold text-xs" style={{ color: textPrimary }}>{e.runningBalance.toLocaleString('fa-IR')}</td>
                               </tr>
                             ))}
@@ -569,7 +601,7 @@ export default function CustomerManagement() {
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="rounded-xl p-6 w-96" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
             <div className="text-sm font-bold mb-4" style={{ color: SUCCESS }}>شارژ حساب {selected?.name}</div>
-            <div className="mb-4">
+            <div className="mb-3">
               <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.customer.chargeAmount}</label>
               <input
                 type="number"
@@ -579,6 +611,50 @@ export default function CustomerManagement() {
                 placeholder="مبلغ را وارد كنید"
                 autoFocus
               />
+            </div>
+            <div className="mb-3">
+              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>شرح</label>
+              <input
+                value={chargePayDescription}
+                onChange={(e) => setChargePayDescription(e.target.value)}
+                className="input-field w-full text-sm"
+                placeholder="توضیحات (اختیاری)"
+              />
+            </div>
+            <div className="mb-3">
+              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>تصاویر</label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => {
+                  const files = e.target.files
+                  if (!files) return
+                  for (const file of Array.from(files)) {
+                    const reader = new FileReader()
+                    reader.onload = (ev) => {
+                      const result = ev.target?.result
+                      if (typeof result === 'string') setChargePayImages((prev) => [...prev, result])
+                    }
+                    reader.readAsDataURL(file)
+                  }
+                }}
+                className="input-field w-full text-sm"
+              />
+              {chargePayImages.length > 0 && (
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {chargePayImages.map((img, idx) => (
+                    <div key={idx} className="relative">
+                      <img src={img} alt="" className="w-16 h-16 rounded-lg object-cover" />
+                      <button
+                        onClick={() => setChargePayImages((prev) => prev.filter((_, i) => i !== idx))}
+                        className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs"
+                        style={{ backgroundColor: ERROR, color: '#ffffff' }}
+                      >✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             {chargePayAmount && parseFloat(chargePayAmount) > 0 && (
               <div className="text-xs mb-3 p-2 rounded-lg" style={{ backgroundColor: `${SUCCESS}10`, color: SUCCESS }}>
@@ -602,7 +678,7 @@ export default function CustomerManagement() {
           <div className="rounded-xl p-6 w-96" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
             <div className="text-sm font-bold mb-1" style={{ color: '#d97706' }}>پرداخت بدهی {selected?.name}</div>
             <div className="text-xs mb-4" style={{ color: textSecondary }}>مانده فعلی: {selected?.balance.toLocaleString('fa-IR')} {fa.common.toman}</div>
-            <div className="mb-4">
+            <div className="mb-3">
               <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.customer.payAmount}</label>
               <input
                 type="number"
@@ -612,6 +688,50 @@ export default function CustomerManagement() {
                 placeholder="مبلغ را وارد كنید"
                 autoFocus
               />
+            </div>
+            <div className="mb-3">
+              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>شرح</label>
+              <input
+                value={chargePayDescription}
+                onChange={(e) => setChargePayDescription(e.target.value)}
+                className="input-field w-full text-sm"
+                placeholder="توضیحات (اختیاری)"
+              />
+            </div>
+            <div className="mb-3">
+              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>تصاویر</label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => {
+                  const files = e.target.files
+                  if (!files) return
+                  for (const file of Array.from(files)) {
+                    const reader = new FileReader()
+                    reader.onload = (ev) => {
+                      const result = ev.target?.result
+                      if (typeof result === 'string') setChargePayImages((prev) => [...prev, result])
+                    }
+                    reader.readAsDataURL(file)
+                  }
+                }}
+                className="input-field w-full text-sm"
+              />
+              {chargePayImages.length > 0 && (
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {chargePayImages.map((img, idx) => (
+                    <div key={idx} className="relative">
+                      <img src={img} alt="" className="w-16 h-16 rounded-lg object-cover" />
+                      <button
+                        onClick={() => setChargePayImages((prev) => prev.filter((_, i) => i !== idx))}
+                        className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs"
+                        style={{ backgroundColor: ERROR, color: '#ffffff' }}
+                      >✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             {chargePayAmount && parseFloat(chargePayAmount) > 0 && (
               <div className="text-xs mb-3 p-2 rounded-lg" style={{ backgroundColor: '#f59e0b10', color: '#d97706' }}>
