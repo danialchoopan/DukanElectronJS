@@ -96,12 +96,20 @@ export interface Customer {
   name: string
   phone: string
   balance: number
+  address: string
+  notes: string
+  isActive: boolean
   createdAt: string
+  purchaseCount?: number
+  lastPurchaseDate?: string | null
+  totalSpent?: number
 }
 
 export interface CustomerInput {
   name: string
   phone: string
+  address?: string
+  notes?: string
 }
 
 export interface CustomerLedgerEntry {

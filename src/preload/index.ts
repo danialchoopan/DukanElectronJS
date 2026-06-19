@@ -87,6 +87,11 @@ const api = {
       ipcRenderer.invoke('customers:pay', { customerId, amount }),
     getLedger: (customerId: number): Promise<IPCResponse<CustomerLedgerEntry[]>> =>
       ipcRenderer.invoke('customers:ledger', { customerId }),
+    getStats: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('customers:stats'),
+    getWithStats: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('customers:getWithStats', { id }),
+    purchaseHistory: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('customers:purchaseHistory', { id }),
+    getAllWithStats: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('customers:getAllWithStats'),
+    deleteSoft: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('customers:deleteSoft', { id }),
   },
 
   expenses: {
