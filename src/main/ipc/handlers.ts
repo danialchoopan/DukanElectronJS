@@ -139,7 +139,7 @@ export function registerAllHandlers(): void {
     try {
       const db = getDatabase()
       const byCategory = db.prepare(`
-        SELECT category, COUNT(*) as count,
+        SELECT COALESCE(NULLIF(category, ''), 'بدون دسته') as category, COUNT(*) as count,
                SUM(stock) as totalStock,
                SUM(stock * purchase_price) as totalValue,
                SUM(stock * sale_price) as retailValue
@@ -157,7 +157,10 @@ export function registerAllHandlers(): void {
         ORDER BY (julianday('now') - julianday(lastSoldAt)) DESC
       `).all()
       return { success: true, data: { byCategory, slowMoving } }
-    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+    } catch (err) {
+      console.error('[REPORT ERROR]', err)
+      return { success: false, error: err instanceof Error ? err.message : String(err) }
+    }
   })
 
   // ─── Sales ──────────────────────────────────────────────

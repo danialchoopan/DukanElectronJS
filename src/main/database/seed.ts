@@ -86,9 +86,70 @@ export function seedDatabase(): void {
   db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('قبوض', 'قبض برق', 2500000, today)
   db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('حقوق', 'حقوق محمد', 8000000, today)
 
+  function randInt(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min
+  }
+
+  function randomDateTime(daysBack: number): string {
+    const d = new Date()
+    d.setDate(d.getDate() - daysBack)
+    d.setHours(randInt(8, 20), randInt(0, 59), randInt(0, 59))
+    return d.toISOString().slice(0, 19).replace('T', ' ')
+  }
+
+  const insertSale = db.prepare('INSERT INTO sales (invoiceNumber, userId, customerId, subtotal, total_amount, totalNetProfit, paymentMethod, customerPaid, changeAmount, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+  const insertSaleItem = db.prepare('INSERT INTO sale_items (saleId, productId, productTitle, quantity, unitPrice, purchasePrice, subtotal, netProfit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+
+  const userIds = db.prepare('SELECT id FROM users').all() as { id: number }[]
+  const custIds = db.prepare('SELECT id FROM customers').all() as { id: number }[]
+  const allProducts = db.prepare('SELECT id, title, purchase_price, sale_price FROM products WHERE isActive = 1').all() as { id: number; title: string; purchase_price: number; sale_price: number }[]
+
+  const methods: string[] = ['cash', 'card', 'ledger']
+
+  for (let day = 0; day < 45; day++) {
+    const numSales = randInt(1, 3)
+    for (let s = 0; s < numSales; s++) {
+      const saleDate = randomDateTime(day + 1)
+      const userId = userIds[randInt(0, userIds.length - 1)].id
+      const paymentMethod = methods[randInt(0, methods.length - 1)]
+      const customerId = paymentMethod === 'ledger' ? custIds[randInt(0, custIds.length - 1)].id : (Math.random() > 0.3 ? custIds[randInt(0, custIds.length - 1)].id : null)
+
+      const numItems = randInt(2, 5)
+      const pickedProducts: { id: number; title: string; purchase_price: number; sale_price: number; qty: number }[] = []
+      const usedIds = new Set<number>()
+      for (let i = 0; i < numItems && i < allProducts.length; i++) {
+        let idx: number
+        do { idx = randInt(0, allProducts.length - 1) } while (usedIds.has(allProducts[idx].id))
+        usedIds.add(allProducts[idx].id)
+        pickedProducts.push({ ...allProducts[idx], qty: randInt(1, 3) })
+      }
+
+      let subtotal = 0
+      let totalCogs = 0
+      for (const item of pickedProducts) {
+        subtotal += item.sale_price * item.qty
+        totalCogs += item.purchase_price * item.qty
+      }
+      const netProfit = subtotal - totalCogs
+      const invoiceNum = `INV-${saleDate.replace(/[-: ]/g, '').slice(0, 14)}-${s}`
+
+      const r = insertSale.run(invoiceNum, userId, customerId, subtotal, subtotal, netProfit, paymentMethod, paymentMethod === 'ledger' ? 0 : subtotal, 0, saleDate)
+      const saleId = r.lastInsertRowid as number
+
+      for (const item of pickedProducts) {
+        insertSaleItem.run(saleId, item.id, item.title, item.qty, item.sale_price, item.purchase_price, item.sale_price * item.qty, (item.sale_price - item.purchase_price) * item.qty)
+      }
+
+      if (paymentMethod === 'ledger' && customerId) {
+        db.prepare('UPDATE customers SET balance = balance - ? WHERE id = ?').run(subtotal, customerId)
+        db.prepare('INSERT INTO customer_ledger (customerId, saleId, type, amount, description, createdAt) VALUES (?, ?, "sale", ?, ?, ?)').run(customerId, saleId, subtotal, `فاکتور ${invoiceNum}`, saleDate)
+      }
+    }
+  }
+
   db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('isSetupComplete', 'true')").run()
   db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('storeName', 'فروشگاه نمونه')").run()
   db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('theme', 'dark')").run()
 
-  console.log('[SEED] Done: 4 users, 35 products, 15 categories, 3 customers, 3 expenses')
+  console.log('[SEED] Done: 4 users, 32 products, 15+ categories, 3 customers, 3 expenses, ~60 sales')
 }

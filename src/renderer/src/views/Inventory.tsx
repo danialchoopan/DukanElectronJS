@@ -62,13 +62,16 @@ export default function Inventory() {
 
   const loadReport = async () => {
     const r = await window.api.products.getReportData()
-    if (r.success && r.data) setReportData(r.data)
+    if (r.success && r.data) {
+      setReportData(r.data)
+    } else {
+      console.error('[Report Error]', r.error)
+    }
   }
 
-  useEffect(() => { loadProducts(); loadLowStock(); loadReturnStats() }, [search])
+  useEffect(() => { loadProducts(); loadLowStock(); loadReturnStats(); loadReport() }, [search])
   useEffect(() => {
     if (tab === 'audit') loadAudit(auditStartDate || undefined, auditEndDate || undefined)
-    if (tab === 'report') loadReport()
   }, [tab, auditStartDate, auditEndDate])
 
   const handleRestock = async () => {
