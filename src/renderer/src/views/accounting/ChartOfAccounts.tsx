@@ -10,6 +10,10 @@ export default function ChartOfAccounts() {
   const [form, setForm] = useState({ code: '', name: '', type: 'asset' as string, parentId: null as number | null, description: '' })
   const [filterType, setFilterType] = useState('all')
   const [allAccounts, setAllAccounts] = useState<any[]>([])
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null)
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set())
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const isDark = document.documentElement.classList.contains('dark')
   const cardBg = isDark ? '#1e293b' : '#ffffff'
@@ -17,12 +21,14 @@ export default function ChartOfAccounts() {
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
   const textSecondary = isDark ? '#94a3b8' : '#64748b'
 
-  const typeColors: Record<string, { bg: string; fg: string }> = {
-    asset: { bg: isDark ? '#0c1e3a' : '#dbeafe', fg: '#3b82f6' },
-    liability: { bg: isDark ? '#450a0a' : '#fee2e2', fg: '#ef4444' },
-    equity: { bg: isDark ? '#2e1065' : '#f3e8ff', fg: '#a855f7' },
-    income: { bg: isDark ? '#052e16' : '#dcfce7', fg: '#22c55e' },
-    expense: { bg: isDark ? '#451a03' : '#fef3c7', fg: '#f59e0b' },
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000) }
+
+  const typeColors: Record<string, { bg: string; fg: string; icon: string }> = {
+    asset: { bg: isDark ? '#0c1e3a' : '#dbeafe', fg: '#3b82f6', icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5' },
+    liability: { bg: isDark ? '#450a0a' : '#fee2e2', fg: '#ef4444', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+    equity: { bg: isDark ? '#2e1065' : '#f3e8ff', fg: '#a855f7', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
+    income: { bg: isDark ? '#052e16' : '#dcfce7', fg: '#22c55e', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+    expense: { bg: isDark ? '#451a03' : '#fef3c7', fg: '#f59e0b', icon: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z' },
   }
 
   const load = async () => {
@@ -34,21 +40,26 @@ export default function ChartOfAccounts() {
   useEffect(() => { load() }, [])
 
   const openAdd = () => { setForm({ code: '', name: '', type: 'asset', parentId: null, description: '' }); setEditingId(null); setShowForm(true) }
-  const openEdit = (a: any) => { setForm({ code: a.code, name: a.name, type: a.type, parentId: a.parentId, description: a.description }); setEditingId(a.id); setShowForm(true) }
+  const openEdit = (a: any) => { setForm({ code: a.code, name: a.name, type: a.type, parentId: a.parentId, description: a.description || '' }); setEditingId(a.id); setShowForm(true) }
 
   const handleSave = async () => {
-    if (!form.code || !form.name) return
+    if (!form.code.trim() || !form.name.trim()) { showToast('کد و نام حساب الزامی است', 'error'); return }
     if (editingId) {
       await window.api.accounts.update(editingId, form)
+      showToast('حساب با موفقیت ویرایش شد')
     } else {
       await window.api.accounts.create(form)
+      showToast('حساب جدید ایجاد شد')
     }
     setShowForm(false)
     load()
   }
 
   const handleDelete = async (id: number) => {
-    await window.api.accounts.delete(id)
+    const r = await window.api.accounts.delete(id)
+    if (r && r.success === false) { showToast(r.error || 'خطا در حذف', 'error') }
+    else { showToast('حساب حذف شد') }
+    setDeleteConfirmId(null)
     load()
   }
 
@@ -57,61 +68,105 @@ export default function ChartOfAccounts() {
     load()
   }
 
+  const toggleExpand = (id: number) => {
+    const next = new Set(expandedIds)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setExpandedIds(next)
+  }
+
   const renderNode = (node: AccountNode, depth: number = 0) => {
     const a = node.account
     const tc = typeColors[a.type] || typeColors.asset
     const matchesFilter = filterType === 'all' || a.type === filterType
-    if (!matchesFilter) return null
+    const matchesSearch = !searchQuery || a.name.includes(searchQuery) || a.code.includes(searchQuery)
+    if (!matchesFilter || !matchesSearch) return null
+    const hasChildren = node.children.length > 0
+    const isExpanded = expandedIds.has(a.id)
     return (
       <div key={a.id}>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl mb-1" style={{ marginLeft: depth * 24, backgroundColor: isDark ? (a.isActive ? 'rgba(59,130,246,0.05)' : 'rgba(100,116,139,0.05)') : (a.isActive ? 'rgba(59,130,246,0.03)' : 'rgba(100,116,139,0.03)'), opacity: a.isActive ? 1 : 0.5 }}>
-          <span className="text-xs font-mono font-bold px-2 py-0.5 rounded" style={{ backgroundColor: tc.bg, color: tc.fg }}>{a.code}</span>
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-1 transition-all cursor-pointer group" style={{ marginLeft: depth * 20, backgroundColor: isDark ? 'rgba(59,130,246,0.04)' : 'rgba(59,130,246,0.02)', border: '1px solid transparent', opacity: a.isActive ? 1 : 0.5 }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.08)' : 'rgba(59,130,246,0.05)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.04)' : 'rgba(59,130,246,0.02)' }}>
+          {hasChildren && (
+            <button onClick={(e) => { e.stopPropagation(); toggleExpand(a.id) }} className="w-5 h-5 flex items-center justify-center rounded transition-transform" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', color: textSecondary }}>
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+            </button>
+          )}
+          {!hasChildren && <span className="w-5" />}
+          <span className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: tc.bg }}>
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke={tc.fg} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d={tc.icon} /></svg>
+          </span>
+          <span className="text-xs font-mono font-bold px-2 py-0.5 rounded shrink-0" style={{ backgroundColor: tc.bg, color: tc.fg }}>{a.code}</span>
           <span className="text-sm font-medium flex-1" style={{ color: textPrimary }}>{a.name}</span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: tc.bg, color: tc.fg }}>{fa.accounting.accounts.types[a.type as keyof typeof fa.accounting.accounts.types]}</span>
-          <button onClick={() => openEdit(a)} className="text-xs px-2 py-1 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>{fa.accounting.accounts.editAccount}</button>
-          <button onClick={() => handleToggle(a.id)} className="text-xs px-2 py-1 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>{a.isActive ? fa.accounting.accounts.inactive : fa.accounting.accounts.active}</button>
-          {!node.children.length && <button onClick={() => handleDelete(a.id)} className="text-xs px-2 py-1 rounded-lg" style={{ backgroundColor: isDark ? '#450a0a' : '#fee2e2', color: '#ef4444' }}>{fa.accounting.accounts.delete}</button>}
+          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0" style={{ backgroundColor: tc.bg, color: tc.fg }}>{fa.accounting.accounts.types[a.type as keyof typeof fa.accounting.accounts.types]}</span>
+          {hasChildren && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold shrink-0" style={{ backgroundColor: isDark ? '#1e293b' : '#f1f5f9', color: textSecondary }}>{node.children.length} زیرمجموعه</span>}
+          <div className="flex items-center gap-1 shrink-0">
+            <button onClick={(e) => { e.stopPropagation(); openEdit(a) }} className="w-7 h-7 rounded-lg flex items-center justify-center transition-all" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }} title="ویرایش">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); handleToggle(a.id) }} className="w-7 h-7 rounded-lg flex items-center justify-center transition-all" style={{ backgroundColor: a.isActive ? (isDark ? '#052e16' : '#dcfce7') : (isDark ? '#1e293b' : '#f1f5f9'), color: a.isActive ? '#22c55e' : textSecondary }} title={a.isActive ? 'غیرفعال' : 'فعال'}>
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={a.isActive ? 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' : 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21' } /></svg>
+            </button>
+            {!hasChildren && (
+              <button onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(a.id) }} className="w-7 h-7 rounded-lg flex items-center justify-center transition-all" style={{ backgroundColor: isDark ? '#450a0a' : '#fee2e2', color: '#ef4444' }} title="حذف">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+              </button>
+            )}
+          </div>
         </div>
-        {node.children.map(child => renderNode(child, depth + 1))}
+        {deleteConfirmId === a.id && (
+          <div className="ml-6 mb-2 rounded-xl p-3" style={{ marginLeft: (depth + 1) * 20, backgroundColor: isDark ? '#450a0a' : '#fef2f2', border: '1px solid #ef4444' }}>
+            <p className="text-xs font-bold mb-2" style={{ color: '#ef4444' }}>آیا از حذف حساب «{a.name}» اطمینان دارید؟</p>
+            <div className="flex gap-2">
+              <button onClick={() => handleDelete(a.id)} className="text-xs px-3 py-1 rounded-lg font-bold" style={{ backgroundColor: '#ef4444', color: '#fff' }}>بله، حذف شود</button>
+              <button onClick={() => setDeleteConfirmId(null)} className="text-xs px-3 py-1 rounded-lg font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>لغو</button>
+            </div>
+          </div>
+        )}
+        {hasChildren && isExpanded && node.children.map(child => renderNode(child, depth + 1))}
       </div>
     )
   }
 
   const types = ['all', 'asset', 'liability', 'equity', 'income', 'expense']
-
-  const typeCounts = types.filter(t => t !== 'all').reduce((acc, t) => {
-    acc[t] = allAccounts.filter(a => a.type === t).length
-    return acc
-  }, {} as Record<string, number>)
+  const typeCounts = types.filter(t => t !== 'all').reduce((acc, t) => { acc[t] = allAccounts.filter(a => a.type === t).length; return acc }, {} as Record<string, number>)
 
   return (
     <div>
+      {toast && <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-6 py-2 rounded-xl text-sm font-bold text-white shadow-lg" style={{ background: toast.type === 'success' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #ef4444, #dc2626)' }}>{toast.msg}</div>}
+
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.accounts.title}</h3>
-        <button onClick={openAdd} className="btn-primary text-sm">+ {fa.accounting.accounts.addAccount}</button>
+        <div>
+          <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.accounts.title}</h3>
+          <p className="text-xs mt-1" style={{ color: textSecondary }}>{allAccounts.filter(a => a.isActive).length} حساب فعال از {allAccounts.length}</p>
+        </div>
+        <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: '#3b82f6' }}>
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+          + {fa.accounting.accounts.addAccount}
+        </button>
+      </div>
+
+      <div className="flex items-center gap-2 mb-3">
+        <div className="relative flex-1 max-w-xs">
+          <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke={textSecondary} strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+          <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="جستجو..." className="input-field text-sm w-full pr-9" />
+        </div>
       </div>
 
       <div className="flex gap-2 mb-4 flex-wrap">
-        {types.filter(t => t !== 'all').map(t => (
-          <div key={t} className="rounded-xl px-3 py-1.5 text-xs font-bold flex items-center gap-1.5"
-            style={{ backgroundColor: typeColors[t]?.bg, color: typeColors[t]?.fg }}>
-            {fa.accounting.accounts.types[t as keyof typeof fa.accounting.accounts.types]}: {typeCounts[t] || 0}
-          </div>
-        ))}
-      </div>
-
-      <div className="flex gap-2 mb-3">
         {types.map(t => (
-          <button key={t} onClick={() => setFilterType(t)} className="px-3 py-1.5 rounded-full text-xs font-bold transition-all"
-            style={{ background: filterType === t ? '#3b82f6' : (isDark ? '#334155' : '#f1f5f9'), color: filterType === t ? '#fff' : textSecondary }}>
+          <button key={t} onClick={() => setFilterType(t)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
+            style={{ background: filterType === t ? '#3b82f6' : (isDark ? '#334155' : '#f1f5f9'), color: filterType === t ? '#fff' : textSecondary, border: `1px solid ${filterType === t ? '#3b82f6' : 'transparent'}` }}>
             {t === 'all' ? fa.dashboard.all : fa.accounting.accounts.types[t as keyof typeof fa.accounting.accounts.types]}
+            {t !== 'all' && <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: filterType === t ? 'rgba(255,255,255,0.2)' : (isDark ? '#1e293b' : '#e2e8f0') }}>{typeCounts[t] || 0}</span>}
           </button>
         ))}
       </div>
 
-      <div className="rounded-2xl border p-3" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+      <div className="rounded-2xl border p-3 space-y-1" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
         {tree.length === 0 ? (
-          <p className="text-center py-8 text-sm" style={{ color: textSecondary }}>{fa.accounting.accounts.noAccounts}</p>
+          <p className="text-center py-12 text-sm" style={{ color: textSecondary }}>{fa.accounting.accounts.noAccounts}</p>
         ) : tree.map(node => renderNode(node))}
       </div>
 
@@ -121,11 +176,11 @@ export default function ChartOfAccounts() {
             <h3 className="font-bold text-lg mb-4" style={{ color: textPrimary }}>{editingId ? fa.accounting.accounts.editAccount : fa.accounting.accounts.addAccount}</h3>
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.accounts.code}</label>
-                <input value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} className="input-field text-sm" placeholder="1000" />
+                <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.accounts.code} *</label>
+                <input value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} className="input-field text-sm" placeholder="مثال: 1000" />
               </div>
               <div>
-                <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.accounts.name}</label>
+                <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.accounts.name} *</label>
                 <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="input-field text-sm" />
               </div>
               <div>
@@ -140,7 +195,7 @@ export default function ChartOfAccounts() {
                 <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.accounts.parent}</label>
                 <select value={form.parentId ?? ''} onChange={e => setForm({ ...form, parentId: e.target.value ? Number(e.target.value) : null })} className="input-field text-sm">
                   <option value="">—</option>
-                  {allAccounts.filter(a => a.id !== editingId).map(a => (
+                  {allAccounts.filter(a => a.id !== editingId && a.isActive).map(a => (
                     <option key={a.id} value={a.id}>{a.code} - {a.name}</option>
                   ))}
                 </select>
@@ -151,8 +206,8 @@ export default function ChartOfAccounts() {
               </div>
             </div>
             <div className="flex gap-2 mt-4">
-              <button onClick={handleSave} className="btn-primary flex-1 py-2.5">{fa.accounting.accounts.save}</button>
-              <button onClick={() => setShowForm(false)} className="btn flex-1 py-2.5" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>{fa.accounting.accounts.cancel}</button>
+              <button onClick={handleSave} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: '#3b82f6' }}>{fa.accounting.accounts.save}</button>
+              <button onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl text-sm font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>{fa.accounting.accounts.cancel}</button>
             </div>
           </div>
         </div>
