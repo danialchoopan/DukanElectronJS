@@ -8,13 +8,14 @@ import CartTable from '../components/CartTable'
 import PaymentPanel from '../components/PaymentPanel'
 import LooseItemsGrid from '../components/LooseItemsGrid'
 import SuspendedSlots from '../components/SuspendedSlots'
+import { fa } from '../i18n'
+import { printA4Report } from '../utils/a4Print'
 import WebcamScanner from '../components/WebcamScanner'
 import ReceiptPrinter from '../components/ReceiptPrinter'
 import Notification from '../components/Notification'
 import { CameraIcon } from '../components/Icons'
 import PopularItems from '../components/PopularItems'
 import type { Sale, Customer, Product } from "../../../types"
-import { fa } from "../i18n"
 
 export default function CashierPOS() {
   const user = useAuthStore((s) => s.user)
@@ -79,6 +80,20 @@ export default function CashierPOS() {
   const confirmSale = useCallback(async () => {
     if (!pendingPayment || items.length === 0) return
     const { method, customerPaid: paidAmt } = pendingPayment
+
+    // Double-check stock for each item before completing the sale
+    for (const item of items) {
+      const currentProduct = await window.api.products.getById(item.productId)
+      if (currentProduct.success && currentProduct.data) {
+        const currentStock = currentProduct.data.stock
+        if (currentStock < item.quantity) {
+          showNotif(`${item.title}: موجودی فعلی ${currentStock} است. نمی‌توان ${item.quantity} عدد فروخت.`)
+          setPendingPayment(null)
+          return
+        }
+      }
+    }
+
     const result = await window.api.sales.create({
       userId: user!.id,
       items: items.map((i) => ({ productId: i.productId, productTitle: i.title, quantity: i.quantity, unitPrice: i.unitPrice, purchasePrice: i.purchasePrice })),
@@ -195,6 +210,18 @@ export default function CashierPOS() {
             </div>
             <div className="flex gap-2">
               <button onClick={() => { setShowReceipt(saleComplete); setSaleComplete(null) }} className="btn btn-primary flex-1 py-2.5">{fa.receipt.print}</button>
+              <button onClick={() => {
+                if (!saleComplete) return
+                let html = '<h1>فاکتور فروش</h1>'
+                html += `<div class="header-info"><span>شماره فاکتور: ${saleComplete.invoiceNumber}</span><span>تاریخ: ${saleComplete.createdAt?.split('T')[0] || ''}</span></div>`
+                html += '<table><thead><tr><th>کالا</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>'
+                saleComplete.items?.forEach((item: any) => { html += `<tr><td>${item.productTitle}</td><td>${item.quantity}</td><td>${item.unitPrice.toLocaleString('fa-IR')}</td><td>${item.subtotal.toLocaleString('fa-IR')}</td></tr>` })
+                html += '</tbody></table>'
+                html += `<p><strong>جمع کل: ${saleComplete.total_amount.toLocaleString('fa-IR')} تومان</strong></p>`
+                html += `<p>نوع پرداخت: ${saleComplete.paymentMethod === 'cash' ? 'نقدی' : saleComplete.paymentMethod === 'card' ? 'کارتی' : 'نسیه'}</p>`
+                printA4Report(html, 'فاکتور فروش')
+                setSaleComplete(null)
+              }} className="btn flex-1 py-2.5" style={{ backgroundColor: '#006194', color: '#fff' }}>چاپ A4</button>
               <button onClick={() => setSaleComplete(null)} className="btn btn-success flex-1 py-2.5">{fa.common.close}</button>
             </div>
           </div>
