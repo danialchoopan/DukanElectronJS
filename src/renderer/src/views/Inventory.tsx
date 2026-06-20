@@ -106,6 +106,7 @@ export default function Inventory() {
   const pagedProducts = filteredProducts.slice(page * pageSize, (page + 1) * pageSize)
   const { sorted: sortedProducts, sortKey, sortDir, toggleSort } = useSortable(pagedProducts)
   const [showPrintDialog, setShowPrintDialog] = useState(false)
+  const [showProductsPrintDialog, setShowProductsPrintDialog] = useState(false)
 
   const donutColors = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#8b5cf6', '#14b8a6']
 
@@ -183,6 +184,29 @@ export default function Inventory() {
       (cat.retailValue || 0) - (cat.totalValue || 0)
     ])
     downloadExcel('inventory-report.csv', headers, rows)
+  }
+
+  const handleProductsPrint = (range: { start: number; end: number } | 'all') => {
+    let data = filteredProducts
+    if (range !== 'all') data = filteredProducts.slice(range.start - 1, range.end)
+    let html = '<h1>لیست موجودی انبار</h1>'
+    html += `<div class="header-info"><span>تاریخ: ${new Date().toLocaleDateString('fa-IR')}</span><span>تعداد: ${data.length} کالا</span></div>`
+    html += '<table><thead><tr><th>بارکد</th><th>نام</th><th>دسته</th><th>موجودی</th><th>قیمت خرید</th><th>قیمت فروش</th><th>ارزش</th></tr></thead><tbody>'
+    data.forEach(p => {
+      html += `<tr><td>${p.barcode || '-'}</td><td>${p.title}</td><td>${p.category || '-'}</td><td>${p.stock}</td><td>${p.purchase_price.toLocaleString('fa-IR')}</td><td>${p.sale_price.toLocaleString('fa-IR')}</td><td>${(p.stock * p.purchase_price).toLocaleString('fa-IR')}</td></tr>`
+    })
+    html += '</tbody></table>'
+    printA4Report(html, 'لیست موجودی انبار')
+  }
+
+  const handleProductsExcel = () => {
+    const headers = ['بارکد', 'نام', 'دسته', 'موجودی', 'حداقل موجودی', 'قیمت خرید', 'قیمت فروش', 'ارزش', 'وضعیت']
+    const rows = filteredProducts.map((p: any) => [
+      p.barcode || '-', p.title, p.category || '-', p.stock, p.minStock,
+      p.purchase_price, p.sale_price, p.stock * p.purchase_price,
+      p.stock <= 0 ? 'تمام شده' : p.stock <= p.minStock ? 'کم‌موجودی' : 'موجود'
+    ])
+    downloadExcel('inventory-products.csv', headers, rows)
   }
 
   const kpis = [
@@ -437,7 +461,7 @@ export default function Inventory() {
           </div>
         )}
 
-        <div className="flex flex-wrap gap-3 mb-4">
+        <div className="flex flex-wrap gap-3 mb-4 items-center">
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={fa.admin.search} className="input-field flex-1 min-w-[200px]" />
           <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="input-field w-40 text-sm">
             <option value="all">همه دسته‌ها</option>
@@ -449,6 +473,14 @@ export default function Inventory() {
             <option value="low">کم\u200cموجودی</option>
             <option value="out">تمام شده</option>
           </select>
+          <button onClick={() => setShowProductsPrintDialog(true)} className="text-xs px-3 py-2 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary, border: `1px solid ${cardBorder}` }}>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
+            چاپ A4
+          </button>
+          <button onClick={handleProductsExcel} className="text-xs px-3 py-2 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary, border: `1px solid ${cardBorder}` }}>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+            خروجی اکسل
+          </button>
         </div>
 
         <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
@@ -913,6 +945,7 @@ export default function Inventory() {
         </>
       )}
       <PrintDialog open={showPrintDialog} title="چاپ گزارش انبار" totalCount={reportData.byCategory.length} onClose={() => setShowPrintDialog(false)} onPrint={(range) => { setShowPrintDialog(false); handlePrintA4(range) }} />
+      <PrintDialog open={showProductsPrintDialog} title="چاپ لیست موجودی" totalCount={filteredProducts.length} onClose={() => setShowProductsPrintDialog(false)} onPrint={(range) => { setShowProductsPrintDialog(false); handleProductsPrint(range) }} />
     </div>
   )
 }
