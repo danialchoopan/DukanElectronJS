@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { t, fa } from '../i18n'
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function Sidebar({ currentView, onNavigate }: Props) {
+  const [collapsed, setCollapsed] = useState(false)
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
   const { theme, setTheme, language, setLanguage } = useSettingsStore()
@@ -31,13 +33,15 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
   ]
 
   const primary = '#006194'
+  const sidebarWidth = collapsed ? 64 : 220
 
   return (
     <div
-      className="h-full flex flex-col"
+      className="h-full flex flex-col relative"
       style={{
-        width: 220,
-        minWidth: 220,
+        width: sidebarWidth,
+        minWidth: sidebarWidth,
+        transition: 'width 0.25s ease, min-width 0.25s ease',
         background: isDark
           ? 'linear-gradient(180deg, #0f1a2e 0%, #162033 100%)'
           : 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
@@ -47,9 +51,24 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
           : '-4px 0 24px rgba(0,0,0,0.04)',
       }}
     >
+      {/* Collapse Toggle Button */}
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center z-10"
+        style={{
+          backgroundColor: primary,
+          color: '#fff',
+          boxShadow: '0 2px 8px rgba(0,97,148,0.3)',
+        }}
+      >
+        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points={collapsed ? '9 18 15 12 9 6' : '15 18 9 12 15 6'} />
+        </svg>
+      </button>
+
       {/* Logo */}
       <div
-        className="px-4 py-4 flex items-center gap-3"
+        className={`flex items-center ${collapsed ? 'justify-center px-0 py-4' : 'px-4 py-4 gap-3'}`}
         style={{
           borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
           background: isDark
@@ -58,7 +77,7 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
         }}
       >
         <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center"
+          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
           style={{
             background: `linear-gradient(135deg, ${primary}, #007bb9)`,
             boxShadow: '0 2px 8px rgba(0,97,148,0.3)',
@@ -66,11 +85,11 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
         >
           <StoreLogo />
         </div>
-        <div>
-          <span className="text-base font-extrabold tracking-tight" style={{ color: isDark ? '#f1f5f9' : '#0f172a' }}>
+        {!collapsed && (
+          <span className="text-base font-extrabold tracking-tight whitespace-nowrap" style={{ color: isDark ? '#f1f5f9' : '#0f172a' }}>
             {ui.app.title}
           </span>
-        </div>
+        )}
       </div>
 
       {/* Nav Items */}
@@ -83,7 +102,7 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
               <button
                 key={item.key}
                 onClick={() => onNavigate(item.key)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group relative"
+                className={`w-full flex items-center rounded-xl text-sm font-semibold transition-all duration-200 group relative ${collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5'}`}
                 style={{
                   backgroundColor: active
                     ? isDark ? 'rgba(0,97,148,0.2)' : 'rgba(0,97,148,0.08)'
@@ -98,6 +117,7 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
                 onMouseLeave={(e) => {
                   if (!active) e.currentTarget.style.backgroundColor = 'transparent'
                 }}
+                title={collapsed ? item.label : undefined}
               >
                 {active && (
                   <div
@@ -111,7 +131,7 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
                 <span style={{ color: active ? (isDark ? '#93ccff' : primary) : undefined }}>
                   {item.icon}
                 </span>
-                <span>{item.label}</span>
+                {!collapsed && <span>{item.label}</span>}
               </button>
             )
           })}
@@ -120,86 +140,141 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
 
       {/* Bottom Controls */}
       <div
-        className="px-3 py-3 space-y-2.5"
+        className={`py-3 space-y-2.5 ${collapsed ? 'px-2' : 'px-3'}`}
         style={{
           borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
           background: isDark ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.02)',
         }}
       >
         {/* User Row */}
-        <div className="flex items-center gap-2.5 px-1">
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-            style={{
-              background: `linear-gradient(135deg, ${primary}, #007bb9)`,
-              color: '#ffffff',
-              boxShadow: '0 2px 6px rgba(0,97,148,0.25)',
-            }}
-          >
-            {user?.name?.charAt(0) || '?'}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-xs font-bold truncate" style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              {user?.name}
-            </div>
-            <div className="text-[10px] font-medium" style={{ color: isDark ? '#64748b' : '#94a3b8' }}>
-              {user?.role === 'admin' ? fa.admin.admin : fa.admin.cashier}
+        {collapsed ? (
+          <div className="flex justify-center">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+              title={user?.name}
+              style={{
+                background: `linear-gradient(135deg, ${primary}, #007bb9)`,
+                color: '#ffffff',
+                boxShadow: '0 2px 6px rgba(0,97,148,0.25)',
+              }}
+            >
+              {user?.name?.charAt(0) || '?'}
             </div>
           </div>
-          <button
-            onClick={logout}
-            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200"
-            style={{ color: isDark ? '#64748b' : '#94a3b8' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.08)'
-              e.currentTarget.style.color = '#ef4444'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent'
-              e.currentTarget.style.color = isDark ? '#64748b' : '#94a3b8'
-            }}
-            title={ui.nav.logout}
-          >
-            <LogoutIcon className="w-4 h-4" />
-          </button>
-        </div>
+        ) : (
+          <div className="flex items-center gap-2.5 px-1">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+              style={{
+                background: `linear-gradient(135deg, ${primary}, #007bb9)`,
+                color: '#ffffff',
+                boxShadow: '0 2px 6px rgba(0,97,148,0.25)',
+              }}
+            >
+              {user?.name?.charAt(0) || '?'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-bold truncate" style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}>
+                {user?.name}
+              </div>
+              <div className="text-[10px] font-medium" style={{ color: isDark ? '#64748b' : '#94a3b8' }}>
+                {user?.role === 'admin' ? fa.admin.admin : fa.admin.cashier}
+              </div>
+            </div>
+            <button
+              onClick={logout}
+              className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200"
+              style={{ color: isDark ? '#64748b' : '#94a3b8' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.08)'
+                e.currentTarget.style.color = '#ef4444'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent'
+                e.currentTarget.style.color = isDark ? '#64748b' : '#94a3b8'
+              }}
+              title={ui.nav.logout}
+            >
+              <LogoutIcon className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* Theme & Language Row */}
-        <div className="flex items-center justify-between px-1">
-          <button
-            onClick={() => setLanguage(language === 'fa' ? 'en' : 'fa')}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200"
-            style={{
-              color: isDark ? '#94a3b8' : '#64748b',
-              background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'
-            }}
-          >
-            <LanguageIcon className="w-3.5 h-3.5" />
-            {language === 'fa' ? 'EN' : 'FA'}
-          </button>
-          <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
-            style={{
-              color: isDark ? '#fbbf24' : '#64748b',
-              background: isDark ? 'rgba(251,191,36,0.08)' : 'rgba(0,0,0,0.04)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = isDark ? 'rgba(251,191,36,0.15)' : 'rgba(0,0,0,0.06)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = isDark ? 'rgba(251,191,36,0.08)' : 'rgba(0,0,0,0.04)'
-            }}
-          >
-            {isDark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
-          </button>
-        </div>
+        {collapsed ? (
+          <div className="flex flex-col items-center gap-2">
+            <button
+              onClick={() => setLanguage(language === 'fa' ? 'en' : 'fa')}
+              className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
+              title={language === 'fa' ? 'English' : 'فارسی'}
+              style={{
+                color: isDark ? '#94a3b8' : '#64748b',
+                background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'
+              }}
+            >
+              <LanguageIcon className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
+              title={isDark ? ui.admin.lightMode : ui.admin.darkMode}
+              style={{
+                color: isDark ? '#fbbf24' : '#64748b',
+                background: isDark ? 'rgba(251,191,36,0.08)' : 'rgba(0,0,0,0.04)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = isDark ? 'rgba(251,191,36,0.15)' : 'rgba(0,0,0,0.06)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = isDark ? 'rgba(251,191,36,0.08)' : 'rgba(0,0,0,0.04)'
+              }}
+            >
+              {isDark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between px-1">
+            <button
+              onClick={() => setLanguage(language === 'fa' ? 'en' : 'fa')}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200"
+              style={{
+                color: isDark ? '#94a3b8' : '#64748b',
+                background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'
+              }}
+            >
+              <LanguageIcon className="w-3.5 h-3.5" />
+              {language === 'fa' ? 'EN' : 'FA'}
+            </button>
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
+              style={{
+                color: isDark ? '#fbbf24' : '#64748b',
+                background: isDark ? 'rgba(251,191,36,0.08)' : 'rgba(0,0,0,0.04)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = isDark ? 'rgba(251,191,36,0.15)' : 'rgba(0,0,0,0.06)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = isDark ? 'rgba(251,191,36,0.08)' : 'rgba(0,0,0,0.04)'
+              }}
+            >
+              {isDark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
