@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSettingsStore } from '../store/settingsStore'
-import { fa } from '../i18n'
 
 type SearchResult = {
   id: string
-  type: 'screen' | 'product' | 'customer' | 'setting'
+  type: 'screen' | 'product' | 'customer' | 'setting' | 'feature'
   title: string
   subtitle: string
   icon: JSX.Element
@@ -16,6 +15,10 @@ interface Props {
   onClose: () => void
   onNavigate: (view: string) => void
 }
+
+const screenIcon = <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+const productIcon = <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+const customerIcon = <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
 
 export default function GlobalSearch({ open, onClose, onNavigate }: Props) {
   const [query, setQuery] = useState('')
@@ -33,12 +36,7 @@ export default function GlobalSearch({ open, onClose, onNavigate }: Props) {
   const primary = '#006194'
 
   useEffect(() => {
-    if (open) {
-      setQuery('')
-      setResults([])
-      setSelectedIndex(0)
-      setTimeout(() => inputRef.current?.focus(), 50)
-    }
+    if (open) { setQuery(''); setResults([]); setSelectedIndex(0); setTimeout(() => inputRef.current?.focus(), 50) }
   }, [open])
 
   useEffect(() => {
@@ -47,10 +45,7 @@ export default function GlobalSearch({ open, onClose, onNavigate }: Props) {
       if (e.key === 'Escape') onClose()
       if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedIndex(i => Math.min(i + 1, results.length - 1)) }
       if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedIndex(i => Math.max(i - 1, 0)) }
-      if (e.key === 'Enter' && results[selectedIndex]) {
-        results[selectedIndex].action()
-        onClose()
-      }
+      if (e.key === 'Enter' && results[selectedIndex]) { results[selectedIndex].action(); onClose() }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
@@ -60,24 +55,58 @@ export default function GlobalSearch({ open, onClose, onNavigate }: Props) {
     if (!query.trim() || !open) { setResults([]); return }
     setLoading(true)
     const q = query.toLowerCase()
-
     const searchResults: SearchResult[] = []
 
-    // Search screens
-    const screens: SearchResult[] = [
-      { id: 'nav-dashboard', type: 'screen', title: fa.nav.dashboard, subtitle: 'داشبورد', action: () => onNavigate('dashboard'), icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> },
-      { id: 'nav-pos', type: 'screen', title: fa.nav.checkout, subtitle: 'فروش', action: () => onNavigate('pos'), icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg> },
-      { id: 'nav-inventory', type: 'screen', title: fa.nav.inventory, subtitle: 'انبارداری', action: () => onNavigate('inventory'), icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg> },
-      { id: 'nav-accounting', type: 'screen', title: fa.nav.accounting, subtitle: 'حسابداری', action: () => onNavigate('accounting'), icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/></svg> },
-      { id: 'nav-sales', type: 'screen', title: fa.dashboard.recentSales, subtitle: 'آخرین فروش\u200cها', action: () => onNavigate('sales'), icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> },
-      { id: 'nav-addproduct', type: 'screen', title: fa.admin.addProduct, subtitle: 'محصولات', action: () => onNavigate('addproduct'), icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> },
-      { id: 'nav-customers', type: 'screen', title: fa.nav.customers, subtitle: 'مشتریان', action: () => onNavigate('customers'), icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> },
-      { id: 'nav-categories', type: 'screen', title: fa.nav.categories, subtitle: 'دسته\u200cبندی\u200cها', action: () => onNavigate('categories'), icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/></svg> },
-      { id: 'nav-admin', type: 'screen', title: fa.nav.admin, subtitle: 'تنظیمات', action: () => onNavigate('admin'), icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> },
+    // All searchable items including screens and sub-features
+    const allItems: SearchResult[] = [
+      // Screens
+      { id: 'nav-dashboard', type: 'screen', title: 'داشبورد', subtitle: 'صفحه اصلی', action: () => onNavigate('dashboard'), icon: screenIcon },
+      { id: 'nav-pos', type: 'screen', title: 'فروش', subtitle: 'صفحه فروش', action: () => onNavigate('pos'), icon: screenIcon },
+      { id: 'nav-inventory', type: 'screen', title: 'انبارداری', subtitle: 'مدیریت موجودی', action: () => onNavigate('inventory'), icon: screenIcon },
+      { id: 'nav-accounting', type: 'screen', title: 'حسابداری', subtitle: 'مدیریت مالی', action: () => onNavigate('accounting'), icon: screenIcon },
+      { id: 'nav-sales', type: 'screen', title: 'آخرین فروش\u200cها', subtitle: 'تاریخچه فروش', action: () => onNavigate('sales'), icon: screenIcon },
+      { id: 'nav-addproduct', type: 'screen', title: 'محصولات', subtitle: 'مدیریت کالاها', action: () => onNavigate('addproduct'), icon: screenIcon },
+      { id: 'nav-customers', type: 'screen', title: 'مشتریان', subtitle: 'مدیریت مشتریان', action: () => onNavigate('customers'), icon: screenIcon },
+      { id: 'nav-categories', type: 'screen', title: 'دسته\u200cبندی\u200cها', subtitle: 'مدیریت دسته‌بندی', action: () => onNavigate('categories'), icon: screenIcon },
+      { id: 'nav-admin', type: 'screen', title: 'تنظیمات', subtitle: 'مدیریت سیستم', action: () => onNavigate('admin'), icon: screenIcon },
+
+      // Settings sub-features
+      { id: 'set-shopname', type: 'setting', title: 'نام فروشگاه', subtitle: 'تنظیمات \u2192 نام فروشگاه', action: () => onNavigate('admin'), icon: screenIcon },
+      { id: 'set-address', type: 'setting', title: 'آدرس فروشگاه', subtitle: 'تنظیمات \u2192 آدرس', action: () => onNavigate('admin'), icon: screenIcon },
+      { id: 'set-phone', type: 'setting', title: 'تلفن فروشگاه', subtitle: 'تنظیمات \u2192 تلفن', action: () => onNavigate('admin'), icon: screenIcon },
+      { id: 'set-tax', type: 'setting', title: 'مالیات بر ارزش افزوده', subtitle: 'تنظیمات \u2192 مالیات', action: () => onNavigate('admin'), icon: screenIcon },
+      { id: 'set-theme', type: 'setting', title: 'تنظیمات ظاهری', subtitle: 'تنظیمات \u2192 تم و زبان', action: () => onNavigate('admin'), icon: screenIcon },
+      { id: 'set-backup', type: 'setting', title: 'پشتیبان\u200cگیری', subtitle: 'تنظیمات \u2192 پشتیبانی', action: () => onNavigate('admin'), icon: screenIcon },
+      { id: 'set-users', type: 'setting', title: 'مدیریت کاربران', subtitle: 'تنظیمات \u2192 کاربران', action: () => onNavigate('admin'), icon: screenIcon },
+      { id: 'set-shortcuts', type: 'setting', title: 'میانبرها', subtitle: 'تنظیمات \u2192 میانبرهای کلیدی', action: () => onNavigate('admin'), icon: screenIcon },
+      { id: 'set-receipt', type: 'setting', title: 'تنظیمات فاکتور', subtitle: 'تنظیمات \u2192 پایان فاکتور', action: () => onNavigate('admin'), icon: screenIcon },
+
+      // Accounting sub-features
+      { id: 'acc-dashboard', type: 'feature', title: 'داشبورد حسابداری', subtitle: 'حسابداری \u2192 داشبورد', action: () => onNavigate('accounting'), icon: screenIcon },
+      { id: 'acc-accounts', type: 'feature', title: 'دفتر حسابها', subtitle: 'حسابداری \u2192 دفتر حسابها', action: () => onNavigate('accounting'), icon: screenIcon },
+      { id: 'acc-journal', type: 'feature', title: 'روزنامه', subtitle: 'حسابداری \u2192 روزنامه', action: () => onNavigate('accounting'), icon: screenIcon },
+      { id: 'acc-trial', type: 'feature', title: 'تراز آزمایشی', subtitle: 'حسابداری \u2192 تراز آزمایشی', action: () => onNavigate('accounting'), icon: screenIcon },
+      { id: 'acc-pnl', type: 'feature', title: 'صورت سود و زیان', subtitle: 'حسابداری \u2192 سود و زیان', action: () => onNavigate('accounting'), icon: screenIcon },
+      { id: 'acc-balance', type: 'feature', title: 'ترازنامه', subtitle: 'حسابداری \u2192 ترازنامه', action: () => onNavigate('accounting'), icon: screenIcon },
+      { id: 'acc-aging', type: 'feature', title: 'مانده مشتریان', subtitle: 'حسابداری \u2192 مانده مشتریان', action: () => onNavigate('accounting'), icon: screenIcon },
+      { id: 'acc-expenses', type: 'feature', title: 'هزینه\u200cها', subtitle: 'حسابداری \u2192 هزینه\u200cها', action: () => onNavigate('accounting'), icon: screenIcon },
+      { id: 'acc-periods', type: 'feature', title: 'دوره\u200cهای مالی', subtitle: 'حسابداری \u2192 دوره\u200cهای مالی', action: () => onNavigate('accounting'), icon: screenIcon },
+      { id: 'acc-cashflow', type: 'feature', title: 'صورت جریان نقدی', subtitle: 'حسابداری \u2192 جریان نقدی', action: () => onNavigate('accounting'), icon: screenIcon },
+
+      // Inventory sub-features
+      { id: 'inv-products', type: 'feature', title: 'موجودی کالا', subtitle: 'انبارداری \u2192 موجودی', action: () => onNavigate('inventory'), icon: screenIcon },
+      { id: 'inv-report', type: 'feature', title: 'گزارش انبار', subtitle: 'انبارداری \u2192 گزارش', action: () => onNavigate('inventory'), icon: screenIcon },
+      { id: 'inv-history', type: 'feature', title: 'تاریخچه تغییرات', subtitle: 'انبارداری \u2192 تاریخچه', action: () => onNavigate('inventory'), icon: screenIcon },
+
+      // Dashboard sub-features
+      { id: 'dash-sales', type: 'feature', title: 'آمار فروش', subtitle: 'داشبورد \u2192 آمار', action: () => onNavigate('dashboard'), icon: screenIcon },
+      { id: 'dash-performance', type: 'feature', title: 'عملکرد صندوک\u200cدارها', subtitle: 'داشبورد \u2192 عملکرد', action: () => onNavigate('dashboard'), icon: screenIcon },
+      { id: 'dash-top', type: 'feature', title: 'پرفروش\u200cترین کالاها', subtitle: 'داشبورد \u2192 پرفروش\u200cها', action: () => onNavigate('dashboard'), icon: screenIcon },
     ]
-    screens.forEach(s => {
-      if (s.title.toLowerCase().includes(q) || s.subtitle.toLowerCase().includes(q)) {
-        searchResults.push(s)
+
+    allItems.forEach(item => {
+      if (item.title.includes(q) || item.subtitle.includes(q) || item.title.toLowerCase().includes(q) || item.subtitle.toLowerCase().includes(q)) {
+        searchResults.push(item)
       }
     })
 
@@ -86,12 +115,9 @@ export default function GlobalSearch({ open, onClose, onNavigate }: Props) {
       if (r.success && r.data) {
         r.data.slice(0, 5).forEach((p: any) => {
           searchResults.push({
-            id: `product-${p.id}`,
-            type: 'product',
-            title: p.title,
-            subtitle: `${p.category || ''} \u2014 ${p.stock} عدد`,
-            action: () => onNavigate('inventory'),
-            icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>,
+            id: `product-${p.id}`, type: 'product', title: p.title,
+            subtitle: `${p.category || ''} — ${p.stock} عدد — ${p.sale_price.toLocaleString('fa-IR')} تومان`,
+            action: () => onNavigate('inventory'), icon: productIcon,
           })
         })
       }
@@ -104,12 +130,9 @@ export default function GlobalSearch({ open, onClose, onNavigate }: Props) {
       if (r.success && r.data) {
         r.data.slice(0, 3).forEach((c: any) => {
           searchResults.push({
-            id: `customer-${c.id}`,
-            type: 'customer',
-            title: c.name,
-            subtitle: `${c.phone || ''} \u2014 ${c.customerType === 'legal' ? 'حقوقی' : 'حقیقی'}`,
-            action: () => onNavigate('customers'),
-            icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>,
+            id: `customer-${c.id}`, type: 'customer', title: c.name,
+            subtitle: `${c.phone || ''} — ${c.customerType === 'legal' ? 'حقوقی' : 'حقیقی'}`,
+            action: () => onNavigate('customers'), icon: customerIcon,
           })
         })
       }
@@ -120,6 +143,8 @@ export default function GlobalSearch({ open, onClose, onNavigate }: Props) {
 
   if (!open) return null
 
+  const typeLabels: Record<string, string> = { screen: 'صفحه', product: 'محصول', customer: 'مشتری', setting: 'تنظیم', feature: 'ویژگی' }
+
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]" style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }} onClick={onClose}>
       <div className="w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }} onClick={e => e.stopPropagation()}>
@@ -129,16 +154,9 @@ export default function GlobalSearch({ open, onClose, onNavigate }: Props) {
           {query && <button onClick={() => setQuery('')} className="text-xs px-2 py-1 rounded" style={{ color: textSecondary, background: isDark ? '#334155' : '#f1f5f9' }}>پاک کردن</button>}
           <kbd className="text-[10px] px-1.5 py-0.5 rounded font-mono" style={{ color: textSecondary, background: isDark ? '#334155' : '#f1f5f9' }}>ESC</kbd>
         </div>
-
         <div className="max-h-[50vh] overflow-y-auto">
-          {loading && (
-            <div className="flex items-center justify-center py-8">
-              <div className="w-6 h-6 border-2 rounded-full animate-spin" style={{ borderColor: primary, borderTopColor: 'transparent' }} />
-            </div>
-          )}
-          {!loading && query && results.length === 0 && (
-            <div className="text-center py-8 text-sm" style={{ color: textSecondary }}>نتیجه\u200cای یافت نشد</div>
-          )}
+          {loading && <div className="flex items-center justify-center py-8"><div className="w-6 h-6 border-2 rounded-full animate-spin" style={{ borderColor: primary, borderTopColor: 'transparent' }} /></div>}
+          {!loading && query && results.length === 0 && <div className="text-center py-8 text-sm" style={{ color: textSecondary }}>نتیجه‌ای یافت نشد</div>}
           {!loading && results.map((r, i) => (
             <div key={r.id} onClick={() => { r.action(); onClose() }}
               className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-all"
@@ -150,18 +168,13 @@ export default function GlobalSearch({ open, onClose, onNavigate }: Props) {
                 <div className="text-xs truncate" style={{ color: textSecondary }}>{r.subtitle}</div>
               </div>
               <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
-                {r.type === 'screen' ? 'صفحه' : r.type === 'product' ? 'محصول' : r.type === 'customer' ? 'مشتری' : 'تنظیم'}
+                {typeLabels[r.type] || r.type}
               </span>
             </div>
           ))}
         </div>
-
         <div className="flex items-center justify-between px-4 py-2 text-[10px]" style={{ borderTop: `1px solid ${cardBorder}`, color: textSecondary }}>
-          <div className="flex gap-3">
-            <span>↑↓ ناوبری</span>
-            <span>↵ انتخاب</span>
-            <span>ESC بستن</span>
-          </div>
+          <div className="flex gap-3"><span>↑↓ ناوبری</span><span>↵ انتخاب</span><span>ESC بستن</span></div>
           <span>{results.length} نتیجه</span>
         </div>
       </div>
