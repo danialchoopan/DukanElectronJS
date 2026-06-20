@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [topProducts, setTopProducts] = useState<any[]>([])
   const [totalExpenses, setTotalExpenses] = useState(0)
   const [returnStats, setReturnStats] = useState({ totalReturns: 0, totalRefund: 0, todayReturns: 0 })
+  const [lowStockAlerts, setLowStockAlerts] = useState<any[]>([])
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [selectedSale, setSelectedSale] = useState<any>(null)
@@ -47,12 +48,13 @@ export default function Dashboard() {
       e = '2099-12-31T23:59:59'
     }
 
-    const [sl, perf, tp, exp, ret] = await Promise.all([
+    const [sl, perf, tp, exp, ret, ls] = await Promise.all([
       window.api.sales.getByDateRange(s, e),
       window.api.sales.getUserPerformance(startDate || undefined, endDate ? endDate + 'T23:59:59' : undefined),
       window.api.sales.getTopProducts(startDate || undefined, endDate ? endDate + 'T23:59:59' : undefined),
       window.api.expenses.getTotal(),
       window.api.returns.getStats(),
+      window.api.products.getLowStock(),
     ])
 
     if (sl.success && sl.data) setSales(sl.data)
@@ -60,6 +62,7 @@ export default function Dashboard() {
     if (tp.success && tp.data) setTopProducts(tp.data)
     if (exp.success && exp.data !== undefined) setTotalExpenses(exp.data)
     if (ret.success && ret.data) setReturnStats(ret.data)
+    if (ls.success && ls.data) setLowStockAlerts(ls.data)
   }
 
   useEffect(() => { loadData() }, [startDate, endDate])
@@ -244,6 +247,21 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      {lowStockAlerts.length > 0 && (
+        <div className="rounded-2xl p-4 border mb-6" style={{ backgroundColor: isDark ? '#451a03' : '#fef3c7', borderColor: '#f59e0b' }}>
+          <div className="flex items-center gap-2 mb-3">
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span className="text-sm font-bold" style={{ color: '#f59e0b' }}>کالاهای کم‌موجودی ({lowStockAlerts.length})</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {lowStockAlerts.slice(0, 8).map((p: any) => (
+              <span key={p.id} className="px-3 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>{p.title} ({p.stock})</span>
+            ))}
+            {lowStockAlerts.length > 8 && <span className="text-xs" style={{ color: '#f59e0b' }}>+{lowStockAlerts.length - 8} بیشتر</span>}
+          </div>
+        </div>
+      )}
 
       {/* Performance & Top Products */}
       <div className="grid grid-cols-2 gap-4 mb-6">

@@ -42,8 +42,8 @@ const api = {
       ipcRenderer.invoke('products:update', { id, data }),
     delete: (id: number): Promise<VoidResponse> =>
       ipcRenderer.invoke('products:delete', { id }),
-    updateStock: (productId: number, quantityChange: number): Promise<VoidResponse> =>
-      ipcRenderer.invoke('products:updateStock', { productId, quantityChange }),
+    updateStock: (productId: number, quantityChange: number, reason?: string): Promise<VoidResponse> =>
+      ipcRenderer.invoke('products:updateStock', { productId, quantityChange, reason }),
     getLowStock: (): Promise<IPCResponse<Product[]>> =>
       ipcRenderer.invoke('products:lowStock'),
     getLoose: (): Promise<IPCResponse<Product[]>> =>

@@ -20,6 +20,7 @@ export default function Inventory() {
   const [filterStock, setFilterStock] = useState('all')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [restockQty, setRestockQty] = useState('')
+  const [restockReason, setRestockReason] = useState('')
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(10)
   const [catPage, setCatPage] = useState(0)
@@ -32,6 +33,7 @@ export default function Inventory() {
   const [reportData, setReportData] = useState<{ byCategory: any[]; slowMoving: any[] }>({ byCategory: [], slowMoving: [] })
   const [returnStats, setReturnStats] = useState({ totalReturns: 0, totalRefund: 0, todayReturns: 0 })
   const [categories, setCategories] = useState<string[]>([])
+  const [viewProduct, setViewProduct] = useState<Product | null>(null)
 
   const isDark = document.documentElement.classList.contains('dark')
   const cardBg = isDark ? '#1e293b' : '#ffffff'
@@ -82,9 +84,10 @@ export default function Inventory() {
     if (!selectedProduct || !restockQty) return
     const qty = parseInt(restockQty)
     if (qty <= 0) return
-    await window.api.products.updateStock(selectedProduct.id, qty)
+    await window.api.products.updateStock(selectedProduct.id, qty, restockReason || undefined)
     setSelectedProduct(null)
     setRestockQty('')
+    setRestockReason('')
     loadProducts()
     loadLowStock()
   }
@@ -209,6 +212,31 @@ export default function Inventory() {
     downloadExcel('inventory-products.csv', headers, rows)
   }
 
+  const handlePrintBarcode = (p: Product) => {
+    const barcodeSvg = (() => {
+      const code = p.barcode || '000000'
+      let bars = ''
+      let x = 5
+      for (let i = 0; i < code.length; i++) {
+        const digit = parseInt(code[i]) || 0
+        const barWidth = (digit % 3) + 1
+        const gap = (digit % 2) + 1
+        if (i % 2 === 0) {
+          bars += `<rect x="${x}" y="0" width="${barWidth}" height="50" fill="#000"/>`
+        }
+        x += barWidth + gap
+      }
+      return `<svg width="200" height="60" xmlns="http://www.w3.org/2000/svg">${bars}<text x="100" y="58" text-anchor="middle" font-size="9" font-family="monospace" fill="#000">${code}</text></svg>`
+    })()
+    const html = `<div style="text-align:center; padding:10px; border:1px solid #ddd; border-radius:8px; width:220px; display:inline-block;">
+      <div style="font-size:8pt; color:#666;">فروشگاه</div>
+      <div style="margin:5px auto;">${barcodeSvg}</div>
+      <div style="font-size:10pt; font-weight:bold; margin-top:4px;">${p.title}</div>
+      <div style="font-size:12pt; font-weight:bold; color:#006194; margin-top:2px;">${p.sale_price.toLocaleString('fa-IR')} تومان</div>
+    </div>`
+    printA4Report(html, 'لیبل بارکد')
+  }
+
   const kpis = [
     {
       label: fa.admin.products,
@@ -293,7 +321,11 @@ export default function Inventory() {
       if (entry.action === 'create' && entry.entityType === 'product') return details.title || details.barcode || ''
       if (entry.action === 'create' && entry.entityType === 'expense') return details.category ? `${details.category} — ${details.amount?.toLocaleString('fa-IR')} تومان` : ''
       if (entry.action === 'create' && entry.entityType === 'sale') return details.total ? `${details.total.toLocaleString('fa-IR')} تومان` : ''
-      if (entry.action === 'restock') return details.quantityChange ? `${details.quantityChange > 0 ? '+' : ''}${details.quantityChange} عدد` : ''
+      if (entry.action === 'restock') {
+        const parts = [details.quantityChange ? `${details.quantityChange > 0 ? '+' : ''}${details.quantityChange} عدد` : '']
+        if (details.reason) parts.push(details.reason)
+        return parts.filter(Boolean).join(' — ')
+      }
       if (entry.action === 'return') return details.quantity ? `${details.quantity} عدد — ${details.refundAmount?.toLocaleString('fa-IR')} تومان` : ''
       if (entry.action === 'update' && details.fields) return `فیلدها: ${details.fields.join(', ')}`
       return ''
@@ -450,13 +482,22 @@ export default function Inventory() {
         {selectedProduct && (
           <div className="rounded-2xl p-4 mb-4 border-2" style={{ backgroundColor: cardBg, borderColor: '#3b82f6' }}>
             <h3 className="font-bold mb-3" style={{ color: textPrimary }}>تامین موجودی: {selectedProduct.title}</h3>
-            <div className="flex gap-3 items-end">
+            <div className="flex gap-3 items-end flex-wrap">
               <div>
                 <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>موجودی فعلی: {selectedProduct.stock}</label>
                 <input type="number" value={restockQty} onChange={(e) => setRestockQty(e.target.value)} className="input-field text-sm" placeholder="تعداد" />
               </div>
+              {restockQty && parseInt(restockQty) > 0 && (
+                <div className="text-xs font-bold px-3 py-2 rounded-lg" style={{ backgroundColor: isDark ? 'rgba(34,197,94,0.15)' : '#dcfce7', color: '#22c55e' }}>
+                  {selectedProduct.stock} → {selectedProduct.stock + parseInt(restockQty)}
+                </div>
+              )}
+              <div className="flex-1 min-w-[180px]">
+                <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>دلیل تامین</label>
+                <input value={restockReason} onChange={(e) => setRestockReason(e.target.value)} className="input-field text-sm" placeholder="مثال: تامین فروشنده" />
+              </div>
               <button onClick={handleRestock} disabled={!restockQty || parseInt(restockQty) <= 0} className="btn-success disabled:opacity-40">+ افزودن</button>
-              <button onClick={() => setSelectedProduct(null)} className="text-sm px-3 py-2 rounded-xl font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: btnColor }}>{fa.admin.cancel}</button>
+              <button onClick={() => { setSelectedProduct(null); setRestockReason('') }} className="text-sm px-3 py-2 rounded-xl font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: btnColor }}>{fa.admin.cancel}</button>
             </div>
           </div>
         )}
@@ -520,6 +561,7 @@ export default function Inventory() {
                 const margin = p.purchase_price > 0 ? (((p.sale_price - p.purchase_price) / p.purchase_price) * 100).toFixed(1) : '0'
                 return (
                 <tr key={p.id} style={{ borderBottom: `1px solid ${cardBorder}`, backgroundColor: rowBg }}
+                  onClick={() => setViewProduct(p)}
                   onMouseEnter={(e) => { if (!isZero && !isLow) e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.03)' }}
                   onMouseLeave={(e) => { if (!isZero && !isLow) e.currentTarget.style.backgroundColor = 'transparent' }}>
                   <td className="px-4 py-2" style={{ color: textSecondary }}>{p.id}</td>
@@ -554,7 +596,12 @@ export default function Inventory() {
                     }}>%{margin}</span>
                   </td>
                   <td className="px-4 py-2">
-                    <button onClick={() => { setSelectedProduct(p); setRestockQty('') }} className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: '#22c55e' }}>+ تامین</button>
+                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                      <button onClick={(e) => { e.stopPropagation(); setSelectedProduct(p); setRestockQty(''); setRestockReason('') }} className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: '#22c55e' }}>+ تامین</button>
+                      <button onClick={(e) => { e.stopPropagation(); handlePrintBarcode(p) }} className="text-xs font-bold px-2 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: '#3b82f6' }}>
+                        <svg className="w-3 h-3 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                      </button>
+                    </div>
                   </td>
                 </tr>
                 )
@@ -946,6 +993,32 @@ export default function Inventory() {
       )}
       <PrintDialog open={showPrintDialog} title="چاپ گزارش انبار" totalCount={reportData.byCategory.length} onClose={() => setShowPrintDialog(false)} onPrint={(range) => { setShowPrintDialog(false); handlePrintA4(range) }} />
       <PrintDialog open={showProductsPrintDialog} title="چاپ لیست موجودی" totalCount={filteredProducts.length} onClose={() => setShowProductsPrintDialog(false)} onPrint={(range) => { setShowProductsPrintDialog(false); handleProductsPrint(range) }} />
+
+      {viewProduct && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setViewProduct(null)}>
+          <div className="rounded-2xl p-6 max-w-lg w-full mx-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-4 mb-4">
+              {viewProduct.imageBase64 && <img src={viewProduct.imageBase64} className="w-20 h-20 rounded-xl object-cover" alt="" />}
+              <div>
+                <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{viewProduct.title}</h3>
+                <p className="text-sm" style={{ color: textSecondary }}>{viewProduct.category || '-'}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}><div className="text-xs" style={{ color: textSecondary }}>بارکد</div><div className="text-sm font-mono font-bold" style={{ color: textPrimary }}>{viewProduct.barcode}</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}><div className="text-xs" style={{ color: textSecondary }}>موجودی</div><div className="text-sm font-bold" style={{ color: viewProduct.stock <= 0 ? '#ef4444' : '#22c55e' }}>{viewProduct.stock}</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}><div className="text-xs" style={{ color: textSecondary }}>قیمت خرید</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{viewProduct.purchase_price.toLocaleString('fa-IR')}</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}><div className="text-xs" style={{ color: textSecondary }}>قیمت فروش</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{viewProduct.sale_price.toLocaleString('fa-IR')}</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}><div className="text-xs" style={{ color: textSecondary }}>حداقل موجودی</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{viewProduct.minStock}</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}><div className="text-xs" style={{ color: textSecondary }}>واحد</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{viewProduct.unit === 'weight' ? 'کیلوگرم' : 'عدد'}</div></div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => { setViewProduct(null); setSelectedProduct(viewProduct); setRestockQty(''); setRestockReason('') }} className="flex-1 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: '#22c55e', color: '#fff' }}>تامین موجودی</button>
+              <button onClick={() => { setViewProduct(null) }} className="flex-1 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: '#006194', color: '#fff' }}>بستن</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

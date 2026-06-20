@@ -103,10 +103,10 @@ export function registerAllHandlers(): void {
       return { success: true, data: result }
     } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
   })
-  ipcMain.handle('products:updateStock', (_event, a: { productId: number; quantityChange: number }) => {
+  ipcMain.handle('products:updateStock', (_event, a: { productId: number; quantityChange: number; reason?: string }) => {
     try {
       const result = products.updateStock(a.productId, a.quantityChange)
-      auditRepo.createAuditEntry(null, 'restock', 'product', a.productId, JSON.stringify({ quantityChange: a.quantityChange }))
+      auditRepo.createAuditEntry(null, 'restock', 'product', a.productId, JSON.stringify({ quantityChange: a.quantityChange, reason: a.reason || '' }))
       return { success: true, data: result }
     } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
   })
