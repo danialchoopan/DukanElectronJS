@@ -77,11 +77,29 @@ export default function SalesHistory() {
     }
   }
 
+  const handleReturnAllItems = async () => {
+    if (!selectedSale || !selectedSale.items) return
+    const unreturnedItems = selectedSale.items.filter((item: any) => !returnedIds.has(`${selectedSale.id}-${item.productId}`))
+    if (unreturnedItems.length === 0) return
+    for (const item of unreturnedItems) {
+      await window.api.returns.create({
+        saleId: selectedSale.id,
+        userId: user?.id || 1,
+        productId: item.productId,
+        quantity: item.quantity,
+        reason: 'بازگشت کل فاکتور',
+        refundAmount: item.unitPrice * item.quantity,
+      })
+    }
+    setSelectedSale(null)
+    loadData()
+    loadReturns()
+  }
+
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
   const textSecondary = isDark ? '#94a3b8' : '#64748b'
-  const headerBg = isDark ? '#0f172a' : '#f8fafc'
   const btnColor = isDark ? '#94a3b8' : '#ffffff'
 
   const filteredSales = sales.filter((s) => {
@@ -169,22 +187,22 @@ export default function SalesHistory() {
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="rounded-xl p-3 text-center" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
           <div className="text-xs" style={{ color: textSecondary }}>{fa.dashboard.invoices}</div>
-          <div className="text-xl font-bold" style={{ color: textPrimary }}>{filteredSales.length}</div>
+          <div className="text-xl font-bold" style={{ color: '#3b82f6' }}>{filteredSales.length}</div>
         </div>
-        <div className="rounded-xl p-3 text-center" style={{ backgroundColor: isDark ? '#052e16' : '#dcfce7', border: `1px solid ${cardBorder}` }}>
+        <div className="rounded-xl p-3 text-center" style={{ backgroundColor: isDark ? 'rgba(34,197,94,0.1)' : '#dcfce7', border: `1px solid ${cardBorder}` }}>
           <div className="text-xs" style={{ color: textSecondary }}>{fa.dashboard.totalSales}</div>
           <div className="text-xl font-bold" style={{ color: '#22c55e' }}>{totalRevenue.toLocaleString('fa-IR')}</div>
         </div>
-        <div className="rounded-xl p-3 text-center" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', border: `1px solid ${cardBorder}` }}>
+        <div className="rounded-xl p-3 text-center" style={{ backgroundColor: isDark ? 'rgba(148,163,184,0.1)' : '#f1f5f9', border: `1px solid ${cardBorder}` }}>
           <div className="text-xs" style={{ color: textSecondary }}>فیلتر شده</div>
-          <div className="text-xl font-bold" style={{ color: textPrimary }}>{filteredSales.length}</div>
+          <div className="text-xl font-bold" style={{ color: '#3b82f6' }}>{filteredSales.length}</div>
         </div>
       </div>
 
       <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
         <table className="w-full text-sm">
           <thead>
-            <tr style={{ backgroundColor: headerBg }}>
+            <tr style={{ backgroundColor: isDark ? 'rgba(0,97,148,0.1)' : '#f0f4f8' }}>
               {([
                 { key: 'id' as keyof Sale, label: '#' },
                 { key: 'invoiceNumber' as keyof Sale, label: 'فاکتور' },
@@ -246,7 +264,7 @@ export default function SalesHistory() {
 
       {selectedSale && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setSelectedSale(null)}>
-          <div className="rounded-2xl p-6 max-w-lg w-full mx-4 border-2" style={{ backgroundColor: cardBg, borderColor: selectedSale.items?.some((item: any) => returnedIds.has(`${selectedSale.id}-${item.productId}`)) ? '#f59e0b' : '#3b82f6' }} onClick={(e) => e.stopPropagation()}>
+          <div className="rounded-2xl p-6 max-w-lg w-full mx-4 border-2" style={{ backgroundColor: cardBg, borderColor: selectedSale.items?.some((item: any) => returnedIds.has(`${selectedSale.id}-${item.productId}`)) ? '#f59e0b' : '#006194' }} onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
               <div>
                 <h3 className="font-bold text-lg" style={{ color: textPrimary }}>{fa.receipt.invoice}</h3>
@@ -257,19 +275,19 @@ export default function SalesHistory() {
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="rounded-xl p-3" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+              <div className="rounded-xl p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : '#f8fafc' }}>
                 <div className="text-xs mb-1" style={{ color: textSecondary }}>{fa.receipt.cashier}</div>
                 <div className="text-sm font-bold" style={{ color: textPrimary }}>{selectedSale.userName}</div>
               </div>
-              <div className="rounded-xl p-3" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+              <div className="rounded-xl p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : '#f8fafc' }}>
                 <div className="text-xs mb-1" style={{ color: textSecondary }}>{fa.payment.method}</div>
                 <div className="text-sm font-bold" style={{ color: textPrimary }}>{selectedSale.paymentMethod === 'cash' ? fa.payment.cash : selectedSale.paymentMethod === 'card' ? fa.payment.card : fa.payment.ledger}</div>
               </div>
-              <div className="rounded-xl p-3" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+              <div className="rounded-xl p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : '#f8fafc' }}>
                 <div className="text-xs mb-1" style={{ color: textSecondary }}>{fa.receipt.date}</div>
                 <div className="text-sm font-bold" style={{ color: textPrimary }}>{formatJalaliDateTime(selectedSale.createdAt)}</div>
               </div>
-              <div className="rounded-xl p-3" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+              <div className="rounded-xl p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : '#f8fafc' }}>
                 <div className="text-xs mb-1" style={{ color: textSecondary }}>{fa.admin.title}</div>
                 <div className="text-sm font-bold" style={{ color: textPrimary }}>{selectedSale.customerName || '-'}</div>
               </div>
@@ -316,8 +334,11 @@ export default function SalesHistory() {
             </div>
 
             <div className="flex gap-2">
-              <button onClick={() => { window.print() }} className="btn btn-primary flex-1 py-2.5">چاپ فاکتور</button>
-              <button onClick={() => setSelectedSale(null)} className="btn btn-gray flex-1 py-2.5">{fa.common.close}</button>
+              <button onClick={() => { window.print() }} className="py-2.5 px-3 rounded-xl text-sm font-bold flex-1" style={{ backgroundColor: isDark ? 'rgba(0,97,148,0.15)' : '#dbeafe', color: '#006194' }}>چاپ فاکتور</button>
+              {!selectedSale.items?.every((item: any) => returnedIds.has(`${selectedSale.id}-${item.productId}`)) && (
+                <button onClick={handleReturnAllItems} className="py-2.5 px-3 rounded-xl text-sm font-bold flex-1" style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>بازگشت کل فاکتور</button>
+              )}
+              <button onClick={() => setSelectedSale(null)} className="py-2.5 px-3 rounded-xl text-sm font-bold flex-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>{fa.common.close}</button>
             </div>
           </div>
         </div>
