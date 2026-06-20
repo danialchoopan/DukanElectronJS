@@ -96,6 +96,7 @@ const api = {
     purchaseHistory: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('customers:purchaseHistory', { id }),
     getAllWithStats: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('customers:getAllWithStats'),
     deleteSoft: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('customers:deleteSoft', { id }),
+    saveImage: (data: { base64: string; customerId: number }): Promise<IPCResponse<string>> => ipcRenderer.invoke('customers:saveImage', data),
   },
 
   expenses: {

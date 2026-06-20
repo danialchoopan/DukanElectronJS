@@ -8,9 +8,7 @@ export function getAllCustomers(): Customer[] {
 
 export function getCustomerById(id: number): Customer | undefined {
   const db = getDatabase()
-  const r = db.prepare('SELECT * FROM customers WHERE id = ?').get(id) as Record<string, unknown> | undefined
-  if (!r) return undefined
-  return { id: r.id as number, name: r.name as string, phone: r.phone as string, balance: r.balance as number, address: (r.address as string) || '', notes: (r.notes as string) || '', isActive: r.isActive as boolean, createdAt: r.createdAt as string }
+  return db.prepare('SELECT * FROM customers WHERE id = ?').get(id) as Customer | undefined
 }
 
 export function searchCustomers(query: string): Customer[] {
@@ -21,7 +19,7 @@ export function searchCustomers(query: string): Customer[] {
 
 export function createCustomer(input: CustomerInput): Customer {
   const db = getDatabase()
-  const result = db.prepare('INSERT INTO customers (name, phone, address, notes) VALUES (?, ?, ?, ?)').run(input.name, input.phone, input.address || '', input.notes || '')
+  const result = db.prepare('INSERT INTO customers (name, phone, address, notes, customerType, description, imageBase64) VALUES (?, ?, ?, ?, ?, ?, ?)').run(input.name, input.phone, input.address || '', input.notes || '', input.customerType || 'real', input.description || '', input.imageBase64 || '')
   return getCustomerById(result.lastInsertRowid as number)!
 }
 
@@ -30,7 +28,7 @@ export function updateCustomer(id: number, input: Partial<CustomerInput>): Custo
   const existing = getCustomerById(id)
   if (!existing) return undefined
   const merged = { ...existing, ...input }
-  db.prepare('UPDATE customers SET name = ?, phone = ?, address = ?, notes = ? WHERE id = ?').run(merged.name, merged.phone, merged.address || '', merged.notes || '', id)
+  db.prepare('UPDATE customers SET name = ?, phone = ?, address = ?, notes = ?, customerType = ?, description = ?, imageBase64 = ? WHERE id = ?').run(merged.name, merged.phone, merged.address || '', merged.notes || '', merged.customerType || 'real', merged.description || '', merged.imageBase64 || '', id)
   return getCustomerById(id)
 }
 
@@ -121,7 +119,8 @@ export function getAllCustomersWithStats(): (Customer & { purchaseCount: number;
   const customers = db.prepare('SELECT * FROM customers WHERE isActive = 1 ORDER BY name').all() as Customer[]
   return customers.map(c => {
     const pc = (db.prepare('SELECT COUNT(*) as c FROM sales WHERE customerId = ?').get(c.id) as { c: number }).c
+    const ts = (db.prepare('SELECT COALESCE(SUM(total_amount), 0) as t FROM sales WHERE customerId = ?').get(c.id) as { t: number }).t
     const lp = db.prepare('SELECT createdAt FROM sales WHERE customerId = ? ORDER BY createdAt DESC LIMIT 1').get(c.id) as { createdAt: string } | undefined
-    return { ...c, purchaseCount: pc, lastPurchaseDate: lp?.createdAt || null }
+    return { ...c, purchaseCount: pc, totalSpent: ts, lastPurchaseDate: lp?.createdAt || null }
   })
 }

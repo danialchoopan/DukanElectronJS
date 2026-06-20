@@ -295,6 +295,11 @@ function initializeDatabase(db: Database.Database): void {
 
 try { db.prepare('ALTER TABLE customers ADD COLUMN address TEXT DEFAULT ""').run() } catch(e) {}
 try { db.prepare('ALTER TABLE customers ADD COLUMN notes TEXT DEFAULT ""').run() } catch(e) {}
+try { db.prepare('ALTER TABLE customers ADD COLUMN customerType TEXT DEFAULT "real"').run() } catch(e) {}
+try { db.prepare('ALTER TABLE customers ADD COLUMN description TEXT DEFAULT ""').run() } catch(e) {}
+try { db.prepare('ALTER TABLE customers ADD COLUMN imageBase64 TEXT DEFAULT ""').run() } catch(e) {}
+try { db.prepare('ALTER TABLE customers ADD COLUMN totalSpent REAL DEFAULT 0').run() } catch(e) {}
+try { db.prepare('ALTER TABLE customers ADD COLUMN totalPurchases INTEGER DEFAULT 0').run() } catch(e) {}
 try { db.prepare('ALTER TABLE customer_ledger ADD COLUMN images TEXT DEFAULT "[]"').run() } catch(e) {}
 
   const defaults: Record<string, string> = {

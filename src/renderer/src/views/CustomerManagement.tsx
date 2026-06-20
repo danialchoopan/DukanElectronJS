@@ -41,7 +41,7 @@ export default function CustomerManagement() {
   const [purchases, setPurchases] = useState<Sale[]>([])
   const [expandedPurchase, setExpandedPurchase] = useState<number | null>(null)
   const [dialog, setDialog] = useState<DialogMode>(null)
-  const [form, setForm] = useState({ name: '', phone: '', address: '', notes: '' })
+  const [form, setForm] = useState({ name: '', phone: '', address: '', notes: '', customerType: 'real' as 'real' | 'legal', description: '', imageBase64: '' })
   const [chargePayAmount, setChargePayAmount] = useState('')
   const [chargePayDescription, setChargePayDescription] = useState('')
   const [chargePayImages, setChargePayImages] = useState<string[]>([])
@@ -120,6 +120,14 @@ export default function CustomerManagement() {
     else runningBalance -= e.amount
     return { ...e, runningBalance }
   }).reverse()
+
+  const purchaseSummary = (() => {
+    if (!purchases.length) return null
+    const totalAmount = purchases.reduce((s, p) => s + p.total_amount, 0)
+    const avgAmount = totalAmount / purchases.length
+    const lastDate = purchases[0]?.createdAt || null
+    return { count: purchases.length, totalAmount, avgAmount, lastDate }
+  })()
 
   const openChargeDialog = () => {
     setChargePayAmount('')
@@ -207,9 +215,9 @@ export default function CustomerManagement() {
   const handleCreate = async () => {
     if (!form.name.trim()) return
     setLoading(true)
-    const r = await window.api.customers.create({ name: form.name.trim(), phone: form.phone.trim(), address: form.address.trim(), notes: form.notes.trim() })
+    const r = await window.api.customers.create({ name: form.name.trim(), phone: form.phone.trim(), address: form.address.trim(), notes: form.notes.trim(), customerType: form.customerType, description: form.description.trim(), imageBase64: form.imageBase64 })
     setDialog(null)
-    setForm({ name: '', phone: '', address: '', notes: '' })
+    setForm({ name: '', phone: '', address: '', notes: '', customerType: 'real', description: '', imageBase64: '' })
     if (r.success && r.data) {
       await loadAll()
       setSelected(r.data)
@@ -221,7 +229,7 @@ export default function CustomerManagement() {
   const handleEdit = async () => {
     if (!selected || !form.name.trim()) return
     setLoading(true)
-    await window.api.customers.update(selected.id, { name: form.name.trim(), phone: form.phone.trim(), address: form.address.trim(), notes: form.notes.trim() })
+    await window.api.customers.update(selected.id, { name: form.name.trim(), phone: form.phone.trim(), address: form.address.trim(), notes: form.notes.trim(), customerType: form.customerType, description: form.description.trim(), imageBase64: form.imageBase64 })
     setDialog(null)
     await refreshSelected(selected.id)
     setLoading(false)
@@ -261,12 +269,12 @@ export default function CustomerManagement() {
 
   const openEditDialog = () => {
     if (!selected) return
-    setForm({ name: selected.name, phone: selected.phone || '', address: (selected as any).address || '', notes: (selected as any).notes || '' })
+    setForm({ name: selected.name, phone: selected.phone || '', address: (selected as any).address || '', notes: (selected as any).notes || '', customerType: (selected as any).customerType || 'real', description: (selected as any).description || '', imageBase64: (selected as any).imageBase64 || '' })
     setDialog('edit')
   }
 
   const openCreateDialog = () => {
-    setForm({ name: '', phone: '', address: '', notes: '' })
+    setForm({ name: '', phone: '', address: '', notes: '', customerType: 'real', description: '', imageBase64: '' })
     setDialog('create')
   }
 
@@ -274,6 +282,19 @@ export default function CustomerManagement() {
     if (m === 'cash') return fa.payment.cash
     if (m === 'card') return fa.payment.card
     return fa.payment.ledger
+  }
+
+  const TypeBadge = ({ type }: { type?: string }) => {
+    const isLegal = type === 'legal'
+    return (
+      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{
+        backgroundColor: isLegal ? '#9333ea18' : '#3b82f618',
+        color: isLegal ? '#9333ea' : '#3b82f6',
+        border: `1px solid ${isLegal ? '#9333ea30' : '#3b82f630'}`,
+      }}>
+        {isLegal ? 'حقوقی' : 'حقیقی'}
+      </span>
+    )
   }
 
   const StatCard = ({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color: string }) => (
@@ -366,11 +387,18 @@ export default function CustomerManagement() {
                   onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = surfaceHover }}
                   onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent' }}
                 >
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0" style={{ border: `2px solid ${avatarColor}`, color: avatarColor, backgroundColor: `${avatarColor}15` }}>
-                    {c.name.charAt(0)}
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 overflow-hidden" style={{ border: `2px solid ${avatarColor}`, color: avatarColor, backgroundColor: `${avatarColor}15` }}>
+                    {c.imageBase64 ? (
+                      <img src={c.imageBase64} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      c.name.charAt(0)
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold truncate" style={{ color: textPrimary }}>{c.name}</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-bold truncate" style={{ color: textPrimary }}>{c.name}</span>
+                      <TypeBadge type={(c as any).customerType} />
+                    </div>
                     <div className="text-xs truncate" style={{ color: textSecondary }}>{c.phone || '-'}</div>
                     {c.purchaseCount !== undefined && (
                       <div className="text-xs" style={{ color: textSecondary }}>
@@ -429,13 +457,21 @@ export default function CustomerManagement() {
                   <div className="space-y-4">
                     {/* Customer Header */}
                     <div className="flex items-start gap-4">
-                      <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shrink-0" style={{ border: `3px solid ${selected.balance < 0 ? ERROR : selected.balance > 0 ? SUCCESS : OUTLINE}`, color: selected.balance < 0 ? ERROR : selected.balance > 0 ? SUCCESS : OUTLINE, backgroundColor: `${selected.balance < 0 ? ERROR : selected.balance > 0 ? SUCCESS : OUTLINE}15` }}>
-                        {selected.name.charAt(0)}
+                      <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shrink-0 overflow-hidden" style={{ border: `3px solid ${selected.balance < 0 ? ERROR : selected.balance > 0 ? SUCCESS : OUTLINE}`, color: selected.balance < 0 ? ERROR : selected.balance > 0 ? SUCCESS : OUTLINE, backgroundColor: `${selected.balance < 0 ? ERROR : selected.balance > 0 ? SUCCESS : OUTLINE}15` }}>
+                        {(selected as any).imageBase64 ? (
+                          <img src={(selected as any).imageBase64} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          selected.name.charAt(0)
+                        )}
                       </div>
                       <div className="flex-1">
-                        <div className="text-lg font-bold" style={{ color: textPrimary }}>{selected.name}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-lg font-bold" style={{ color: textPrimary }}>{selected.name}</div>
+                          <TypeBadge type={(selected as any).customerType} />
+                        </div>
                         <div className="text-sm" style={{ color: textSecondary }}>{selected.phone || 'بدون تلفن'}</div>
                         {(selected as any).address && <div className="text-sm mt-1" style={{ color: textSecondary }}>{(selected as any).address}</div>}
+                        {(selected as any).description && <div className="text-sm mt-1" style={{ color: textPrimary }}>{(selected as any).description}</div>}
                         {(selected as any).notes && <div className="text-xs mt-1 italic" style={{ color: textSecondary }}>{(selected as any).notes}</div>}
                       </div>
                     </div>
@@ -452,7 +488,7 @@ export default function CustomerManagement() {
                     </div>
 
                     {/* Stats Row */}
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-4 gap-3">
                       <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cardBorder}` }}>
                         <div className="text-xs" style={{ color: textSecondary }}>تعداد خرید</div>
                         <div className="text-lg font-bold" style={{ color: textPrimary }}>{selected.purchaseCount || 0}</div>
@@ -460,6 +496,10 @@ export default function CustomerManagement() {
                       <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cardBorder}` }}>
                         <div className="text-xs" style={{ color: textSecondary }}>مجموع خرید</div>
                         <div className="text-lg font-bold" style={{ color: textPrimary }}>{(selected as any).totalSpent?.toLocaleString('fa-IR') || '0'}</div>
+                      </div>
+                      <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cardBorder}` }}>
+                        <div className="text-xs" style={{ color: textSecondary }}>میانگین خرید</div>
+                        <div className="text-lg font-bold" style={{ color: textPrimary }}>{selected.purchaseCount ? Math.round(((selected as any).totalSpent || 0) / selected.purchaseCount).toLocaleString('fa-IR') : '0'}</div>
                       </div>
                       <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cardBorder}` }}>
                         <div className="text-xs" style={{ color: textSecondary }}>آخرین خرید</div>
@@ -512,6 +552,31 @@ export default function CustomerManagement() {
                 {/* Purchases Tab */}
                 {detailTab === 'purchases' && (
                   <div>
+                    {/* Purchase Summary Card */}
+                    {purchaseSummary && (
+                      <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cardBorder}` }}>
+                        <div className="text-xs font-medium mb-2" style={{ color: textSecondary }}>خلاصه خرید</div>
+                        <div className="grid grid-cols-4 gap-3">
+                          <div>
+                            <div className="text-xs" style={{ color: textSecondary }}>تعداد خرید</div>
+                            <div className="text-lg font-bold" style={{ color: PRIMARY }}>{purchaseSummary.count}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs" style={{ color: textSecondary }}>مجموع مبلغ</div>
+                            <div className="text-lg font-bold" style={{ color: SUCCESS }}>{purchaseSummary.totalAmount.toLocaleString('fa-IR')}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs" style={{ color: textSecondary }}>میانگین</div>
+                            <div className="text-lg font-bold" style={{ color: textPrimary }}>{Math.round(purchaseSummary.avgAmount).toLocaleString('fa-IR')}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs" style={{ color: textSecondary }}>آخرین خرید</div>
+                            <div className="text-sm font-bold" style={{ color: textPrimary }}>{purchaseSummary.lastDate ? formatJalaliShort(purchaseSummary.lastDate) : '-'}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {purchases.length === 0 ? (
                       <div className="text-center py-8 text-sm" style={{ color: textSecondary }}>خریدی ثبت نشده</div>
                     ) : (
@@ -571,6 +636,31 @@ export default function CustomerManagement() {
                 {/* Ledger Tab */}
                 {detailTab === 'ledger' && (
                   <div>
+                    {/* Spending Summary in Ledger */}
+                    {selected && (
+                      <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cardBorder}` }}>
+                        <div className="text-xs font-medium mb-2" style={{ color: textSecondary }}>خلاصه خرید</div>
+                        <div className="grid grid-cols-4 gap-3">
+                          <div>
+                            <div className="text-xs" style={{ color: textSecondary }}>تعداد خرید</div>
+                            <div className="text-lg font-bold" style={{ color: PRIMARY }}>{selected.purchaseCount || 0}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs" style={{ color: textSecondary }}>مجموع خرید</div>
+                            <div className="text-lg font-bold" style={{ color: SUCCESS }}>{((selected as any).totalSpent || 0).toLocaleString('fa-IR')}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs" style={{ color: textSecondary }}>میانگین خرید</div>
+                            <div className="text-lg font-bold" style={{ color: textPrimary }}>{selected.purchaseCount ? Math.round(((selected as any).totalSpent || 0) / selected.purchaseCount).toLocaleString('fa-IR') : '0'}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs" style={{ color: textSecondary }}>آخرین خرید</div>
+                            <div className="text-sm font-bold" style={{ color: textPrimary }}>{selected.lastPurchaseDate ? formatJalaliShort(selected.lastPurchaseDate) : '-'}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex gap-1 mb-3">
                       {([
                         { key: 'all' as LedgerFilter, label: fa.common.all },
@@ -805,9 +895,43 @@ export default function CustomerManagement() {
 
       {(dialog === 'create' || dialog === 'edit') && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="rounded-xl p-6 w-96" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+          <div className="rounded-xl p-6 w-[420px] max-h-[85vh] overflow-y-auto" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
             <div className="text-sm font-bold mb-4" style={{ color: PRIMARY }}>{dialog === 'create' ? fa.customer.addCustomer : fa.admin.edit}</div>
             <div className="space-y-3">
+              {/* Image Upload */}
+              <div>
+                <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>تصویر مشتری</label>
+                <div className="flex items-center gap-3">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shrink-0 overflow-hidden" style={{ border: `2px solid ${cardBorder}`, backgroundColor: isDark ? '#0f172a' : '#f8fafc', color: textSecondary }}>
+                    {form.imageBase64 ? (
+                      <img src={form.imageBase64} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+                        const reader = new FileReader()
+                        reader.onload = (ev) => {
+                          const result = ev.target?.result
+                          if (typeof result === 'string') setForm((f) => ({ ...f, imageBase64: result }))
+                        }
+                        reader.readAsDataURL(file)
+                      }}
+                      className="input-field w-full text-sm"
+                    />
+                    {form.imageBase64 && (
+                      <button onClick={() => setForm((f) => ({ ...f, imageBase64: '' }))} className="text-xs mt-1" style={{ color: ERROR }}>حذف تصویر</button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.name} *</label>
                 <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className="input-field w-full text-sm" />
@@ -816,9 +940,29 @@ export default function CustomerManagement() {
                 <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.customer.phone}</label>
                 <input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} className="input-field w-full text-sm" />
               </div>
+
+              {/* Customer Type Radio */}
+              <div>
+                <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>نوع مشتری</label>
+                <div className="flex gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg flex-1" style={{ backgroundColor: form.customerType === 'real' ? '#3b82f618' : 'transparent', border: `1px solid ${form.customerType === 'real' ? '#3b82f6' : cardBorder}` }}>
+                    <input type="radio" name="customerType" value="real" checked={form.customerType === 'real'} onChange={() => setForm((f) => ({ ...f, customerType: 'real' }))} className="accent-[#3b82f6]" />
+                    <span className="text-sm font-bold" style={{ color: form.customerType === 'real' ? '#3b82f6' : textSecondary }}>حقیقی</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg flex-1" style={{ backgroundColor: form.customerType === 'legal' ? '#9333ea18' : 'transparent', border: `1px solid ${form.customerType === 'legal' ? '#9333ea' : cardBorder}` }}>
+                    <input type="radio" name="customerType" value="legal" checked={form.customerType === 'legal'} onChange={() => setForm((f) => ({ ...f, customerType: 'legal' }))} className="accent-[#9333ea]" />
+                    <span className="text-sm font-bold" style={{ color: form.customerType === 'legal' ? '#9333ea' : textSecondary }}>حقوقی</span>
+                  </label>
+                </div>
+              </div>
+
               <div>
                 <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>آدرس</label>
                 <input value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} className="input-field w-full text-sm" />
+              </div>
+              <div>
+                <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>توضیحات</label>
+                <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} className="input-field w-full text-sm" rows={3} placeholder="توضیحات تکمیلی درباره مشتری..." />
               </div>
               <div>
                 <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>یادداشت</label>

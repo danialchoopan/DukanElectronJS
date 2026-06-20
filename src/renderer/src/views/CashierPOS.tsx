@@ -210,9 +210,11 @@ export default function CashierPOS() {
             </div>
             <div className="flex gap-2">
               <button onClick={() => { setShowReceipt(saleComplete); setSaleComplete(null) }} className="btn btn-primary flex-1 py-2.5">{fa.receipt.print}</button>
-              <button onClick={() => {
+              <button               onClick={() => {
                 if (!saleComplete) return
                 let html = '<h1>فاکتور فروش</h1>'
+                const customerInfo = selectedCustomer ? `<div class="header-info"><span>مشتری: ${selectedCustomer.name}</span><span>تلفن: ${selectedCustomer.phone}</span></div>` : '<div class="header-info"><span>مشتری: ناشناس</span></div>'
+                html += customerInfo
                 html += `<div class="header-info"><span>شماره فاکتور: ${saleComplete.invoiceNumber}</span><span>تاریخ: ${saleComplete.createdAt?.split('T')[0] || ''}</span></div>`
                 html += '<table><thead><tr><th>کالا</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>'
                 saleComplete.items?.forEach((item: any) => { html += `<tr><td>${item.productTitle}</td><td>${item.quantity}</td><td>${item.unitPrice.toLocaleString('fa-IR')}</td><td>${item.subtotal.toLocaleString('fa-IR')}</td></tr>` })

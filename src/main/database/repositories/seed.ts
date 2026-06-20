@@ -62,17 +62,17 @@ export function seedDemoData(): boolean {
       productIds.push(r.lastInsertRowid as number)
     }
 
-    const insertCustomer = db.prepare('INSERT INTO customers (name, phone, address, notes) VALUES (?, ?, ?, ?)')
+    const insertCustomer = db.prepare('INSERT INTO customers (name, phone, address, notes, customerType, description) VALUES (?, ?, ?, ?, ?, ?)')
     const customerIds: number[] = []
     const customerData = [
-      { name: 'علی محمدی', phone: '09121234567', address: 'تهران، خیابان ولیعصر', notes: 'مشتری دائمی' },
-      { name: 'سارا احمدی', phone: '09351234567', address: 'تهران، خیابان آزادی', notes: '' },
-      { name: 'رضا کریمی', phone: '09191234567', address: '', notes: 'مشتری عمده' },
-      { name: 'نیلوفر حسینی', phone: '09011234567', address: 'اصفهان', notes: '' },
-      { name: 'امیر رضایی', phone: '09221234567', address: 'تهران، منطقه ۵', notes: 'مشتری جدید' },
+      { name: 'علی محمدی', phone: '09121234567', address: 'تهران، خیابان ولیعصر', notes: 'مشتری دائمی', customerType: 'real', description: 'خریدار عمده لبنیات' },
+      { name: 'سارا احمدی', phone: '09351234567', address: 'تهران، خیابان آزادی', notes: '', customerType: 'real', description: '' },
+      { name: 'رضا کریمی', phone: '09191234567', address: '', notes: 'مشتری عمده', customerType: 'legal', description: 'شرکت بازرگانی کریمی' },
+      { name: 'نیلوفر حسینی', phone: '09011234567', address: 'اصفهان', notes: '', customerType: 'real', description: '' },
+      { name: 'امیر رضایی', phone: '09221234567', address: 'تهران، منطقه ۵', notes: 'مشتری جدید', customerType: 'real', description: '' },
     ]
     for (const c of customerData) {
-      const r = insertCustomer.run(c.name, c.phone, c.address, c.notes)
+      const r = insertCustomer.run(c.name, c.phone, c.address, c.notes, c.customerType, c.description)
       customerIds.push(r.lastInsertRowid as number)
     }
 

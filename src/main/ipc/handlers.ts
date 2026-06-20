@@ -205,6 +205,18 @@ export function registerAllHandlers(): void {
   })
   handleArg<{ customerId: number }, ReturnType<typeof customers.getLedgerEntries>>('customers:ledger', (a) => customers.getLedgerEntries(a.customerId))
 
+  ipcMain.handle('customers:saveImage', (_event, arg: { base64: string; customerId: number }) => {
+    try {
+      const imagesDir = join(app.getPath('userData'), 'customer-images')
+      if (!existsSync(imagesDir)) mkdirSync(imagesDir, { recursive: true })
+      const ext = arg.base64.startsWith('data:image/png') ? '.png' : '.jpg'
+      const filename = `customer-${arg.customerId}-${randomBytes(8).toString('hex')}${ext}`
+      const base64Data = arg.base64.replace(/^data:image\/\w+;base64,/, '')
+      writeFileSync(join(imagesDir, filename), Buffer.from(base64Data, 'base64'))
+      return { success: true, data: filename }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
+
   // ─── Expenses ───────────────────────────────────────────
   handle('expenses:getAll', () => expenses.getAllExpenses())
   handleArg<{ startDate: string; endDate: string }, ReturnType<typeof expenses.getExpensesByDateRange>>('expenses:getByDateRange', (a) => expenses.getExpensesByDateRange(a.startDate, a.endDate))

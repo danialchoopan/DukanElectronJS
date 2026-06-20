@@ -98,6 +98,9 @@ export interface Customer {
   balance: number
   address: string
   notes: string
+  customerType: 'real' | 'legal'
+  description: string
+  imageBase64: string
   isActive: boolean
   createdAt: string
   purchaseCount?: number
@@ -110,6 +113,19 @@ export interface CustomerInput {
   phone: string
   address?: string
   notes?: string
+  customerType?: 'real' | 'legal'
+  description?: string
+  imageBase64?: string
+}
+
+export interface CustomerInput {
+  name: string
+  phone: string
+  address?: string
+  notes?: string
+  customerType?: 'real' | 'legal'
+  description?: string
+  imageBase64?: string
 }
 
 export interface CustomerLedgerEntry {
