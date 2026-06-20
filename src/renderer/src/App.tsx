@@ -42,7 +42,7 @@ export default function App() {
   useEffect(() => {
     initSettings().then(() => {
       window.api.settings.getAll().then((r) => {
-        if (r.success && r.data?.storeName) setShopName(r.data.storeName)
+        if (r.success && r.data?.storeName) setShopName(r.data.storeName, r.data.storePhone || '')
       })
     })
     loadFromStorage()

@@ -1,13 +1,16 @@
 let cachedShopName = 'فروشگاه'
+let cachedShopPhone = ''
 
-export function setShopName(name: string) {
+export function setShopName(name: string, phone?: string) {
   if (name) cachedShopName = name
+  if (phone !== undefined) cachedShopPhone = phone
 }
 
 export function printA4Report(html: string, title: string, shopName?: string): void {
   const win = window.open('', '_blank')
   if (!win) return
   const name = shopName || cachedShopName
+  const phone = cachedShopPhone
   win.document.write(`<!DOCTYPE html>
 <html dir="rtl" lang="fa">
 <head>
@@ -19,7 +22,8 @@ export function printA4Report(html: string, title: string, shopName?: string): v
     @media print { body { margin: 0; } }
     body { font-family: 'Vazirmatn', 'Tahoma', sans-serif; font-size: 11pt; direction: rtl; color: #1a1a1a; padding: 20px; }
     h1 { font-size: 18pt; text-align: center; margin-bottom: 4px; color: #006194; }
-    .shop-name { text-align: center; font-size: 14pt; font-weight: 700; color: #006194; margin-bottom: 4px; }
+    .shop-name { text-align: center; font-size: 14pt; font-weight: 700; color: #006194; margin-bottom: 2px; }
+    .shop-phone { text-align: center; font-size: 11pt; color: #555; margin-bottom: 6px; }
     .report-title { text-align: center; font-size: 12pt; font-weight: 600; color: #333; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #006194; }
     h2 { font-size: 12pt; margin-bottom: 6px; color: #333; margin-top: 16px; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
@@ -40,6 +44,7 @@ export function printA4Report(html: string, title: string, shopName?: string): v
 </head>
 <body>
   <div class="shop-name">${name}</div>
+  ${phone ? `<div class="shop-phone">تلفن: ${phone}</div>` : ''}
   <div class="report-title">${title}</div>
   ${html}
   <div class="checkbox-group">
