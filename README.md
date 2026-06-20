@@ -125,4 +125,19 @@ npm run start
 ## Tech Stack
 
 Electron 33 · React 18 · TypeScript 5 · Vite 6 · Zustand 5 · better-sqlite3 11 · Tailwind CSS 3 · html5-qrcode · Vazirmatn (Local) · i18n (FA/EN) · Dark/Light Mode · electron-builder 25
- 
+
+---
+
+## Build & Install
+
+```bash
+npm install
+npx electron-builder --win
+```
+
+| File | Description |
+|------|-------------|
+| `release/win-unpacked/SuperMarket POS.exe` | Windows portable app (no installation needed) |
+
+> Fully offline. First run shows the setup wizard.
+
