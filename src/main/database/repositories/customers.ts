@@ -102,7 +102,11 @@ export function getCustomerWithStats(id: number) {
 
 export function getCustomerPurchaseHistory(customerId: number) {
   const db = getDatabase()
-  return db.prepare('SELECT * FROM sales WHERE customerId = ? ORDER BY createdAt DESC').all(customerId)
+  const sales = db.prepare('SELECT * FROM sales WHERE customerId = ? ORDER BY createdAt DESC').all(customerId) as any[]
+  return sales.map(s => {
+    const items = db.prepare('SELECT * FROM sale_items WHERE saleId = ?').all(s.id)
+    return { ...s, items }
+  })
 }
 
 export function deleteCustomerSoft(id: number): { success: boolean; error?: string } {

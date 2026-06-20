@@ -4,7 +4,7 @@ import { fa } from '../i18n'
 import { formatJalaliShort, formatJalaliDateTime } from '../utils/jalali'
 import { getProductImageUrl } from '../utils/productImage'
 
-type FilterType = 'all' | 'debtor' | 'creditor' | 'inactive'
+type FilterType = 'all' | 'debtor' | 'creditor' | 'inactive' | 'real' | 'legal'
 
 function LedgerImage({ src }: { src: string }) {
   const [resolved, setResolved] = useState(src || '')
@@ -108,6 +108,8 @@ export default function CustomerManagement() {
       case 'debtor': return c.balance < 0
       case 'creditor': return c.balance > 0
       case 'inactive': return !c.isActive
+      case 'real': return (c as any).customerType === 'real'
+      case 'legal': return (c as any).customerType === 'legal'
       default: return true
     }
   })
@@ -336,17 +338,19 @@ export default function CustomerManagement() {
           </div>
 
           {/* Filter Buttons */}
-          <div className="flex gap-1 p-2" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+          <div className="flex gap-1 p-2 flex-wrap" style={{ borderBottom: `1px solid ${cardBorder}` }}>
             {([
               { key: 'all' as FilterType, label: fa.common.all },
               { key: 'debtor' as FilterType, label: 'بدهكار' },
               { key: 'creditor' as FilterType, label: 'طلبكار' },
               { key: 'inactive' as FilterType, label: 'غیرفعال' },
+              { key: 'real' as FilterType, label: 'حقیقی' },
+              { key: 'legal' as FilterType, label: 'حقوقی' },
             ]).map((f) => (
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
-                className="flex-1 text-xs font-bold py-1.5 rounded-lg transition-all"
+                className="text-xs font-bold py-1.5 px-2.5 rounded-lg transition-all"
                 style={{
                   backgroundColor: filter === f.key ? PRIMARY : 'transparent',
                   color: filter === f.key ? '#ffffff' : textSecondary,
