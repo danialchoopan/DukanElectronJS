@@ -13,6 +13,20 @@ interface PrintSettings {
   printSignature: string
   printWatermark: string
   printWatermarkOpacity: string
+  printFontSize: string
+  printHeaderSize: string
+  printLineSpacing: string
+  printMarginTop: string
+  printMarginBottom: string
+  printMarginLeft: string
+  printMarginRight: string
+  printPaperSize: string
+  printHeaderField1: string
+  printHeaderField2: string
+  printHeaderField3: string
+  printBorderStyle: string
+  printHeaderAlign: string
+  printActiveTemplate: string
 }
 
 const defaults: PrintSettings = {
@@ -27,12 +41,29 @@ const defaults: PrintSettings = {
   printSignature: '',
   printWatermark: '',
   printWatermarkOpacity: '20',
+  printFontSize: '11pt',
+  printHeaderSize: '18pt',
+  printLineSpacing: '1.5',
+  printMarginTop: '15',
+  printMarginBottom: '15',
+  printMarginLeft: '15',
+  printMarginRight: '15',
+  printPaperSize: 'A4',
+  printHeaderField1: '',
+  printHeaderField2: '',
+  printHeaderField3: '',
+  printBorderStyle: 'none',
+  printHeaderAlign: 'center',
+  printActiveTemplate: 'default',
 }
 
 export default function CustomizationSettings() {
   const [settings, setSettings] = useState<PrintSettings>(defaults)
   const [saved, setSaved] = useState(false)
   const [previews, setPreviews] = useState<{ logo: string; signature: string; watermark: string }>({ logo: '', signature: '', watermark: '' })
+  const [templates, setTemplates] = useState<string[]>([])
+  const [showNewTemplateInput, setShowNewTemplateInput] = useState(false)
+  const templateInputRef = useRef<HTMLInputElement>(null)
   const logoRef = useRef<HTMLInputElement>(null)
   const sigRef = useRef<HTMLInputElement>(null)
   const wmRef = useRef<HTMLInputElement>(null)
@@ -60,7 +91,14 @@ export default function CustomizationSettings() {
     }
   }
 
-  useEffect(() => { loadSettings() }, [])
+  useEffect(() => { loadSettings(); loadTemplates() }, [])
+
+  const loadTemplates = async () => {
+    const r = await window.api.settings.get('printTemplates')
+    if (r.success && r.data) {
+      try { setTemplates(JSON.parse(r.data)) } catch {}
+    }
+  }
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -98,6 +136,10 @@ export default function CustomizationSettings() {
     await window.api.printSettings.save(settings as unknown as Record<string, string>)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  const selectTemplate = (name: string) => {
+    updateField('printActiveTemplate', name)
   }
 
   const handleReset = async () => {
@@ -141,6 +183,20 @@ export default function CustomizationSettings() {
         printInvoiceTitle: settings.printInvoiceTitle,
         printReprintTitle: settings.printReprintTitle,
         printReportTitle: settings.printReportTitle,
+        printFontSize: settings.printFontSize,
+        printHeaderSize: settings.printHeaderSize,
+        printLineSpacing: settings.printLineSpacing,
+        printMarginTop: settings.printMarginTop,
+        printMarginBottom: settings.printMarginBottom,
+        printMarginLeft: settings.printMarginLeft,
+        printMarginRight: settings.printMarginRight,
+        printPaperSize: settings.printPaperSize,
+        printHeaderField1: settings.printHeaderField1,
+        printHeaderField2: settings.printHeaderField2,
+        printHeaderField3: settings.printHeaderField3,
+        printBorderStyle: settings.printBorderStyle,
+        printHeaderAlign: settings.printHeaderAlign,
+        printActiveTemplate: settings.printActiveTemplate,
       },
     })
   }
@@ -193,6 +249,16 @@ export default function CustomizationSettings() {
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <select value={settings.printActiveTemplate || 'default'} onChange={e => { selectTemplate(e.target.value) }} className="input-field text-sm w-40">
+            <option value="default">پیش‌فرض</option>
+            {templates.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <input ref={templateInputRef} placeholder="نام قالب جدید" className="input-field text-sm w-40" style={{ display: showNewTemplateInput ? 'block' : 'none' }} />
+          <button onClick={() => setShowNewTemplateInput(!showNewTemplateInput)} className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: primary }}>قالب جدید</button>
+        </div>
+      </div>
       {/* Logo */}
       {renderImageUpload('logo', 'لوگوی چاپ', logoRef)}
 
@@ -235,6 +301,97 @@ export default function CustomizationSettings() {
               <span className="text-xs px-2 py-1 rounded-lg font-bold" style={{ backgroundColor: settings.printColorScheme + '20', color: settings.printColorScheme }}>متن نمونه</span>
               <span className="text-xs px-3 py-1 rounded-lg font-bold text-white" style={{ backgroundColor: settings.printColorScheme }}>پس زمینه</span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+        <h4 className="text-sm font-bold mb-3" style={{ color: textPrimary }}>اندازه و فاصله</h4>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>اندازه قلم متن</label>
+            <select value={settings.printFontSize || '11pt'} onChange={e => updateField('printFontSize', e.target.value)} className="input-field text-sm w-full">
+              <option value="9pt">9pt</option><option value="10pt">10pt</option><option value="11pt">11pt</option>
+              <option value="12pt">12pt</option><option value="14pt">14pt</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>اندازه عنوان</label>
+            <select value={settings.printHeaderSize || '18pt'} onChange={e => updateField('printHeaderSize', e.target.value)} className="input-field text-sm w-full">
+              <option value="14pt">14pt</option><option value="16pt">16pt</option>
+              <option value="18pt">18pt</option><option value="20pt">20pt</option><option value="24pt">24pt</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>فاصله خطوط</label>
+            <select value={settings.printLineSpacing || '1.5'} onChange={e => updateField('printLineSpacing', e.target.value)} className="input-field text-sm w-full">
+              <option value="1.2">فشرده (1.2)</option><option value="1.5">عادی (1.5)</option>
+              <option value="2.0">باز (2.0)</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>اندازه کاغذ</label>
+            <select value={settings.printPaperSize || 'A4'} onChange={e => updateField('printPaperSize', e.target.value)} className="input-field text-sm w-full">
+              <option value="A4">A4</option><option value="A5">A5</option><option value="Letter">Letter</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+        <h4 className="text-sm font-bold mb-3" style={{ color: textPrimary }}>حاشیه کاغذ (mm)</h4>
+        <div className="grid grid-cols-4 gap-2">
+          {['top','bottom','left','right'].map(dir => {
+            const key = `printMargin${dir.charAt(0).toUpperCase() + dir.slice(1)}` as keyof PrintSettings
+            return (
+              <div key={dir}>
+                <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{dir === 'top' ? 'بالا' : dir === 'bottom' ? 'پایین' : dir === 'left' ? 'چپ' : 'راست'}</label>
+                <input type="number" min="5" max="50" value={parseInt(settings[key] || '15')}
+                  onChange={e => updateField(key, e.target.value)}
+                  className="input-field text-sm w-full" />
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+        <h4 className="text-sm font-bold mb-3" style={{ color: textPrimary }}>فیلدهای سربرگ (با خط برای پر کردن)</h4>
+        {[1,2,3].map(i => (
+          <div key={i} className="mb-2">
+            <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>فیلد {i}</label>
+            <input value={settings[`printHeaderField${i}` as keyof PrintSettings] || ''} onChange={e => updateField(`printHeaderField${i}` as keyof PrintSettings, e.target.value)}
+              className="input-field text-sm w-full" placeholder={`مثال: شماره: __________   تاریخ: __________`} />
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+          <h4 className="text-sm font-bold mb-3" style={{ color: textPrimary }}>حاشیه تزئینی</h4>
+          <div className="flex gap-2">
+            {['none','simple','double','decorative'].map(s => (
+              <button key={s} onClick={() => updateField('printBorderStyle', s)}
+                className="flex-1 py-2 rounded-lg text-xs font-bold transition-all"
+                style={{ backgroundColor: (settings.printBorderStyle || 'none') === s ? primary : (isDark ? '#334155' : '#f1f5f9'), color: (settings.printBorderStyle || 'none') === s ? '#fff' : textSecondary }}>
+                {s === 'none' ? 'بدون' : s === 'simple' ? 'ساده' : s === 'double' ? 'دوخط' : 'مُدِل'}
+              </button>
+            ))}
+          </div>
+          <div className="mt-3 p-3 rounded-lg flex items-center justify-center" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: settings.printBorderStyle === 'simple' ? '3px solid #006194' : settings.printBorderStyle === 'double' ? '6px double #006194' : settings.printBorderStyle === 'decorative' ? '8px solid #006194' : '1px solid transparent' }}>
+            <span className="text-xs" style={{ color: textSecondary }}>پیش‌نمایش سریع</span>
+          </div>
+        </div>
+        <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+          <h4 className="text-sm font-bold mb-3" style={{ color: textPrimary }}>جهت سربرگ</h4>
+          <div className="flex gap-2">
+            {['center','right'].map(a => (
+              <button key={a} onClick={() => updateField('printHeaderAlign', a)}
+                className="flex-1 py-2 rounded-lg text-xs font-bold transition-all"
+                style={{ backgroundColor: (settings.printHeaderAlign || 'center') === a ? primary : (isDark ? '#334155' : '#f1f5f9'), color: (settings.printHeaderAlign || 'center') === a ? '#fff' : textSecondary }}>
+                {a === 'center' ? 'وسط' : 'راست'}
+              </button>
+            ))}
           </div>
         </div>
       </div>

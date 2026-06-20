@@ -14,6 +14,20 @@ export const DEFAULT_PRINT_SETTINGS: Record<string, string> = {
   printLogo: '',
   printSignature: '',
   printWatermark: '',
+  printFontSize: '11pt',
+  printHeaderSize: '18pt',
+  printLineSpacing: '1.5',
+  printMarginTop: '15',
+  printMarginBottom: '15',
+  printMarginLeft: '15',
+  printMarginRight: '15',
+  printPaperSize: 'A4',
+  printHeaderField1: '',
+  printHeaderField2: '',
+  printHeaderField3: '',
+  printBorderStyle: 'none',
+  printHeaderAlign: 'center',
+  printActiveTemplate: 'default',
 }
 
 export function getPrintSettings(): Record<string, string> {

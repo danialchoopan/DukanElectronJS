@@ -31,6 +31,20 @@ export function printA4Report(html: string, title: string, options?: {
     printInvoiceTitle?: string
     printReprintTitle?: string
     printReportTitle?: string
+    printFontSize?: string
+    printHeaderSize?: string
+    printLineSpacing?: string
+    printMarginTop?: string
+    printMarginBottom?: string
+    printMarginLeft?: string
+    printMarginRight?: string
+    printPaperSize?: string
+    printHeaderField1?: string
+    printHeaderField2?: string
+    printHeaderField3?: string
+    printBorderStyle?: string
+    printHeaderAlign?: string
+    printActiveTemplate?: string
   }
 }): void {
   const win = window.open('', '_blank')
@@ -80,6 +94,16 @@ export function printA4Report(html: string, title: string, options?: {
     ? `<div style="font-size: 10pt; color: #555; margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px;"><strong>مالیات بر ارزش افزوده:</strong> ${taxRate}% (شامل قیمت نهایی می‌باشد)</div>`
     : ''
 
+  const headerFields = [cust.printHeaderField1, cust.printHeaderField2, cust.printHeaderField3]
+    .filter(Boolean)
+    .map(f => `<div style="margin: 4px 0; font-size: 10pt; border-bottom: 1px dashed #999;">${f}</div>`)
+    .join('')
+
+  let borderCSS = ''
+  if (cust.printBorderStyle === 'simple') borderCSS = 'body { border-top: 3px solid #006194; border-bottom: 3px solid #006194; padding-top: 10px; }'
+  if (cust.printBorderStyle === 'double') borderCSS = 'body { border-top: 6px double #006194; border-bottom: 6px double #006194; padding: 10px 0; }'
+  if (cust.printBorderStyle === 'decorative') borderCSS = 'body { border-top: 8px solid #006194; border-bottom: 4px solid #006194; padding: 10px 0; }'
+
   win.document.write(`<!DOCTYPE html>
 <html dir="rtl" lang="fa">
 <head>
@@ -87,13 +111,13 @@ export function printA4Report(html: string, title: string, options?: {
   <title>${title}</title>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    @page { size: A4; margin: 15mm; }
+    @page { size: ${cust.printPaperSize || 'A4'}; margin: ${cust.printMarginTop || 15}mm ${cust.printMarginRight || 15}mm ${cust.printMarginBottom || 15}mm ${cust.printMarginLeft || 15}mm; }
     @media print { body { margin: 0; } }
-    body { font-family: 'Vazirmatn', 'Tahoma', sans-serif; font-size: 11pt; direction: rtl; color: #1a1a1a; padding: 20px; }
-    h1 { font-size: 18pt; text-align: center; margin-bottom: 4px; color: ${primaryColor}; }
-    .shop-name { text-align: center; font-size: 14pt; font-weight: 700; color: ${primaryColor}; margin-bottom: 2px; }
+    body { font-family: 'Vazirmatn', 'Tahoma', sans-serif; font-size: ${cust.printFontSize || '11pt'}; line-height: ${cust.printLineSpacing || '1.5'}; direction: rtl; color: #1a1a1a; padding: 20px; }
+    h1 { font-size: ${cust.printHeaderSize || '18pt'}; text-align: ${cust.printHeaderAlign || 'center'}; margin-bottom: 4px; color: ${primaryColor}; }
+    .shop-name { text-align: ${cust.printHeaderAlign || 'center'}; font-size: 14pt; font-weight: 700; color: ${primaryColor}; margin-bottom: 2px; }
     .shop-phone { text-align: center; font-size: 11pt; color: #555; margin-bottom: 6px; }
-    .report-title { text-align: center; font-size: 12pt; font-weight: 600; color: #333; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid ${primaryColor}; }
+    .report-title { text-align: ${cust.printHeaderAlign || 'center'}; font-size: 12pt; font-weight: 600; color: #333; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid ${primaryColor}; }
     h2 { font-size: 12pt; margin-bottom: 6px; color: #333; margin-top: 16px; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
     th { background: #f0f4f8; padding: 8px 6px; text-align: right; font-size: 10pt; border-bottom: 2px solid #333; }
@@ -109,11 +133,13 @@ export function printA4Report(html: string, title: string, options?: {
     .signature-box { text-align: center; width: 45%; }
     .signature-line { border-top: 1px solid #333; margin-top: 32px; padding-top: 4px; font-size: 9pt; color: #666; }
     .signature-img { max-width: 120px; max-height: 50px; margin-bottom: 4px; display: block; margin-left: auto; margin-right: auto; }
+    ${borderCSS}
     ${watermarkStyle}
   </style>
 </head>
 <body>
   ${logoHtml}
+  ${headerFields}
   <div class="shop-name">${name}</div>
   ${phone ? `<div class="shop-phone">تلفن: ${phone}</div>` : ''}
   <div class="report-title">${title}</div>
