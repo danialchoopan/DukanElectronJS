@@ -11,17 +11,23 @@ export default function AccountingDashboard() {
   const [recentEntries, setRecentEntries] = useState<any[]>([])
   const [opExpenses, setOpExpenses] = useState<{ name: string; amount: number }[]>([])
   const [seeded, setSeeded] = useState(false)
+  const [showJournalForm, setShowJournalForm] = useState(false)
+  const [journalForm, setJournalForm] = useState({ entryDate: new Date().toISOString().slice(0, 10), description: '', lines: [{ accountId: 0, debit: 0, credit: 0, description: '' }, { accountId: 0, debit: 0, credit: 0, description: '' }] })
+  const [allAccounts, setAllAccounts] = useState<any[]>([])
+  const [journalError, setJournalError] = useState('')
 
   const isDark = document.documentElement.classList.contains('dark')
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
   const textSecondary = isDark ? '#94a3b8' : '#64748b'
+  const PRIMARY = '#006194'
 
   const load = async () => {
-    const [plRes, jeRes] = await Promise.all([
+    const [plRes, jeRes, acRes] = await Promise.all([
       window.api.reports.getProfitLoss(),
       window.api.journal.getEntries({ limit: 5 }),
+      window.api.accounts.getAll(),
     ])
     if (plRes.success && plRes.data) {
       const d = plRes.data
@@ -37,6 +43,7 @@ export default function AccountingDashboard() {
       setJournalCount(jeRes.data.total || 0)
       setRecentEntries(jeRes.data.entries || [])
     }
+    if (acRes.success && acRes.data) setAllAccounts(acRes.data)
   }
 
   useEffect(() => { load() }, [])
@@ -45,6 +52,42 @@ export default function AccountingDashboard() {
     await window.api.accounting.seedDemo()
     setSeeded(true)
     load()
+  }
+
+  const handleJournalSubmit = async () => {
+    setJournalError('')
+    const validLines = journalForm.lines.filter(l => l.accountId > 0)
+    if (validLines.length < 2) { setJournalError('حداقل دو ردیف حساب الزامی است'); return }
+    const totalDebit = validLines.reduce((s, l) => s + l.debit, 0)
+    const totalCredit = validLines.reduce((s, l) => s + l.credit, 0)
+    if (Math.abs(totalDebit - totalCredit) > 0.01) { setJournalError('جمع بدهکار و بستانکار باید برابر باشد'); return }
+    if (!journalForm.description.trim()) { setJournalError('شرح سند الزامی است'); return }
+    const res = await window.api.journal.create({
+      entryDate: journalForm.entryDate,
+      description: journalForm.description,
+      lines: validLines.map(l => ({ accountId: l.accountId, debit: l.debit, credit: l.credit, description: l.description })),
+    })
+    if (res.success) {
+      setShowJournalForm(false)
+      setJournalForm({ entryDate: new Date().toISOString().slice(0, 10), description: '', lines: [{ accountId: 0, debit: 0, credit: 0, description: '' }, { accountId: 0, debit: 0, credit: 0, description: '' }] })
+      load()
+    } else {
+      setJournalError(res.error || 'خطا در ثبت سند')
+    }
+  }
+
+  const addJournalLine = () => {
+    setJournalForm(f => ({ ...f, lines: [...f.lines, { accountId: 0, debit: 0, credit: 0, description: '' }] }))
+  }
+  const removeJournalLine = (idx: number) => {
+    if (journalForm.lines.length <= 2) return
+    setJournalForm(f => ({ ...f, lines: f.lines.filter((_, i) => i !== idx) }))
+  }
+  const updateJournalLine = (idx: number, field: string, value: any) => {
+    setJournalForm(f => ({
+      ...f,
+      lines: f.lines.map((l, i) => i === idx ? { ...l, [field]: value } : l)
+    }))
   }
 
   const profitPercent = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : '0'
@@ -130,6 +173,80 @@ export default function AccountingDashboard() {
           خروجی اکسل
         </button>
       </div>
+
+      {/* Quick Journal Entry */}
+      <div className="flex justify-end gap-2">
+        <button onClick={() => setShowJournalForm(!showJournalForm)} className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-1" style={{ backgroundColor: showJournalForm ? '#3b82f6' : (isDark ? '#334155' : '#f1f5f9'), color: showJournalForm ? '#ffffff' : textSecondary }}>
+          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          {fa.accounting.journal.createManual}
+        </button>
+      </div>
+
+      {showJournalForm && (
+        <div className="rounded-xl p-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+          <div className="text-sm font-bold mb-3" style={{ color: textPrimary }}>{fa.accounting.journal.createManual}</div>
+          {journalError && <div className="text-xs mb-2 p-2 rounded-lg" style={{ backgroundColor: '#fee2e2', color: '#dc2626' }}>{journalError}</div>}
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.journal.date}</label>
+              <input type="date" value={journalForm.entryDate} onChange={e => setJournalForm(f => ({ ...f, entryDate: e.target.value }))} className="input-field w-full text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.journal.description}</label>
+              <input value={journalForm.description} onChange={e => setJournalForm(f => ({ ...f, description: e.target.value }))} className="input-field w-full text-sm" placeholder="شرح سند..." />
+            </div>
+          </div>
+          <div className="space-y-2 mb-3">
+            <div className="grid grid-cols-12 gap-2 text-xs font-bold" style={{ color: textSecondary }}>
+              <div className="col-span-4">حساب</div>
+              <div className="col-span-2">{fa.accounting.journal.debit}</div>
+              <div className="col-span-2">{fa.accounting.journal.credit}</div>
+              <div className="col-span-3">شرح ردیف</div>
+              <div className="col-span-1"></div>
+            </div>
+            {journalForm.lines.map((line, idx) => (
+              <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                <div className="col-span-4">
+                  <select value={line.accountId} onChange={e => updateJournalLine(idx, 'accountId', Number(e.target.value))} className="input-field w-full text-xs">
+                    <option value={0}>انتخاب حساب...</option>
+                    {allAccounts.filter(a => a.isActive && a.parentId).map(a => (
+                      <option key={a.id} value={a.id}>{a.code} - {a.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-span-2">
+                  <input type="number" value={line.debit || ''} onChange={e => updateJournalLine(idx, 'debit', Number(e.target.value))} className="input-field w-full text-xs" placeholder="0" />
+                </div>
+                <div className="col-span-2">
+                  <input type="number" value={line.credit || ''} onChange={e => updateJournalLine(idx, 'credit', Number(e.target.value))} className="input-field w-full text-xs" placeholder="0" />
+                </div>
+                <div className="col-span-3">
+                  <input value={line.description} onChange={e => updateJournalLine(idx, 'description', e.target.value)} className="input-field w-full text-xs" placeholder="اختیاری" />
+                </div>
+                <div className="col-span-1 text-center">
+                  <button onClick={() => removeJournalLine(idx)} disabled={journalForm.lines.length <= 2} className="w-6 h-6 rounded flex items-center justify-center text-xs" style={{ color: journalForm.lines.length <= 2 ? textSecondary : '#dc2626', opacity: journalForm.lines.length <= 2 ? 0.3 : 1 }}>
+                    ×
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-between">
+            <button onClick={addJournalLine} className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+              + افزودن ردیف
+            </button>
+            <div className="flex gap-2">
+              <button onClick={() => { setShowJournalForm(false); setJournalError('') }} className="px-4 py-2 rounded-lg text-sm font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+                {fa.common.cancel}
+              </button>
+              <button onClick={handleJournalSubmit} className="px-4 py-2 rounded-lg text-sm font-bold" style={{ backgroundColor: PRIMARY, color: '#ffffff' }}>
+                {fa.common.save}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {kpis.map((kpi, i) => (
           <div key={i} className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>

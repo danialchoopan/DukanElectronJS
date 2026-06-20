@@ -280,6 +280,7 @@ export const en = {
       incomeStatement: 'Income Statement',
       balanceSheet: 'Balance Sheet',
       arAging: 'AR Aging',
+      cashFlow: 'Cash Flow Statement',
     },
     accounts: {
       title: 'Chart of Accounts',

@@ -278,6 +278,7 @@ export const fa = {
       incomeStatement: 'صورت سود و زیان',
       balanceSheet: 'ترازنامه',
       arAging: 'مانده مشتریان',
+      cashFlow: 'صورت جریان نقدی',
     },
     accounts: {
       title: 'دفتر حسابها',

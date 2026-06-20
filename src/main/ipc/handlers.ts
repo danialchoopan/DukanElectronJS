@@ -353,6 +353,7 @@ export function registerAllHandlers(): void {
   handleArg<{ entryDate: string; description: string; lines: { accountId: number; debit: number; credit: number; description?: string }[] }, any>('journal:create', (a) => journalRepo.createJournalEntry({ ...a, referenceType: 'manual' }))
   handleArg<{ startDate?: string; endDate?: string }, any>('journal:trialBalance', (a) => journalRepo.getTrialBalance(a.startDate, a.endDate))
   handleArg<{ accountId: number; startDate?: string; endDate?: string }, any>('journal:ledger', (a) => journalRepo.getGeneralLedger(a.accountId, a.startDate, a.endDate))
+  handleArg<{ startDate?: string; endDate?: string }, any>('reports:cashFlow', (a) => journalRepo.generateCashFlow(a.startDate, a.endDate))
 
   // ─── Financial Reports ───────────────────────────────
   handleArg<{ startDate?: string; endDate?: string }, any>('reports:profitLoss', (a) => reportsRepo.generateProfitLoss(a.startDate, a.endDate))
@@ -363,6 +364,13 @@ export function registerAllHandlers(): void {
   handle('periods:getAll', () => periodsRepo.getAllPeriods())
   handle('periods:getActive', () => periodsRepo.getActivePeriod())
   handleArg<{ id: number; userId: number }, boolean>('periods:close', (a) => periodsRepo.closePeriod(a.id, a.userId))
+  ipcMain.handle('periods:create', (_event, a: { name: string; startDate: string; endDate: string }) => {
+    try {
+      const db = getDatabase()
+      db.prepare('INSERT INTO fiscal_periods (name, startDate, endDate) VALUES (?, ?, ?)').run(a.name, a.startDate, a.endDate)
+      return { success: true }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
 
   // ─── Accounting Migration ────────────────────────────
   handle('accounting:migrate', () => {

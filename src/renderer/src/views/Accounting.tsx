@@ -9,8 +9,10 @@ import IncomeStatement from './accounting/IncomeStatement'
 import BalanceSheet from './accounting/BalanceSheet'
 import ARAging from './accounting/ARAging'
 import ExpenseManagement from './ExpenseManagement'
+import FiscalPeriods from './accounting/FiscalPeriods'
+import CashFlowStatement from './accounting/CashFlowStatement'
 
-type AccountingTab = 'dashboard' | 'accounts' | 'journal' | 'trialBalance' | 'incomeStatement' | 'balanceSheet' | 'arAging' | 'expenses'
+type AccountingTab = 'dashboard' | 'accounts' | 'journal' | 'trialBalance' | 'incomeStatement' | 'balanceSheet' | 'arAging' | 'expenses' | 'periods' | 'cashFlow'
 
 export default function Accounting() {
   const [tab, setTab] = useState<AccountingTab>('dashboard')
@@ -44,9 +46,15 @@ export default function Accounting() {
     { key: 'expenses', label: fa.nav.expenses, group: 3,
       icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>),
     },
+    { key: 'periods', label: fa.accounting.periods.title, group: 3,
+      icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>),
+    },
+    { key: 'cashFlow', label: fa.accounting.tabs.cashFlow, group: 4,
+      icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>),
+    },
   ]
 
-  const groups = [0, 1, 2, 3]
+  const groups = [0, 1, 2, 3, 4]
 
   return (
     <div className="h-full p-4 overflow-auto">
@@ -92,6 +100,8 @@ export default function Accounting() {
         {tab === 'balanceSheet' && <BalanceSheet />}
         {tab === 'arAging' && <ARAging />}
         {tab === 'expenses' && <ExpenseManagement />}
+        {tab === 'periods' && <FiscalPeriods />}
+        {tab === 'cashFlow' && <CashFlowStatement />}
       </div>
     </div>
   )

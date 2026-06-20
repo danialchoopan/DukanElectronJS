@@ -201,11 +201,13 @@ const api = {
     getProfitLoss: (startDate?: string, endDate?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('reports:profitLoss', { startDate, endDate }),
     getBalanceSheet: (asOfDate?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('reports:balanceSheet', { asOfDate }),
     getARAging: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('reports:arAging'),
+    getCashFlow: (startDate?: string, endDate?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('reports:cashFlow', { startDate, endDate }),
   },
   periods: {
     getAll: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('periods:getAll'),
     getActive: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('periods:getActive'),
     close: (id: number, userId: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('periods:close', { id, userId }),
+    create: (data: { name: string; startDate: string; endDate: string }): Promise<IPCResponse<any>> => ipcRenderer.invoke('periods:create', data),
   },
   accounting: {
     migrate: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('accounting:migrate'),

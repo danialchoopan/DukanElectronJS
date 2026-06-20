@@ -145,6 +145,40 @@ export function getTrialBalance(startDate?: string, endDate?: string): TrialBala
   `).all(...params) as TrialBalanceRow[]
 }
 
+export function generateCashFlow(startDate?: string, endDate?: string): { operating: { label: string; amount: number }[]; totalInflow: number; totalOutflow: number; netChange: number } {
+  const db = getDatabase()
+  let where = 'WHERE 1=1'
+  const params: any[] = []
+  if (startDate) { where += ' AND je.entryDate >= ?'; params.push(startDate) }
+  if (endDate) { where += ' AND je.entryDate <= ?'; params.push(endDate) }
+
+  const cashIn = db.prepare(`
+    SELECT COALESCE(SUM(jel.debit), 0) as amount
+    FROM journal_entry_lines jel
+    JOIN journal_entries je ON je.id = jel.entryId
+    JOIN accounts a ON a.id = jel.accountId
+    ${where} AND a.code IN ('1100', '1200')
+  `).get(...params) as { amount: number }
+
+  const cashOut = db.prepare(`
+    SELECT COALESCE(SUM(jel.credit), 0) as amount
+    FROM journal_entry_lines jel
+    JOIN journal_entries je ON je.id = jel.entryId
+    JOIN accounts a ON a.id = jel.accountId
+    ${where} AND a.code IN ('1100', '1200')
+  `).get(...params) as { amount: number }
+
+  return {
+    operating: [
+      { label: 'دریافتی از فروش', amount: cashIn.amount },
+      { label: 'پرداختی بابت هزینه‌ها', amount: cashOut.amount },
+    ],
+    totalInflow: cashIn.amount,
+    totalOutflow: cashOut.amount,
+    netChange: cashIn.amount - cashOut.amount,
+  }
+}
+
 export function getGeneralLedger(accountId: number, startDate?: string, endDate?: string): LedgerRow[] {
   const db = getDatabase()
   let where = 'WHERE jel.accountId = ?'

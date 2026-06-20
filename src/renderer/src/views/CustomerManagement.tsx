@@ -3,6 +3,7 @@ import type { Customer, CustomerLedgerEntry, Sale } from '../../../types'
 import { fa } from '../i18n'
 import { formatJalaliShort, formatJalaliDateTime } from '../utils/jalali'
 import { getProductImageUrl } from '../utils/productImage'
+import { printA4Report } from '../utils/a4Print'
 
 type FilterType = 'all' | 'debtor' | 'creditor' | 'inactive' | 'real' | 'legal'
 
@@ -284,6 +285,25 @@ export default function CustomerManagement() {
     if (m === 'cash') return fa.payment.cash
     if (m === 'card') return fa.payment.card
     return fa.payment.ledger
+  }
+
+  const handlePrintStatement = () => {
+    if (!selected) return
+    const typeBadge = (selected as any).customerType === 'legal' ? 'حقوقی' : 'حقیقی'
+    let html = `<div style="margin-bottom:12px;font-size:10pt;color:#555">مشتری: ${selected.name} — نوع: ${typeBadge} — تلفن: ${selected.phone || 'بدون تلفن'}</div>`
+    html += '<table><thead><tr><th>تاریخ</th><th>نوع</th><th>مبلغ</th><th>شرح</th><th>مانده</th></tr></thead><tbody>'
+    let runningBalance = 0
+    const reversed = [...ledgerEntries].reverse()
+    for (const e of reversed) {
+      if (e.type === 'charge' || e.type === 'payment') runningBalance += e.amount
+      else runningBalance -= e.amount
+      const typeLabel = e.type === 'charge' ? 'شارژ' : e.type === 'payment' ? 'پرداخت' : 'فروش'
+      const sign = e.type === 'sale' || e.type === 'debt' ? '-' : '+'
+      html += `<tr><td>${formatJalaliDateTime(e.createdAt)}</td><td>${typeLabel}</td><td>${sign}${e.amount.toLocaleString('fa-IR')}</td><td>${e.description || '-'}</td><td>${runningBalance.toLocaleString('fa-IR')}</td></tr>`
+    }
+    html += '</tbody></table>'
+    html += `<div style="margin-top:16px;padding:12px;background:#f0f4f8;border-radius:8px"><strong>مانده فعلی حساب: ${selected.balance.toLocaleString('fa-IR')} ${fa.common.toman}</strong></div>`
+    printA4Report(html, `صورتحساب ${selected.name}`)
   }
 
   const TypeBadge = ({ type }: { type?: string }) => {
@@ -684,6 +704,13 @@ export default function CustomerManagement() {
                           {f.label}
                         </button>
                       ))}
+                    </div>
+
+                    <div className="flex justify-end mb-3">
+                      <button onClick={handlePrintStatement} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold" style={{ backgroundColor: `${PRIMARY}15`, color: PRIMARY, border: `1px solid ${PRIMARY}40` }}>
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
+                        چاپ صورتحساب
+                      </button>
                     </div>
 
                     {ledgerWithBalance.length === 0 ? (
