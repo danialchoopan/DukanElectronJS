@@ -66,9 +66,11 @@ export function printA4Report(html: string, title: string, options?: {
     </div>
     <div class="signature-row">
       <div class="signature-box">
+        ${cust.printSignature ? `<img src="${cust.printSignature}" class="signature-img" />` : ''}
         <div class="signature-line">محل امضای خریدار</div>
       </div>
       <div class="signature-box">
+        ${cust.printSignature ? `<img src="${cust.printSignature}" class="signature-img" />` : ''}
         <div class="signature-line">محل امضای فروشنده</div>
       </div>
     </div>
@@ -106,6 +108,7 @@ export function printA4Report(html: string, title: string, options?: {
     .signature-row { display: flex; justify-content: space-between; margin-top: 32px; padding-top: 12px; border-top: 1px solid #ccc; }
     .signature-box { text-align: center; width: 45%; }
     .signature-line { border-top: 1px solid #333; margin-top: 32px; padding-top: 4px; font-size: 9pt; color: #666; }
+    .signature-img { max-width: 120px; max-height: 50px; margin-bottom: 4px; display: block; margin-left: auto; margin-right: auto; }
     ${watermarkStyle}
   </style>
 </head>
