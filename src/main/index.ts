@@ -76,13 +76,17 @@ function registerNavigationShortcuts(): void {
   }
 }
 
-app.whenReady().then(() => {
-  getDatabase()
-  // seedDatabase()  // Uncomment to auto-seed demo data on first run
-  registerAllHandlers()
-  autoBackup()
-  createWindow()
-  registerNavigationShortcuts()
+app.whenReady().then(async () => {
+  try {
+    getDatabase()
+    registerAllHandlers()
+    await autoBackup()
+    createWindow()
+    registerNavigationShortcuts()
+  } catch (err) {
+    logError('Startup error: ' + (err instanceof Error ? err.message : String(err)))
+    dialog.showErrorBox('Startup Error', 'An error occurred during startup:\n\n' + (err instanceof Error ? err.message : String(err)) + '\n\nCheck the log file for details.')
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
