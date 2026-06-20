@@ -10,10 +10,9 @@ files:
   - "node_modules/better-sqlite3/**/*"
 win:
   target:
-    - nsis
+    - portable
   sign: false
-  signingHashAlgorithms: []
-  artifactName: "${productName}-${version}-Setup.${ext}"
+  artifactName: "${productName}-${version}-Portable.${ext}"
 linux:
   target:
     - AppImage

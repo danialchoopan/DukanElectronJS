@@ -10,6 +10,8 @@ release/
 *.log
 .mimocode
 npm-debug.log*
+error.log
+*.db
 
 # OS files
 .DS_Store
@@ -27,14 +29,43 @@ Desktop.ini
 .env.local
 .env.production
 
-# Electron
+# Electron user data (runtime, not committed)
 *.db
 *.db-journal
 *.db-wal
+*.db-shm
 
-# Cache
+# App user data (generated at runtime)
+AppData/
+userData/
+
+# Temp files
+.tmp/
 .cache/
 .vite/
-
-# TypeScript
 *.tsbuildinfo
+
+# Test files
+tests/
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Spec/plan files (not source code)
+*.txt
+*.md
+!README.md
+!SETUP.md
+
+# Designer mockup files (not source code)
+stitch_persian_rtl_accounting_ui/
+screen.png
+code.html
+
+# Git
+*.orig
+*.BACKUP.*
+*.base.*
+*.local.*
