@@ -165,6 +165,42 @@ export function registerAllHandlers(): void {
     }
   })
 
+  ipcMain.handle('products:bulkImport', (_event, arg: { products: ProductInput[] }) => {
+    try {
+      const db = getDatabase()
+      const results: { title: string; success: boolean; error?: string }[] = []
+      const importTx = db.transaction(() => {
+        for (const p of arg.products) {
+          try {
+            if (!p.title) { results.push({ title: p.title || 'بدون نام', success: false, error: 'نام کالا الزامی است' }); continue }
+            if (!p.barcode || p.barcode.trim() === '') {
+              const row = db.prepare("SELECT barcode FROM products WHERE barcode LIKE 'PRD-%' ORDER BY CAST(SUBSTR(barcode, 5) AS INTEGER) DESC LIMIT 1").get() as { barcode: string } | undefined
+              const lastNum = row ? parseInt(row.barcode.replace('PRD-', '')) : 0
+              p.barcode = `PRD-${String(lastNum + 1).padStart(6, '0')}`
+            }
+            const existing = db.prepare('SELECT id FROM products WHERE barcode = ?').get(p.barcode) as { id: number } | undefined
+            if (existing) {
+              db.prepare('UPDATE products SET title=?, category=?, unit=?, purchase_price=?, sale_price=?, stock=?, minStock=?, isLoose=? WHERE id=?').run(
+                p.title, p.category || '', p.unit || 'number', p.purchase_price, p.sale_price, p.stock, p.minStock || 0, p.isLoose ? 1 : 0, existing.id
+              )
+              results.push({ title: p.title, success: true })
+            } else {
+              db.prepare('INSERT INTO products (barcode, title, category, unit, purchase_price, sale_price, stock, minStock, isActive) VALUES (?,?,?,?,?,?,?,?,1)').run(
+                p.barcode, p.title, p.category || '', p.unit || 'number', p.purchase_price, p.sale_price, p.stock, p.minStock || 0
+              )
+              results.push({ title: p.title, success: true })
+            }
+          } catch (err) {
+            results.push({ title: p.title || '?', success: false, error: err instanceof Error ? err.message : String(err) })
+          }
+        }
+      })
+      importTx()
+      const successCount = results.filter(r => r.success).length
+      return { success: true, data: { results, successCount, failCount: results.length - successCount } }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
+
   // ─── Sales ──────────────────────────────────────────────
   ipcMain.handle('sales:create', (_event, a: SaleInput) => {
     try {

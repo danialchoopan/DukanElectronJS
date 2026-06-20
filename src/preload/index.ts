@@ -55,6 +55,8 @@ const api = {
       ipcRenderer.invoke('products:saveImage', data),
     getImage: (filename: string): Promise<IPCResponse<string>> =>
       ipcRenderer.invoke('products:getImage', { filename }),
+    bulkImport: (products: any[]): Promise<IPCResponse<any>> =>
+      ipcRenderer.invoke('products:bulkImport', { products }),
   },
 
   sales: {

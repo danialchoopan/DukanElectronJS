@@ -27,6 +27,10 @@ export default function AddProduct() {
     barcode: '', title: '', category: '', unit: 'number' as 'number' | 'weight',
     purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '',
   })
+  const [detailProduct, setDetailProduct] = useState<any>(null)
+  const [detailEditMode, setDetailEditMode] = useState(false)
+  const [detailForm, setDetailForm] = useState<any>({})
+  const [showDetailConfirm, setShowDetailConfirm] = useState(false)
 
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
@@ -99,6 +103,10 @@ export default function AddProduct() {
   }
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showBulkForm, setShowBulkForm] = useState(false)
+  const [bulkText, setBulkText] = useState('')
+  const [bulkResults, setBulkResults] = useState<any[] | null>(null)
+  const [bulkPreview, setBulkPreview] = useState<any[] | null>(null)
 
   const handleDeleteConfirm = async () => {
     if (!editProduct) return
@@ -188,6 +196,10 @@ export default function AddProduct() {
           className="btn btn-primary text-sm"
         >
           + {fa.admin.addProduct}
+        </button>
+        <button onClick={() => setShowBulkForm(true)} className="text-sm px-4 py-2 rounded-xl font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary, border: `1px solid ${cardBorder}` }}>
+          <svg className="w-4 h-4 inline ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          ورود گروهی
         </button>
       </div>
 
@@ -434,7 +446,8 @@ export default function AddProduct() {
               return (
                 <tr
                   key={p.id}
-                  className="transition-all duration-150"
+                  onClick={() => openDetail(p)}
+                  className="cursor-pointer transition-all duration-150"
                   style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` }}
                   onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(0,97,148,0.06)' : 'rgba(0,97,148,0.03)' }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
@@ -516,6 +529,167 @@ export default function AddProduct() {
           </div>
         )}
       </div>
+      {showBulkForm && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => { setShowBulkForm(false); setBulkResults(null); setBulkText('') }}>
+          <div className="rounded-2xl p-6 max-w-2xl w-full mx-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, maxHeight: '80vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4" style={{ color: textPrimary }}>ورود گروهی کالا</h3>
+            {!bulkPreview && !bulkResults ? (
+              <>
+                <p className="text-xs mb-3" style={{ color: textSecondary }}>هر خط یک کالا: نام, بارکد (اختیاری), دسته, قیمت خرید, قیمت فروش, موجودی</p>
+                <textarea value={bulkText} onChange={e => setBulkText(e.target.value)} className="input-field w-full text-sm font-mono" rows={10} placeholder={'شیر کاله,626001,لبنیات,28000,32000,50\nبرنج ایرانی,PRD-001,خشکبار,85000,98000,20\nروغن لادن,,روغن,120000,135000,15'} />
+                <div className="flex gap-2 mt-3">
+                  <button onClick={() => {
+                    const lines = bulkText.trim().split('\n').filter(Boolean)
+                    const products = lines.map(line => {
+                      const parts = line.split(',').map(s => s.trim())
+                      return { title: parts[0] || '', barcode: parts[1] || '', category: parts[2] || '', purchase_price: parseFloat(parts[3]) || 0, sale_price: parseFloat(parts[4]) || 0, stock: parseInt(parts[5]) || 0 }
+                    })
+                    setBulkPreview(products)
+                  }} className="px-6 py-2.5 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: '#006194' }}>پیش‌نمایش</button>
+                  <button onClick={() => {
+                    const BOM = '\uFEFF'
+                    const csv = BOM + 'نام,بارکد,دسته,قیمت خرید,قیمت فروش,موجودی\nشیر کاله,626001,لبنیات,28000,32000,50\nبرنج ایرانی,PRD-001,خشکبار,85000,98000,20\nروغن لادن,,روغن,120000,135000,15\n'
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+                    const link = document.createElement('a')
+                    link.href = URL.createObjectURL(blob)
+                    link.download = 'sample-import.csv'
+                    link.click()
+                    URL.revokeObjectURL(link.href)
+                  }} className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>دانلود نمونه</button>
+                  <button onClick={() => { setShowBulkForm(false); setBulkResults(null); setBulkText('') }} className="px-4 py-2.5 rounded-xl text-sm font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>لغو</button>
+                </div>
+              </>
+            ) : bulkPreview && !bulkResults ? (
+              <div>
+                <p className="text-sm font-bold mb-3" style={{ color: textPrimary }}>پیش‌نمایش ({bulkPreview.length} کالا)</p>
+                <div className="max-h-60 overflow-auto rounded-xl border mb-3" style={{ borderColor: cardBorder }}>
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+                        <th className="px-3 py-2 text-right" style={{ color: textSecondary }}>نام</th>
+                        <th className="px-3 py-2 text-right" style={{ color: textSecondary }}>بارکد</th>
+                        <th className="px-3 py-2 text-right" style={{ color: textSecondary }}>دسته</th>
+                        <th className="px-3 py-2 text-right" style={{ color: textSecondary }}>ق خرید</th>
+                        <th className="px-3 py-2 text-right" style={{ color: textSecondary }}>ق فروش</th>
+                        <th className="px-3 py-2 text-center" style={{ color: textSecondary }}>موجودی</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bulkPreview.map((p, i) => (
+                        <tr key={i} style={{ borderTop: `1px solid ${cardBorder}` }}>
+                          <td className="px-3 py-2" style={{ color: textPrimary }}>{p.title}</td>
+                          <td className="px-3 py-2 font-mono" style={{ color: textSecondary }}>{p.barcode || '-'}</td>
+                          <td className="px-3 py-2" style={{ color: textPrimary }}>{p.category}</td>
+                          <td className="px-3 py-2" style={{ color: textPrimary }}>{p.purchase_price.toLocaleString('fa-IR')}</td>
+                          <td className="px-3 py-2" style={{ color: textPrimary }}>{p.sale_price.toLocaleString('fa-IR')}</td>
+                          <td className="px-3 py-2 text-center" style={{ color: textPrimary }}>{p.stock}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={async () => {
+                    const r = await window.api.products.bulkImport(bulkPreview)
+                    if (r.success && r.data) { setBulkResults(r.data.results); setBulkPreview(null) }
+                  }} className="px-6 py-2.5 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: '#006194' }}>تایید ورود {bulkPreview.length} کالا</button>
+                  <button onClick={() => setBulkPreview(null)} className="px-4 py-2.5 rounded-xl text-sm font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>بازگشت</button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p className="text-sm mb-3" style={{ color: textPrimary }}>نتیجه ورود گروهی:</p>
+                <div className="max-h-60 overflow-auto rounded-xl border" style={{ borderColor: cardBorder }}>
+                  {bulkResults!.map((r, i) => (
+                    <div key={i} className="flex items-center justify-between px-3 py-2" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                      <span className="text-sm" style={{ color: textPrimary }}>{r.title}</span>
+                      {r.success ? (
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#dcfce7', color: '#16a34a' }}>موفق</span>
+                      ) : (
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#fee2e2', color: '#dc2626' }}>{r.error || 'خطا'}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button onClick={() => { setBulkResults(null); setBulkText(''); setShowBulkForm(false); loadProducts() }} className="w-full mt-3 py-2.5 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: '#006194' }}>پایان</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {detailProduct && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setDetailProduct(null)}>
+          <div className="rounded-2xl p-6 max-w-lg w-full mx-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, maxHeight: '85vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold" style={{ color: textPrimary }}>جزئیات کالا</h3>
+              <div className="flex gap-2">
+                {!detailEditMode && (
+                  <button onClick={() => setDetailEditMode(true)} className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textPrimary }}>
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    ویرایش
+                  </button>
+                )}
+                <button onClick={() => setDetailProduct(null)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>✕</button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {detailProduct.imageBase64 && (
+                <div className="col-span-2 flex justify-center">
+                  <img src={detailProduct.imageBase64} className="w-32 h-32 rounded-xl object-cover" style={{ border: `1px solid ${cardBorder}` }} />
+                </div>
+              )}
+              {!detailEditMode ? (
+                <>
+                  <InfoField label="نام" value={detailProduct.title} />
+                  <InfoField label="بارکد" value={detailProduct.barcode || '-'} />
+                  <InfoField label="دسته" value={detailProduct.category || '-'} />
+                  <InfoField label="موجودی" value={String(detailProduct.stock)} color={detailProduct.stock <= 0 ? '#ef4444' : '#22c55e'} />
+                  <InfoField label="قیمت خرید" value={detailProduct.purchase_price.toLocaleString('fa-IR')} />
+                  <InfoField label="قیمت فروش" value={detailProduct.sale_price.toLocaleString('fa-IR')} />
+                  <InfoField label="حداقل موجودی" value={String(detailProduct.minStock || 0)} />
+                  <InfoField label="واحد" value={detailProduct.unit === 'weight' ? 'وزنی' : 'عددی'} />
+                </>
+              ) : (
+                <div className="col-span-2 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    {['title','barcode','category','stock','minStock','purchase_price','sale_price'].map(field => (
+                      <div key={field}>
+                        <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{field}</label>
+                        <input type={field.includes('price') || field === 'stock' || field === 'minStock' ? 'number' : 'text'}
+                          value={detailForm[field] || ''} onChange={e => setDetailForm({ ...detailForm, [field]: field.includes('price') || field === 'stock' || field === 'minStock' ? parseFloat(e.target.value) || 0 : e.target.value })}
+                          className="input-field text-sm w-full" />
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>توضیحات</label>
+                    <textarea value={detailForm.description || ''} onChange={e => setDetailForm({ ...detailForm, description: e.target.value })} className="input-field text-sm w-full" rows={2} />
+                  </div>
+                  {!showDetailConfirm ? (
+                    <button onClick={() => setShowDetailConfirm(true)} className="w-full py-2.5 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: '#006194' }}>ذخیره تغییرات</button>
+                  ) : (
+                    <div className="rounded-xl p-3" style={{ backgroundColor: isDark ? '#450a0a' : '#fef2f2', border: '1px solid #ef4444' }}>
+                      <p className="text-xs font-bold mb-2 text-center" style={{ color: '#ef4444' }}>آیا از ذخیره تغییرات اطمینان دارید؟</p>
+                      <div className="flex gap-2">
+                        <button onClick={async () => {
+                          await window.api.products.update(detailProduct.id, detailForm)
+                          setDetailProduct(null)
+                          setDetailEditMode(false)
+                          setShowDetailConfirm(false)
+                          loadProducts()
+                        }} className="flex-1 py-2 rounded-lg text-xs font-bold text-white" style={{ backgroundColor: '#ef4444' }}>بله، ذخیره شود</button>
+                        <button onClick={() => setShowDetailConfirm(false)} className="flex-1 py-2 rounded-lg text-xs font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>لغو</button>
+                      </div>
+                    </div>
+                  )}
+                  <button onClick={() => { setDetailEditMode(false); setShowDetailConfirm(false); setDetailForm({ title: detailProduct.title, barcode: detailProduct.barcode || '', category: detailProduct.category || '', purchase_price: detailProduct.purchase_price, sale_price: detailProduct.sale_price, stock: detailProduct.stock, minStock: detailProduct.minStock || 0, description: detailProduct.description || '', imageBase64: detailProduct.imageBase64 || '' }) }} className="text-xs py-2" style={{ color: textSecondary }}>لغو ویرایش</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <PrintDialog open={showPrintDialog} title="چاپ لیست کالاها" totalCount={products.length} onClose={() => setShowPrintDialog(false)} onPrint={(range) => { setShowPrintDialog(false); handlePrintProducts(range) }} />
     </div>
   )
@@ -525,4 +699,21 @@ export default function AddProduct() {
     setForm({ barcode: p.barcode, title: p.title, category: p.category, unit: p.unit, purchase_price: p.purchase_price, sale_price: p.sale_price, stock: p.stock, minStock: p.minStock, isLoose: p.isLoose, description: p.description || '', imageBase64: p.imageBase64 || '' })
     setShowForm(true)
   }
+
+  const openDetail = (p: any) => {
+    setDetailProduct(p)
+    setDetailForm({ title: p.title, barcode: p.barcode || '', category: p.category || '', purchase_price: p.purchase_price, sale_price: p.sale_price, stock: p.stock, minStock: p.minStock || 0, description: p.description || '', imageBase64: p.imageBase64 || '' })
+    setDetailEditMode(false)
+    setShowDetailConfirm(false)
+  }
+}
+
+function InfoField({ label, value, color }: { label: string; value: string; color?: string }) {
+  const isDark = document.documentElement.classList.contains('dark')
+  return (
+    <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc' }}>
+      <div className="text-xs" style={{ color: '#94a3b8' }}>{label}</div>
+      <div className="text-sm font-bold" style={{ color: color || '#0f172a' }}>{value}</div>
+    </div>
+  )
 }

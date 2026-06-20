@@ -76,6 +76,8 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
   const [shopName, setShopName] = useState('')
   const [shopAddress, setShopAddress] = useState('')
   const [shopPhone, setShopPhone] = useState('')
+  const [businessType, setBusinessType] = useState<'supermarket' | 'restaurant' | 'clothing' | 'other'>('supermarket')
+  const [enableTax, setEnableTax] = useState(false)
   const [adminPin, setAdminPin] = useState('')
   const [adminPinConfirm, setAdminPinConfirm] = useState('')
   const [pinError, setPinError] = useState('')
@@ -121,12 +123,16 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
       window.api.settings.set('storeName', shopName || (lang === 'fa' ? 'فروشگاه من' : 'My Store')),
       window.api.settings.set('storeAddress', shopAddress),
       window.api.settings.set('storePhone', shopPhone),
-      window.api.settings.set('businessType', 'supermarket'),
+      window.api.settings.set('businessType', businessType),
       window.api.settings.set('autoRounding', '500'),
+      window.api.settings.set('taxEnabled', String(enableTax)),
       window.api.settings.set('language', lang),
       window.api.settings.set('theme', theme),
       window.api.settings.set('isSetupComplete', 'true'),
     ])
+    if (enableTax) {
+      await window.api.settings.set('taxRate', '9')
+    }
     if (adminPin.length >= 4) {
       await window.api.auth.createUser({ name: lang === 'fa' ? 'مدیر' : 'Admin', pinCode: adminPin, role: 'admin' })
     }
@@ -295,6 +301,38 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                       <StoreIcon color={colors.outline} />
                     </div>
+                  </div>
+                </div>
+
+                {/* Business Type */}
+                <div className="mb-4">
+                  <label className="text-xs font-medium mb-2 block" style={{ color: subtitleColor }}>نوع کسب‌وکار</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([
+                      { key: 'supermarket', label: 'سوپرمارکت' },
+                      { key: 'restaurant', label: 'رستوران' },
+                      { key: 'clothing', label: 'پوشاک' },
+                      { key: 'other', label: 'سایر' },
+                    ]).map(b => (
+                      <button key={b.key} onClick={() => setBusinessType(b.key as any)}
+                        className="py-2.5 rounded-lg text-xs font-bold transition-all"
+                        style={{ backgroundColor: businessType === b.key ? colors.primary : (isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9'), color: businessType === b.key ? '#fff' : subtitleColor, border: businessType === b.key ? 'none' : cardBorder }}>
+                        {b.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tax Toggle */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between p-3 rounded-xl" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc' }}>
+                    <div>
+                      <div className="text-sm font-medium" style={{ color: titleColor }}>مالیات بر ارزش افزوده</div>
+                      <div className="text-xs" style={{ color: subtitleColor }}>در صورت نیاز می‌توانید بعداً در تنظیمات تغییر دهید</div>
+                    </div>
+                    <button onClick={() => setEnableTax(!enableTax)} className="relative w-10 h-5 rounded-full transition-all" style={{ backgroundColor: enableTax ? colors.primary : (isDark ? '#475569' : '#d1d5db') }}>
+                      <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all" style={{ left: enableTax ? '20px' : '2px' }} />
+                    </button>
                   </div>
                 </div>
 
