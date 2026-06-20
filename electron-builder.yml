@@ -1,5 +1,5 @@
 appId: com.hamtraz.accounting
-productName: HamTraz Accounting
+productName: HamTrazAccouting
 directories:
   output: release
 files:
@@ -14,7 +14,7 @@ win:
   target:
     - portable
   sign: false
-  artifactName: "HamTrazAccounting-${version}.${ext}"
+  artifactName: "HamTrazAccounting-${version}beta.${ext}"
 linux:
   target:
     - AppImage
