@@ -5,6 +5,8 @@ import { generateReceiptHTML, printContent } from '../utils/receipt'
 import { printA4Report, downloadExcel } from '../utils/a4Print'
 import ShamsiDateInput from '../components/ShamsiDateInput'
 import Pagination from '../components/Pagination'
+import { useSortable } from '../hooks/useSortable'
+import PrintDialog from '../components/PrintDialog'
 
 export default function Dashboard() {
   const [sales, setSales] = useState<any[]>([])
@@ -66,6 +68,8 @@ export default function Dashboard() {
   const cardTotal = sales.filter((s: any) => s.paymentMethod === 'card').reduce((a: number, s: any) => a + s.total_amount, 0)
   const ledgerTotal = sales.filter((s: any) => s.paymentMethod === 'ledger').reduce((a: number, s: any) => a + s.total_amount, 0)
   const pagedSales = sales.slice(salesPage * salesPageSize, (salesPage + 1) * salesPageSize)
+  const { sorted: sortedSales, sortKey, sortDir, toggleSort } = useSortable(pagedSales)
+  const [showPrintDialog, setShowPrintDialog] = useState(false)
 
   const getShamsiToday = () => {
     const d = new Date()
@@ -84,9 +88,10 @@ export default function Dashboard() {
     { label: 'مرجوعی', value: `${returnStats.totalReturns}`, color: '#f59e0b', bg: isDark ? '#451a03' : '#fef3c7' },
   ]
 
-  const handlePrintA4 = () => {
+  const handlePrintA4 = (range: { start: number; end: number } | 'all') => {
+    const printSales = range === 'all' ? sales : sales.slice(range.start - 1, range.end)
     let html = '<h1>گزارش داشبورد فروشگاه</h1>'
-    html += `<div class="header-info"><span>تاریخ: ${getShamsiToday()}</span></div>`
+    html += `<div class="header-info"><span>تاریخ: ${getShamsiToday()}</span><span>تعداد فاکتور: ${printSales.length}</span></div>`
     html += '<table><thead><tr><th>شاخص</th><th>مقدار</th></tr></thead><tbody>'
     stats.forEach(s => { html += `<tr><td>${s.label}</td><td>${s.value}</td></tr>` })
     html += '</tbody></table>'
@@ -109,7 +114,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold" style={{ color: textPrimary }}>{fa.dashboard.title}</h2>
         <div className="flex items-center gap-2">
-          <button onClick={handlePrintA4} className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+          <button onClick={() => setShowPrintDialog(true)} className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             چاپ گزارش
           </button>
@@ -196,16 +201,28 @@ export default function Dashboard() {
         <table className="w-full text-sm">
           <thead>
             <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>#</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>فاکتور</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.cashier}</th>
-              <th className="text-center px-4 py-2" style={{ color: textSecondary }}>{fa.payment.method}</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.pos.total}</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>تاریخ</th>
+              {([
+                { key: 'id' as any, label: '#' },
+                { key: 'invoiceNumber' as any, label: 'فاکتور' },
+                { key: 'userName' as any, label: fa.admin.cashier },
+                { key: 'paymentMethod' as any, label: fa.payment.method, align: 'center' as const },
+                { key: 'total_amount' as any, label: fa.pos.total },
+                { key: 'createdAt' as any, label: 'تاریخ' },
+              ]).map(col => (
+                <th key={String(col.key)}
+                  className={`px-4 py-2 cursor-pointer select-none transition-all hover:bg-blue-500/10 ${col.align === 'center' ? 'text-center' : 'text-right'}`}
+                  style={{ color: sortKey === col.key ? '#3b82f6' : textSecondary }}
+                  onClick={() => toggleSort(col.key)}>
+                  <span className="inline-flex items-center gap-1">
+                    {col.label}
+                    <span className="text-[10px] opacity-50">{sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {pagedSales.map((s) => (
+            {sortedSales.map((s) => (
               <tr key={s.id} className="cursor-pointer transition-all" style={{ borderBottom: `1px solid ${cardBorder}` }}
                 onClick={() => setSelectedSale(s)}
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.03)')}
@@ -295,6 +312,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+      <PrintDialog open={showPrintDialog} title="چاپ گزارش داشبورد" totalCount={sales.length} onClose={() => setShowPrintDialog(false)} onPrint={(range) => { setShowPrintDialog(false); handlePrintA4(range) }} />
     </div>
   )
 }

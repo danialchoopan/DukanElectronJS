@@ -3,6 +3,7 @@ import { fa } from '../../i18n'
 import ShamsiDateInput from '../../components/ShamsiDateInput'
 import { printA4Report, downloadExcel } from '../../utils/a4Print'
 import HelpPopup from '../../components/HelpPopup'
+import { useSortable } from '../../hooks/useSortable'
 
 export default function BalanceSheet() {
   const [data, setData] = useState<any>(null)
@@ -23,10 +24,19 @@ export default function BalanceSheet() {
 
   if (!data) return null
 
-  const Section = ({ title, items, total, color }: { title: string; items: any[]; total: number; color: string }) => (
+  const { sorted: sortedCA, sortKey: caSortKey, sortDir: caSortDir, toggleSort: caToggleSort } = useSortable(data.currentAssets || [])
+  const { sorted: sortedLTA, sortKey: ltaSortKey, sortDir: ltaSortDir, toggleSort: ltaToggleSort } = useSortable(data.longTermAssets || [])
+  const { sorted: sortedCL, sortKey: clSortKey, sortDir: clSortDir, toggleSort: clToggleSort } = useSortable(data.currentLiabilities || [])
+  const { sorted: sortedLTL, sortKey: ltlSortKey, sortDir: ltlSortDir, toggleSort: ltlToggleSort } = useSortable(data.longTermLiabilities || [])
+  const { sorted: sortedEq, sortKey: eqSortKey, sortDir: eqSortDir, toggleSort: eqToggleSort } = useSortable(data.equityItems || [])
+
+  const Section = ({ title, sortedItems, total, color, sortKey, sortDir, onSort }: { title: string; sortedItems: any[]; total: number; color: string; sortKey: any; sortDir: any; onSort: any }) => (
     <div className="mb-3">
-      <div className="text-sm font-bold mb-2" style={{ color }}>{title}</div>
-      {items.map((item, i) => (
+      <div className="text-sm font-bold mb-2 flex items-center gap-2 cursor-pointer select-none" style={{ color }} onClick={onSort}>
+        {title}
+        <span className="text-[10px] opacity-50">{sortKey ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
+      </div>
+      {sortedItems.map((item, i) => (
         <div key={i} className="flex justify-between px-4 py-1.5" style={{ borderBottom: `1px solid ${cardBorder}` }}>
           <span className="text-sm" style={{ color: textSecondary }}>{item.accountCode} - {item.accountName}</span>
           <span className="text-sm font-mono font-bold" style={{ color: textPrimary }}>{item.amount.toLocaleString('fa-IR')}</span>
@@ -104,8 +114,8 @@ export default function BalanceSheet() {
 
       <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
         <div className="p-4" style={{ borderBottom: `2px solid ${cardBorder}` }}>
-          <Section title={fa.accounting.balanceSheet.currentAssets} items={data.currentAssets} total={data.totalCurrentAssets} color="#3b82f6" />
-          {data.longTermAssets?.length > 0 && <Section title={fa.accounting.balanceSheet.longTermAssets} items={data.longTermAssets} total={data.totalLongTermAssets} color="#3b82f6" />}
+          <Section title={fa.accounting.balanceSheet.currentAssets} sortedItems={sortedCA} total={data.totalCurrentAssets} color="#3b82f6" sortKey={caSortKey} sortDir={caSortDir} onSort={() => caToggleSort('amount' as any)} />
+          {data.longTermAssets?.length > 0 && <Section title={fa.accounting.balanceSheet.longTermAssets} sortedItems={sortedLTA} total={data.totalLongTermAssets} color="#3b82f6" sortKey={ltaSortKey} sortDir={ltaSortDir} onSort={() => ltaToggleSort('amount' as any)} />}
           <div className="flex justify-between px-4 py-3 rounded-xl" style={{ backgroundColor: isDark ? '#0c1e3a' : '#dbeafe' }}>
             <span className="font-bold" style={{ color: '#3b82f6' }}>{fa.accounting.balanceSheet.totalAssets}</span>
             <span className="font-bold font-mono" style={{ color: '#3b82f6' }}>{data.totalAssets.toLocaleString('fa-IR')}</span>
@@ -113,8 +123,8 @@ export default function BalanceSheet() {
         </div>
 
         <div className="p-4" style={{ borderBottom: `2px solid ${cardBorder}` }}>
-          <Section title={fa.accounting.balanceSheet.currentLiabilities} items={data.currentLiabilities} total={data.totalCurrentLiabilities} color="#ef4444" />
-          {data.longTermLiabilities?.length > 0 && <Section title={fa.accounting.balanceSheet.longTermLiabilities} items={data.longTermLiabilities} total={data.totalLongTermLiabilities} color="#ef4444" />}
+          <Section title={fa.accounting.balanceSheet.currentLiabilities} sortedItems={sortedCL} total={data.totalCurrentLiabilities} color="#ef4444" sortKey={clSortKey} sortDir={clSortDir} onSort={() => clToggleSort('amount' as any)} />
+          {data.longTermLiabilities?.length > 0 && <Section title={fa.accounting.balanceSheet.longTermLiabilities} sortedItems={sortedLTL} total={data.totalLongTermLiabilities} color="#ef4444" sortKey={ltlSortKey} sortDir={ltlSortDir} onSort={() => ltlToggleSort('amount' as any)} />}
           <div className="flex justify-between px-4 py-2 rounded-xl mb-2" style={{ backgroundColor: isDark ? '#450a0a' : '#fee2e2' }}>
             <span className="font-bold text-sm" style={{ color: '#ef4444' }}>{fa.accounting.balanceSheet.totalLiabilities}</span>
             <span className="font-bold font-mono text-sm" style={{ color: '#ef4444' }}>{data.totalLiabilities.toLocaleString('fa-IR')}</span>
@@ -122,7 +132,7 @@ export default function BalanceSheet() {
         </div>
 
         <div className="p-4" style={{ borderBottom: `2px solid ${cardBorder}` }}>
-          <Section title={fa.accounting.balanceSheet.equity} items={data.equityItems} total={data.totalEquity} color="#a855f7" />
+          <Section title={fa.accounting.balanceSheet.equity} sortedItems={sortedEq} total={data.totalEquity} color="#a855f7" sortKey={eqSortKey} sortDir={eqSortDir} onSort={() => eqToggleSort('amount' as any)} />
         </div>
 
         <div className="p-4 flex justify-between">

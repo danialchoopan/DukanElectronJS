@@ -6,6 +6,8 @@ import { printA4Report, downloadExcel } from '../utils/a4Print'
 import ShamsiDateInput from '../components/ShamsiDateInput'
 import Pagination from '../components/Pagination'
 import { useAuthStore } from '../store/authStore'
+import { useSortable } from '../hooks/useSortable'
+import PrintDialog from '../components/PrintDialog'
 
 export default function SalesHistory() {
   const [sales, setSales] = useState<Sale[]>([])
@@ -95,16 +97,22 @@ export default function SalesHistory() {
 
   const totalRevenue = filteredSales.filter(s => !returnedIds.has(s.id)).reduce((sum, s) => sum + s.total_amount, 0)
   const pagedSales = filteredSales.slice(page * pageSize, (page + 1) * pageSize)
+  const { sorted: sortedSales, sortKey, sortDir, toggleSort } = useSortable(pagedSales)
+  const [showPrintDialog, setShowPrintDialog] = useState(false)
 
-  const handlePrintSales = () => {
+  const handlePrintSales = (range: { start: number; end: number } | 'all') => {
+    let data = filteredSales
+    if (range !== 'all') {
+      data = filteredSales.slice(range.start - 1, range.end)
+    }
     let html = '<h1>گزارش فروش</h1>'
-    html += `<div class="header-info"><span>از: ${startDate || 'همه'} تا: ${endDate || 'همه'}</span><span>تعداد: ${filteredSales.length}</span></div>`
+    html += `<div class="header-info"><span>از: ${startDate || 'همه'} تا: ${endDate || 'همه'}</span><span>تعداد: ${data.length}</span></div>`
     html += '<table><thead><tr><th>فاکتور</th><th>تاریخ</th><th>صندوکدار</th><th>مشتری</th><th>تعداد اقلام</th><th>نوع پرداخت</th><th>مبلغ</th></tr></thead><tbody>'
-    filteredSales.forEach(s => {
+    data.forEach(s => {
       html += `<tr><td>${s.invoiceNumber}</td><td>${formatJalaliDateTime(s.createdAt)}</td><td>${s.userName}</td><td>${s.customerName || '-'}</td><td>${s.items?.length || 0}</td><td>${s.paymentMethod === 'cash' ? 'نقدی' : s.paymentMethod === 'card' ? 'کارتی' : 'نسیه'}</td><td>${s.total_amount.toLocaleString('fa-IR')}</td></tr>`
     })
     html += '</tbody></table>'
-    html += `<p>جمع کل: ${totalRevenue.toLocaleString('fa-IR')} تومان</p>`
+    html += `<p>جمع کل: ${data.reduce((sum, s) => sum + s.total_amount, 0).toLocaleString('fa-IR')} تومان</p>`
     printA4Report(html, 'گزارش فروش')
   }
 
@@ -130,7 +138,7 @@ export default function SalesHistory() {
         <div className="flex items-end gap-2">
           <button onClick={loadData} className="btn btn-primary text-sm py-2">{fa.dashboard.refresh}</button>
           <button onClick={() => { setStartDate(''); setEndDate(''); setSearchQuery(''); setFilterMethod('all'); setFilterStatus('all') }} className="btn btn-gray text-sm py-2">{fa.dashboard.all}</button>
-          <button onClick={handlePrintSales} className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+          <button onClick={() => setShowPrintDialog(true)} className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             چاپ گزارش فروش
           </button>
@@ -176,19 +184,31 @@ export default function SalesHistory() {
         <table className="w-full text-sm">
           <thead>
             <tr style={{ backgroundColor: headerBg }}>
-              <th className="text-right px-4 py-3" style={{ color: textSecondary }}>#</th>
-              <th className="text-right px-4 py-3" style={{ color: textSecondary }}>فاکتور</th>
-              <th className="text-right px-4 py-3" style={{ color: textSecondary }}>{fa.admin.cashier}</th>
-              <th className="text-right px-4 py-3" style={{ color: textSecondary }}>{fa.admin.title}</th>
+              {([
+                { key: 'id' as keyof Sale, label: '#' },
+                { key: 'invoiceNumber' as keyof Sale, label: 'فاکتور' },
+                { key: 'userName' as keyof Sale, label: fa.admin.cashier },
+                { key: 'customerName' as keyof Sale, label: fa.admin.title },
+                { key: 'total_amount' as keyof Sale, label: fa.pos.total },
+                { key: 'createdAt' as keyof Sale, label: 'تاریخ' },
+              ]).map(col => (
+                <th key={String(col.key)}
+                  className="px-4 py-3 cursor-pointer select-none transition-all hover:bg-blue-500/10 text-right"
+                  style={{ color: sortKey === col.key ? '#3b82f6' : textSecondary }}
+                  onClick={() => toggleSort(col.key)}>
+                  <span className="inline-flex items-center gap-1">
+                    {col.label}
+                    <span className="text-[10px] opacity-50">{sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
+                  </span>
+                </th>
+              ))}
               <th className="text-center px-4 py-3" style={{ color: textSecondary }}>{fa.pos.items}</th>
               <th className="text-center px-4 py-3" style={{ color: textSecondary }}>{fa.payment.method}</th>
-              <th className="text-right px-4 py-3" style={{ color: textSecondary }}>{fa.pos.total}</th>
               <th className="text-center px-4 py-3" style={{ color: textSecondary }}>وضعیت</th>
-              <th className="text-right px-4 py-3" style={{ color: textSecondary }}>تاریخ</th>
             </tr>
           </thead>
           <tbody>
-            {pagedSales.map((s, idx) => {
+            {sortedSales.map((s, idx) => {
               const isReturned = returnedIds.has(s.id)
               return (
                 <tr key={s.id} className="transition-all cursor-pointer" style={{ borderBottom: `1px solid ${cardBorder}`, backgroundColor: isReturned ? 'rgba(245,158,11,0.08)' : 'transparent' }}
@@ -328,6 +348,7 @@ export default function SalesHistory() {
           </div>
         </div>
       )}
+      <PrintDialog open={showPrintDialog} title="چاپ گزارش فروش" totalCount={filteredSales.length} onClose={() => setShowPrintDialog(false)} onPrint={(range) => { setShowPrintDialog(false); handlePrintSales(range) }} />
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { fa } from '../../i18n'
 import ShamsiDateInput from '../../components/ShamsiDateInput'
 import Pagination from '../../components/Pagination'
 import HelpPopup from '../../components/HelpPopup'
+import { useSortable } from '../../hooks/useSortable'
 
 export default function JournalEntries() {
   const [entries, setEntries] = useState<any[]>([])
@@ -38,6 +39,7 @@ export default function JournalEntries() {
 
   const totalDebit = entries.reduce((s: number, e: any) => s + (e.lines?.reduce((ls: number, l: any) => ls + l.debit, 0) || 0), 0)
   const totalCredit = entries.reduce((s: number, e: any) => s + (e.lines?.reduce((ls: number, l: any) => ls + l.credit, 0) || 0), 0)
+  const { sorted, sortKey, sortDir, toggleSort } = useSortable(entries)
 
   return (
     <div>
@@ -84,15 +86,27 @@ export default function JournalEntries() {
         <table className="w-full text-sm">
           <thead>
             <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>#</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.accounting.journal.date}</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.accounting.journal.description}</th>
-              <th className="text-center px-4 py-2" style={{ color: textSecondary }}>{fa.accounting.journal.reference}</th>
+              {([
+                { key: 'id' as any, label: '#' },
+                { key: 'entryDate' as any, label: fa.accounting.journal.date },
+                { key: 'description' as any, label: fa.accounting.journal.description },
+                { key: 'referenceType' as any, label: fa.accounting.journal.reference, align: 'center' as const },
+              ]).map(col => (
+                <th key={String(col.key)}
+                  className={`px-4 py-2 cursor-pointer select-none transition-all hover:bg-blue-500/10 ${col.align === 'center' ? 'text-center' : 'text-right'}`}
+                  style={{ color: sortKey === col.key ? '#3b82f6' : textSecondary }}
+                  onClick={() => toggleSort(col.key)}>
+                  <span className="inline-flex items-center gap-1">
+                    {col.label}
+                    <span className="text-[10px] opacity-50">{sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
+                  </span>
+                </th>
+              ))}
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
           <tbody>
-            {entries.map((e, i) => {
+            {sorted.map((e, i) => {
               const rc = refColors[e.referenceType || 'manual'] || refColors.manual
               return (
                 <tr key={e.id} style={{ borderBottom: `1px solid ${cardBorder}` }}>

@@ -4,6 +4,7 @@ import { fa } from '../i18n'
 import { formatJalaliShort, getTodayGregorian } from '../utils/jalali'
 import ShamsiDateInput from '../components/ShamsiDateInput'
 import Pagination from '../components/Pagination'
+import { useSortable } from '../hooks/useSortable'
 
 export default function ExpenseManagement() {
   const [expenses, setExpenses] = useState<Expense[]>([])
@@ -74,6 +75,7 @@ export default function ExpenseManagement() {
   const categories = Object.values(fa.expense.categories)
 
   const paged = expenses.slice(page * pageSize, (page + 1) * pageSize)
+  const { sorted, sortKey, sortDir, toggleSort } = useSortable(paged)
 
   return (
     <div className="h-full p-4 overflow-auto" dir="rtl">
@@ -170,16 +172,22 @@ export default function ExpenseManagement() {
         <table className="w-full text-sm">
           <thead>
             <tr style={{ color: textSecondary, borderBottom: `1px solid ${cardBorder}` }}>
-              <th className="text-right px-3 py-2 font-bold text-xs">{fa.expense.date}</th>
-              <th className="text-right px-3 py-2 font-bold text-xs">{fa.expense.category}</th>
-              <th className="text-right px-3 py-2 font-bold text-xs">{fa.expense.description}</th>
-              <th className="text-right px-3 py-2 font-bold text-xs">{fa.expense.amount}</th>
+              {([
+                { key: 'date' as keyof Expense, label: fa.expense.date },
+                { key: 'category' as keyof Expense, label: fa.expense.category },
+                { key: 'description' as keyof Expense, label: fa.expense.description },
+                { key: 'amount' as keyof Expense, label: fa.expense.amount },
+              ]).map(col => (
+                <th key={String(col.key)} className="text-right px-3 py-2 font-bold text-xs cursor-pointer select-none" onClick={() => toggleSort(col.key)}>
+                  {col.label} <span className="text-[10px] opacity-50">{sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
+                </th>
+              ))}
               <th className="text-center px-3 py-2 font-bold text-xs" style={{ width: 40 }}></th>
               <th className="text-center px-3 py-2 font-bold text-xs" style={{ width: 80 }}></th>
             </tr>
           </thead>
           <tbody>
-            {paged.map((ex) => (
+            {sorted.map((ex) => (
               <tr
                 key={ex.id}
                 onClick={() => setSelectedExpense(ex)}

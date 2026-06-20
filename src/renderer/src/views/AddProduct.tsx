@@ -4,6 +4,8 @@ import { useSettingsStore } from '../store/settingsStore'
 import { printA4Report, downloadExcel } from '../utils/a4Print'
 import WebcamScanner from '../components/WebcamScanner'
 import type { Product } from '../../../types'
+import { useSortable } from '../hooks/useSortable'
+import PrintDialog from '../components/PrintDialog'
 
 const PAGE_SIZES = [5, 10, 20, 50]
 
@@ -109,12 +111,18 @@ export default function AddProduct() {
 
   const totalPages = Math.ceil(products.length / pageSize)
   const pagedProducts = products.slice(page * pageSize, (page + 1) * pageSize)
+  const { sorted, sortKey, sortDir, toggleSort } = useSortable(pagedProducts)
+  const [showPrintDialog, setShowPrintDialog] = useState(false)
 
-  const handlePrintProducts = () => {
+  const handlePrintProducts = (range: { start: number; end: number } | 'all') => {
+    let data = products
+    if (range !== 'all') {
+      data = products.slice(range.start - 1, range.end)
+    }
     let html = '<h1>لیست کالاها</h1>'
-    html += `<div class="header-info"><span>تاریخ: ${new Date().toLocaleDateString('fa-IR')}</span><span>تعداد: ${products.length}</span></div>`
+    html += `<div class="header-info"><span>تاریخ: ${new Date().toLocaleDateString('fa-IR')}</span><span>تعداد: ${data.length}</span></div>`
     html += '<table><thead><tr><th>بارکد</th><th>نام</th><th>دسته</th><th>موجودی</th><th>قیمت خرید</th><th>قیمت فروش</th></tr></thead><tbody>'
-    products.forEach((p) => {
+    data.forEach((p) => {
       html += `<tr><td>${p.barcode}</td><td>${p.title}</td><td>${p.category || '-'}</td><td>${p.stock}</td><td>${p.purchase_price.toLocaleString('fa-IR')}</td><td>${p.sale_price.toLocaleString('fa-IR')}</td></tr>`
     })
     html += '</tbody></table>'
@@ -270,7 +278,7 @@ export default function AddProduct() {
         <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: `1px solid ${cardBorder}` }}>
           <span className="text-sm font-bold" style={{ color: textPrimary }}>{fa.admin.addProduct}</span>
           <div className="flex gap-2">
-            <button onClick={handlePrintProducts} className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+            <button onClick={() => setShowPrintDialog(true)} className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
               چاپ لیست کالاها
             </button>
@@ -283,18 +291,30 @@ export default function AddProduct() {
         <table className="w-full text-sm">
           <thead>
             <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>ID</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.barcode}</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.title}</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.category}</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.purchasePrice}</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.salePrice}</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.stock}</th>
+              {([
+                { key: 'id' as keyof Product, label: 'ID' },
+                { key: 'barcode' as keyof Product, label: fa.admin.barcode },
+                { key: 'title' as keyof Product, label: fa.admin.title },
+                { key: 'category' as keyof Product, label: fa.admin.category },
+                { key: 'purchase_price' as keyof Product, label: fa.admin.purchasePrice },
+                { key: 'sale_price' as keyof Product, label: fa.admin.salePrice },
+                { key: 'stock' as keyof Product, label: fa.admin.stock },
+              ]).map(col => (
+                <th key={String(col.key)}
+                  className="px-4 py-2 cursor-pointer select-none transition-all hover:bg-blue-500/10 text-right"
+                  style={{ color: sortKey === col.key ? '#3b82f6' : textSecondary }}
+                  onClick={() => toggleSort(col.key)}>
+                  <span className="inline-flex items-center gap-1">
+                    {col.label}
+                    <span className="text-[10px] opacity-50">{sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
+                  </span>
+                </th>
+              ))}
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
           <tbody>
-            {pagedProducts.map((p) => {
+            {sorted.map((p) => {
               const isZero = p.stock <= 0
               const isLow = p.stock > 0 && p.stock <= p.minStock
               const rowBg = isZero ? 'rgba(239,68,68,0.08)' : isLow ? 'rgba(245,158,11,0.08)' : 'transparent'
@@ -349,6 +369,7 @@ export default function AddProduct() {
           </div>
         )}
       </div>
+      <PrintDialog open={showPrintDialog} title="چاپ لیست کالاها" totalCount={products.length} onClose={() => setShowPrintDialog(false)} onPrint={(range) => { setShowPrintDialog(false); handlePrintProducts(range) }} />
     </div>
   )
 

@@ -3,6 +3,7 @@ import { fa } from '../../i18n'
 import ShamsiDateInput from '../../components/ShamsiDateInput'
 import { downloadExcel } from '../../utils/a4Print'
 import HelpPopup from '../../components/HelpPopup'
+import { useSortable } from '../../hooks/useSortable'
 
 export default function TrialBalance() {
   const [rows, setRows] = useState<any[]>([])
@@ -29,6 +30,8 @@ export default function TrialBalance() {
   const typeColors: Record<string, string> = {
     asset: '#3b82f6', liability: '#ef4444', equity: '#a855f7', income: '#22c55e', expense: '#f59e0b',
   }
+  const filteredRows = rows.filter((r: any) => r.totalDebit !== 0 || r.totalCredit !== 0)
+  const { sorted, sortKey, sortDir, toggleSort } = useSortable(filteredRows)
 
   return (
     <div>
@@ -59,15 +62,27 @@ export default function TrialBalance() {
         <table className="w-full text-sm">
           <thead>
             <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.accounting.trialBalance.account}</th>
-              <th className="text-center px-4 py-2" style={{ color: textSecondary }}>نوع</th>
-              <th className="text-left px-4 py-2" style={{ color: textSecondary }}>{fa.accounting.trialBalance.totalDebit}</th>
-              <th className="text-left px-4 py-2" style={{ color: textSecondary }}>{fa.accounting.trialBalance.totalCredit}</th>
-              <th className="text-left px-4 py-2" style={{ color: textSecondary }}>{fa.accounting.trialBalance.balance}</th>
+              {([
+                { key: 'accountName' as any, label: fa.accounting.trialBalance.account },
+                { key: 'accountType' as any, label: 'نوع', align: 'center' as const },
+                { key: 'totalDebit' as any, label: fa.accounting.trialBalance.totalDebit, align: 'left' as const },
+                { key: 'totalCredit' as any, label: fa.accounting.trialBalance.totalCredit, align: 'left' as const },
+                { key: 'balance' as any, label: fa.accounting.trialBalance.balance, align: 'left' as const },
+              ]).map(col => (
+                <th key={String(col.key)}
+                  className={`px-4 py-2 cursor-pointer select-none transition-all hover:bg-blue-500/10 ${col.align === 'center' ? 'text-center' : col.align === 'left' ? 'text-left' : 'text-right'}`}
+                  style={{ color: sortKey === col.key ? '#3b82f6' : textSecondary }}
+                  onClick={() => toggleSort(col.key)}>
+                  <span className="inline-flex items-center gap-1">
+                    {col.label}
+                    <span className="text-[10px] opacity-50">{sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {rows.filter((r: any) => r.totalDebit !== 0 || r.totalCredit !== 0).map((r: any) => {
+            {sorted.map((r: any) => {
               const maxRow = Math.max(r.totalDebit, r.totalCredit, 1)
               const debitPct = (r.totalDebit / maxRow) * 100
               const creditPct = (r.totalCredit / maxRow) * 100

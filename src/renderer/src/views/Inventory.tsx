@@ -7,6 +7,8 @@ import Pagination from '../components/Pagination'
 import ShamsiDateInput from '../components/ShamsiDateInput'
 import HelpPopup from '../components/HelpPopup'
 import { printA4Report, downloadExcel } from '../utils/a4Print'
+import { useSortable } from '../hooks/useSortable'
+import PrintDialog from '../components/PrintDialog'
 
 type AuditFilter = 'all' | 'create' | 'update' | 'delete' | 'restock'
 
@@ -102,6 +104,8 @@ export default function Inventory() {
   const totalProfit = totalRetailValue - totalStockValue
   const lowStockCount = filteredProducts.filter(p => p.stock > 0 && p.stock <= p.minStock).length
   const pagedProducts = filteredProducts.slice(page * pageSize, (page + 1) * pageSize)
+  const { sorted: sortedProducts, sortKey, sortDir, toggleSort } = useSortable(pagedProducts)
+  const [showPrintDialog, setShowPrintDialog] = useState(false)
 
   const donutColors = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#8b5cf6', '#14b8a6']
 
@@ -147,18 +151,24 @@ export default function Inventory() {
     printContent(html)
   }
 
-  const handlePrintA4 = () => {
+  const handlePrintA4 = (range: { start: number; end: number } | 'all') => {
+    let catData = reportData.byCategory
+    let slowData = reportData.slowMoving
+    if (range !== 'all') {
+      catData = catData.slice(range.start - 1, range.end)
+      slowData = slowData.slice(range.start - 1, range.end)
+    }
     let html = '<h1>گزارش موجودی انبار</h1>'
     html += `<div class="header-info"><span>تاریخ: ${new Date().toLocaleDateString('fa-IR')}</span><span>فروشگاه</span></div>`
     html += '<table><thead><tr><th>دسته</th><th>تعداد</th><th>موجودی</th><th>ارزش خرید</th><th>ارزش فروش</th><th>سود</th><th>حاشیه</th></tr></thead><tbody>'
-    reportData.byCategory.forEach((cat: any) => {
+    catData.forEach((cat: any) => {
       const profit = (cat.retailValue || 0) - (cat.totalValue || 0)
       const margin = cat.retailValue > 0 ? Math.round((profit / cat.retailValue) * 100) : 0
       html += `<tr><td>${cat.category || '-'}</td><td>${cat.count}</td><td>${cat.totalStock}</td><td>${(cat.totalValue || 0).toLocaleString('fa-IR')}</td><td>${(cat.retailValue || 0).toLocaleString('fa-IR')}</td><td>${profit.toLocaleString('fa-IR')}</td><td>%${margin}</td></tr>`
     })
     html += '</tbody></table>'
     html += '<h2>کالاهای کندفروش</h2><table><thead><tr><th>کالا</th><th>دسته</th><th>موجودی</th><th>وضعیت</th></tr></thead><tbody>'
-    reportData.slowMoving.forEach((item: any) => {
+    slowData.forEach((item: any) => {
       html += `<tr><td>${item.title}</td><td>${item.category || '-'}</td><td>${item.stock}</td><td>${item.lastSoldAt ? 'آخرین فروش: ' + item.lastSoldAt : 'هرگز فروخته نشده'}</td></tr>`
     })
     html += '</tbody></table>'
@@ -445,19 +455,31 @@ export default function Inventory() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
-                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>ID</th>
-                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.barcode}</th>
-                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.title}</th>
-                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.category}</th>
-                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.stock}</th>
-                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.purchasePrice}</th>
+                {([
+                  { key: 'id' as keyof Product, label: 'ID', width: '50px' },
+                  { key: 'barcode' as keyof Product, label: fa.admin.barcode },
+                  { key: 'title' as keyof Product, label: fa.admin.title },
+                  { key: 'category' as keyof Product, label: fa.admin.category },
+                  { key: 'stock' as keyof Product, label: fa.admin.stock, align: 'center' as const },
+                  { key: 'purchase_price' as keyof Product, label: fa.admin.purchasePrice },
+                ]).map(col => (
+                  <th key={String(col.key)}
+                    className={`px-4 py-2 cursor-pointer select-none transition-all hover:bg-blue-500/10 ${col.align === 'center' ? 'text-center' : 'text-right'}`}
+                    style={{ color: sortKey === col.key ? '#3b82f6' : textSecondary, width: col.width }}
+                    onClick={() => toggleSort(col.key)}>
+                    <span className="inline-flex items-center gap-1">
+                      {col.label}
+                      <span className="text-[10px] opacity-50">{sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
+                    </span>
+                  </th>
+                ))}
                 <th className="text-right px-4 py-2" style={{ color: textSecondary }}>ارزش</th>
                 <th className="text-right px-4 py-2" style={{ color: textSecondary }}>حاشیه سود</th>
                 <th className="px-4 py-2"></th>
               </tr>
             </thead>
             <tbody>
-              {pagedProducts.map((p) => {
+              {sortedProducts.map((p) => {
                 const isZero = p.stock <= 0
                 const isLow = p.stock > 0 && p.stock <= p.minStock
                 const rowBg = isZero ? (isDark ? 'rgba(239,68,68,0.08)' : 'rgba(239,68,68,0.05)') : isLow ? (isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.05)') : 'transparent'
@@ -517,7 +539,7 @@ export default function Inventory() {
       {tab === 'report' && (
         <div className="space-y-4">
           <div className="flex gap-2 justify-end">
-            <button onClick={handlePrintA4}
+            <button onClick={() => setShowPrintDialog(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
               style={{ backgroundColor: isDark ? '#1e293b' : '#f8fafc', color: textPrimary, border: `1px solid ${cardBorder}` }}>
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -890,6 +912,7 @@ export default function Inventory() {
           </div>
         </>
       )}
+      <PrintDialog open={showPrintDialog} title="چاپ گزارش انبار" totalCount={reportData.byCategory.length} onClose={() => setShowPrintDialog(false)} onPrint={(range) => { setShowPrintDialog(false); handlePrintA4(range) }} />
     </div>
   )
 }

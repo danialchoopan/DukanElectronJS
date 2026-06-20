@@ -3,6 +3,7 @@ import { fa } from '../../i18n'
 import ShamsiDateInput from '../../components/ShamsiDateInput'
 import { printA4Report, downloadExcel } from '../../utils/a4Print'
 import HelpPopup from '../../components/HelpPopup'
+import { useSortable } from '../../hooks/useSortable'
 
 export default function IncomeStatement() {
   const [data, setData] = useState<any>(null)
@@ -25,11 +26,17 @@ export default function IncomeStatement() {
   if (!data) return null
 
   const revenue = data.totalRevenue || 1
+  const { sorted: sortedRevenue, sortKey: revSortKey, sortDir: revSortDir, toggleSort: revToggleSort } = useSortable(data.revenue || [])
+  const { sorted: sortedCogs, sortKey: cogsSortKey, sortDir: cogsSortDir, toggleSort: cogsToggleSort } = useSortable(data.cogs || [])
+  const { sorted: sortedOpEx, sortKey: opexSortKey, sortDir: opexSortDir, toggleSort: opexToggleSort } = useSortable(data.operatingExpenses || [])
 
-  const Section = ({ title, items, total, color }: { title: string; items: any[]; total: number; color: string }) => (
+  const Section = ({ title, sortedItems, total, color, sortKey, sortDir, onSort }: { title: string; sortedItems: any[]; total: number; color: string; sortKey: any; sortDir: any; onSort: any }) => (
     <div className="mb-4">
-      <div className="text-sm font-bold mb-2" style={{ color: textPrimary }}>{title}</div>
-      {items.map((item, i) => {
+      <div className="text-sm font-bold mb-2 flex items-center gap-2 cursor-pointer select-none" style={{ color: textPrimary }} onClick={onSort}>
+        {title}
+        <span className="text-[10px] opacity-50">{sortKey ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
+      </div>
+      {sortedItems.map((item, i) => {
         const pct = (item.amount / revenue) * 100
         return (
           <div key={i} className="px-4 py-1.5" style={{ borderBottom: `1px solid ${cardBorder}` }}>
@@ -96,15 +103,15 @@ export default function IncomeStatement() {
       </div>
 
       <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-        <Section title={fa.accounting.profitLoss.revenue} items={data.revenue} total={data.totalRevenue} color="#22c55e" />
-        <Section title={fa.accounting.profitLoss.cogs} items={data.cogs} total={data.totalCogs} color="#ef4444" />
+        <Section title={fa.accounting.profitLoss.revenue} sortedItems={sortedRevenue} total={data.totalRevenue} color="#22c55e" sortKey={revSortKey} sortDir={revSortDir} onSort={() => revToggleSort('amount' as any)} />
+        <Section title={fa.accounting.profitLoss.cogs} sortedItems={sortedCogs} total={data.totalCogs} color="#ef4444" sortKey={cogsSortKey} sortDir={cogsSortDir} onSort={() => cogsToggleSort('amount' as any)} />
 
         <div className="flex justify-between px-4 py-3 mx-4 mb-4 rounded-xl" style={{ backgroundColor: isDark ? '#052e16' : '#dcfce7' }}>
           <span className="font-bold" style={{ color: '#22c55e' }}>{fa.accounting.profitLoss.grossProfit}</span>
           <span className="font-bold font-mono" style={{ color: '#22c55e' }}>{data.grossProfit.toLocaleString('fa-IR')}</span>
         </div>
 
-        <Section title={fa.accounting.profitLoss.operatingExpenses} items={data.operatingExpenses} total={data.totalOperatingExpenses} color="#f59e0b" />
+        <Section title={fa.accounting.profitLoss.operatingExpenses} sortedItems={sortedOpEx} total={data.totalOperatingExpenses} color="#f59e0b" sortKey={opexSortKey} sortDir={opexSortDir} onSort={() => opexToggleSort('amount' as any)} />
 
         <div className="flex justify-between px-4 py-4 mx-4 mb-4 rounded-xl" style={{ backgroundColor: data.netProfit >= 0 ? (isDark ? '#052e16' : '#dcfce7') : (isDark ? '#450a0a' : '#fee2e2') }}>
           <span className="text-lg font-bold" style={{ color: data.netProfit >= 0 ? '#22c55e' : '#ef4444' }}>
