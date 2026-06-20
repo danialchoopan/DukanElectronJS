@@ -80,7 +80,6 @@ export function printA4Report(html: string, title: string, options?: {
     </div>
     <div class="signature-row">
       <div class="signature-box">
-        ${cust.printSignature ? `<img src="${cust.printSignature}" class="signature-img" />` : ''}
         <div class="signature-line">محل امضای خریدار</div>
       </div>
       <div class="signature-box">
