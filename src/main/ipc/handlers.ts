@@ -5,6 +5,7 @@ import * as sales from '../database/repositories/sales'
 import * as auth from '../database/repositories/auth'
 import * as suspend from '../database/repositories/suspend'
 import * as settingsRepo from '../database/repositories/settings'
+import * as printSettings from '../database/repositories/printSettings'
 import * as customers from '../database/repositories/customers'
 import * as expenses from '../database/repositories/expenses'
 import * as cashRegister from '../database/repositories/cashRegister'
@@ -265,6 +266,13 @@ export function registerAllHandlers(): void {
   handle('settings:getAll', () => settingsRepo.getAllSettings())
   handleArg<{ key: string }, string | null>('settings:get', (a) => settingsRepo.getSetting(a.key) || null)
   handleArg<{ key: string; value: string }, void>('settings:set', (a) => settingsRepo.setSetting(a.key, a.value))
+
+  // ─── Print Settings ─────────────────────────────────────
+  handle('printSettings:getAll', () => printSettings.getPrintSettings())
+  handleArg<{ settings: Record<string, string> }, boolean>('printSettings:save', (a) => { printSettings.savePrintSettings(a.settings); return true })
+  handle('printSettings:reset', () => { printSettings.resetPrintSettings(); return true })
+  handleArg<{ type: string; base64: string }, { filename: string; path: string }>('printSettings:uploadAsset', (a) => printSettings.savePrintAsset(a.type, a.base64))
+  handleArg<{ filename: string }, string | null>('printSettings:getAsset', (a) => printSettings.getPrintAsset(a.filename))
 
   // ─── Backup/Restore ─────────────────────────────────────
   ipcMain.handle('backup:export', async () => {

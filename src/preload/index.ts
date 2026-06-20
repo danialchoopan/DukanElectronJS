@@ -145,6 +145,14 @@ const api = {
       ipcRenderer.invoke('settings:set', { key, value }),
   },
 
+  printSettings: {
+    getAll: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('printSettings:getAll'),
+    save: (settings: Record<string, string>): Promise<IPCResponse<any>> => ipcRenderer.invoke('printSettings:save', { settings }),
+    reset: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('printSettings:reset'),
+    uploadAsset: (type: string, base64: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('printSettings:uploadAsset', { type, base64 }),
+    getAsset: (filename: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('printSettings:getAsset', { filename }),
+  },
+
   categories: {
     getAll: (): Promise<IPCResponse<any[]>> =>
       ipcRenderer.invoke('categories:getAll'),

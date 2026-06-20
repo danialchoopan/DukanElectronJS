@@ -145,6 +145,7 @@ export const en = {
     lightMode: 'Light Mode',
     appearance: 'Appearance',
     shortcuts: 'Shortcuts',
+    customization: 'Customization',
   },
   customer: {
     title: 'Customer Management',

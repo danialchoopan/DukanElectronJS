@@ -15,14 +15,47 @@ export function getTaxRate(): number {
   return cachedTaxRate
 }
 
-export function printA4Report(html: string, title: string, options?: { shopName?: string; isInvoice?: boolean; taxRate?: number }): void {
+export function printA4Report(html: string, title: string, options?: {
+  shopName?: string
+  isInvoice?: boolean
+  taxRate?: number
+  customization?: {
+    printColorScheme?: string
+    printLogo?: string
+    printSignature?: string
+    printWatermark?: string
+    printWatermarkOpacity?: string
+    printShowSignature?: string
+    printShowTax?: string
+    printFooter?: string
+    printInvoiceTitle?: string
+    printReprintTitle?: string
+    printReportTitle?: string
+  }
+}): void {
   const win = window.open('', '_blank')
   if (!win) return
   const name = options?.shopName || cachedShopName
   const phone = cachedShopPhone
   const isInvoice = options?.isInvoice ?? false
   const taxRate = options?.taxRate ?? cachedTaxRate
-  const invoiceSection = isInvoice ? `
+  const cust = options?.customization || {}
+  const primaryColor = cust.printColorScheme || '#006194'
+  const showSignature = cust.printShowSignature !== 'false'
+  const showTax = cust.printShowTax !== 'false'
+
+  const logoHtml = cust.printLogo
+    ? `<img src="${cust.printLogo}" style="max-height: 60px; max-width: 200px; display: block; margin: 0 auto 8px auto;" />`
+    : ''
+
+  const wmOpacity = cust.printWatermarkOpacity ? (parseInt(cust.printWatermarkOpacity) / 100) : 0.1
+  const watermarkStyle = cust.printWatermark
+    ? `body::after { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url('${cust.printWatermark}'); background-repeat: no-repeat; background-position: center; background-size: contain; opacity: ${wmOpacity}; pointer-events: none; z-index: -1; }`
+    : ''
+
+  const footerText = cust.printFooter || `تاریخ در ${new Date().toLocaleDateString('fa-IR')} چاپ شده است — ${name}`
+
+  const invoiceSection = isInvoice && showSignature ? `
     <div class="checkbox-group">
       <label><input type="checkbox" /> حقیقی</label>
       <label><input type="checkbox" /> حقوقی</label>
@@ -40,7 +73,11 @@ export function printA4Report(html: string, title: string, options?: { shopName?
       </div>
     </div>
   ` : ''
-  const taxInfo = taxRate > 0 ? `<div style="font-size: 10pt; color: #555; margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px;"><strong>مالیات بر ارزش افزوده:</strong> ${taxRate}% (شامل قیمت نهایی می‌باشد)</div>` : ''
+
+  const taxInfo = taxRate > 0 && showTax
+    ? `<div style="font-size: 10pt; color: #555; margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px;"><strong>مالیات بر ارزش افزوده:</strong> ${taxRate}% (شامل قیمت نهایی می‌باشد)</div>`
+    : ''
+
   win.document.write(`<!DOCTYPE html>
 <html dir="rtl" lang="fa">
 <head>
@@ -51,10 +88,10 @@ export function printA4Report(html: string, title: string, options?: { shopName?
     @page { size: A4; margin: 15mm; }
     @media print { body { margin: 0; } }
     body { font-family: 'Vazirmatn', 'Tahoma', sans-serif; font-size: 11pt; direction: rtl; color: #1a1a1a; padding: 20px; }
-    h1 { font-size: 18pt; text-align: center; margin-bottom: 4px; color: #006194; }
-    .shop-name { text-align: center; font-size: 14pt; font-weight: 700; color: #006194; margin-bottom: 2px; }
+    h1 { font-size: 18pt; text-align: center; margin-bottom: 4px; color: ${primaryColor}; }
+    .shop-name { text-align: center; font-size: 14pt; font-weight: 700; color: ${primaryColor}; margin-bottom: 2px; }
     .shop-phone { text-align: center; font-size: 11pt; color: #555; margin-bottom: 6px; }
-    .report-title { text-align: center; font-size: 12pt; font-weight: 600; color: #333; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #006194; }
+    .report-title { text-align: center; font-size: 12pt; font-weight: 600; color: #333; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid ${primaryColor}; }
     h2 { font-size: 12pt; margin-bottom: 6px; color: #333; margin-top: 16px; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
     th { background: #f0f4f8; padding: 8px 6px; text-align: right; font-size: 10pt; border-bottom: 2px solid #333; }
@@ -64,21 +101,23 @@ export function printA4Report(html: string, title: string, options?: { shopName?
     .header-info { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 10pt; color: #555; }
     .checkbox-group { display: flex; gap: 24px; margin: 16px 0; font-size: 10pt; }
     .checkbox-group label { display: flex; align-items: center; gap: 6px; }
-    .checkbox-group input[type="checkbox"] { width: 14px; height: 14px; accent-color: #006194; }
+    .checkbox-group input[type="checkbox"] { width: 14px; height: 14px; accent-color: ${primaryColor}; }
     .description-box { border: 1px solid #999; border-radius: 4px; min-height: 60px; padding: 8px; margin: 8px 0; font-size: 10pt; color: #999; }
     .signature-row { display: flex; justify-content: space-between; margin-top: 32px; padding-top: 12px; border-top: 1px solid #ccc; }
     .signature-box { text-align: center; width: 45%; }
     .signature-line { border-top: 1px solid #333; margin-top: 32px; padding-top: 4px; font-size: 9pt; color: #666; }
+    ${watermarkStyle}
   </style>
 </head>
 <body>
+  ${logoHtml}
   <div class="shop-name">${name}</div>
   ${phone ? `<div class="shop-phone">تلفن: ${phone}</div>` : ''}
   <div class="report-title">${title}</div>
   ${taxInfo}
   ${html}
   ${invoiceSection}
-  <div class="footer">تاریخ در ${new Date().toLocaleDateString('fa-IR')} چاپ شده است — ${name}</div>
+  <div class="footer">${footerText}</div>
 </body>
 </html>`)
   win.document.close()
