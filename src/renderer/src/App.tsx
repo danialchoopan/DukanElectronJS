@@ -17,6 +17,7 @@ import Categories from './views/Categories'
 import Help from './views/Help'
 import SetupWizard from './views/SetupWizard'
 import Sidebar from './components/Sidebar'
+import GlobalSearch from './components/GlobalSearch'
 
 type View = 'pos' | 'dashboard' | 'admin' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'help' | 'categories'
 
@@ -36,6 +37,7 @@ export default function App() {
   const user = useAuthStore((s) => s.user)
   const [currentView, setCurrentView] = useState<View>('dashboard')
   const [isFirstRun, setIsFirstRun] = useState<boolean | null>(null)
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false)
   const { init: initSettings, language, theme, setTheme } = useSettingsStore()
   const { shortcuts, loadFromStorage } = useShortcutsStore()
 
@@ -103,6 +105,23 @@ export default function App() {
     return () => window.removeEventListener('keydown', handler, true)
   }, [user, shortcuts, currentView, navigateTo, theme, setTheme])
 
+  useEffect(() => {
+    let lastShiftTime = 0
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        const now = Date.now()
+        if (now - lastShiftTime < 500) {
+          setShowGlobalSearch(true)
+          lastShiftTime = 0
+        } else {
+          lastShiftTime = now
+        }
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
   if (isFirstRun === null) return <div className="h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)' }}>Loading...</div>
   if (isFirstRun) return <SetupWizard onComplete={() => setIsFirstRun(false)} />
   if (!user) return <LockScreen />
@@ -122,6 +141,7 @@ export default function App() {
         {currentView === 'admin' && user.role === 'admin' && <AdminPanel />}
         {currentView === 'help' && <Help />}
       </div>
+      <GlobalSearch open={showGlobalSearch} onClose={() => setShowGlobalSearch(false)} onNavigate={(v) => { setCurrentView(v as View); setShowGlobalSearch(false) }} />
     </div>
   )
 }
