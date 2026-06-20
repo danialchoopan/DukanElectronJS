@@ -1,16 +1,46 @@
 let cachedShopName = 'فروشگاه'
 let cachedShopPhone = ''
+let cachedTaxRate = 0
 
 export function setShopName(name: string, phone?: string) {
   if (name) cachedShopName = name
   if (phone !== undefined) cachedShopPhone = phone
 }
 
-export function printA4Report(html: string, title: string, shopName?: string): void {
+export function setTaxRate(rate: number) {
+  cachedTaxRate = rate
+}
+
+export function getTaxRate(): number {
+  return cachedTaxRate
+}
+
+export function printA4Report(html: string, title: string, options?: { shopName?: string; isInvoice?: boolean; taxRate?: number }): void {
   const win = window.open('', '_blank')
   if (!win) return
-  const name = shopName || cachedShopName
+  const name = options?.shopName || cachedShopName
   const phone = cachedShopPhone
+  const isInvoice = options?.isInvoice ?? false
+  const taxRate = options?.taxRate ?? cachedTaxRate
+  const invoiceSection = isInvoice ? `
+    <div class="checkbox-group">
+      <label><input type="checkbox" /> حقیقی</label>
+      <label><input type="checkbox" /> حقوقی</label>
+    </div>
+    <div>
+      <strong style="font-size: 10pt;">توضیحات:</strong>
+      <div class="description-box"></div>
+    </div>
+    <div class="signature-row">
+      <div class="signature-box">
+        <div class="signature-line">محل امضای خریدار</div>
+      </div>
+      <div class="signature-box">
+        <div class="signature-line">محل امضای فروشنده</div>
+      </div>
+    </div>
+  ` : ''
+  const taxInfo = taxRate > 0 ? `<div style="font-size: 10pt; color: #555; margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px;"><strong>مالیات بر ارزش افزوده:</strong> ${taxRate}% (شامل قیمت نهایی می‌باشد)</div>` : ''
   win.document.write(`<!DOCTYPE html>
 <html dir="rtl" lang="fa">
 <head>
@@ -38,7 +68,6 @@ export function printA4Report(html: string, title: string, shopName?: string): v
     .description-box { border: 1px solid #999; border-radius: 4px; min-height: 60px; padding: 8px; margin: 8px 0; font-size: 10pt; color: #999; }
     .signature-row { display: flex; justify-content: space-between; margin-top: 32px; padding-top: 12px; border-top: 1px solid #ccc; }
     .signature-box { text-align: center; width: 45%; }
-    .signature-label { font-size: 10pt; font-weight: 600; color: #333; margin-bottom: 40px; }
     .signature-line { border-top: 1px solid #333; margin-top: 32px; padding-top: 4px; font-size: 9pt; color: #666; }
   </style>
 </head>
@@ -46,23 +75,9 @@ export function printA4Report(html: string, title: string, shopName?: string): v
   <div class="shop-name">${name}</div>
   ${phone ? `<div class="shop-phone">تلفن: ${phone}</div>` : ''}
   <div class="report-title">${title}</div>
+  ${taxInfo}
   ${html}
-  <div class="checkbox-group">
-    <label><input type="checkbox" /> حقیقی</label>
-    <label><input type="checkbox" /> حقوقی</label>
-  </div>
-  <div>
-    <strong style="font-size: 10pt;">توضیحات:</strong>
-    <div class="description-box"></div>
-  </div>
-  <div class="signature-row">
-    <div class="signature-box">
-      <div class="signature-line">محل امضای خریدار</div>
-    </div>
-    <div class="signature-box">
-      <div class="signature-line">محل امضای فروشنده</div>
-    </div>
-  </div>
+  ${invoiceSection}
   <div class="footer">تاریخ در ${new Date().toLocaleDateString('fa-IR')} چاپ شده است — ${name}</div>
 </body>
 </html>`)

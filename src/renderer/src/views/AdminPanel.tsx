@@ -409,7 +409,8 @@ function BackupSection() {
 }
 
 function SettingsTab() {
-  const [rounding, setRounding] = useState(500)
+  const [taxRate, setTaxRate] = useState(0)
+  const [taxEnabled, setTaxEnabled] = useState(false)
   const [storeName, setStoreName] = useState('')
   const [storeAddress, setStoreAddress] = useState('')
   const [storePhone, setStorePhone] = useState('')
@@ -422,7 +423,8 @@ function SettingsTab() {
   useEffect(() => {
     window.api.settings.getAll().then((r) => {
       if (r.success && r.data) {
-        setRounding(parseInt(r.data.autoRounding ?? '500', 10))
+        setTaxRate(parseFloat(r.data.taxRate ?? '0'))
+        setTaxEnabled(r.data.taxEnabled === 'true')
         setStoreName(r.data.storeName ?? '')
         setStoreAddress(r.data.storeAddress ?? '')
         setStorePhone(r.data.storePhone ?? '')
@@ -433,7 +435,8 @@ function SettingsTab() {
 
   const saveAll = async () => {
     await Promise.all([
-      window.api.settings.set('autoRounding', String(rounding)),
+      window.api.settings.set('taxRate', String(taxRate)),
+      window.api.settings.set('taxEnabled', String(taxEnabled)),
       window.api.settings.set('storeName', storeName),
       window.api.settings.set('storeAddress', storeAddress),
       window.api.settings.set('storePhone', storePhone),
@@ -447,7 +450,6 @@ function SettingsTab() {
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
   const textSecondary = isDark ? '#94a3b8' : '#64748b'
   const inputBg = isDark ? '#0f172a' : '#f8fafc'
-  const btnBg = isDark ? '#334155' : '#f1f5f9'
 
   const inputStyle = { background: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }
 
@@ -500,22 +502,42 @@ function SettingsTab() {
       </div>
 
       <div className="rounded-2xl p-4 border mt-4" style={{ backgroundColor: cardBg, borderColor: cardBorder, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}>
-        <label className="text-xs font-bold block mb-2" style={{ color: textSecondary }}>{fa.admin.autoRoundingSetting}</label>
-        <div className="flex gap-2">
-          {[0, 500, 1000].map((v) => (
-            <button key={v} onClick={() => setRounding(v)}
-              className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-              style={{
-                background: rounding === v
-                  ? `linear-gradient(135deg, ${primary}, #007bb9)`
-                  : btnBg,
-                color: rounding === v ? '#ffffff' : textSecondary,
-                boxShadow: rounding === v ? '0 4px 12px rgba(0,97,148,0.3)' : 'none',
-              }}>
-              {v === 0 ? fa.admin.roundingOff : v.toLocaleString('fa-IR')}
-            </button>
-          ))}
+        <div className="flex items-center justify-between mb-3">
+          <label className="text-xs font-bold" style={{ color: textSecondary }}>مالیات بر ارزش افزوده</label>
+          <button onClick={() => setTaxEnabled(!taxEnabled)}
+            className="relative w-10 h-5 rounded-full transition-all duration-200"
+            style={{ backgroundColor: taxEnabled ? primary : (isDark ? '#475569' : '#d1d5db') }}>
+            <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
+              style={{ left: taxEnabled ? '20px' : '2px' }} />
+          </button>
         </div>
+        {taxEnabled && (
+          <div>
+            <label className="text-xs block mb-1" style={{ color: textSecondary }}>درصد مالیات (%)</label>
+            <div className="flex gap-2 items-center">
+              <input type="range" min="0" max="30" step="0.5" value={taxRate}
+                onChange={(e) => setTaxRate(parseFloat(e.target.value))}
+                className="flex-1 h-2 rounded-lg appearance-none cursor-pointer"
+                style={{ accentColor: primary }} />
+              <span className="text-sm font-bold font-mono min-w-[60px] text-center" style={{ color: primary }}>{taxRate}%</span>
+            </div>
+            <div className="flex gap-1 mt-2">
+              {[0, 5, 9, 10, 15].map((v) => (
+                <button key={v} onClick={() => setTaxRate(v)}
+                  className="flex-1 px-2 py-1.5 rounded-lg text-[11px] font-bold transition-all"
+                  style={{
+                    background: taxRate === v ? `linear-gradient(135deg, ${primary}, #007bb9)` : (isDark ? '#334155' : '#f1f5f9'),
+                    color: taxRate === v ? '#ffffff' : textSecondary,
+                  }}>
+                  {v}%
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] mt-2" style={{ color: textSecondary }}>
+              مالیات به صورت خودکار در چاپ فاکتور و صورتحساب‌ها اعمال می‌شود.
+            </p>
+          </div>
+        )}
       </div>
 
       <button

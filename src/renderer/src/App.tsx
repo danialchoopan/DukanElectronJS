@@ -3,7 +3,7 @@ import { useAuthStore } from './store/authStore'
 import { useSettingsStore } from './store/settingsStore'
 import { useShortcutsStore } from './store/shortcutsStore'
 import { setLanguage } from './i18n'
-import { setShopName } from './utils/a4Print'
+import { setShopName, setTaxRate } from './utils/a4Print'
 import LockScreen from './views/LockScreen'
 import CashierPOS from './views/CashierPOS'
 import Dashboard from './views/Dashboard'
@@ -43,6 +43,7 @@ export default function App() {
     initSettings().then(() => {
       window.api.settings.getAll().then((r) => {
         if (r.success && r.data?.storeName) setShopName(r.data.storeName, r.data.storePhone || '')
+        if (r.success && r.data?.taxRate) setTaxRate(parseFloat(r.data.taxRate) || 0)
       })
     })
     loadFromStorage()

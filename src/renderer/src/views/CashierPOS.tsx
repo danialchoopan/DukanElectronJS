@@ -235,7 +235,7 @@ export default function CashierPOS() {
                   html += '</tbody></table>'
                   html += `<p><strong>جمع کل: ${saleComplete.total_amount.toLocaleString('fa-IR')} تومان</strong></p>`
                   html += `<p>نوع پرداخت: ${saleComplete.paymentMethod === 'cash' ? 'نقدی' : saleComplete.paymentMethod === 'card' ? 'کارتی' : 'نسیه'}</p>`
-                  printA4Report(html, 'فاکتور فروش')
+                  printA4Report(html, 'فاکتور فروش', { isInvoice: true })
                   setSaleComplete(null)
                 }}
                 className="flex-1 py-3 rounded-xl font-bold text-sm transition-all"
