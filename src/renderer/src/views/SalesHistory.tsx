@@ -17,7 +17,7 @@ export default function SalesHistory() {
   const [filterMethod, setFilterMethod] = useState<string>('all')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [returnedIds, setReturnedIds] = useState<Set<number>>(new Set())
+  const [returnedIds, setReturnedIds] = useState<Set<string>>(new Set())
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(10)
   const [returnItem, setReturnItem] = useState<{ sale: Sale; item: any } | null>(null)
@@ -42,9 +42,9 @@ export default function SalesHistory() {
   const loadReturns = async () => {
     const r = await window.api.returns.list()
     if (r.success && r.data) {
-      const ids = new Set<number>()
-      r.data.forEach((ret: any) => ids.add(ret.saleId))
-      setReturnedIds(ids)
+      const keys = new Set<string>()
+      r.data.forEach((ret: any) => keys.add(`${ret.saleId}-${ret.productId}`))
+      setReturnedIds(keys)
     }
   }
 
@@ -86,8 +86,9 @@ export default function SalesHistory() {
 
   const filteredSales = sales.filter((s) => {
     if (filterMethod !== 'all' && s.paymentMethod !== filterMethod) return false
-    if (filterStatus === 'returned' && !returnedIds.has(s.id)) return false
-    if (filterStatus === 'normal' && returnedIds.has(s.id)) return false
+    const hasReturns = s.items?.some((item: any) => returnedIds.has(`${s.id}-${item.productId}`))
+    if (filterStatus === 'returned' && !hasReturns) return false
+    if (filterStatus === 'normal' && hasReturns) return false
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
       return s.invoiceNumber.toLowerCase().includes(q) || s.userName?.toLowerCase().includes(q) || s.customerName?.toLowerCase().includes(q) || String(s.total_amount).includes(q)
@@ -95,7 +96,7 @@ export default function SalesHistory() {
     return true
   })
 
-  const totalRevenue = filteredSales.filter(s => !returnedIds.has(s.id)).reduce((sum, s) => sum + s.total_amount, 0)
+  const totalRevenue = filteredSales.filter(s => !s.items?.every((item: any) => returnedIds.has(`${s.id}-${item.productId}`))).reduce((sum, s) => sum + s.total_amount, 0)
   const pagedSales = filteredSales.slice(page * pageSize, (page + 1) * pageSize)
   const { sorted: sortedSales, sortKey, sortDir, toggleSort } = useSortable(pagedSales)
   const [showPrintDialog, setShowPrintDialog] = useState(false)
@@ -209,12 +210,13 @@ export default function SalesHistory() {
           </thead>
           <tbody>
             {sortedSales.map((s, idx) => {
-              const isReturned = returnedIds.has(s.id)
+              const hasReturns = s.items?.some((item: any) => returnedIds.has(`${s.id}-${item.productId}`))
+              const isFullyReturned = s.items?.every((item: any) => returnedIds.has(`${s.id}-${item.productId}`))
               return (
-                <tr key={s.id} className="transition-all cursor-pointer" style={{ borderBottom: `1px solid ${cardBorder}`, backgroundColor: isReturned ? 'rgba(245,158,11,0.08)' : 'transparent' }}
+                <tr key={s.id} className="transition-all cursor-pointer" style={{ borderBottom: `1px solid ${cardBorder}`, backgroundColor: isFullyReturned ? 'rgba(239,68,68,0.08)' : hasReturns ? 'rgba(245,158,11,0.08)' : 'transparent' }}
                   onClick={() => setSelectedSale(s)}
-                  onMouseEnter={(e) => { if (!isReturned) e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.03)' }}
-                  onMouseLeave={(e) => { if (!isReturned) e.currentTarget.style.backgroundColor = 'transparent' }}>
+                  onMouseEnter={(e) => { if (!hasReturns) e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.03)' }}
+                  onMouseLeave={(e) => { if (!hasReturns) e.currentTarget.style.backgroundColor = 'transparent' }}>
                   <td className="px-4 py-2.5" style={{ color: textSecondary }}>{idx + 1}</td>
                   <td className="px-4 py-2.5 font-mono text-xs font-bold" style={{ color: textPrimary }}>{s.invoiceNumber}</td>
                   <td className="px-4 py-2.5 font-medium" style={{ color: textPrimary }}>{s.userName}</td>
@@ -226,9 +228,9 @@ export default function SalesHistory() {
                       color: s.paymentMethod === 'cash' ? '#16a34a' : s.paymentMethod === 'card' ? '#2563eb' : '#9333ea',
                     }}>{s.paymentMethod === 'cash' ? fa.payment.cash : s.paymentMethod === 'card' ? fa.payment.card : fa.payment.ledger}</span>
                   </td>
-                  <td className="px-4 py-2.5 font-bold text-right" style={{ color: isReturned ? '#f59e0b' : textPrimary, textDecoration: isReturned ? 'line-through' : 'none' }}>{s.total_amount.toLocaleString('fa-IR')}</td>
+                  <td className="px-4 py-2.5 font-bold text-right" style={{ color: isFullyReturned ? '#ef4444' : textPrimary, textDecoration: isFullyReturned ? 'line-through' : 'none' }}>{s.total_amount.toLocaleString('fa-IR')}</td>
                   <td className="px-4 py-2.5 text-center">
-                    {isReturned ? <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>بازگشتی</span> : <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: '#dcfce7', color: '#166534' }}>عادی</span>}
+                    {isFullyReturned ? <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}>بازگشت کامل</span> : hasReturns ? <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>بازگشت جزئی</span> : <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: '#dcfce7', color: '#166534' }}>عادی</span>}
                   </td>
                   <td className="px-4 py-2.5 text-xs" style={{ color: textSecondary }}>{formatJalaliDateTime(s.createdAt)}</td>
                 </tr>
@@ -244,12 +246,12 @@ export default function SalesHistory() {
 
       {selectedSale && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setSelectedSale(null)}>
-          <div className="rounded-2xl p-6 max-w-lg w-full mx-4 border-2" style={{ backgroundColor: cardBg, borderColor: returnedIds.has(selectedSale.id) ? '#f59e0b' : '#3b82f6' }} onClick={(e) => e.stopPropagation()}>
+          <div className="rounded-2xl p-6 max-w-lg w-full mx-4 border-2" style={{ backgroundColor: cardBg, borderColor: selectedSale.items?.some((item: any) => returnedIds.has(`${selectedSale.id}-${item.productId}`)) ? '#f59e0b' : '#3b82f6' }} onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
               <div>
                 <h3 className="font-bold text-lg" style={{ color: textPrimary }}>{fa.receipt.invoice}</h3>
                 <p className="text-sm font-mono" style={{ color: textSecondary }}>{selectedSale.invoiceNumber}</p>
-                {returnedIds.has(selectedSale.id) && <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>بازگشت شده</span>}
+                {selectedSale.items?.some((item: any) => returnedIds.has(`${selectedSale.id}-${item.productId}`)) && <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>بازگشت شده</span>}
               </div>
               <button onClick={() => setSelectedSale(null)} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: btnColor }}>&times;</button>
             </div>
@@ -281,24 +283,29 @@ export default function SalesHistory() {
                     <th className="text-center px-3 py-2" style={{ color: textSecondary }}>تعداد</th>
                     <th className="text-right px-3 py-2" style={{ color: textSecondary }}>قیمت واحد</th>
                     <th className="text-right px-3 py-2" style={{ color: textSecondary }}>جمع</th>
-                    {!returnedIds.has(selectedSale.id) && <th className="px-3 py-2"></th>}
+                    <th className="px-3 py-2"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {selectedSale.items?.map((item: any) => (
-                    <tr key={item.id} style={{ borderBottom: `1px solid ${cardBorder}` }}>
-                      <td className="px-3 py-2 font-medium" style={{ color: textPrimary }}>{item.productTitle}</td>
-                      <td className="px-3 py-2 text-center" style={{ color: textPrimary }}>{item.quantity}</td>
-                      <td className="px-3 py-2 text-right" style={{ color: textPrimary }}>{item.unitPrice.toLocaleString('fa-IR')}</td>
-                      <td className="px-3 py-2 text-right font-bold" style={{ color: textPrimary }}>{item.subtotal.toLocaleString('fa-IR')}</td>
-                      {!returnedIds.has(selectedSale.id) && (
+                  {selectedSale.items?.map((item: any) => {
+                    const isItemReturned = returnedIds.has(`${selectedSale.id}-${item.productId}`)
+                    return (
+                      <tr key={item.id} style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                        <td className="px-3 py-2 font-medium" style={{ color: textPrimary }}>{item.productTitle}</td>
+                        <td className="px-3 py-2 text-center" style={{ color: textPrimary }}>{item.quantity}</td>
+                        <td className="px-3 py-2 text-right" style={{ color: textPrimary }}>{item.unitPrice.toLocaleString('fa-IR')}</td>
+                        <td className="px-3 py-2 text-right font-bold" style={{ color: textPrimary }}>{item.subtotal.toLocaleString('fa-IR')}</td>
                         <td className="px-3 py-2 text-center">
-                          <button onClick={() => { setReturnItem({ sale: selectedSale, item }); setReturnQty(String(item.quantity)); setReturnReason('') }}
-                            className="text-[10px] font-bold px-2 py-1 rounded-lg" style={{ backgroundColor: isDark ? '#451a03' : '#fef3c7', color: '#92400e' }}>مرجوع</button>
+                          {isItemReturned ? (
+                            <span className="text-[10px] font-bold px-2 py-1 rounded-lg" style={{ backgroundColor: isDark ? '#451a03' : '#fef3c7', color: '#ef4444' }}>مرجوعی</span>
+                          ) : (
+                            <button onClick={() => { setReturnItem({ sale: selectedSale, item }); setReturnQty(String(item.quantity)); setReturnReason('') }}
+                              className="text-[10px] font-bold px-2 py-1 rounded-lg" style={{ backgroundColor: isDark ? '#451a03' : '#fef3c7', color: '#92400e' }}>مرجوع</button>
+                          )}
                         </td>
-                      )}
-                    </tr>
-                  ))}
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

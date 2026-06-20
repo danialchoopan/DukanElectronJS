@@ -15,6 +15,7 @@ import ReceiptPrinter from '../components/ReceiptPrinter'
 import Notification from '../components/Notification'
 import { CameraIcon } from '../components/Icons'
 import PopularItems from '../components/PopularItems'
+import { formatJalaliDateTime } from '../utils/jalali'
 import type { Sale, Customer, Product } from "../../../types"
 
 export default function CashierPOS() {
@@ -30,6 +31,7 @@ export default function CashierPOS() {
   const [showReceipt, setShowReceipt] = useState<Sale | null>(null)
   const [saleComplete, setSaleComplete] = useState<Sale | null>(null)
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+  const [lastCustomer, setLastCustomer] = useState<Customer | null>(null)
   const [storeSettings, setStoreSettings] = useState({ storeName: '', storeAddress: '', storePhone: '', receiptFooter: '' })
   const [fullyPaid, setFullyPaid] = useState(true)
   const [productRefreshKey, setProductRefreshKey] = useState(0)
@@ -102,6 +104,7 @@ export default function CashierPOS() {
       customerPaid: paidAmt || 0,
     })
     if (result.success && result.data) {
+      setLastCustomer(selectedCustomer)
       setSaleComplete(result.data)
       clearCart()
       setSelectedCustomer(null)
@@ -110,7 +113,7 @@ export default function CashierPOS() {
       barcodeRef.current?.focus()
     } else { showNotif(`${result.error}`) }
     setPendingPayment(null)
-  }, [pendingPayment, items, user, selectedCustomer, clearCart, showNotif])
+  }, [pendingPayment, items, user, selectedCustomer, lastCustomer, clearCart, showNotif])
 
   const handleSuspend = useCallback(async (slotIndex?: number) => {
     if (items.length === 0) { showNotif(fa.pos.nothingToHold); return }
@@ -213,9 +216,9 @@ export default function CashierPOS() {
               <button               onClick={() => {
                 if (!saleComplete) return
                 let html = '<h1>فاکتور فروش</h1>'
-                const customerInfo = selectedCustomer ? `<div class="header-info"><span>مشتری: ${selectedCustomer.name}</span><span>تلفن: ${selectedCustomer.phone}</span></div>` : '<div class="header-info"><span>مشتری: ناشناس</span></div>'
+                const customerInfo = lastCustomer ? `<div class="header-info"><span>مشتری: ${lastCustomer.name}</span><span>تلفن: ${lastCustomer.phone}</span></div>` : '<div class="header-info"><span>مشتری: ناشناس</span></div>'
                 html += customerInfo
-                html += `<div class="header-info"><span>شماره فاکتور: ${saleComplete.invoiceNumber}</span><span>تاریخ: ${saleComplete.createdAt?.split('T')[0] || ''}</span></div>`
+                html += `<div class="header-info"><span>شماره فاکتور: ${saleComplete.invoiceNumber}</span><span>تاریخ: ${formatJalaliDateTime(saleComplete.createdAt || '')}</span></div>`
                 html += '<table><thead><tr><th>کالا</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>'
                 saleComplete.items?.forEach((item: any) => { html += `<tr><td>${item.productTitle}</td><td>${item.quantity}</td><td>${item.unitPrice.toLocaleString('fa-IR')}</td><td>${item.subtotal.toLocaleString('fa-IR')}</td></tr>` })
                 html += '</tbody></table>'

@@ -23,7 +23,7 @@ export default function PaymentPanel({ onPaymentComplete, selectedCustomer, onSe
 
   useEffect(() => {
     if (showCustomerSearch) {
-      window.api.customers.search(customerQuery).then((r) => { if (r.success && r.data) setCustomers(r.data) })
+      window.api.customers.search(customerQuery).then((r) => { if (r.success && r.data) setCustomers(r.data.slice(0, 3)) })
     }
   }, [showCustomerSearch, customerQuery])
 
