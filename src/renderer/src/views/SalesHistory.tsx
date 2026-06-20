@@ -414,7 +414,19 @@ export default function SalesHistory() {
             </div>
 
             <div className="flex gap-2">
-              <button onClick={() => { window.print() }}
+              <button onClick={() => {
+                if (!selectedSale) return
+                let html = '<h1>چاپ دوباره فاکتور</h1>'
+                const customerInfo = selectedSale.customerName ? `<div class="header-info"><span>مشتری: ${selectedSale.customerName}</span></div>` : ''
+                html += customerInfo
+                html += `<div class="header-info"><span>شماره فاکتور: ${selectedSale.invoiceNumber}</span><span>تاریخ: ${formatJalaliDateTime(selectedSale.createdAt)}</span></div>`
+                html += `<div class="header-info"><span>صندوکدار: ${selectedSale.userName}</span><span>نوع پرداخت: ${selectedSale.paymentMethod === 'cash' ? 'نقدی' : selectedSale.paymentMethod === 'card' ? 'کارتی' : 'نسیه'}</span></div>`
+                html += '<table><thead><tr><th>کالا</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>'
+                selectedSale.items?.forEach((item: any) => { html += `<tr><td>${item.productTitle}</td><td>${item.quantity}</td><td>${item.unitPrice.toLocaleString('fa-IR')}</td><td>${item.subtotal.toLocaleString('fa-IR')}</td></tr>` })
+                html += '</tbody></table>'
+                html += `<p><strong>جمع کل: ${selectedSale.total_amount.toLocaleString('fa-IR')} تومان</strong></p>`
+                printA4Report(html, 'چاپ دوباره فاکتور', { isInvoice: true })
+              }}
                 className="text-sm px-5 py-2.5 rounded-xl font-bold flex-1 transition-all duration-200"
                 style={{ background: 'linear-gradient(135deg, #006194, #007bb9)', color: '#fff', boxShadow: '0 2px 8px rgba(0,97,148,0.3)' }}>چاپ فاکتور</button>
               {!selectedSale.items?.every((item: any) => returnedIds.has(`${selectedSale.id}-${item.productId}`)) && (
