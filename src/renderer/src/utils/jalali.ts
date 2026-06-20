@@ -40,8 +40,9 @@ export function formatJalaliDateTime(dateStr: string): string {
   const { y, m, d } = parseDateSafe(dateStr)
   const [jy, jm, jd] = gregorianToJalali(y, m, d)
   let hours = '00', mins = '00'
-  if (dateStr.includes('T')) {
-    const timePart = dateStr.split('T')[1]
+  const timeSeparator = dateStr.includes('T') ? 'T' : ' '
+  if (dateStr.includes(timeSeparator)) {
+    const timePart = dateStr.split(timeSeparator)[1]
     if (timePart) {
       const parts = timePart.split(':')
       if (parts[0]) hours = parts[0].padStart(2, '0')

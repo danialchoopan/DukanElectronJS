@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import type { Sale } from '../../../types'
 import { fa } from '../i18n'
 import { formatJalaliDateTime } from '../utils/jalali'
+import { printA4Report, downloadExcel } from '../utils/a4Print'
 import ShamsiDateInput from '../components/ShamsiDateInput'
 import Pagination from '../components/Pagination'
 import { useAuthStore } from '../store/authStore'
@@ -95,6 +96,24 @@ export default function SalesHistory() {
   const totalRevenue = filteredSales.filter(s => !returnedIds.has(s.id)).reduce((sum, s) => sum + s.total_amount, 0)
   const pagedSales = filteredSales.slice(page * pageSize, (page + 1) * pageSize)
 
+  const handlePrintSales = () => {
+    let html = '<h1>گزارش فروش</h1>'
+    html += `<div class="header-info"><span>از: ${startDate || 'همه'} تا: ${endDate || 'همه'}</span><span>تعداد: ${filteredSales.length}</span></div>`
+    html += '<table><thead><tr><th>فاکتور</th><th>تاریخ</th><th>صندوکدار</th><th>مشتری</th><th>تعداد اقلام</th><th>نوع پرداخت</th><th>مبلغ</th></tr></thead><tbody>'
+    filteredSales.forEach(s => {
+      html += `<tr><td>${s.invoiceNumber}</td><td>${formatJalaliDateTime(s.createdAt)}</td><td>${s.userName}</td><td>${s.customerName || '-'}</td><td>${s.items?.length || 0}</td><td>${s.paymentMethod === 'cash' ? 'نقدی' : s.paymentMethod === 'card' ? 'کارتی' : 'نسیه'}</td><td>${s.total_amount.toLocaleString('fa-IR')}</td></tr>`
+    })
+    html += '</tbody></table>'
+    html += `<p>جمع کل: ${totalRevenue.toLocaleString('fa-IR')} تومان</p>`
+    printA4Report(html, 'گزارش فروش')
+  }
+
+  const handleExcelSales = () => {
+    const headers = ['فاکتور', 'تاریخ', 'صندوکدار', 'مشتری', 'تعداد اقلام', 'نوع پرداخت', 'مبلغ']
+    const csvRows = filteredSales.map(s => [s.invoiceNumber, formatJalaliDateTime(s.createdAt), s.userName, s.customerName || '-', s.items?.length || 0, s.paymentMethod === 'cash' ? 'نقدی' : s.paymentMethod === 'card' ? 'کارتی' : 'نسیه', s.total_amount])
+    downloadExcel('sales-history.csv', headers, csvRows)
+  }
+
   return (
     <div className="h-full p-4 overflow-auto">
       <div className="flex items-center justify-between mb-4">
@@ -111,6 +130,14 @@ export default function SalesHistory() {
         <div className="flex items-end gap-2">
           <button onClick={loadData} className="btn btn-primary text-sm py-2">{fa.dashboard.refresh}</button>
           <button onClick={() => { setStartDate(''); setEndDate(''); setSearchQuery(''); setFilterMethod('all'); setFilterStatus('all') }} className="btn btn-gray text-sm py-2">{fa.dashboard.all}</button>
+          <button onClick={handlePrintSales} className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            چاپ گزارش فروش
+          </button>
+          <button onClick={handleExcelSales} className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            خروجی اکسل
+          </button>
         </div>
       </div>
 

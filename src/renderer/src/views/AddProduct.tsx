@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../i18n'
 import { useSettingsStore } from '../store/settingsStore'
+import { printA4Report, downloadExcel } from '../utils/a4Print'
 import WebcamScanner from '../components/WebcamScanner'
 import type { Product } from '../../../types'
 
@@ -108,6 +109,23 @@ export default function AddProduct() {
 
   const totalPages = Math.ceil(products.length / pageSize)
   const pagedProducts = products.slice(page * pageSize, (page + 1) * pageSize)
+
+  const handlePrintProducts = () => {
+    let html = '<h1>لیست کالاها</h1>'
+    html += `<div class="header-info"><span>تاریخ: ${new Date().toLocaleDateString('fa-IR')}</span><span>تعداد: ${products.length}</span></div>`
+    html += '<table><thead><tr><th>بارکد</th><th>نام</th><th>دسته</th><th>موجودی</th><th>قیمت خرید</th><th>قیمت فروش</th></tr></thead><tbody>'
+    products.forEach((p) => {
+      html += `<tr><td>${p.barcode}</td><td>${p.title}</td><td>${p.category || '-'}</td><td>${p.stock}</td><td>${p.purchase_price.toLocaleString('fa-IR')}</td><td>${p.sale_price.toLocaleString('fa-IR')}</td></tr>`
+    })
+    html += '</tbody></table>'
+    printA4Report(html, 'لیست کالاها')
+  }
+
+  const handleExcelProducts = () => {
+    const headers = ['بارکد', 'نام', 'دسته', 'موجودی', 'حداقل موجودی', 'قیمت خرید', 'قیمت فروش', 'وضعیت']
+    const csvRows = products.map((p: any) => [p.barcode, p.title, p.category || '-', p.stock, p.minStock, p.purchase_price, p.sale_price, p.isActive ? 'فعال' : 'غیرفعال'])
+    downloadExcel('products-list.csv', headers, csvRows)
+  }
 
   return (
     <div className="h-full p-4 overflow-auto">
@@ -249,6 +267,19 @@ export default function AddProduct() {
 
       {/* Product Table */}
       <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+        <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+          <span className="text-sm font-bold" style={{ color: textPrimary }}>{fa.admin.addProduct}</span>
+          <div className="flex gap-2">
+            <button onClick={handlePrintProducts} className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              چاپ لیست کالاها
+            </button>
+            <button onClick={handleExcelProducts} className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              خروجی اکسل
+            </button>
+          </div>
+        </div>
         <table className="w-full text-sm">
           <thead>
             <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>

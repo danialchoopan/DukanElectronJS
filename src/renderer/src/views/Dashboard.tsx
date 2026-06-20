@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { fa } from '../i18n'
 import { formatJalaliDateTime, gregorianToJalali } from '../utils/jalali'
 import { generateReceiptHTML, printContent } from '../utils/receipt'
+import { printA4Report, downloadExcel } from '../utils/a4Print'
 import ShamsiDateInput from '../components/ShamsiDateInput'
 import Pagination from '../components/Pagination'
 
@@ -83,11 +84,41 @@ export default function Dashboard() {
     { label: 'مرجوعی', value: `${returnStats.totalReturns}`, color: '#f59e0b', bg: isDark ? '#451a03' : '#fef3c7' },
   ]
 
+  const handlePrintA4 = () => {
+    let html = '<h1>گزارش داشبورد فروشگاه</h1>'
+    html += `<div class="header-info"><span>تاریخ: ${getShamsiToday()}</span></div>`
+    html += '<table><thead><tr><th>شاخص</th><th>مقدار</th></tr></thead><tbody>'
+    stats.forEach(s => { html += `<tr><td>${s.label}</td><td>${s.value}</td></tr>` })
+    html += '</tbody></table>'
+    if (topProducts.length > 0) {
+      html += '<h2>پرفروش\u200cترین کالاها</h2><table><thead><tr><th>کالا</th><th>تعداد فروش</th><th>درآمد</th></tr></thead><tbody>'
+      topProducts.forEach((p: any) => { html += `<tr><td>${p.productTitle || p.title}</td><td>${p.totalQty}</td><td>${p.totalRevenue?.toLocaleString('fa-IR')}</td></tr>` })
+      html += '</tbody></table>'
+    }
+    printA4Report(html, 'گزارش داشبورد فروشگاه')
+  }
+
+  const handleExcelExport = () => {
+    const headers = ['فاکتور', 'تاریخ', 'صندوکدار', 'مشتری', 'مبلغ', 'نوع پرداخت']
+    const csvRows = sales.map((s: any) => [s.invoiceNumber, formatJalaliDateTime(s.createdAt), s.userName, s.customerName || '-', s.total_amount, s.paymentMethod])
+    downloadExcel('sales-report.csv', headers, csvRows)
+  }
+
   return (
     <div className="h-full p-4 overflow-auto">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold" style={{ color: textPrimary }}>{fa.dashboard.title}</h2>
-        <span className="text-sm font-medium px-3 py-1 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>{getShamsiToday()}</span>
+        <div className="flex items-center gap-2">
+          <button onClick={handlePrintA4} className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            چاپ گزارش
+          </button>
+          <button onClick={handleExcelExport} className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            خروجی اکسل
+          </button>
+          <span className="text-sm font-medium px-3 py-1 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>{getShamsiToday()}</span>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3 mb-5">
