@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
+import { printA4Report } from '../../utils/a4Print'
 import ShamsiDateInput from '../../components/ShamsiDateInput'
 import Pagination from '../../components/Pagination'
 import HelpPopup from '../../components/HelpPopup'
@@ -43,13 +44,26 @@ export default function JournalEntries() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-4">
-        <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.journal.title}</h3>
-        <HelpPopup title="راهنمای روزنامه" sections={[
-          { heading: 'اسناد حسابداری', items: ['هر سند شامل حداقل دو ردیف بدهکار و بستانکار است', 'جمع بدهکار باید با جمع بستانکار برابر باشد', 'اسناد خودکار از فروش، هزینه و مرجوعی ایجاد می‌شوند'] },
-          { heading: 'فیلتر و جستجو', items: ['فیلتر بر اساس تاریخ شمسی', 'فیلتر بر اساس نوع سند (فروش/هزینه/مرجوعی/دستی)', 'کلیک روی سند برای مشاهده ردیف‌ها'] },
-          { heading: 'سند دستی', items: ['با زدن + سند دستی ایجاد کنید', 'مطمئن شوید جمع بدهکار با بستانکار برابر است'] }
-        ]} />
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.journal.title}</h3>
+          <HelpPopup title="راهنمای روزنامه" sections={[
+            { heading: 'اسناد حسابداری', items: ['هر سند شامل حداقل دو ردیف بدهکار و بستانکار است', 'جمع بدهکار باید با جمع بستانکار برابر باشد', 'اسناد خودکار از فروش، هزینه و مرجوعی ایجاد می‌شوند'] },
+            { heading: 'فیلتر و جستجو', items: ['فیلتر بر اساس تاریخ شمسی', 'فیلتر بر اساس نوع سند (فروش/هزینه/مرجوعی/دستی)', 'کلیک روی سند برای مشاهده ردیف‌ها'] },
+            { heading: 'سند دستی', items: ['با زدن + سند دستی ایجاد کنید', 'مطمئن شوید جمع بدهکار با بستانکار برابر است'] }
+          ]} />
+        </div>
+        <button onClick={() => {
+          let html = '<table><thead><tr><th>#</th><th>تاریخ</th><th>شرح</th><th>نوع</th></tr></thead><tbody>'
+          entries.forEach((e, i) => {
+            html += `<tr><td>${page * pageSize + i + 1}</td><td>${e.entryDate}</td><td>${e.description}</td><td>${fa.accounting.journal.types[e.referenceType as keyof typeof fa.accounting.journal.types] || e.referenceType}</td></tr>`
+          })
+          html += '</tbody></table>'
+          printA4Report(html, 'روزنامه حسابداری')
+        }} className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
+          چاپ
+        </button>
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-4">

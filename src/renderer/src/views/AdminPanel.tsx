@@ -4,38 +4,65 @@ import { fa } from '../i18n'
 import UISettings from './UISettings'
 import ShortcutsSettings from './accounting/ShortcutsSettings'
 
+const primary = '#006194'
+
 export default function AdminPanel() {
   const [tab, setTab] = useState<'users' | 'settings' | 'ui' | 'shortcuts'>('users')
   const isDark = document.documentElement.classList.contains('dark')
-  
-  const tabs: { key: typeof tab; label: string }[] = [
-    { key: 'users', label: fa.admin.users },
-    { key: 'settings', label: fa.admin.settings },
-    { key: 'ui', label: 'ظاهر برنامه' },
-    { key: 'shortcuts', label: 'میانبرها' },
+
+  const tabs: { key: typeof tab; label: string; icon: string }[] = [
+    { key: 'users', label: fa.admin.users, icon: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75' },
+    { key: 'settings', label: fa.admin.settings, icon: 'M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z' },
+    { key: 'ui', label: 'ظاهر برنامه', icon: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 100-6 3 3 0 000 6z' },
+    { key: 'shortcuts', label: 'میانبرها', icon: 'M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3' },
   ]
 
-  const bgColor = isDark ? '#0f172a' : '#f1f5f9'
+  const bgColor = isDark ? '#0f172a' : '#f8fafc'
+  const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
+  const textSecondary = isDark ? '#94a3b8' : '#64748b'
+  const btnBg = isDark ? '#334155' : '#f1f5f9'
 
   return (
-    <div className="h-full p-4 overflow-auto w-full" style={{ backgroundColor: bgColor }}>
-      <div className="flex gap-2 mb-4">
+    <div className="h-full p-5 overflow-auto w-full" style={{ backgroundColor: bgColor }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-5">
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center"
+          style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)`, boxShadow: '0 2px 8px rgba(0,97,148,0.25)' }}
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+            <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <div>
+          <h2 className="text-xl font-extrabold tracking-tight" style={{ color: textPrimary }}>تنظیمات و مدیریت</h2>
+          <p className="text-xs font-medium" style={{ color: textSecondary }}>{fa.admin.settings}</p>
+        </div>
+      </div>
+
+      {/* Tab Bar */}
+      <div className="flex gap-2 mb-5">
         {tabs.map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)}
-            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === t.key ? 'shadow-lg' : ''}`}
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2"
             style={{
-              background: tab === t.key 
-                ? 'linear-gradient(135deg, #3b82f6, #2563eb)' 
-                : (isDark ? '#334155' : '#e2e8f0'),
-              color: tab === t.key 
-                ? '#ffffff' 
-                : (isDark ? '#94a3b8' : '#475569'),
-              boxShadow: tab === t.key ? '0 4px 12px rgba(59,130,246,0.3)' : 'none',
-            }}>
+              background: tab === t.key
+                ? `linear-gradient(135deg, ${primary}, #007bb9)`
+                : btnBg,
+              color: tab === t.key ? '#ffffff' : textSecondary,
+              boxShadow: tab === t.key ? '0 4px 12px rgba(0,97,148,0.3)' : 'none',
+            }}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d={t.icon} />
+            </svg>
             {t.label}
           </button>
         ))}
       </div>
+
       <div className="w-full">
         {tab === 'users' && <UsersTab />}
         {tab === 'settings' && <SettingsTab />}
@@ -52,7 +79,7 @@ function UsersTab() {
   const [showPin, setShowPin] = useState(true)
   const [form, setForm] = useState({ name: '', pinCode: '', role: 'cashier' as 'admin' | 'cashier' })
   const isDark = document.documentElement.classList.contains('dark')
-  
+
   const load = async () => { const r = await window.api.auth.listUsers(); if (r.success && r.data) setUsers(r.data) }
   useEffect(() => { load() }, [])
 
@@ -65,131 +92,157 @@ function UsersTab() {
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
-  const textSecondary = isDark ? '#94a3b8' : '#475569'
+  const textSecondary = isDark ? '#94a3b8' : '#64748b'
   const inputBg = isDark ? '#0f172a' : '#f8fafc'
-  const inputBorder = isDark ? '#334155' : '#e2e8f0'
+  const btnBg = isDark ? '#334155' : '#f1f5f9'
+
+  const inputStyle = { background: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }
 
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="font-bold text-lg" style={{ color: textPrimary }}>{fa.admin.users}</h3>
-        <button 
-          onClick={() => setShowForm(true)} 
-          className="btn-primary text-sm px-4 py-2"
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: isDark ? 'rgba(0,97,148,0.2)' : 'rgba(0,97,148,0.08)' }}>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke={primary} strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          </div>
+          <h3 className="font-extrabold text-sm" style={{ color: textPrimary }}>{fa.admin.users}</h3>
+        </div>
+        <button
+          onClick={() => setShowForm(true)}
+          className="btn btn-primary text-sm"
         >
           + {fa.admin.addUser}
         </button>
       </div>
-      
+
       {showForm && (
-        <div className="rounded-2xl p-4 mb-4 grid grid-cols-1 md:grid-cols-4 gap-3 items-end border-2" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+        <div
+          className="rounded-2xl p-5 mb-4 grid grid-cols-1 md:grid-cols-4 gap-3 items-end border overflow-hidden"
+          style={{
+            backgroundColor: cardBg,
+            borderColor: primary,
+            borderRightWidth: '4px',
+            boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(0,97,148,0.08)',
+          }}
+        >
           <div>
-            <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.name}</label>
-            <input 
-              value={form.name} 
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} 
-              className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500"
-              style={{ 
-                background: inputBg, 
-                border: `1px solid ${inputBorder}`,
-                color: textPrimary
-              }}
+            <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.name}</label>
+            <input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              className="input-field text-sm"
+              style={inputStyle}
             />
           </div>
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-medium" style={{ color: textSecondary }}>{fa.admin.pin}</label>
-              <button type="button" onClick={() => setShowPin(!showPin)} 
-                className="text-[10px] px-2 py-0.5 rounded" 
-                style={{ background: isDark ? '#334155' : '#e2e8f0', color: textSecondary }}>
-                {showPin ? '●●●' : '👁'}
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-bold" style={{ color: textSecondary }}>{fa.admin.pin}</label>
+              <button type="button" onClick={() => setShowPin(!showPin)}
+                className="text-[10px] px-2 py-0.5 rounded-lg font-bold"
+                style={{ background: btnBg, color: textSecondary }}>
+                {showPin ? '●●●' : '○○○'}
               </button>
             </div>
-            <input 
-              type={showPin ? 'text' : 'password'} 
-              value={form.pinCode} 
-              onChange={(e) => setForm((f) => ({ ...f, pinCode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} 
-              className="w-full px-3 py-2 rounded-lg text-sm tracking-widest font-mono outline-none transition-all focus:ring-2 focus:ring-blue-500"
-              style={{ 
-                background: inputBg, 
-                border: `1px solid ${inputBorder}`,
-                color: textPrimary
-              }}
-              maxLength={6} 
-              inputMode="numeric" 
+            <input
+              type={showPin ? 'text' : 'password'}
+              value={form.pinCode}
+              onChange={(e) => setForm((f) => ({ ...f, pinCode: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+              className="input-field text-sm tracking-widest font-mono"
+              style={inputStyle}
+              maxLength={6}
+              inputMode="numeric"
             />
           </div>
           <div>
-            <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.role}</label>
-            <select 
-              value={form.role} 
-              onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as any }))} 
-              className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500"
-              style={{ 
-                background: inputBg, 
-                border: `1px solid ${inputBorder}`,
-                color: textPrimary
-              }}>
+            <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.role}</label>
+            <select
+              value={form.role}
+              onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as any }))}
+              className="input-field text-sm"
+              style={inputStyle}>
               <option value="cashier">{fa.admin.cashier}</option>
               <option value="admin">{fa.admin.admin}</option>
             </select>
           </div>
           <div className="flex gap-2">
-            <button 
-              onClick={handleSubmit} 
-              className="btn-success text-sm flex-1"
-            >
+            <button onClick={handleSubmit} className="btn btn-success text-sm flex-1">
               {fa.admin.create}
             </button>
-            <button 
-              onClick={() => setShowForm(false)} 
-              className="flex-1 px-4 py-2 rounded-lg font-bold text-sm transition-all"
-              style={{ 
-                background: isDark ? '#334155' : '#e2e8f0', 
-                color: textSecondary 
-              }}>
+            <button
+              onClick={() => setShowForm(false)}
+              className="flex-1 px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200"
+              style={{ backgroundColor: btnBg, color: textSecondary }}>
               {fa.admin.cancel}
             </button>
           </div>
         </div>
       )}
-      
-      <div className="rounded-2xl border-2 overflow-hidden w-full" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+
+      <div
+        className="rounded-2xl border overflow-hidden w-full"
+        style={{
+          backgroundColor: cardBg,
+          borderColor: cardBorder,
+          boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)',
+        }}
+      >
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
-                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>ID</th>
-                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.name}</th>
-                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.admin.role}</th>
-                <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.expense.date}</th>
-                <th className="px-4 py-2"></th>
+              <tr style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)' }}>
+                <th className="text-right px-4 py-2.5 text-xs font-bold" style={{ color: textSecondary, borderBottom: `2px solid ${cardBorder}` }}>ID</th>
+                <th className="text-right px-4 py-2.5 text-xs font-bold" style={{ color: textSecondary, borderBottom: `2px solid ${cardBorder}` }}>{fa.admin.name}</th>
+                <th className="text-right px-4 py-2.5 text-xs font-bold" style={{ color: textSecondary, borderBottom: `2px solid ${cardBorder}` }}>{fa.admin.role}</th>
+                <th className="text-right px-4 py-2.5 text-xs font-bold" style={{ color: textSecondary, borderBottom: `2px solid ${cardBorder}` }}>{fa.expense.date}</th>
+                <th className="px-4 py-2.5" style={{ borderBottom: `2px solid ${cardBorder}` }}></th>
               </tr>
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u.id} style={{ borderBottom: `1px solid ${cardBorder}` }}>
-                  <td className="px-4 py-2" style={{ color: textSecondary }}>{u.id}</td>
-                  <td className="px-4 py-2 font-medium" style={{ color: textPrimary }}>{u.name}</td>
-                  <td className="px-4 py-2">
-                    <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{
-                      backgroundColor: u.role === 'admin' ? '#fef3c7' : '#dbeafe',
-                      color: u.role === 'admin' ? '#92400e' : '#1e40af',
+                <tr
+                  key={u.id}
+                  className="transition-all duration-150"
+                  style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(0,97,148,0.06)' : 'rgba(0,97,148,0.03)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+                >
+                  <td className="px-4 py-2.5" style={{ color: textSecondary }}>{u.id}</td>
+                  <td className="px-4 py-2.5 font-bold" style={{ color: textPrimary }}>{u.name}</td>
+                  <td className="px-4 py-2.5">
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-bold" style={{
+                      backgroundColor: u.role === 'admin' ? (isDark ? 'rgba(245,158,11,0.15)' : '#fef3c7') : (isDark ? 'rgba(0,97,148,0.15)' : '#e0f2fe'),
+                      color: u.role === 'admin' ? '#f59e0b' : primary,
                     }}>{u.role === 'admin' ? fa.admin.admin : fa.admin.cashier}</span>
                   </td>
-                  <td className="px-4 py-2 text-xs" style={{ color: textSecondary }}>{u.createdAt}</td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-2.5 text-xs" style={{ color: textSecondary }}>{u.createdAt}</td>
+                  <td className="px-4 py-2.5">
                     {u.role !== 'admin' && (
-                      <button onClick={async () => { await window.api.auth.deleteUser(u.id); load() }} 
-                        className="text-xs font-bold px-2 py-1 rounded transition-all hover:bg-red-100 dark:hover:bg-red-900/20"
-                        style={{ color: '#dc2626' }}>
+                      <button onClick={async () => { await window.api.auth.deleteUser(u.id); load() }}
+                        className="text-xs font-bold px-2.5 py-1 rounded-lg transition-all duration-200"
+                        style={{ color: '#ef4444', backgroundColor: isDark ? 'rgba(239,68,68,0.1)' : '#fef2f2' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(239,68,68,0.2)' : '#fee2e2' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(239,68,68,0.1)' : '#fef2f2' }}
+                      >
                         {fa.admin.delete}
                       </button>
                     )}
                   </td>
                 </tr>
               ))}
-              {users.length === 0 && <tr><td colSpan={5} className="text-center py-4" style={{ color: textSecondary }}>{fa.admin.noUsers}</td></tr>}
+              {users.length === 0 && (
+                <tr>
+                  <td colSpan={5}>
+                    <div className="flex flex-col items-center justify-center py-12 gap-3">
+                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }}>
+                        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke={textSecondary} strokeWidth="1" opacity="0.5">
+                          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                        </svg>
+                      </div>
+                      <span className="text-sm font-bold" style={{ color: textSecondary }}>{fa.admin.noUsers}</span>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -205,10 +258,12 @@ function BackupSection() {
   const [integrityResult, setIntegrityResult] = useState<string | null>(null)
   const isDark = document.documentElement.classList.contains('dark')
 
+  const primary = '#006194'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
-  const textSecondary = isDark ? '#94a3b8' : '#475569'
+  const textSecondary = isDark ? '#94a3b8' : '#64748b'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const inputBg = isDark ? '#0f172a' : '#f8fafc'
+  const btnBg = isDark ? '#334155' : '#f1f5f9'
 
   const loadData = async () => {
     const [listRes, statsRes] = await Promise.all([
@@ -274,16 +329,31 @@ function BackupSection() {
   return (
     <div className="space-y-3">
       <div className="flex gap-2 flex-wrap">
-        <button onClick={handleCreateBackup} disabled={loading} className="btn-primary flex-1 py-2 text-sm">
+        <button onClick={handleCreateBackup} disabled={loading} className="btn btn-primary flex-1 py-2 text-sm">
           + پشتیبان جدید
         </button>
-        <button onClick={handleExport} disabled={loading} className="flex-1 py-2 rounded-lg font-bold text-sm transition-all" style={{ background: isDark ? '#334155' : '#e2e8f0', color: textSecondary }}>
+        <button
+          onClick={handleExport}
+          disabled={loading}
+          className="flex-1 py-2 rounded-xl font-bold text-sm transition-all duration-200"
+          style={{ backgroundColor: btnBg, color: textSecondary }}
+        >
           ذخیره در فایل
         </button>
-        <button onClick={handleIntegrity} disabled={loading} className="flex-1 py-2 rounded-lg font-bold text-sm transition-all" style={{ background: isDark ? '#334155' : '#e2e8f0', color: textSecondary }}>
+        <button
+          onClick={handleIntegrity}
+          disabled={loading}
+          className="flex-1 py-2 rounded-xl font-bold text-sm transition-all duration-200"
+          style={{ backgroundColor: btnBg, color: textSecondary }}
+        >
           بررسی سلامت
         </button>
-        <button onClick={handleCleanup} disabled={loading} className="py-2 px-3 rounded-lg font-bold text-sm transition-all" style={{ background: '#fef2f2', color: '#dc2626' }}>
+        <button
+          onClick={handleCleanup}
+          disabled={loading}
+          className="py-2 px-3 rounded-xl font-bold text-sm transition-all duration-200"
+          style={{ backgroundColor: isDark ? 'rgba(239,68,68,0.1)' : '#fef2f2', color: '#ef4444' }}
+        >
           پاکسازی
         </button>
       </div>
@@ -296,21 +366,27 @@ function BackupSection() {
       )}
 
       {integrityResult && (
-        <div className="px-3 py-2 rounded-lg text-xs" style={{ background: inputBg, color: textSecondary }}>
+        <div className="px-3 py-2 rounded-xl text-xs" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textSecondary }}>
           {integrityResult}
         </div>
       )}
 
       {backups.length > 0 && (
-        <div className="space-y-1 max-h-48 overflow-auto">
+        <div className="space-y-1.5 max-h-48 overflow-auto">
           {backups.map((b) => (
-            <div key={b.name} className="flex items-center justify-between px-3 py-2 rounded-lg text-xs" style={{ background: inputBg, border: `1px solid ${cardBorder}` }}>
+            <div
+              key={b.name}
+              className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all duration-150"
+              style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}` }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = primary }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = cardBorder }}
+            >
               <div className="flex-1 min-w-0">
-                <div className="font-medium truncate" style={{ color: textPrimary }}>{b.name}</div>
+                <div className="font-bold truncate" style={{ color: textPrimary }}>{b.name}</div>
                 <div style={{ color: textSecondary }}>{new Date(b.timestamp).toLocaleString('fa-IR')} — {formatSize(b.size)}</div>
               </div>
               <button onClick={() => handleRestore(b.path)} disabled={loading}
-                className="ml-2 px-2 py-1 rounded text-xs font-bold" style={{ background: '#dcfce7', color: '#166534' }}>
+                className="ml-2 px-2.5 py-1 rounded-lg text-xs font-bold" style={{ backgroundColor: isDark ? 'rgba(34,197,94,0.15)' : '#dcfce7', color: '#22c55e' }}>
                 بازیابی
               </button>
             </div>
@@ -319,7 +395,14 @@ function BackupSection() {
       )}
 
       {backups.length === 0 && (
-        <p className="text-xs text-center py-2" style={{ color: textSecondary }}>هنوز پشتیبانی وجود ندارد</p>
+        <div className="flex flex-col items-center justify-center py-8 gap-2">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }}>
+            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke={textSecondary} strokeWidth="1.5" opacity="0.5">
+              <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+          </div>
+          <p className="text-xs text-center" style={{ color: textSecondary }}>هنوز پشتیبانی وجود ندارد</p>
+        </div>
       )}
     </div>
   )
@@ -333,6 +416,8 @@ function SettingsTab() {
   const [receiptFooter, setReceiptFooter] = useState('')
   const [saved, setSaved] = useState(false)
   const isDark = document.documentElement.classList.contains('dark')
+
+  const primary = '#006194'
 
   useEffect(() => {
     window.api.settings.getAll().then((r) => {
@@ -360,88 +445,72 @@ function SettingsTab() {
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
-  const textSecondary = isDark ? '#94a3b8' : '#475569'
+  const textSecondary = isDark ? '#94a3b8' : '#64748b'
   const inputBg = isDark ? '#0f172a' : '#f8fafc'
-  const inputBorder = isDark ? '#334155' : '#e2e8f0'
+  const btnBg = isDark ? '#334155' : '#f1f5f9'
+
+  const inputStyle = { background: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }
 
   return (
     <div className="w-full max-w-4xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-4">
-          <div className="rounded-2xl p-4 border-2" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-            <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.storeName}</label>
-            <input 
-              value={storeName} 
-              onChange={(e) => setStoreName(e.target.value)} 
-              className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500"
-              style={{ 
-                background: inputBg, 
-                border: `1px solid ${inputBorder}`,
-                color: textPrimary
-              }}
+          <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.storeName}</label>
+            <input
+              value={storeName}
+              onChange={(e) => setStoreName(e.target.value)}
+              className="input-field text-sm"
+              style={inputStyle}
             />
           </div>
-          
-          <div className="rounded-2xl p-4 border-2" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-            <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.storeAddress}</label>
-            <input 
-              value={storeAddress} 
-              onChange={(e) => setStoreAddress(e.target.value)} 
-              className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500"
-              style={{ 
-                background: inputBg, 
-                border: `1px solid ${inputBorder}`,
-                color: textPrimary
-              }}
+
+          <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.storeAddress}</label>
+            <input
+              value={storeAddress}
+              onChange={(e) => setStoreAddress(e.target.value)}
+              className="input-field text-sm"
+              style={inputStyle}
             />
           </div>
         </div>
-        
+
         <div className="space-y-4">
-          <div className="rounded-2xl p-4 border-2" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-            <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.storePhone}</label>
-            <input 
-              value={storePhone} 
-              onChange={(e) => setStorePhone(e.target.value)} 
-              className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500"
-              style={{ 
-                background: inputBg, 
-                border: `1px solid ${inputBorder}`,
-                color: textPrimary
-              }}
+          <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.storePhone}</label>
+            <input
+              value={storePhone}
+              onChange={(e) => setStorePhone(e.target.value)}
+              className="input-field text-sm"
+              style={inputStyle}
             />
           </div>
-          
-          <div className="rounded-2xl p-4 border-2" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-            <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.receiptFooter}</label>
-            <input 
-              value={receiptFooter} 
-              onChange={(e) => setReceiptFooter(e.target.value)} 
-              className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500"
-              style={{ 
-                background: inputBg, 
-                border: `1px solid ${inputBorder}`,
-                color: textPrimary
-              }}
+
+          <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.receiptFooter}</label>
+            <input
+              value={receiptFooter}
+              onChange={(e) => setReceiptFooter(e.target.value)}
+              className="input-field text-sm"
+              style={inputStyle}
             />
           </div>
         </div>
       </div>
 
-      <div className="rounded-2xl p-4 border-2 mt-4" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-        <label className="text-xs font-medium block mb-2" style={{ color: textSecondary }}>{fa.admin.autoRoundingSetting}</label>
+      <div className="rounded-2xl p-4 border mt-4" style={{ backgroundColor: cardBg, borderColor: cardBorder, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <label className="text-xs font-bold block mb-2" style={{ color: textSecondary }}>{fa.admin.autoRoundingSetting}</label>
         <div className="flex gap-2">
           {[0, 500, 1000].map((v) => (
-            <button key={v} onClick={() => setRounding(v)} 
-              className="flex-1 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
+            <button key={v} onClick={() => setRounding(v)}
+              className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
               style={{
-                background: rounding === v 
-                  ? 'linear-gradient(135deg, #3b82f6, #2563eb)' 
-                  : (isDark ? '#334155' : '#e2e8f0'),
-                color: rounding === v 
-                  ? '#ffffff' 
-                  : (isDark ? '#94a3b8' : '#475569'),
-                boxShadow: rounding === v ? '0 4px 12px rgba(59,130,246,0.3)' : 'none',
+                background: rounding === v
+                  ? `linear-gradient(135deg, ${primary}, #007bb9)`
+                  : btnBg,
+                color: rounding === v ? '#ffffff' : textSecondary,
+                boxShadow: rounding === v ? '0 4px 12px rgba(0,97,148,0.3)' : 'none',
               }}>
               {v === 0 ? fa.admin.roundingOff : v.toLocaleString('fa-IR')}
             </button>
@@ -449,15 +518,27 @@ function SettingsTab() {
         </div>
       </div>
 
-      <button 
-        onClick={saveAll} 
-        className="btn-primary w-full py-3 text-lg mt-4"
+      <button
+        onClick={saveAll}
+        className="w-full py-3 text-lg mt-4 rounded-xl font-bold transition-all duration-200"
+        style={{
+          background: saved
+            ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+            : `linear-gradient(135deg, ${primary}, #007bb9)`,
+          color: '#ffffff',
+          boxShadow: saved ? '0 4px 12px rgba(34,197,94,0.3)' : '0 4px 12px rgba(0,97,148,0.3)',
+        }}
       >
-        {saved ? '✓ ' + fa.admin.saved : fa.admin.save}
+        {saved ? fa.admin.saved : fa.admin.save}
       </button>
 
-      <div className="rounded-2xl p-5 border-2 mt-4" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-        <h3 className="font-bold mb-3" style={{ color: textPrimary }}>پشتیبان‌گیری و بازیابی</h3>
+      <div className="rounded-2xl p-5 border mt-5" style={{ backgroundColor: cardBg, borderColor: cardBorder, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: isDark ? 'rgba(0,97,148,0.2)' : 'rgba(0,97,148,0.08)' }}>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke={primary} strokeWidth="2"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          </div>
+          <h3 className="font-extrabold text-sm" style={{ color: textPrimary }}>پشتیبان‌گیری و بازیابی</h3>
+        </div>
         <p className="text-sm mb-4" style={{ color: textSecondary }}>
           تمام اطلاعات فروشگاه شامل کالاها، فاکتورها، مشتریان و تنظیمات
         </p>

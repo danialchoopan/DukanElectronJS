@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import ShamsiDateInput from '../../components/ShamsiDateInput'
-import { downloadExcel } from '../../utils/a4Print'
+import { downloadExcel, printA4Report } from '../../utils/a4Print'
 import HelpPopup from '../../components/HelpPopup'
 import { useSortable } from '../../hooks/useSortable'
 
@@ -43,14 +43,28 @@ export default function TrialBalance() {
             { heading: 'نحوه استفاده', items: ['فیلتر تاریخی برای بررسی دوره خاص', 'رنگ‌بندی: سبز=مثبت، قرمز=منفی', 'نمودار نواری نسبت بدهکار به بستانکار'] }
           ]} />
         </div>
-        <button onClick={() => {
-          const headers = [fa.accounting.trialBalance.account, fa.accounting.trialBalance.totalDebit, fa.accounting.trialBalance.totalCredit, fa.accounting.trialBalance.balance]
-          const csvRows = rows.filter((r: any) => r.totalDebit !== 0 || r.totalCredit !== 0).map((r: any) => [`${r.accountCode} - ${r.accountName}`, String(r.totalDebit), String(r.totalCredit), String(r.balance)])
-          csvRows.push([fa.accounting.trialBalance.totals, String(totalDebit), String(totalCredit), ''])
-          downloadExcel('trial-balance.csv', headers, csvRows)
-        }} className="text-xs px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
-          خروجی اکسل
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => {
+            let html = '<table><thead><tr><th>حساب</th><th>نوع</th><th>بدهکار</th><th>بستانکار</th><th>مانده</th></tr></thead><tbody>'
+            rows.filter((r: any) => r.totalDebit !== 0 || r.totalCredit !== 0).forEach((r: any) => {
+              html += `<tr><td>${r.accountCode} - ${r.accountName}</td><td>${fa.accounting.accounts.types[r.accountType as keyof typeof fa.accounting.accounts.types]}</td><td>${r.totalDebit > 0 ? r.totalDebit.toLocaleString('fa-IR') : '-'}</td><td>${r.totalCredit > 0 ? r.totalCredit.toLocaleString('fa-IR') : '-'}</td><td>${Math.abs(r.balance).toLocaleString('fa-IR')}</td></tr>`
+            })
+            html += `<tr><td colspan="2"><strong>${fa.accounting.trialBalance.totals}</strong></td><td><strong>${totalDebit.toLocaleString('fa-IR')}</strong></td><td><strong>${totalCredit.toLocaleString('fa-IR')}</strong></td><td></td></tr>`
+            html += '</tbody></table>'
+            printA4Report(html, 'تراز آزمایشی')
+          }} className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
+            چاپ
+          </button>
+          <button onClick={() => {
+            const headers = [fa.accounting.trialBalance.account, fa.accounting.trialBalance.totalDebit, fa.accounting.trialBalance.totalCredit, fa.accounting.trialBalance.balance]
+            const csvRows = rows.filter((r: any) => r.totalDebit !== 0 || r.totalCredit !== 0).map((r: any) => [`${r.accountCode} - ${r.accountName}`, String(r.totalDebit), String(r.totalCredit), String(r.balance)])
+            csvRows.push([fa.accounting.trialBalance.totals, String(totalDebit), String(totalCredit), ''])
+            downloadExcel('trial-balance.csv', headers, csvRows)
+          }} className="text-xs px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+            خروجی اکسل
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3 mb-4">

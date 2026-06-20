@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
-import { downloadExcel } from '../../utils/a4Print'
+import { downloadExcel, printA4Report } from '../../utils/a4Print'
 
 export default function AccountingDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0)
@@ -109,7 +109,19 @@ export default function AccountingDashboard() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <button onClick={() => {
+          let html = '<table><thead><tr><th>شاخص</th><th>مبلغ</th></tr></thead><tbody>'
+          html += `<tr><td>${fa.accounting.profitLoss.revenue}</td><td>${totalRevenue.toLocaleString('fa-IR')}</td></tr>`
+          html += `<tr><td>${fa.accounting.profitLoss.cogs} + ${fa.accounting.profitLoss.operatingExpenses}</td><td>${totalExpenses.toLocaleString('fa-IR')}</td></tr>`
+          html += `<tr><td>${netProfit >= 0 ? fa.accounting.profitLoss.netProfit : fa.accounting.profitLoss.netLoss}</td><td>${Math.abs(netProfit).toLocaleString('fa-IR')}</td></tr>`
+          html += `<tr><td>${fa.accounting.journal.title}</td><td>${journalCount}</td></tr>`
+          html += '</tbody></table>'
+          printA4Report(html, 'داشبورد حسابداری')
+        }} className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
+          چاپ
+        </button>
         <button onClick={() => {
           const headers = ['انتخاب']
           const rows = [[fa.accounting.profitLoss.revenue], [totalRevenue.toLocaleString('fa-IR')], [fa.accounting.profitLoss.cogs], [totalCogs.toLocaleString('fa-IR')], [fa.accounting.profitLoss.operatingExpenses], [totalOpEx.toLocaleString('fa-IR')], [netProfit >= 0 ? fa.accounting.profitLoss.netProfit : fa.accounting.profitLoss.netLoss], [Math.abs(netProfit).toLocaleString('fa-IR')]]

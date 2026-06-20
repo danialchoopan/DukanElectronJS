@@ -7,6 +7,8 @@ import type { Product } from '../../../types'
 import { useSortable } from '../hooks/useSortable'
 import PrintDialog from '../components/PrintDialog'
 
+const primary = '#006194'
+
 const PAGE_SIZES = [5, 10, 20, 50]
 
 export default function AddProduct() {
@@ -26,10 +28,12 @@ export default function AddProduct() {
     purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '',
   })
 
-  const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
-  const textSecondary = isDark ? '#94a3b8' : '#64748b'
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
+  const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
+  const textSecondary = isDark ? '#94a3b8' : '#64748b'
+  const btnBg = isDark ? '#334155' : '#f1f5f9'
+  const inputBg = isDark ? '#0f172a' : '#f8fafc'
 
   const showNotif = (msg: string) => { setNotification(msg); setTimeout(() => setNotification(''), 3000) }
 
@@ -135,21 +139,26 @@ export default function AddProduct() {
     downloadExcel('products-list.csv', headers, csvRows)
   }
 
+  const inputStyle = { background: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }
+
   return (
-    <div className="h-full p-4 overflow-auto">
+    <div className="h-full p-5 overflow-auto" style={{ background: isDark ? '#0f172a' : '#f8fafc' }}>
       {notification && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-6 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', boxShadow: '0 4px 12px rgba(34,197,94,0.3)' }}>{notification}</div>
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-6 py-2.5 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', boxShadow: '0 4px 16px rgba(34,197,94,0.3)' }}>{notification}</div>
       )}
       {showWebcam && <WebcamScanner onScan={handleBarcodeScanned} onClose={() => setShowWebcam(false)} />}
 
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="card p-6 max-w-sm w-full text-center">
-            <h3 className="text-lg font-bold mb-2" style={{ color: textPrimary }}>{fa.admin.delete}؟</h3>
-            <p className="text-sm mb-4" style={{ color: textSecondary }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div className="rounded-2xl p-6 max-w-sm w-full mx-4 text-center border" style={{ backgroundColor: cardBg, borderColor: cardBorder, boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(239,68,68,0.1)' }}>
+              <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><path d="M12 9v2m0 4h.01M5.07 19H18.93A2 2 0 0020.82 16L13.9 3.46a2 2 0 00-3.8 0L3.18 16a2 2 0 001.89 3z"/></svg>
+            </div>
+            <h3 className="font-extrabold mb-2" style={{ color: textPrimary }}>{fa.admin.delete}؟</h3>
+            <p className="text-sm mb-2" style={{ color: textSecondary }}>
               آیا از حذف "{editProduct?.title}" اطمینان دارید؟
             </p>
-            <p className="text-xs mb-4" style={{ color: '#f59e0b' }}>
+            <p className="text-xs mb-5" style={{ color: '#f59e0b' }}>
               اطلاعات حسابداری حفظ می‌شود ولی کالا از لیست موجودی حذف می‌شود.
             </p>
             <div className="flex gap-2">
@@ -160,36 +169,94 @@ export default function AddProduct() {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold" style={{ color: textPrimary }}>{fa.admin.addProduct}</h2>
-        <button onClick={() => { setEditProduct(null); setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '' }); setShowForm(true) }} className="btn btn-primary text-sm">+ {fa.admin.addProduct}</button>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)`, boxShadow: '0 2px 8px rgba(0,97,148,0.25)' }}
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          </div>
+          <div>
+            <h2 className="text-xl font-extrabold tracking-tight" style={{ color: textPrimary }}>{fa.admin.addProduct}</h2>
+            <p className="text-xs font-medium" style={{ color: textSecondary }}>{products.length} کالا در سیستم</p>
+          </div>
+        </div>
+        <button
+          onClick={() => { setEditProduct(null); setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '' }); setShowForm(true) }}
+          className="btn btn-primary text-sm"
+        >
+          + {fa.admin.addProduct}
+        </button>
       </div>
 
       {/* Search */}
       <div className="flex gap-3 mb-4">
-        <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={fa.admin.search} className="input-field flex-1" />
+        <div className="flex-1 relative">
+          <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke={textSecondary} strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={`${fa.admin.search}...`}
+            className="input-field text-sm pr-10"
+          />
+        </div>
+        <button
+          onClick={() => setShowWebcam(true)}
+          className="text-sm px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all duration-200"
+          style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, color: textSecondary, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          اسکن بارکد
+        </button>
       </div>
 
       {/* Product Form */}
       {showForm && (
-        <div key={editProduct ? `edit-${editProduct.id}` : 'new'} className="rounded-2xl p-5 mb-4 border-2" style={{ backgroundColor: cardBg, borderColor: '#3b82f6' }}>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold" style={{ color: textPrimary }}>{editProduct ? fa.admin.edit : fa.admin.addProduct}</h3>
-            <button onClick={() => { setShowForm(false); setEditProduct(null) }} className="text-xl" style={{ color: textSecondary }}>&times;</button>
+        <div
+          key={editProduct ? `edit-${editProduct.id}` : 'new'}
+          className="rounded-2xl p-5 mb-5 border overflow-hidden"
+          style={{
+            backgroundColor: cardBg,
+            borderColor: primary,
+            borderRightWidth: '4px',
+            boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(0,97,148,0.08)',
+          }}
+        >
+          <div className="flex justify-between items-center mb-5">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: isDark ? 'rgba(0,97,148,0.2)' : 'rgba(0,97,148,0.08)' }}>
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke={primary} strokeWidth="2">
+                  {editProduct ? <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /> : <path d="M12 5v14M5 12h14" />}
+                </svg>
+              </div>
+              <h3 className="font-extrabold" style={{ color: textPrimary }}>{editProduct ? fa.admin.edit : fa.admin.addProduct}</h3>
+            </div>
+            <button
+              onClick={() => { setShowForm(false); setEditProduct(null) }}
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
+              style={{ backgroundColor: btnBg, color: textSecondary }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444' }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = textSecondary }}
+            >
+              &times;
+            </button>
           </div>
-          <div className="grid grid-cols-4 gap-3">
+
+          <div className="grid grid-cols-4 gap-4">
             <div>
-              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.barcode} <span className="text-xs opacity-50">(اختیاری - خودکار تولید می‌شود)</span></label>
-              <input value={form.barcode} onChange={(e) => setForm((f) => ({ ...f, barcode: e.target.value }))} className="input-field text-sm font-mono" placeholder="خالی = خودکار" />
+              <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.barcode} <span className="opacity-50 font-normal">(اختیاری)</span></label>
+              <input value={form.barcode} onChange={(e) => setForm((f) => ({ ...f, barcode: e.target.value }))} className="input-field text-sm font-mono" placeholder="خالی = خودکار" style={inputStyle} />
             </div>
             <div className="col-span-2">
-              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.title} *</label>
-              <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="input-field text-sm" autoFocus />
+              <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.title} *</label>
+              <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="input-field text-sm" autoFocus style={inputStyle} />
             </div>
             <div>
-              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.category} *</label>
+              <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.category} *</label>
               <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                className="input-field text-sm" style={{ borderColor: !form.category ? '#ef4444' : undefined }}>
+                className="input-field text-sm" style={{ ...inputStyle, borderColor: !form.category ? '#ef4444' : cardBorder }}>
                 <option value="">-- انتخاب دسته‌بندی --</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.name}>{c.parentId ? `↳ ${c.name}` : c.name}</option>
@@ -198,57 +265,61 @@ export default function AddProduct() {
               {!form.category && <p className="text-[10px] mt-1" style={{ color: '#ef4444' }}>انتخاب دسته‌بندی الزامی است</p>}
             </div>
             <div>
-              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.purchasePrice}</label>
-              <input type="number" value={form.purchase_price || ''} onChange={(e) => setForm((f) => ({ ...f, purchase_price: +e.target.value }))} className="input-field text-sm" />
+              <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.purchasePrice}</label>
+              <input type="number" value={form.purchase_price || ''} onChange={(e) => setForm((f) => ({ ...f, purchase_price: +e.target.value }))} className="input-field text-sm" style={inputStyle} />
             </div>
             <div>
-              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.salePrice}</label>
-              <input type="number" value={form.sale_price || ''} onChange={(e) => setForm((f) => ({ ...f, sale_price: +e.target.value }))} className="input-field text-sm" />
+              <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.salePrice}</label>
+              <input type="number" value={form.sale_price || ''} onChange={(e) => setForm((f) => ({ ...f, sale_price: +e.target.value }))} className="input-field text-sm" style={inputStyle} />
             </div>
             <div>
-              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.admin.stock}</label>
-              <input type="number" value={form.stock || ''} onChange={(e) => setForm((f) => ({ ...f, stock: +e.target.value }))} className="input-field text-sm" />
+              <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.stock}</label>
+              <input type="number" value={form.stock || ''} onChange={(e) => setForm((f) => ({ ...f, stock: +e.target.value }))} className="input-field text-sm" style={inputStyle} />
             </div>
             <div>
-              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>حداقل موجودی (هشدار)</label>
-              <input type="number" value={form.minStock || ''} onChange={(e) => setForm((f) => ({ ...f, minStock: +e.target.value }))} className="input-field text-sm" placeholder="0" />
+              <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>حداقل موجودی (هشدار)</label>
+              <input type="number" value={form.minStock || ''} onChange={(e) => setForm((f) => ({ ...f, minStock: +e.target.value }))} className="input-field text-sm" placeholder="0" style={inputStyle} />
             </div>
             <div className="col-span-2">
-              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>توضیحات / یادداشت</label>
-              <textarea value={form.description || ''} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} className="input-field text-sm" rows={2} placeholder="توضیحات محصول..." />
+              <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>توضیحات / یادداشت</label>
+              <textarea value={form.description || ''} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} className="input-field text-sm" rows={2} placeholder="توضیحات محصول..." style={inputStyle} />
             </div>
             <div className="col-span-2">
-              <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>تصویر محصول</label>
+              <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>تصویر محصول</label>
               <div className="flex gap-3 items-start">
                 <div className="flex-1">
-                  <input type="file" accept="image/*" onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) {
-                      const reader = new FileReader()
-                      reader.onload = (ev) => {
-                        const base64 = ev.target?.result as string
-                        setForm((f) => ({ ...f, imageBase64: base64 }))
+                  <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200" style={{ border: `2px dashed ${cardBorder}`, color: textSecondary, backgroundColor: inputBg }}>
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                    <span className="text-xs font-bold">انتخاب تصویر</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        const reader = new FileReader()
+                        reader.onload = (ev) => {
+                          const base64 = ev.target?.result as string
+                          setForm((f) => ({ ...f, imageBase64: base64 }))
+                        }
+                        reader.readAsDataURL(file)
                       }
-                      reader.readAsDataURL(file)
-                    }
-                  }} className="input-field text-sm file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-blue-500 file:text-white" />
+                    }} />
+                  </label>
                 </div>
                 {form.imageBase64 && (
-                  <div className="w-16 h-16 rounded-lg overflow-hidden border flex-shrink-0">
-                    <img src={form.imageBase64} alt="preview" className="w-full h-full object-cover" />
-                  </div>
-                )}
-                {form.imageBase64 && (
-                  <button onClick={() => setForm((f) => ({ ...f, imageBase64: '' }))} className="text-xs px-2 py-1 rounded" style={{ color: '#ef4444' }}>حذف</button>
+                  <>
+                    <div className="w-16 h-16 rounded-xl overflow-hidden border flex-shrink-0" style={{ borderColor: cardBorder }}>
+                      <img src={form.imageBase64} alt="preview" className="w-full h-full object-cover" />
+                    </div>
+                    <button onClick={() => setForm((f) => ({ ...f, imageBase64: '' }))} className="text-xs px-2 py-1 rounded-lg font-bold" style={{ color: '#ef4444', backgroundColor: isDark ? 'rgba(239,68,68,0.1)' : '#fef2f2' }}>حذف</button>
+                  </>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-2 pt-2">
-              <input type="checkbox" checked={form.isLoose} onChange={(e) => setForm((f) => ({ ...f, isLoose: e.target.checked }))} className="w-4 h-4" />
+              <input type="checkbox" checked={form.isLoose} onChange={(e) => setForm((f) => ({ ...f, isLoose: e.target.checked }))} className="w-4 h-4 rounded" style={{ accentColor: primary }} />
               <label className="text-sm" style={{ color: textSecondary }}>{fa.admin.looseItem}</label>
             </div>
           </div>
-          <div className="flex gap-2 mt-4">
+          <div className="flex gap-2 mt-5 pt-4" style={{ borderTop: `1px solid ${cardBorder}` }}>
             <button onClick={handleSubmit} disabled={!form.title || !form.category} className="btn btn-success disabled:opacity-40">{editProduct ? fa.admin.save : fa.admin.create}</button>
             <button onClick={() => { setShowForm(false); setEditProduct(null) }} className="btn btn-danger">{fa.admin.cancel}</button>
             {editProduct && (
@@ -258,14 +329,33 @@ export default function AddProduct() {
         </div>
       )}
 
-      {/* Category Summary */}
+      {/* Category Tabs */}
       {categories.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
-          <button onClick={() => { setSearchQuery(''); setPage(0) }} className="px-3 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: !searchQuery ? '#3b82f6' : 'var(--bg-tertiary)', color: !searchQuery ? '#fff' : 'var(--text-secondary)' }}>همه ({products.length})</button>
+          <button
+            onClick={() => { setSearchQuery(''); setPage(0) }}
+            className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200"
+            style={{
+              background: !searchQuery ? `linear-gradient(135deg, ${primary}, #007bb9)` : btnBg,
+              color: !searchQuery ? '#ffffff' : textSecondary,
+              boxShadow: !searchQuery ? '0 4px 12px rgba(0,97,148,0.3)' : 'none',
+            }}
+          >
+            همه ({products.length})
+          </button>
           {categories.map((cat) => {
             const count = products.filter((p) => p.category === cat.name).length
             return (
-              <button key={cat.id} onClick={() => { setSearchQuery(cat.name); setPage(0) }} className="px-3 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: searchQuery === cat.name ? '#3b82f6' : 'var(--bg-tertiary)', color: searchQuery === cat.name ? '#fff' : 'var(--text-secondary)' }}>
+              <button
+                key={cat.id}
+                onClick={() => { setSearchQuery(cat.name); setPage(0) }}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200"
+                style={{
+                  background: searchQuery === cat.name ? `linear-gradient(135deg, ${primary}, #007bb9)` : btnBg,
+                  color: searchQuery === cat.name ? '#ffffff' : textSecondary,
+                  boxShadow: searchQuery === cat.name ? '0 4px 12px rgba(0,97,148,0.3)' : 'none',
+                }}
+              >
                 {cat.name} ({count})
               </button>
             )
@@ -274,15 +364,39 @@ export default function AddProduct() {
       )}
 
       {/* Product Table */}
-      <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-        <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: `1px solid ${cardBorder}` }}>
-          <span className="text-sm font-bold" style={{ color: textPrimary }}>{fa.admin.addProduct}</span>
+      <div
+        className="rounded-2xl border overflow-hidden"
+        style={{
+          backgroundColor: cardBg,
+          borderColor: cardBorder,
+          boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)',
+        }}
+      >
+        <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: `2px solid ${cardBorder}` }}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: isDark ? 'rgba(0,97,148,0.2)' : 'rgba(0,97,148,0.08)' }}>
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke={primary} strokeWidth="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+            <span className="font-extrabold text-sm" style={{ color: textPrimary }}>لیست کالاها</span>
+          </div>
           <div className="flex gap-2">
-            <button onClick={() => setShowPrintDialog(true)} className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+            <button
+              onClick={() => setShowPrintDialog(true)}
+              className="text-xs px-3.5 py-2 rounded-xl font-bold flex items-center gap-1.5 transition-all duration-200"
+              style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, color: textSecondary, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = primary; e.currentTarget.style.color = primary }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = cardBorder; e.currentTarget.style.color = textSecondary }}
+            >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-              چاپ لیست کالاها
+              چاپ لیست
             </button>
-            <button onClick={handleExcelProducts} className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
+            <button
+              onClick={handleExcelProducts}
+              className="text-xs px-3.5 py-2 rounded-xl font-bold flex items-center gap-1.5 transition-all duration-200"
+              style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, color: textSecondary, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = primary; e.currentTarget.style.color = primary }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = cardBorder; e.currentTarget.style.color = textSecondary }}
+            >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
               خروجی اکسل
             </button>
@@ -290,9 +404,9 @@ export default function AddProduct() {
         </div>
         <table className="w-full text-sm">
           <thead>
-            <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+            <tr style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)' }}>
               {([
-                { key: 'id' as keyof Product, label: 'ID' },
+                { key: 'id' as keyof Product, label: '#' },
                 { key: 'barcode' as keyof Product, label: fa.admin.barcode },
                 { key: 'title' as keyof Product, label: fa.admin.title },
                 { key: 'category' as keyof Product, label: fa.admin.category },
@@ -301,46 +415,75 @@ export default function AddProduct() {
                 { key: 'stock' as keyof Product, label: fa.admin.stock },
               ]).map(col => (
                 <th key={String(col.key)}
-                  className="px-4 py-2 cursor-pointer select-none transition-all hover:bg-blue-500/10 text-right"
-                  style={{ color: sortKey === col.key ? '#3b82f6' : textSecondary }}
+                  className="px-4 py-2.5 cursor-pointer select-none transition-all duration-200 text-right text-xs font-bold"
+                  style={{ color: sortKey === col.key ? primary : textSecondary, borderBottom: `2px solid ${cardBorder}` }}
                   onClick={() => toggleSort(col.key)}>
                   <span className="inline-flex items-center gap-1">
                     {col.label}
-                    <span className="text-[10px] opacity-50">{sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
+                    <span className="text-[10px] opacity-40">{sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
                   </span>
                 </th>
               ))}
-              <th className="px-4 py-2"></th>
+              <th className="px-4 py-2.5" style={{ borderBottom: `2px solid ${cardBorder}` }}></th>
             </tr>
           </thead>
           <tbody>
             {sorted.map((p) => {
               const isZero = p.stock <= 0
               const isLow = p.stock > 0 && p.stock <= p.minStock
-              const rowBg = isZero ? 'rgba(239,68,68,0.08)' : isLow ? 'rgba(245,158,11,0.08)' : 'transparent'
               return (
-                <tr key={p.id} style={{ borderBottom: `1px solid ${cardBorder}`, backgroundColor: rowBg }}>
-                  <td className="px-4 py-2" style={{ color: textSecondary }}>{p.id}</td>
-                  <td className="px-4 py-2 font-mono text-xs" style={{ color: textPrimary }}>{p.barcode || '-'}</td>
-                  <td className="px-4 py-2 font-medium" style={{ color: textPrimary }}>{p.title}</td>
-                  <td className="px-4 py-2">
-                    <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{ backgroundColor: 'var(--bg-tertiary)', color: textSecondary }}>{p.category || '-'}</span>
+                <tr
+                  key={p.id}
+                  className="transition-all duration-150"
+                  style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(0,97,148,0.06)' : 'rgba(0,97,148,0.03)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+                >
+                  <td className="px-4 py-2.5" style={{ color: textSecondary }}>{p.id}</td>
+                  <td className="px-4 py-2.5 font-mono text-xs font-bold" style={{ color: primary }}>{p.barcode || '-'}</td>
+                  <td className="px-4 py-2.5 font-bold" style={{ color: textPrimary }}>{p.title}</td>
+                  <td className="px-4 py-2.5">
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-bold" style={{
+                      backgroundColor: isDark ? 'rgba(0,97,148,0.15)' : 'rgba(0,97,148,0.08)',
+                      color: primary,
+                    }}>{p.category || '-'}</span>
                   </td>
-                  <td className="px-4 py-2" style={{ color: textPrimary }}>{p.purchase_price.toLocaleString('fa-IR')}</td>
-                  <td className="px-4 py-2 font-bold" style={{ color: textPrimary }}>{p.sale_price.toLocaleString('fa-IR')}</td>
-                  <td className="px-4 py-2">
-                    <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{
-                      backgroundColor: p.stock <= 0 ? '#fecaca' : p.stock <= p.minStock ? '#fef3c7' : '#dcfce7',
-                      color: p.stock <= 0 ? '#991b1b' : p.stock <= p.minStock ? '#92400e' : '#166534',
+                  <td className="px-4 py-2.5" style={{ color: textSecondary }}>{p.purchase_price.toLocaleString('fa-IR')}</td>
+                  <td className="px-4 py-2.5 font-extrabold" style={{ color: textPrimary }}>{p.sale_price.toLocaleString('fa-IR')}</td>
+                  <td className="px-4 py-2.5">
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-bold" style={{
+                      backgroundColor: isZero ? (isDark ? 'rgba(239,68,68,0.15)' : '#fef2f2') : isLow ? (isDark ? 'rgba(245,158,11,0.15)' : '#fef3c7') : (isDark ? 'rgba(34,197,94,0.15)' : '#dcfce7'),
+                      color: isZero ? '#ef4444' : isLow ? '#f59e0b' : '#22c55e',
                     }}>{p.stock}</span>
                   </td>
-                  <td className="px-4 py-2">
-                    <button onClick={() => startEdit(p)} className="text-xs font-bold px-2 py-1 rounded" style={{ color: '#3b82f6' }}>{fa.admin.edit}</button>
+                  <td className="px-4 py-2.5">
+                    <button
+                      onClick={() => startEdit(p)}
+                      className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-200"
+                      style={{ color: primary, backgroundColor: isDark ? 'rgba(0,97,148,0.1)' : 'rgba(0,97,148,0.06)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(0,97,148,0.2)' : 'rgba(0,97,148,0.12)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(0,97,148,0.1)' : 'rgba(0,97,148,0.06)' }}
+                    >
+                      {fa.admin.edit}
+                    </button>
                   </td>
                 </tr>
               )
             })}
-            {pagedProducts.length === 0 && <tr><td colSpan={8} className="text-center py-8" style={{ color: textSecondary }}>{fa.admin.noProducts}</td></tr>}
+            {pagedProducts.length === 0 && (
+              <tr>
+                <td colSpan={8}>
+                  <div className="flex flex-col items-center justify-center py-12 gap-3">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }}>
+                      <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke={textSecondary} strokeWidth="1" opacity="0.5">
+                        <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-bold" style={{ color: textSecondary }}>{fa.admin.noProducts}</span>
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -350,22 +493,26 @@ export default function AddProduct() {
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold" style={{ color: textSecondary }}>تعداد در هر صفحه:</span>
           <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(0) }}
-            className="input-field text-sm w-20" style={{ padding: '4px 8px' }}>
+            className="input-field text-sm w-20" style={{ ...inputStyle, padding: '4px 8px' }}>
             {PAGE_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
           <span className="text-xs" style={{ color: textSecondary }}>{products.length} کالا</span>
         </div>
         {totalPages > 1 && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button onClick={() => setPage(0)} disabled={page === 0}
-              className="btn btn-primary text-sm disabled:opacity-40" style={{ padding: '6px 10px', fontSize: '11px' }}>اول</button>
+              className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 disabled:opacity-40"
+              style={{ backgroundColor: btnBg, color: textSecondary }}>اول</button>
             <button onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0}
-              className="btn btn-primary text-sm disabled:opacity-40" style={{ padding: '6px 10px', fontSize: '11px' }}>قبلی</button>
-            <span className="text-sm font-bold px-2" style={{ color: textPrimary }}>{page + 1} / {totalPages}</span>
+              className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 disabled:opacity-40"
+              style={{ backgroundColor: btnBg, color: textSecondary }}>قبلی</button>
+            <span className="text-sm font-extrabold px-3" style={{ color: primary }}>{page + 1} / {totalPages}</span>
             <button onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1}
-              className="btn btn-primary text-sm disabled:opacity-40" style={{ padding: '6px 10px', fontSize: '11px' }}>بعدی</button>
+              className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 disabled:opacity-40"
+              style={{ backgroundColor: btnBg, color: textSecondary }}>بعدی</button>
             <button onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1}
-              className="btn btn-primary text-sm disabled:opacity-40" style={{ padding: '6px 10px', fontSize: '11px' }}>آخر</button>
+              className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 disabled:opacity-40"
+              style={{ backgroundColor: btnBg, color: textSecondary }}>آخر</button>
           </div>
         )}
       </div>
