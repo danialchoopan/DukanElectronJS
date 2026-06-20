@@ -1,5 +1,5 @@
-appId: com.supermarket.pos
-productName: SuperMarket POS
+appId: com.hamtraz.accounting
+productName: HamTraz Accounting
 directories:
   output: release
 files:
@@ -8,11 +8,13 @@ files:
   - package.json
   - "!node_modules/**/*"
   - "node_modules/better-sqlite3/**/*"
+  - "node_modules/bindings/**/*"
+  - "node_modules/file-uri-to-path/**/*"
 win:
   target:
     - portable
   sign: false
-  artifactName: "${productName}-${version}-Portable.${ext}"
+  artifactName: "HamTrazAccounting-${version}.${ext}"
 linux:
   target:
     - AppImage

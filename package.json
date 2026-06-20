@@ -1,7 +1,7 @@
 {
-  "name": "supermarket-pos",
+  "name": "hamtraz-accounting",
   "version": "1.0.0",
-  "description": "High-speed POS system for Iranian supermarkets",
+  "description": "سیستم حسابداری و مدیریت فروشگاه — HamTraz Accounting",
   "main": "dist-electron/main/index.js",
   "scripts": {
     "start": "vite",
