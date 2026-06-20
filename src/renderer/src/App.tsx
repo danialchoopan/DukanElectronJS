@@ -3,6 +3,7 @@ import { useAuthStore } from './store/authStore'
 import { useSettingsStore } from './store/settingsStore'
 import { useShortcutsStore } from './store/shortcutsStore'
 import { setLanguage } from './i18n'
+import { setShopName } from './utils/a4Print'
 import LockScreen from './views/LockScreen'
 import CashierPOS from './views/CashierPOS'
 import Dashboard from './views/Dashboard'
@@ -39,7 +40,11 @@ export default function App() {
   const { shortcuts, loadFromStorage } = useShortcutsStore()
 
   useEffect(() => {
-    initSettings()
+    initSettings().then(() => {
+      window.api.settings.getAll().then((r) => {
+        if (r.success && r.data?.storeName) setShopName(r.data.storeName)
+      })
+    })
     loadFromStorage()
     window.api.system.isFirstRun().then((r) => {
       if (r.success && r.data) setIsFirstRun(r.data.isFirstRun)
