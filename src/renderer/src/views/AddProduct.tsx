@@ -40,7 +40,7 @@ export default function AddProduct() {
   const loadCategories = async () => {
     const r = await window.api.categories.getAll()
     if (r.success && r.data) {
-      setCategories(r.data)
+      setCategories(r.data.filter((c: any) => c.parentId === null))
     }
   }
 

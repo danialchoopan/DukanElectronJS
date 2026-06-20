@@ -23,12 +23,13 @@ export default function IncomeStatement() {
 
   useEffect(() => { load() }, [startDate, endDate])
 
+  const { sorted: sortedRevenue, sortKey: revSortKey, sortDir: revSortDir, toggleSort: revToggleSort } = useSortable(data?.revenue || [])
+  const { sorted: sortedCogs, sortKey: cogsSortKey, sortDir: cogsSortDir, toggleSort: cogsToggleSort } = useSortable(data?.cogs || [])
+  const { sorted: sortedOpEx, sortKey: opexSortKey, sortDir: opexSortDir, toggleSort: opexToggleSort } = useSortable(data?.operatingExpenses || [])
+
   if (!data) return null
 
   const revenue = data.totalRevenue || 1
-  const { sorted: sortedRevenue, sortKey: revSortKey, sortDir: revSortDir, toggleSort: revToggleSort } = useSortable(data.revenue || [])
-  const { sorted: sortedCogs, sortKey: cogsSortKey, sortDir: cogsSortDir, toggleSort: cogsToggleSort } = useSortable(data.cogs || [])
-  const { sorted: sortedOpEx, sortKey: opexSortKey, sortDir: opexSortDir, toggleSort: opexToggleSort } = useSortable(data.operatingExpenses || [])
 
   const Section = ({ title, sortedItems, total, color, sortKey, sortDir, onSort }: { title: string; sortedItems: any[]; total: number; color: string; sortKey: any; sortDir: any; onSort: any }) => (
     <div className="mb-4">

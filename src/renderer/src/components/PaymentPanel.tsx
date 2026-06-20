@@ -45,26 +45,33 @@ export default function PaymentPanel({ onPaymentComplete, selectedCustomer, onSe
         <div className="text-3xl font-bold text-green-400">{totalAmount.toLocaleString('fa-IR')} {fa.common.toman}</div>
       </div>
 
-      {selectedMethod === 'ledger' && (
-        <div className="mb-3">
-          <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>{fa.payment.customer}</label>
-          {selectedCustomer ? (
-            <div className="flex justify-between items-center rounded-xl p-2 mt-1" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+      {/* Customer Search - always visible */}
+      <div className="mb-3">
+        <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>{fa.payment.customer}</label>
+        {selectedCustomer ? (
+          <div className="flex justify-between items-center rounded-xl p-2" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+            <div className="flex items-center gap-2">
               <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{selectedCustomer.name}</span>
-              <div className="flex items-center gap-2">
-                <span className={`text-xs font-bold ${selectedCustomer.balance < 0 ? 'text-red-400' : 'text-green-400'}`}>
-                  {selectedCustomer.balance.toLocaleString('fa-IR')}
-                </span>
-                <button onClick={() => onSelectCustomer(null)} className="btn-danger" style={{ padding: '2px 6px', fontSize: '10px', borderRadius: '6px' }}>
-                  <XIcon className="w-3 h-3" />
-                </button>
-              </div>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold" style={{ backgroundColor: selectedCustomer.customerType === 'legal' ? 'rgba(168,85,247,0.15)' : 'rgba(59,130,246,0.15)', color: selectedCustomer.customerType === 'legal' ? '#a855f7' : '#3b82f6' }}>
+                {selectedCustomer.customerType === 'legal' ? 'حقوقی' : 'حقیقی'}
+              </span>
             </div>
-          ) : (
-            <button onClick={() => setShowCustomerSearch(true)} className="btn-primary w-full text-sm">{fa.payment.selectCustomer}</button>
-          )}
-        </div>
-      )}
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-bold ${selectedCustomer.balance < 0 ? 'text-red-400' : 'text-green-400'}`}>
+                {selectedCustomer.balance.toLocaleString('fa-IR')}
+              </span>
+              <button onClick={() => onSelectCustomer(null)} className="btn-danger" style={{ padding: '2px 6px', fontSize: '10px', borderRadius: '6px' }}>
+                <XIcon className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button onClick={() => setShowCustomerSearch(true)} className="w-full text-sm font-medium py-2 rounded-xl flex items-center justify-center gap-2 transition-all" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px dashed var(--border-color)' }}>
+            <SearchIcon className="w-4 h-4" />
+            {fa.payment.selectCustomer}
+          </button>
+        )}
+      </div>
 
       {showCustomerSearch && (
         <div className="rounded-xl p-3 mb-3" style={{ backgroundColor: 'var(--bg-tertiary)' }}>

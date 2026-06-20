@@ -100,7 +100,7 @@ export const fa = {
     products: 'کالاها',
     users: 'کاربران',
     settings: 'تنظیمات',
-    addProduct: 'افزودن کالا',
+    addProduct: 'محصولات',
     addUser: 'افزودن کاربر',
     edit: 'ویرایش',
     delete: 'حذف',

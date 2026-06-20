@@ -22,13 +22,13 @@ export default function BalanceSheet() {
 
   useEffect(() => { load() }, [asOfDate])
 
-  if (!data) return null
+  const { sorted: sortedCA, sortKey: caSortKey, sortDir: caSortDir, toggleSort: caToggleSort } = useSortable(data?.currentAssets || [])
+  const { sorted: sortedLTA, sortKey: ltaSortKey, sortDir: ltaSortDir, toggleSort: ltaToggleSort } = useSortable(data?.longTermAssets || [])
+  const { sorted: sortedCL, sortKey: clSortKey, sortDir: clSortDir, toggleSort: clToggleSort } = useSortable(data?.currentLiabilities || [])
+  const { sorted: sortedLTL, sortKey: ltlSortKey, sortDir: ltlSortDir, toggleSort: ltlToggleSort } = useSortable(data?.longTermLiabilities || [])
+  const { sorted: sortedEq, sortKey: eqSortKey, sortDir: eqSortDir, toggleSort: eqToggleSort } = useSortable(data?.equityItems || [])
 
-  const { sorted: sortedCA, sortKey: caSortKey, sortDir: caSortDir, toggleSort: caToggleSort } = useSortable(data.currentAssets || [])
-  const { sorted: sortedLTA, sortKey: ltaSortKey, sortDir: ltaSortDir, toggleSort: ltaToggleSort } = useSortable(data.longTermAssets || [])
-  const { sorted: sortedCL, sortKey: clSortKey, sortDir: clSortDir, toggleSort: clToggleSort } = useSortable(data.currentLiabilities || [])
-  const { sorted: sortedLTL, sortKey: ltlSortKey, sortDir: ltlSortDir, toggleSort: ltlToggleSort } = useSortable(data.longTermLiabilities || [])
-  const { sorted: sortedEq, sortKey: eqSortKey, sortDir: eqSortDir, toggleSort: eqToggleSort } = useSortable(data.equityItems || [])
+  if (!data) return null
 
   const Section = ({ title, sortedItems, total, color, sortKey, sortDir, onSort }: { title: string; sortedItems: any[]; total: number; color: string; sortKey: any; sortDir: any; onSort: any }) => (
     <div className="mb-3">
