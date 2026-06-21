@@ -6,6 +6,7 @@ import WebcamScanner from '../components/WebcamScanner'
 import type { Product } from '../../../types'
 import { useSortable } from '../hooks/useSortable'
 import PrintDialog from '../components/PrintDialog'
+import { getProductImageUrl } from '../utils/productImage'
 
 const primary = '#006194'
 
@@ -28,6 +29,7 @@ export default function AddProduct() {
     purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '',
   })
   const [detailProduct, setDetailProduct] = useState<any>(null)
+  const [detailImageUrl, setDetailImageUrl] = useState('')
   const [detailEditMode, setDetailEditMode] = useState(false)
   const [detailForm, setDetailForm] = useState<any>({})
   const [showDetailConfirm, setShowDetailConfirm] = useState(false)
@@ -257,10 +259,6 @@ export default function AddProduct() {
           </div>
 
           <div className="grid grid-cols-4 gap-4">
-            <div>
-              <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.barcode} <span className="opacity-50 font-normal">(اختیاری)</span></label>
-              <input value={form.barcode} onChange={(e) => setForm((f) => ({ ...f, barcode: e.target.value }))} className="input-field text-sm font-mono" placeholder="خالی = خودکار" style={inputStyle} />
-            </div>
             <div className="col-span-2">
               <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.title} *</label>
               <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="input-field text-sm" autoFocus style={inputStyle} />
@@ -634,9 +632,9 @@ export default function AddProduct() {
             </div>
             
             <div className="grid grid-cols-2 gap-3 mb-4">
-              {detailProduct.imageBase64 && (
+              {detailImageUrl && (
                 <div className="col-span-2 flex justify-center">
-                  <img src={detailProduct.imageBase64} className="w-32 h-32 rounded-xl object-cover" style={{ border: `1px solid ${cardBorder}` }} />
+                  <img src={detailImageUrl} className="w-32 h-32 rounded-xl object-cover" style={{ border: `1px solid ${cardBorder}` }} />
                 </div>
               )}
               {!detailEditMode ? (
@@ -700,8 +698,14 @@ export default function AddProduct() {
     setShowForm(true)
   }
 
-  const openDetail = (p: any) => {
+  const openDetail = async (p: any) => {
     setDetailProduct(p)
+    if (p.imageBase64 && !p.imageBase64.startsWith('data:')) {
+      const url = await getProductImageUrl(p.imageBase64)
+      setDetailImageUrl(url)
+    } else {
+      setDetailImageUrl(p.imageBase64 || '')
+    }
     setDetailForm({ title: p.title, barcode: p.barcode || '', category: p.category || '', purchase_price: p.purchase_price, sale_price: p.sale_price, stock: p.stock, minStock: p.minStock || 0, description: p.description || '', imageBase64: p.imageBase64 || '' })
     setDetailEditMode(false)
     setShowDetailConfirm(false)

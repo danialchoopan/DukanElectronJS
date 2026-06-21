@@ -10,6 +10,8 @@ import { printA4Report, downloadExcel } from '../utils/a4Print'
 import { useSortable } from '../hooks/useSortable'
 import PrintDialog from '../components/PrintDialog'
 import { useHighlight } from '../hooks/useHighlight'
+import { getProductImageUrl } from '../utils/productImage'
+import { generateQRSvg } from '../utils/qrCode'
 
 type AuditFilter = 'all' | 'create' | 'update' | 'delete' | 'restock'
 
@@ -40,6 +42,8 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
   const [auditPage, setAuditPage] = useState(0)
   const [auditPageSize, setAuditPageSize] = useState(10)
   const [reportData, setReportData] = useState<{ byCategory: any[]; slowMoving: any[] }>({ byCategory: [], slowMoving: [] })
+  const [imageUrls, setImageUrls] = useState<Record<number, string>>({})
+  const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     if (initialTab && ['products', 'report', 'audit'].includes(initialTab)) {
@@ -65,6 +69,12 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
       setProducts(r.data)
       const cats = [...new Set(r.data.map((p: Product) => p.category).filter(Boolean))]
       setCategories(cats)
+      r.data.forEach(async (p: Product) => {
+        if (p.imageBase64 && !imageUrls[p.id] && !p.imageBase64.startsWith('data:')) {
+          const url = await getProductImageUrl(p.imageBase64)
+          if (url) setImageUrls(prev => ({ ...prev, [p.id]: url }))
+        }
+      })
     }
   }
 
@@ -230,28 +240,32 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
   }
 
   const handlePrintBarcode = async (p: Product) => {
-    const barcodeSvg = (() => {
-      const code = p.barcode || '000000'
-      let bars = ''
-      let x = 5
-      for (let i = 0; i < code.length; i++) {
-        const digit = parseInt(code[i]) || 0
-        const barWidth = (digit % 3) + 1
-        const gap = (digit % 2) + 1
-        if (i % 2 === 0) {
-          bars += `<rect x="${x}" y="0" width="${barWidth}" height="50" fill="#000"/>`
-        }
-        x += barWidth + gap
-      }
-      return `<svg width="200" height="60" xmlns="http://www.w3.org/2000/svg">${bars}<text x="100" y="58" text-anchor="middle" font-size="9" font-family="monospace" fill="#000">${code}</text></svg>`
-    })()
+    const qrSvg = generateQRSvg(p.barcode || `PRD-${p.id}`, 120)
     const html = `<div style="text-align:center; padding:10px; border:1px solid #ddd; border-radius:8px; width:220px; display:inline-block;">
       <div style="font-size:8pt; color:#666;">فروشگاه</div>
-      <div style="margin:5px auto;">${barcodeSvg}</div>
+      <div style="margin:5px auto; display:flex; justify-content:center;">${qrSvg}</div>
       <div style="font-size:10pt; font-weight:bold; margin-top:4px;">${p.title}</div>
+      <div style="font-size:7pt; color:#666; margin-top:2px; font-family:monospace;">${p.barcode || `PRD-${p.id}`}</div>
       <div style="font-size:12pt; font-weight:bold; color:#006194; margin-top:2px;">${p.sale_price.toLocaleString('fa-IR')} تومان</div>
     </div>`
     await printA4Report(html, 'لیبل بارکد')
+  }
+
+  const handlePrintSelectedQR = async () => {
+    const selected = sortedProducts.filter(p => selectedProducts.has(p.id))
+    if (selected.length === 0) return
+    const items = selected.map(p => {
+      const qrSvg = generateQRSvg(p.barcode || `PRD-${p.id}`, 100)
+      return `<div style="text-align:center; padding:8px; border:1px solid #ddd; border-radius:8px; width:200px; display:inline-block; margin:4px;">
+        <div style="font-size:7pt; color:#666;">فروشگاه</div>
+        <div style="margin:4px auto; display:flex; justify-content:center;">${qrSvg}</div>
+        <div style="font-size:9pt; font-weight:bold; margin-top:3px;">${p.title}</div>
+        <div style="font-size:6pt; color:#666; margin-top:1px; font-family:monospace;">${p.barcode || `PRD-${p.id}`}</div>
+        <div style="font-size:11pt; font-weight:bold; color:#006194; margin-top:2px;">${p.sale_price.toLocaleString('fa-IR')} تومان</div>
+      </div>`
+    }).join('')
+    await printA4Report(`<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px;">${items}</div>`, 'لیبل‌های QR')
+    setSelectedProducts(new Set())
   }
 
   const kpis = [
@@ -539,12 +553,23 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
             خروجی اکسل
           </button>
+          {selectedProducts.size > 0 && (
+            <button onClick={handlePrintSelectedQR} className="text-xs px-3 py-2 rounded-lg font-bold flex items-center gap-1" style={{ background: 'linear-gradient(135deg, #006194, #007bb9)', color: '#fff', boxShadow: '0 2px 8px rgba(0,97,148,0.25)' }}>
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
+              چاپ QR ({selectedProducts.size})
+            </button>
+          )}
         </div>
 
         <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
           <table className="w-full text-sm">
             <thead>
               <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+                <th className="px-3 py-2 w-10" style={{ color: textSecondary }}>
+                  <input type="checkbox" checked={selectedProducts.size === sortedProducts.length && sortedProducts.length > 0}
+                    onChange={() => { const allIds = sortedProducts.map(p => p.id); if (selectedProducts.size === allIds.length) setSelectedProducts(new Set()); else setSelectedProducts(new Set(allIds)) }}
+                    style={{ accentColor: '#3b82f6' }} />
+                </th>
                 {([
                   { key: 'id' as keyof Product, label: 'ID', width: '50px' },
                   { key: 'barcode' as keyof Product, label: fa.admin.barcode },
@@ -581,12 +606,15 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
                   onClick={() => setViewProduct(p)}
                   onMouseEnter={(e) => { if (!isZero && !isLow) e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.03)' }}
                   onMouseLeave={(e) => { if (!isZero && !isLow) e.currentTarget.style.backgroundColor = 'transparent' }}>
+                  <td className="px-3 py-2" style={{ borderBottom: `1px solid ${cardBorder}`, backgroundColor: rowBg }}>
+                    <input type="checkbox" checked={selectedProducts.has(p.id)} onChange={() => { const next = new Set(selectedProducts); if (next.has(p.id)) next.delete(p.id); else next.add(p.id); setSelectedProducts(next) }} onClick={e => e.stopPropagation()} style={{ accentColor: '#3b82f6' }} />
+                  </td>
                   <td className="px-4 py-2" style={{ color: textSecondary }}>{p.id}</td>
                   <td className="px-4 py-2 font-mono text-xs" style={{ color: textPrimary }}>{p.barcode || '-'}</td>
                   <td className="px-4 py-2 font-medium" style={{ color: textPrimary }}>
                     <div className="flex items-center gap-2">
-                      {p.imageBase64 ? (
-                        <img src={p.imageBase64} alt="" className="w-8 h-8 rounded-full object-cover border" style={{ borderColor: cardBorder }} />
+                      {imageUrls[p.id] || (p.imageBase64 && p.imageBase64.startsWith('data:')) ? (
+                        <img src={imageUrls[p.id] || p.imageBase64} alt="" className="w-8 h-8 rounded-full object-cover border" style={{ borderColor: cardBorder }} />
                       ) : (
                         <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
                           {p.title.charAt(0)}
@@ -763,7 +791,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+              <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
                     <th className="text-right px-4 py-2" style={{ color: textSecondary }}>دسته</th>
                     <th className="text-center px-3 py-2" style={{ color: textSecondary }}>تعداد کالا</th>
                     <th className="text-center px-3 py-2" style={{ color: textSecondary }}>موجودی</th>
@@ -1020,7 +1048,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setViewProduct(null)}>
           <div className="rounded-2xl p-6 max-w-lg w-full mx-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }} onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-4 mb-4">
-              {viewProduct.imageBase64 && <img src={viewProduct.imageBase64} className="w-20 h-20 rounded-xl object-cover" alt="" />}
+              {(imageUrls[viewProduct.id] || (viewProduct.imageBase64 && viewProduct.imageBase64.startsWith('data:'))) && <img src={imageUrls[viewProduct.id] || viewProduct.imageBase64} className="w-20 h-20 rounded-xl object-cover" alt="" />}
               <div>
                 <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{viewProduct.title}</h3>
                 <p className="text-sm" style={{ color: textSecondary }}>{viewProduct.category || '-'}</p>
