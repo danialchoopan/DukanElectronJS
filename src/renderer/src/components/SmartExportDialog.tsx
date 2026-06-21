@@ -223,7 +223,7 @@ export default function SmartExportDialog({ open, mode, onClose }: Props) {
                   {presets.map(p => (
                     <button key={p.key} onClick={() => applyPreset(p)}
                       className={`p-3 rounded-xl text-right transition-all ${selectedPreset === p.key ? 'ring-2' : ''}`}
-                      style={{ backgroundColor: surfaceBg, border: `1px solid ${cardBorder}`, ...(selectedPreset === p.key ? { borderColor: primary, boxShadow: `0 0 0 2px ${primary}33` } : {}) }}>
+                      style={{ backgroundColor: surfaceBg, border: `1px solid ${selectedPreset === p.key ? primary : cardBorder}`, ...(selectedPreset === p.key ? { boxShadow: `0 0 0 2px ${primary}33` } : {}) }}>
                       <div className="text-sm font-bold" style={{ color: selectedPreset === p.key ? primary : textPrimary }}>{p.label}</div>
                       <div className="text-xs mt-0.5" style={{ color: textSecondary }}>{p.description}</div>
                     </button>
