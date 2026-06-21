@@ -77,7 +77,7 @@ export default function BalanceSheet() {
           }} className="text-xs px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
             خروجی اکسل
           </button>
-          <button onClick={() => {
+          <button onClick={async () => {
             let html = '<h1>ترازنامه</h1>'
             html += `<div class="header-info"><span>تاریخ: ${new Date().toLocaleDateString('fa-IR')}</span></div>`
             html += '<table><thead><tr><th>بخش</th><th>مبلغ</th></tr></thead><tbody>'
@@ -86,7 +86,7 @@ export default function BalanceSheet() {
             html += `<tr><td>${fa.accounting.balanceSheet.totalEquity}</td><td>${data.totalEquity.toLocaleString('fa-IR')}</td></tr>`
             html += `<tr><td>${fa.accounting.balanceSheet.totalLiabilitiesAndEquity}</td><td>${data.totalLiabilitiesAndEquity.toLocaleString('fa-IR')}</td></tr>`
             html += '</tbody></table>'
-            printA4Report(html, fa.accounting.balanceSheet.title)
+            await printA4Report(html, fa.accounting.balanceSheet.title)
           }} className="text-xs px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
             چاپ A4
           </button>

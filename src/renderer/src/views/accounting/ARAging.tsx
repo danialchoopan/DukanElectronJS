@@ -45,13 +45,13 @@ export default function ARAging() {
             { heading: 'گزارش بدهی مشتریان', items: ['بدهی مشتریان بر اساس سنین مختلف نمایش داده می‌شود', 'جاری (۰-۳۰ روز): سبز', '۳۱-۶۰ روز: زرد', '۶۱-۹۰ روز: نارنجی', 'بیش از ۹۰ روز: قرمز'] }
           ]} />
         </div>
-        <button onClick={() => {
+        <button onClick={async () => {
           let html = '<table><thead><tr><th>مشتری</th><th>تلفن</th><th>جاری</th><th>۳۱-۶۰ روز</th><th>۶۱-۹۰ روز</th><th>بیش از ۹۰ روز</th><th>جمع</th></tr></thead><tbody>'
           data.rows.forEach((r: any) => {
             html += `<tr><td>${r.customerName}</td><td>${r.phone || '-'}</td><td>${r.current > 0 ? r.current.toLocaleString('fa-IR') : '-'}</td><td>${r.days31to60 > 0 ? r.days31to60.toLocaleString('fa-IR') : '-'}</td><td>${r.days61to90 > 0 ? r.days61to90.toLocaleString('fa-IR') : '-'}</td><td>${r.over90 > 0 ? r.over90.toLocaleString('fa-IR') : '-'}</td><td>${r.total.toLocaleString('fa-IR')}</td></tr>`
           })
           html += '</tbody></table>'
-          printA4Report(html, 'مانده مشتریان')
+          await printA4Report(html, 'مانده مشتریان')
         }} className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
           چاپ

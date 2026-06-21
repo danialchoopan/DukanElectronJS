@@ -44,14 +44,14 @@ export default function TrialBalance() {
           ]} />
         </div>
         <div className="flex gap-2">
-          <button onClick={() => {
+          <button onClick={async () => {
             let html = '<table><thead><tr><th>حساب</th><th>نوع</th><th>بدهکار</th><th>بستانکار</th><th>مانده</th></tr></thead><tbody>'
             rows.filter((r: any) => r.totalDebit !== 0 || r.totalCredit !== 0).forEach((r: any) => {
               html += `<tr><td>${r.accountCode} - ${r.accountName}</td><td>${fa.accounting.accounts.types[r.accountType as keyof typeof fa.accounting.accounts.types]}</td><td>${r.totalDebit > 0 ? r.totalDebit.toLocaleString('fa-IR') : '-'}</td><td>${r.totalCredit > 0 ? r.totalCredit.toLocaleString('fa-IR') : '-'}</td><td>${Math.abs(r.balance).toLocaleString('fa-IR')}</td></tr>`
             })
             html += `<tr><td colspan="2"><strong>${fa.accounting.trialBalance.totals}</strong></td><td><strong>${totalDebit.toLocaleString('fa-IR')}</strong></td><td><strong>${totalCredit.toLocaleString('fa-IR')}</strong></td><td></td></tr>`
             html += '</tbody></table>'
-            printA4Report(html, 'تراز آزمایشی')
+            await printA4Report(html, 'تراز آزمایشی')
           }} className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
             چاپ

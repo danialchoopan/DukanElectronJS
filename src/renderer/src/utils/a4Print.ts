@@ -29,19 +29,29 @@ function getJalaliNow(): string {
   return now.toLocaleDateString('fa-IR') + ' — ' + now.toLocaleTimeString('fa-IR')
 }
 
-export function printA4Report(html: string, title: string, options?: {
+export async function printA4Report(html: string, title: string, options?: {
   shopName?: string
   isInvoice?: boolean
   taxRate?: number
   customization?: Record<string, string>
-}): void {
+}): Promise<void> {
+  const cust = { ...cachedCustomization, ...(options?.customization || {}) }
+
+  for (const key of ['printLogo', 'printSignature', 'printWatermark'] as const) {
+    if (cust[key] && !cust[key].startsWith('data:') && !cust[key].startsWith('http') && window.api?.printSettings) {
+      try {
+        const r = await window.api.printSettings.getAsset(cust[key])
+        if (r.success && r.data) cust[key] = r.data as string
+      } catch (e) { /* ignore */ }
+    }
+  }
+
   const win = window.open('', '_blank')
   if (!win) return
   const name = options?.shopName || cachedShopName
   const phone = cachedShopPhone
   const isInvoice = options?.isInvoice ?? false
   const taxRate = options?.taxRate ?? cachedTaxRate
-  const cust = { ...cachedCustomization, ...(options?.customization || {}) }
   const primaryColor = cust.printColorScheme || '#006194'
   const showSignature = cust.printShowSignature !== 'false'
   const showTax = cust.printShowTax !== 'false'

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import { printA4Report } from '../../utils/a4Print'
+import { formatJalaliDateTime } from '../../utils/jalali'
 import ShamsiDateInput from '../../components/ShamsiDateInput'
 import Pagination from '../../components/Pagination'
 import HelpPopup from '../../components/HelpPopup'
@@ -53,13 +54,13 @@ export default function JournalEntries() {
             { heading: 'سند دستی', items: ['با زدن + سند دستی ایجاد کنید', 'مطمئن شوید جمع بدهکار با بستانکار برابر است'] }
           ]} />
         </div>
-        <button onClick={() => {
+        <button onClick={async () => {
           let html = '<table><thead><tr><th>#</th><th>تاریخ</th><th>شرح</th><th>نوع</th></tr></thead><tbody>'
           entries.forEach((e, i) => {
             html += `<tr><td>${page * pageSize + i + 1}</td><td>${e.entryDate}</td><td>${e.description}</td><td>${fa.accounting.journal.types[e.referenceType as keyof typeof fa.accounting.journal.types] || e.referenceType}</td></tr>`
           })
           html += '</tbody></table>'
-          printA4Report(html, 'روزنامه حسابداری')
+          await printA4Report(html, 'روزنامه حسابداری')
         }} className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
           چاپ
@@ -125,7 +126,7 @@ export default function JournalEntries() {
               return (
                 <tr key={e.id} style={{ borderBottom: `1px solid ${cardBorder}` }}>
                   <td className="px-4 py-2" style={{ color: textSecondary }}>{page * pageSize + i + 1}</td>
-                  <td className="px-4 py-2 text-xs" style={{ color: textPrimary }}>{e.entryDate}</td>
+                  <td className="px-4 py-2 text-xs" style={{ color: textPrimary }}>{formatJalaliDateTime(e.entryDate)}</td>
                   <td className="px-4 py-2 font-medium" style={{ color: textPrimary }}>{e.description}</td>
                   <td className="px-4 py-2 text-center">
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: rc.bg, color: rc.fg }}>
@@ -160,7 +161,7 @@ function ExpandedEntry({ entryId, cardBg, cardBorder, textPrimary, textSecondary
   if (!entry) return null
   return (
     <div className="rounded-2xl border p-4 mt-3" style={{ backgroundColor: cardBg, borderColor: '#3b82f6' }}>
-      <div className="text-sm font-bold mb-3" style={{ color: textPrimary }}>{entry.description} — {entry.entryDate}</div>
+      <div className="text-sm font-bold mb-3" style={{ color: textPrimary }}>{entry.description} — {formatJalaliDateTime(entry.entryDate)}</div>
       <table className="w-full text-sm">
         <thead>
           <tr>

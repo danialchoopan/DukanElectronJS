@@ -224,7 +224,7 @@ export default function CashierPOS() {
             <div className="flex gap-2">
               <button onClick={() => { setShowReceipt(saleComplete); setSaleComplete(null) }} className="flex-1 py-3 rounded-xl font-bold text-sm transition-all" style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)`, color: '#fff', boxShadow: `0 4px 12px ${primary}40` }}>{fa.receipt.print}</button>
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (!saleComplete) return
                   let html = '<h1>فاکتور فروش</h1>'
                   const customerInfo = lastCustomer ? `<div class="header-info"><span>مشتری: ${lastCustomer.name}</span><span>تلفن: ${lastCustomer.phone}</span></div>` : '<div class="header-info"><span>مشتری: ناشناس</span></div>'
@@ -235,7 +235,7 @@ export default function CashierPOS() {
                   html += '</tbody></table>'
                   html += `<p><strong>جمع کل: ${saleComplete.total_amount.toLocaleString('fa-IR')} تومان</strong></p>`
                   html += `<p>نوع پرداخت: ${saleComplete.paymentMethod === 'cash' ? 'نقدی' : saleComplete.paymentMethod === 'card' ? 'کارتی' : 'نسیه'}</p>`
-                  printA4Report(html, 'فاکتور فروش', { isInvoice: true })
+                  await printA4Report(html, 'فاکتور فروش', { isInvoice: true })
                   setSaleComplete(null)
                 }}
                 className="flex-1 py-3 rounded-xl font-bold text-sm transition-all"

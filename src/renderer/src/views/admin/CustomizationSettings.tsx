@@ -169,7 +169,7 @@ export default function CustomizationSettings() {
       </table>
     `
 
-    printA4Report(sampleHtml, settings.printInvoiceTitle, {
+    await printA4Report(sampleHtml, settings.printInvoiceTitle, {
       isInvoice: true,
       customization: {
         printColorScheme: settings.printColorScheme,

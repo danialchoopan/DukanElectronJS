@@ -287,7 +287,7 @@ export default function CustomerManagement() {
     return fa.payment.ledger
   }
 
-  const handlePrintStatement = () => {
+  const handlePrintStatement = async () => {
     if (!selected) return
     const typeBadge = (selected as any).customerType === 'legal' ? 'حقوقی' : 'حقیقی'
     let html = `<div style="margin-bottom:12px;font-size:10pt;color:#555">مشتری: ${selected.name} — نوع: ${typeBadge} — تلفن: ${selected.phone || 'بدون تلفن'}</div>`
@@ -303,7 +303,7 @@ export default function CustomerManagement() {
     }
     html += '</tbody></table>'
     html += `<div style="margin-top:16px;padding:12px;background:#f0f4f8;border-radius:8px"><strong>مانده فعلی حساب: ${selected.balance.toLocaleString('fa-IR')} ${fa.common.toman}</strong></div>`
-    printA4Report(html, `صورتحساب ${selected.name}`)
+    await printA4Report(html, `صورتحساب ${selected.name}`)
   }
 
   const TypeBadge = ({ type }: { type?: string }) => {

@@ -131,7 +131,7 @@ export default function SalesHistory() {
   const { sorted: sortedSales, sortKey, sortDir, toggleSort } = useSortable(pagedSales)
   const [showPrintDialog, setShowPrintDialog] = useState(false)
 
-  const handlePrintSales = (range: { start: number; end: number } | 'all') => {
+  const handlePrintSales = async (range: { start: number; end: number } | 'all') => {
     let data = filteredSales
     if (range !== 'all') {
       data = filteredSales.slice(range.start - 1, range.end)
@@ -144,7 +144,7 @@ export default function SalesHistory() {
     })
     html += '</tbody></table>'
     html += `<p>جمع کل: ${data.reduce((sum, s) => sum + s.total_amount, 0).toLocaleString('fa-IR')} تومان</p>`
-    printA4Report(html, 'گزارش فروش')
+    await printA4Report(html, 'گزارش فروش')
   }
 
   const handleExcelSales = () => {
@@ -414,7 +414,7 @@ export default function SalesHistory() {
             </div>
 
             <div className="flex gap-2">
-              <button onClick={() => {
+              <button onClick={async () => {
                 if (!selectedSale) return
                 let html = '<h1>چاپ دوباره فاکتور</h1>'
                 const customerInfo = selectedSale.customerName ? `<div class="header-info"><span>مشتری: ${selectedSale.customerName}</span></div>` : ''
@@ -425,7 +425,7 @@ export default function SalesHistory() {
                 selectedSale.items?.forEach((item: any) => { html += `<tr><td>${item.productTitle}</td><td>${item.quantity}</td><td>${item.unitPrice.toLocaleString('fa-IR')}</td><td>${item.subtotal.toLocaleString('fa-IR')}</td></tr>` })
                 html += '</tbody></table>'
                 html += `<p><strong>جمع کل: ${selectedSale.total_amount.toLocaleString('fa-IR')} تومان</strong></p>`
-                printA4Report(html, 'چاپ دوباره فاکتور', { isInvoice: true })
+                await printA4Report(html, 'چاپ دوباره فاکتور', { isInvoice: true })
               }}
                 className="text-sm px-5 py-2.5 rounded-xl font-bold flex-1 transition-all duration-200"
                 style={{ background: 'linear-gradient(135deg, #006194, #007bb9)', color: '#fff', boxShadow: '0 2px 8px rgba(0,97,148,0.3)' }}>چاپ فاکتور</button>

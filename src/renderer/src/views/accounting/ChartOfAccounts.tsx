@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import { printA4Report } from '../../utils/a4Print'
+import HelpPopup from '../../components/HelpPopup'
 
 interface AccountNode { account: any; children: AccountNode[] }
 
@@ -142,15 +143,21 @@ export default function ChartOfAccounts() {
           <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.accounts.title}</h3>
           <p className="text-xs mt-1" style={{ color: textSecondary }}>{allAccounts.filter(a => a.isActive).length} حساب فعال از {allAccounts.length}</p>
         </div>
+        <HelpPopup title="راهنمای دفتر حسابها" sections={[
+          { heading: 'دفتر حسابها چیست؟', items: ['دفتر حسابها ساختار اصلی حسابداری است', 'هر حساب دارای یک کد منحصربه‌فرد و نام است', 'انواع حساب: دارایی، بدهی، سرمایه، درآمد، هزینه'] },
+          { heading: 'نحوه استفاده', items: ['برای ایجاد حساب جدید دکمه + را بزنید', 'حساب‌ها را می‌توان به صورت سلسله‌مراتبی سازماندهی کرد (والد و زیرمجموعه)', 'با کلیک روی فلش ➤ می‌توان زیرمجموعه‌ها را باز و بسته کرد', 'برای جستجو از باکس بالای صفحه استفاده کنید'] },
+          { heading: 'انواع حساب', items: ['دارایی (Asset): منابع اقتصادی مثل نقد و بانک', 'بدهی (Liability): تعهدات مالی مثل حساب‌های پرداختنی', 'سرمایه (Equity): سرمایه صاحب کسب‌وکار', 'درآمد (Income): فروش کالا و خدمات', 'هزینه (Expense): هزینه‌های عملیاتی مثل اجاره و حقوق'] },
+          { heading: 'تغییر وضعیت', items: ['حساب‌های فعال با رنگ کامل و غیرفعال با opacity کمتر نمایش داده می‌شوند', 'برای حذف حساب ابتدا باید زیرمجموعه و تراکنش نداشته باشد'] }
+        ]} />
         <div className="flex items-center gap-2">
-          <button onClick={() => {
+          <button onClick={async () => {
             let html = '<table><thead><tr><th>کد</th><th>نام</th><th>نوع</th><th>والد</th><th>وضعیت</th></tr></thead><tbody>'
             allAccounts.forEach(a => {
               const parent = allAccounts.find((p: any) => p.id === a.parentId)
               html += `<tr><td>${a.code}</td><td>${a.name}</td><td>${fa.accounting.accounts.types[a.type as keyof typeof fa.accounting.accounts.types]}</td><td>${parent?.name || '-'}</td><td>${a.isActive ? 'فعال' : 'غیرفعال'}</td></tr>`
             })
             html += '</tbody></table>'
-            printA4Report(html, 'دفتر حسابها')
+            await printA4Report(html, 'دفتر حسابها')
           }} className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
             چاپ

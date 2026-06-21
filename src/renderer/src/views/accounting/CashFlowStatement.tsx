@@ -26,7 +26,7 @@ export default function CashFlowStatement() {
 
   const maxVal = data ? Math.max(data.totalInflow, data.totalOutflow, 1) : 1
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (!data) return
     let html = '<table><thead><tr><th>شرح</th><th>مبلغ</th></tr></thead><tbody>'
     for (const row of data.operating) {
@@ -36,7 +36,7 @@ export default function CashFlowStatement() {
     html += `<tr class="total-row"><td>خروجی کل</td><td>${data.totalOutflow.toLocaleString('fa-IR')} ${fa.common.toman}</td></tr>`
     html += `<tr class="total-row"><td>تغییر خالص</td><td>${data.netChange.toLocaleString('fa-IR')} ${fa.common.toman}</td></tr>`
     html += '</tbody></table>'
-    printA4Report(html, fa.accounting.tabs.cashFlow)
+    await printA4Report(html, fa.accounting.tabs.cashFlow)
   }
 
   const handleExcel = () => {

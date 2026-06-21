@@ -126,7 +126,7 @@ export default function AddProduct() {
   const { sorted, sortKey, sortDir, toggleSort } = useSortable(pagedProducts)
   const [showPrintDialog, setShowPrintDialog] = useState(false)
 
-  const handlePrintProducts = (range: { start: number; end: number } | 'all') => {
+  const handlePrintProducts = async (range: { start: number; end: number } | 'all') => {
     let data = products
     if (range !== 'all') {
       data = products.slice(range.start - 1, range.end)
@@ -138,7 +138,7 @@ export default function AddProduct() {
       html += `<tr><td>${p.barcode}</td><td>${p.title}</td><td>${p.category || '-'}</td><td>${p.stock}</td><td>${p.purchase_price.toLocaleString('fa-IR')}</td><td>${p.sale_price.toLocaleString('fa-IR')}</td></tr>`
     })
     html += '</tbody></table>'
-    printA4Report(html, 'لیست کالاها')
+    await printA4Report(html, 'لیست کالاها')
   }
 
   const handleExcelProducts = () => {

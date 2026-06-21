@@ -134,7 +134,7 @@ export default function Dashboard() {
     },
   ]
 
-  const handlePrintA4 = (range: { start: number; end: number } | 'all') => {
+  const handlePrintA4 = async (range: { start: number; end: number } | 'all') => {
     const printSales = range === 'all' ? sales : sales.slice(range.start - 1, range.end)
     let html = '<h1>گزارش داشبورد فروشگاه</h1>'
     html += `<div class="header-info"><span>تاریخ: ${getShamsiToday()}</span><span>تعداد فاکتور: ${printSales.length}</span></div>`
@@ -146,7 +146,7 @@ export default function Dashboard() {
       topProducts.forEach((p: any) => { html += `<tr><td>${p.productTitle || p.title}</td><td>${p.totalQty}</td><td>${p.totalRevenue?.toLocaleString('fa-IR')}</td></tr>` })
       html += '</tbody></table>'
     }
-    printA4Report(html, 'گزارش داشبورد فروشگاه')
+    await printA4Report(html, 'گزارش داشبورد فروشگاه')
   }
 
   const handleExcelExport = () => {

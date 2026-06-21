@@ -126,7 +126,7 @@ export default function Inventory() {
     return acc
   }, {})
 
-  const handlePrintReport = () => {
+  const handlePrintReport = async () => {
     const now = new Date()
     const [jy, jm, jd] = gregorianToJalali(now.getFullYear(), now.getMonth() + 1, now.getDate())
     const jMonths = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند']
@@ -155,7 +155,7 @@ export default function Inventory() {
     printContent(html)
   }
 
-  const handlePrintA4 = (range: { start: number; end: number } | 'all') => {
+  const handlePrintA4 = async (range: { start: number; end: number } | 'all') => {
     let catData = reportData.byCategory
     let slowData = reportData.slowMoving
     if (range !== 'all') {
@@ -176,7 +176,7 @@ export default function Inventory() {
       html += `<tr><td>${item.title}</td><td>${item.category || '-'}</td><td>${item.stock}</td><td>${item.lastSoldAt ? 'آخرین فروش: ' + item.lastSoldAt : 'هرگز فروخته نشده'}</td></tr>`
     })
     html += '</tbody></table>'
-    printA4Report(html, 'گزارش موجودی انبار')
+    await printA4Report(html, 'گزارش موجودی انبار')
   }
 
   const handleExcelExport = () => {
@@ -189,7 +189,7 @@ export default function Inventory() {
     downloadExcel('inventory-report.csv', headers, rows)
   }
 
-  const handleProductsPrint = (range: { start: number; end: number } | 'all') => {
+  const handleProductsPrint = async (range: { start: number; end: number } | 'all') => {
     let data = filteredProducts
     if (range !== 'all') data = filteredProducts.slice(range.start - 1, range.end)
     let html = '<h1>لیست موجودی انبار</h1>'
@@ -199,7 +199,7 @@ export default function Inventory() {
       html += `<tr><td>${p.barcode || '-'}</td><td>${p.title}</td><td>${p.category || '-'}</td><td>${p.stock}</td><td>${p.purchase_price.toLocaleString('fa-IR')}</td><td>${p.sale_price.toLocaleString('fa-IR')}</td><td>${(p.stock * p.purchase_price).toLocaleString('fa-IR')}</td></tr>`
     })
     html += '</tbody></table>'
-    printA4Report(html, 'لیست موجودی انبار')
+    await printA4Report(html, 'لیست موجودی انبار')
   }
 
   const handleProductsExcel = () => {
@@ -212,7 +212,7 @@ export default function Inventory() {
     downloadExcel('inventory-products.csv', headers, rows)
   }
 
-  const handlePrintBarcode = (p: Product) => {
+  const handlePrintBarcode = async (p: Product) => {
     const barcodeSvg = (() => {
       const code = p.barcode || '000000'
       let bars = ''
@@ -234,7 +234,7 @@ export default function Inventory() {
       <div style="font-size:10pt; font-weight:bold; margin-top:4px;">${p.title}</div>
       <div style="font-size:12pt; font-weight:bold; color:#006194; margin-top:2px;">${p.sale_price.toLocaleString('fa-IR')} تومان</div>
     </div>`
-    printA4Report(html, 'لیبل بارکد')
+    await printA4Report(html, 'لیبل بارکد')
   }
 
   const kpis = [
