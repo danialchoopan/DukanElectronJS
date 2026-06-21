@@ -1,6 +1,7 @@
 let cachedShopName = 'فروشگاه'
 let cachedShopPhone = ''
 let cachedTaxRate = 0
+let cachedCustomization: Record<string, string> = {}
 
 export function setShopName(name: string, phone?: string) {
   if (name) cachedShopName = name
@@ -15,37 +16,24 @@ export function getTaxRate(): number {
   return cachedTaxRate
 }
 
+export function setPrintCustomization(settings: Record<string, string>) {
+  cachedCustomization = { ...settings }
+}
+
+export function getPrintCustomization(): Record<string, string> {
+  return cachedCustomization
+}
+
+function getJalaliNow(): string {
+  const now = new Date()
+  return now.toLocaleDateString('fa-IR') + ' — ' + now.toLocaleTimeString('fa-IR')
+}
+
 export function printA4Report(html: string, title: string, options?: {
   shopName?: string
   isInvoice?: boolean
   taxRate?: number
-  customization?: {
-    printColorScheme?: string
-    printLogo?: string
-    printSignature?: string
-    printWatermark?: string
-    printWatermarkOpacity?: string
-    printShowSignature?: string
-    printShowTax?: string
-    printFooter?: string
-    printInvoiceTitle?: string
-    printReprintTitle?: string
-    printReportTitle?: string
-    printFontSize?: string
-    printHeaderSize?: string
-    printLineSpacing?: string
-    printMarginTop?: string
-    printMarginBottom?: string
-    printMarginLeft?: string
-    printMarginRight?: string
-    printPaperSize?: string
-    printHeaderField1?: string
-    printHeaderField2?: string
-    printHeaderField3?: string
-    printBorderStyle?: string
-    printHeaderAlign?: string
-    printActiveTemplate?: string
-  }
+  customization?: Record<string, string>
 }): void {
   const win = window.open('', '_blank')
   if (!win) return
@@ -53,7 +41,7 @@ export function printA4Report(html: string, title: string, options?: {
   const phone = cachedShopPhone
   const isInvoice = options?.isInvoice ?? false
   const taxRate = options?.taxRate ?? cachedTaxRate
-  const cust = options?.customization || {}
+  const cust = { ...cachedCustomization, ...(options?.customization || {}) }
   const primaryColor = cust.printColorScheme || '#006194'
   const showSignature = cust.printShowSignature !== 'false'
   const showTax = cust.printShowTax !== 'false'
@@ -67,7 +55,7 @@ export function printA4Report(html: string, title: string, options?: {
     ? `body::after { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url('${cust.printWatermark}'); background-repeat: no-repeat; background-position: center; background-size: contain; opacity: ${wmOpacity}; pointer-events: none; z-index: -1; }`
     : ''
 
-  const footerText = cust.printFooter || `تاریخ در ${new Date().toLocaleDateString('fa-IR')} چاپ شده است — ${name}`
+  const footerText = cust.printFooter || `تاریخ در ${getJalaliNow()} چاپ شده است — ${name}`
 
   const invoiceSection = isInvoice && showSignature ? `
     <div class="checkbox-group">
@@ -99,9 +87,9 @@ export function printA4Report(html: string, title: string, options?: {
     .join('')
 
   let borderCSS = ''
-  if (cust.printBorderStyle === 'simple') borderCSS = 'body { border-top: 3px solid #006194; border-bottom: 3px solid #006194; padding-top: 10px; }'
-  if (cust.printBorderStyle === 'double') borderCSS = 'body { border-top: 6px double #006194; border-bottom: 6px double #006194; padding: 10px 0; }'
-  if (cust.printBorderStyle === 'decorative') borderCSS = 'body { border-top: 8px solid #006194; border-bottom: 4px solid #006194; padding: 10px 0; }'
+  if (cust.printBorderStyle === 'simple') borderCSS = `body { border-top: 3px solid ${primaryColor}; border-bottom: 3px solid ${primaryColor}; padding-top: 10px; }`
+  if (cust.printBorderStyle === 'double') borderCSS = `body { border-top: 6px double ${primaryColor}; border-bottom: 6px double ${primaryColor}; padding: 10px 0; }`
+  if (cust.printBorderStyle === 'decorative') borderCSS = `body { border-top: 8px solid ${primaryColor}; border-bottom: 4px solid ${primaryColor}; padding: 10px 0; }`
 
   win.document.write(`<!DOCTYPE html>
 <html dir="rtl" lang="fa">
