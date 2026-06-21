@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useCartStore } from '../store/cartStore'
 import type { Customer } from '../../../types'
 import { fa } from '../i18n'
-import { MoneyIcon, CreditCardIcon, BookIcon, SearchIcon, XIcon } from './Icons'
+import { MoneyIcon, BookIcon, SearchIcon, XIcon } from './Icons'
 
 type PaymentMethod = 'cash' | 'card' | 'ledger'
 
@@ -32,7 +32,6 @@ export default function PaymentPanel({ onPaymentComplete, selectedCustomer, onSe
 
   const methods: { key: PaymentMethod; label: string; icon: JSX.Element; color: string }[] = [
     { key: 'cash', label: fa.payment.cash, icon: <MoneyIcon className="w-5 h-5" />, color: 'linear-gradient(135deg, #22c55e, #16a34a)' },
-    { key: 'card', label: fa.payment.card, icon: <CreditCardIcon className="w-5 h-5" />, color: 'linear-gradient(135deg, #3b82f6, #2563eb)' },
     { key: 'ledger', label: fa.payment.ledger, icon: <BookIcon className="w-5 h-5" />, color: 'linear-gradient(135deg, #a855f7, #7c3aed)' },
   ]
 
@@ -137,25 +136,6 @@ export default function PaymentPanel({ onPaymentComplete, selectedCustomer, onSe
           )}
           <button onClick={() => onPaymentComplete('cash', paidAmount)} disabled={totalAmount <= 0}
             className="btn btn-success w-full text-lg py-3 disabled:opacity-40">{fa.payment.completeSale}</button>
-        </div>
-      )}
-
-      {selectedMethod === 'card' && (
-        <div className="space-y-2">
-          {!fullyPaid && (
-            <>
-              <div className="text-center mb-2" style={{ color: 'var(--text-secondary)' }}>{fa.payment.customerPays}</div>
-              <input type="number" value={paid} onChange={(e) => setPaid(e.target.value)} className="input-field text-2xl text-center font-bold py-3" placeholder="0" autoFocus />
-            </>
-          )}
-          {fullyPaid && (
-            <div className="rounded-xl p-3 text-center" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-              <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{fa.pos.total}:</span>
-              <span className="text-lg font-bold text-green-400 mr-2">{totalAmount.toLocaleString('fa-IR')} {fa.common.toman}</span>
-            </div>
-          )}
-          <button onClick={() => onPaymentComplete('card', paidAmount)} disabled={totalAmount <= 0}
-            className="btn btn-success w-full text-lg py-3">{fa.payment.confirmCard}</button>
         </div>
       )}
 

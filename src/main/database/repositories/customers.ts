@@ -118,6 +118,23 @@ export function deleteCustomerSoft(id: number): { success: boolean; error?: stri
   return { success: true }
 }
 
+export function deleteLedgerEntry(entryId: number): { success: boolean; error?: string } {
+  const db = getDatabase()
+  const entry = db.prepare('SELECT * FROM customer_ledger WHERE id = ?').get(entryId) as any
+  if (!entry) return { success: false, error: 'رکورد یافت نشد' }
+
+  db.transaction(() => {
+    if (entry.type === 'charge' || entry.type === 'debt') {
+      db.prepare('UPDATE customers SET balance = balance - ? WHERE id = ?').run(entry.amount, entry.customerId)
+    } else if (entry.type === 'payment') {
+      db.prepare('UPDATE customers SET balance = balance + ? WHERE id = ?').run(entry.amount, entry.customerId)
+    }
+    db.prepare('DELETE FROM customer_ledger WHERE id = ?').run(entryId)
+  })()
+
+  return { success: true }
+}
+
 export function getAllCustomersWithStats(): (Customer & { purchaseCount: number; lastPurchaseDate: string | null })[] {
   const db = getDatabase()
   const customers = db.prepare('SELECT * FROM customers WHERE isActive = 1 ORDER BY name').all() as Customer[]

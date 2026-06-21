@@ -166,7 +166,7 @@ export default function CustomerManagement({ highlightId, onHighlightDone }: Pro
     const amt = parseFloat(chargePayAmount)
     if (amt <= 0) return
     setLoading(true)
-    await window.api.customers.charge(selected.id, -amt, chargePayDescription || `افزودن بدهی: ${chargePayDescription || 'بدون شرح'}`, chargePayImages.length > 0 ? chargePayImages : undefined)
+    await window.api.customers.charge(selected.id, -amt, chargePayDescription || 'افزودن بدهی', chargePayImages.length > 0 ? chargePayImages : undefined)
     setDialog(null)
     setChargePayAmount('')
     setChargePayDescription('')
@@ -305,8 +305,8 @@ export default function CustomerManagement({ highlightId, onHighlightDone }: Pro
     for (const e of reversed) {
       if (e.type === 'charge' || e.type === 'payment') runningBalance += e.amount
       else runningBalance -= e.amount
-      const typeLabel = e.type === 'charge' ? 'شارژ' : e.type === 'payment' ? 'پرداخت' : 'فروش'
-      const sign = e.type === 'sale' || e.type === 'debt' ? '-' : '+'
+      const typeLabel = e.type === 'charge' && e.amount >= 0 ? 'افزایش مانده' : e.type === 'charge' && e.amount < 0 ? 'افزودن بدهی' : e.type === 'payment' ? 'پرداخت' : e.type === 'debt' ? 'بدهی' : 'فروش'
+      const sign = e.type === 'sale' || (e.type === 'charge' && e.amount < 0) ? '-' : '+'
       html += `<tr><td>${formatJalaliDateTime(e.createdAt)}</td><td>${typeLabel}</td><td>${sign}${e.amount.toLocaleString('fa-IR')}</td><td>${e.description || '-'}</td><td>${runningBalance.toLocaleString('fa-IR')}</td></tr>`
     }
     html += '</tbody></table>'
@@ -697,7 +697,7 @@ export default function CustomerManagement({ highlightId, onHighlightDone }: Pro
                     <div className="flex gap-1 mb-3">
                       {([
                         { key: 'all' as LedgerFilter, label: fa.common.all },
-                        { key: 'charge' as LedgerFilter, label: 'شارژ' },
+                        { key: 'charge' as LedgerFilter, label: 'افزایش مانده' },
                         { key: 'payment' as LedgerFilter, label: 'پرداخت' },
                         { key: 'sale' as LedgerFilter, label: 'فروش' },
                       ]).map((f) => (
@@ -745,14 +745,14 @@ export default function CustomerManagement({ highlightId, onHighlightDone }: Pro
                                 <td className="px-3 py-2 text-xs" style={{ color: textSecondary }}>{formatJalaliDateTime(e.createdAt)}</td>
                                 <td className="px-3 py-2">
                                   <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{
-                                    backgroundColor: e.type === 'charge' ? `${SUCCESS}15` : e.type === 'payment' ? '#f59e0b15' : `${PRIMARY}15`,
-                                    color: e.type === 'charge' ? SUCCESS : e.type === 'payment' ? '#d97706' : PRIMARY,
+                                    backgroundColor: e.type === 'charge' && e.amount >= 0 ? `${SUCCESS}15` : e.type === 'payment' ? '#f59e0b15' : e.type === 'sale' ? `${PRIMARY}15` : `${ERROR}15`,
+                                    color: e.type === 'charge' && e.amount >= 0 ? SUCCESS : e.type === 'payment' ? '#d97706' : e.type === 'sale' ? PRIMARY : ERROR,
                                   }}>
-                                    {e.type === 'charge' ? 'شارژ' : e.type === 'payment' ? 'پرداخت' : 'فروش'}
+                                    {e.type === 'charge' && e.amount >= 0 ? 'افزایش مانده' : e.type === 'charge' && e.amount < 0 ? 'افزودن بدهی' : e.type === 'payment' ? 'پرداخت' : e.type === 'debt' ? 'بدهی' : 'فروش'}
                                   </span>
                                 </td>
-                                <td className="px-3 py-2 font-bold" style={{ color: e.type === 'sale' ? ERROR : SUCCESS }}>
-                                  {e.type === 'sale' ? '-' : '+'}{e.amount.toLocaleString('fa-IR')}
+                                <td className="px-3 py-2 font-bold" style={{ color: e.type === 'sale' || (e.type === 'charge' && e.amount < 0) ? ERROR : SUCCESS }}>
+                                  {e.type === 'sale' || (e.type === 'charge' && e.amount < 0) ? '' : '+'}{e.amount.toLocaleString('fa-IR')}
                                 </td>
                                 <td className="px-3 py-2 text-xs" style={{ color: textSecondary }}>
                                   {e.description}
@@ -765,6 +765,11 @@ export default function CustomerManagement({ highlightId, onHighlightDone }: Pro
                                   )}
                                 </td>
                                 <td className="px-3 py-2 font-bold text-xs" style={{ color: textPrimary }}>{e.runningBalance.toLocaleString('fa-IR')}</td>
+                                <td className="px-2 py-2">
+                                  <button onClick={(ev) => { ev.stopPropagation(); if (confirm('آیا از حذف این رکورد اطمینان دارید؟')) { window.api.customers.deleteLedgerEntry(e.id).then(() => refreshSelected(selected.id)) } }} className="text-xs p-1 rounded-lg hover:bg-red-500/10" style={{ color: ERROR }}>
+                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                                  </button>
+                                </td>
                               </tr>
                             ))}
                           </tbody>
@@ -783,7 +788,7 @@ export default function CustomerManagement({ highlightId, onHighlightDone }: Pro
       {dialog === 'charge' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="rounded-xl p-6 w-96" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-            <div className="text-sm font-bold mb-4" style={{ color: SUCCESS }}>شارژ حساب {selected?.name}</div>
+            <div className="text-sm font-bold mb-4" style={{ color: SUCCESS }}>افزایش مانده — {selected?.name}</div>
             <div className="mb-3">
               <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.customer.chargeAmount}</label>
               <input
@@ -1089,7 +1094,7 @@ export default function CustomerManagement({ highlightId, onHighlightDone }: Pro
                 <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
                   <div className="text-xs" style={{ color: textSecondary }}>نوع</div>
                   <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: selectedLedgerEntry.type === 'charge' ? `${SUCCESS}15` : selectedLedgerEntry.type === 'payment' ? '#f59e0b15' : selectedLedgerEntry.type === 'debt' ? `${ERROR}15` : `${PRIMARY}15`, color: selectedLedgerEntry.type === 'charge' ? SUCCESS : selectedLedgerEntry.type === 'payment' ? '#d97706' : selectedLedgerEntry.type === 'debt' ? ERROR : PRIMARY }}>
-                    {selectedLedgerEntry.type === 'charge' ? 'شارژ' : selectedLedgerEntry.type === 'payment' ? 'پرداخت' : selectedLedgerEntry.type === 'debt' ? 'بدهی' : 'فروش'}
+                    {selectedLedgerEntry.type === 'charge' ? 'افزایش مانده' : selectedLedgerEntry.type === 'payment' ? 'پرداخت' : selectedLedgerEntry.type === 'debt' ? 'بدهی' : 'فروش'}
                   </span>
                 </div>
                 <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>

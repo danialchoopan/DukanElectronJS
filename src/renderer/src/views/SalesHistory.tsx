@@ -140,7 +140,7 @@ export default function SalesHistory() {
     html += `<div class="header-info"><span>از: ${startDate || 'همه'} تا: ${endDate || 'همه'}</span><span>تعداد: ${data.length}</span></div>`
     html += '<table><thead><tr><th>فاکتور</th><th>تاریخ</th><th>صندوکدار</th><th>مشتری</th><th>تعداد اقلام</th><th>نوع پرداخت</th><th>مبلغ</th></tr></thead><tbody>'
     data.forEach(s => {
-      html += `<tr><td>${s.invoiceNumber}</td><td>${formatJalaliDateTime(s.createdAt)}</td><td>${s.userName}</td><td>${s.customerName || '-'}</td><td>${s.items?.length || 0}</td><td>${s.paymentMethod === 'cash' ? 'نقدی' : s.paymentMethod === 'card' ? 'کارتی' : 'نسیه'}</td><td>${s.total_amount.toLocaleString('fa-IR')}</td></tr>`
+      html += `<tr><td>${s.invoiceNumber}</td><td>${formatJalaliDateTime(s.createdAt)}</td><td>${s.userName}</td><td>${s.customerName || '-'}</td><td>${s.items?.length || 0}</td><td>${s.paymentMethod === 'cash' ? 'نقدی' : s.paymentMethod === 'card' ? 'کارتی' : 'بدهی'}</td><td>${s.total_amount.toLocaleString('fa-IR')}</td></tr>`
     })
     html += '</tbody></table>'
     html += `<p>جمع کل: ${data.reduce((sum, s) => sum + s.total_amount, 0).toLocaleString('fa-IR')} تومان</p>`
@@ -149,7 +149,7 @@ export default function SalesHistory() {
 
   const handleExcelSales = () => {
     const headers = ['فاکتور', 'تاریخ', 'صندوکدار', 'مشتری', 'تعداد اقلام', 'نوع پرداخت', 'مبلغ']
-    const csvRows = filteredSales.map(s => [s.invoiceNumber, formatJalaliDateTime(s.createdAt), s.userName, s.customerName || '-', s.items?.length || 0, s.paymentMethod === 'cash' ? 'نقدی' : s.paymentMethod === 'card' ? 'کارتی' : 'نسیه', s.total_amount])
+    const csvRows = filteredSales.map(s => [s.invoiceNumber, formatJalaliDateTime(s.createdAt), s.userName, s.customerName || '-', s.items?.length || 0, s.paymentMethod === 'cash' ? 'نقدی' : s.paymentMethod === 'card' ? 'کارتی' : 'بدهی', s.total_amount])
     downloadExcel('sales-history.csv', headers, csvRows)
   }
 
@@ -420,7 +420,7 @@ export default function SalesHistory() {
                 const customerInfo = selectedSale.customerName ? `<div class="header-info"><span>مشتری: ${selectedSale.customerName}</span></div>` : ''
                 html += customerInfo
                 html += `<div class="header-info"><span>شماره فاکتور: ${selectedSale.invoiceNumber}</span><span>تاریخ: ${formatJalaliDateTime(selectedSale.createdAt)}</span></div>`
-                html += `<div class="header-info"><span>صندوکدار: ${selectedSale.userName}</span><span>نوع پرداخت: ${selectedSale.paymentMethod === 'cash' ? 'نقدی' : selectedSale.paymentMethod === 'card' ? 'کارتی' : 'نسیه'}</span></div>`
+                html += `<div class="header-info"><span>صندوکدار: ${selectedSale.userName}</span><span>نوع پرداخت: ${selectedSale.paymentMethod === 'cash' ? 'نقدی' : selectedSale.paymentMethod === 'card' ? 'کارتی' : 'بدهی'}</span></div>`
                 html += '<table><thead><tr><th>کالا</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>'
                 selectedSale.items?.forEach((item: any) => { html += `<tr><td>${item.productTitle}</td><td>${item.quantity}</td><td>${item.unitPrice.toLocaleString('fa-IR')}</td><td>${item.subtotal.toLocaleString('fa-IR')}</td></tr>` })
                 html += '</tbody></table>'
