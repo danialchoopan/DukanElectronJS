@@ -18,6 +18,7 @@ import Help from './views/Help'
 import SetupWizard from './views/SetupWizard'
 import Sidebar from './components/Sidebar'
 import GlobalSearch from './components/GlobalSearch'
+import PrintPreviewDialog from './components/PrintPreviewDialog'
 
 type View = 'pos' | 'dashboard' | 'admin' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'help' | 'categories'
 
@@ -153,6 +154,7 @@ export default function App() {
         {currentView === 'help' && <Help />}
       </div>
       <GlobalSearch open={showGlobalSearch} onClose={() => setShowGlobalSearch(false)} onNavigate={(view, tab, highlightId) => { handleNavigate(view, tab, highlightId); setShowGlobalSearch(false) }} />
+      <PrintPreviewDialog />
     </div>
   )
 }

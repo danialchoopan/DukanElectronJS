@@ -3,7 +3,7 @@ import type { Customer, CustomerLedgerEntry, Sale } from '../../../types'
 import { fa } from '../i18n'
 import { formatJalaliShort, formatJalaliDateTime } from '../utils/jalali'
 import { getProductImageUrl } from '../utils/productImage'
-import { printA4Report } from '../utils/a4Print'
+import { showPrint } from '../utils/showPrint'
 import { useHighlight } from '../hooks/useHighlight'
 
 type FilterType = 'all' | 'debtor' | 'creditor' | 'inactive' | 'real' | 'legal'
@@ -311,7 +311,7 @@ export default function CustomerManagement({ highlightId, onHighlightDone }: Pro
     }
     html += '</tbody></table>'
     html += `<div style="margin-top:16px;padding:12px;background:#f0f4f8;border-radius:8px"><strong>مانده فعلی حساب: ${selected.balance.toLocaleString('fa-IR')} ${fa.common.toman}</strong></div>`
-    await printA4Report(html, `صورتحساب ${selected.name}`)
+    showPrint(html, `صورتحساب ${selected.name}`)
   }
 
   const TypeBadge = ({ type }: { type?: string }) => {

@@ -9,7 +9,7 @@ import PaymentPanel from '../components/PaymentPanel'
 import LooseItemsGrid from '../components/LooseItemsGrid'
 import SuspendedSlots from '../components/SuspendedSlots'
 import { fa } from '../i18n'
-import { printA4Report } from '../utils/a4Print'
+import { showPrint } from '../utils/showPrint'
 import WebcamScanner from '../components/WebcamScanner'
 import ReceiptPrinter from '../components/ReceiptPrinter'
 import Notification from '../components/Notification'
@@ -235,7 +235,7 @@ export default function CashierPOS() {
                   html += '</tbody></table>'
                   html += `<p><strong>جمع کل: ${saleComplete.total_amount.toLocaleString('fa-IR')} تومان</strong></p>`
                   html += `<p>نوع پرداخت: ${saleComplete.paymentMethod === 'cash' ? 'نقدی' : saleComplete.paymentMethod === 'card' ? 'کارتی' : 'بدهی'}</p>`
-                  await printA4Report(html, 'فاکتور فروش', { isInvoice: true })
+                  showPrint(html, 'فاکتور فروش', true)
                   setSaleComplete(null)
                 }}
                 className="flex-1 py-3 rounded-xl font-bold text-sm transition-all"

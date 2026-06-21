@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import type { Sale } from '../../../types'
 import { fa } from '../i18n'
 import { formatJalaliDateTime } from '../utils/jalali'
-import { printA4Report, downloadExcel } from '../utils/a4Print'
+import { downloadExcel } from '../utils/a4Print'
+import { showPrint } from '../utils/showPrint'
 import ShamsiDateInput from '../components/ShamsiDateInput'
 import Pagination from '../components/Pagination'
 import { useAuthStore } from '../store/authStore'
@@ -144,7 +145,7 @@ export default function SalesHistory() {
     })
     html += '</tbody></table>'
     html += `<p>جمع کل: ${data.reduce((sum, s) => sum + s.total_amount, 0).toLocaleString('fa-IR')} تومان</p>`
-    await printA4Report(html, 'گزارش فروش')
+    showPrint(html, 'گزارش فروش')
   }
 
   const handleExcelSales = () => {
@@ -425,7 +426,7 @@ export default function SalesHistory() {
                 selectedSale.items?.forEach((item: any) => { html += `<tr><td>${item.productTitle}</td><td>${item.quantity}</td><td>${item.unitPrice.toLocaleString('fa-IR')}</td><td>${item.subtotal.toLocaleString('fa-IR')}</td></tr>` })
                 html += '</tbody></table>'
                 html += `<p><strong>جمع کل: ${selectedSale.total_amount.toLocaleString('fa-IR')} تومان</strong></p>`
-                await printA4Report(html, 'چاپ دوباره فاکتور', { isInvoice: true })
+                showPrint(html, 'چاپ دوباره فاکتور', true)
               }}
                 className="text-sm px-5 py-2.5 rounded-xl font-bold flex-1 transition-all duration-200"
                 style={{ background: 'linear-gradient(135deg, #006194, #007bb9)', color: '#fff', boxShadow: '0 2px 8px rgba(0,97,148,0.3)' }}>چاپ فاکتور</button>
