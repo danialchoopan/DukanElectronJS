@@ -258,12 +258,23 @@ const api = {
     execute: (options: any, userName?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('smartExport:execute', { options, userName }),
     save: (data: any, filePath: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('smartExport:save', { data, filePath }),
     runTests: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('smartExport:runTests'),
+    runMigrationTests: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('migration:runTests'),
   },
 
   smartImport: {
     preview: (filePath: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('smartImport:preview', { filePath }),
     execute: (data: any, options: any, userName?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('smartImport:execute', { data, options, userName }),
     validate: (filePath: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('smartImport:validate', { filePath }),
+  },
+
+  migration: {
+    version: (): Promise<IPCResponse<string>> => ipcRenderer.invoke('migration:version'),
+    matrix: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('migration:matrix'),
+    check: (filePath: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('migration:check', { filePath }),
+    migrate: (filePath: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('migration:migrate', { filePath }),
+    dryRun: (filePath: string, options: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('migration:dryRun', { filePath, options }),
+    preBackup: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('migration:preBackup'),
+    smartImport: (filePath: string, options: any, userName?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('migration:smartImport', { filePath, options, userName }),
   },
 
   onNavigate: (callback: (page: string) => void): (() => void) => {

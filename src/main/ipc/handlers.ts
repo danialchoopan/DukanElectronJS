@@ -19,8 +19,10 @@ import * as reportsRepo from '../database/repositories/reports'
 import * as seedRepo from '../database/repositories/seed'
 import * as backupService from '../database/backup'
 import * as smartExportService from '../database/smartExport'
+import * as migrationService from '../database/migration'
 import { runBackupTests } from '../database/backup.test'
 import { runSmartExportTests } from '../database/smartExport.test'
+import { runMigrationTests } from '../database/migration.test'
 import { isFirstRun, getDatabase } from '../database/connection'
 import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync } from 'fs'
 import { join } from 'path'
@@ -379,6 +381,10 @@ export function registerAllHandlers(): void {
     return runSmartExportTests()
   })
 
+  handle('migration:runTests', () => {
+    return runMigrationTests()
+  })
+
   // ─── Dialog ────────────────────────────────────────
   ipcMain.handle('dialog:openBackup', async () => {
     const win = BrowserWindow.getFocusedWindow()
@@ -546,6 +552,52 @@ export function registerAllHandlers(): void {
       return { valid: true, modules: data.modules.map((m: any) => ({ module: m.module, recordCount: m.recordCount })), signature, encrypted: data.encrypted }
     } catch (err: any) {
       return { valid: false, error: err.message }
+    }
+  })
+
+  // ─── Version Compatibility / Migration ──────────────────
+  handle('migration:version', () => migrationService.getCurrentVersion())
+  handle('migration:matrix', () => migrationService.getCompatibilityMatrix())
+
+  handleArg('migration:check', (arg: { filePath: string }) => {
+    try {
+      const data = smartExportService.loadExportFile(arg.filePath)
+      return migrationService.checkCompatibility(data)
+    } catch (err: any) {
+      return { compatible: false, errors: [err.message] }
+    }
+  })
+
+  handleArg('migration:migrate', (arg: { filePath: string }) => {
+    try {
+      const data = smartExportService.loadExportFile(arg.filePath)
+      return migrationService.migrateData(data)
+    } catch (err: any) {
+      return { data: null, migrated: false, changes: [], error: err.message }
+    }
+  })
+
+  handleArg('migration:dryRun', (arg: { filePath: string; options: any }) => {
+    try {
+      const data = smartExportService.loadExportFile(arg.filePath)
+      return migrationService.dryRunImport(data, arg.options)
+    } catch (err: any) {
+      return { compatible: false, error: err.message }
+    }
+  })
+
+  handle('migration:preBackup', () => {
+    return migrationService.preImportBackup()
+  })
+
+  handleArg('migration:smartImport', (arg: { filePath: string; options: any; userName?: string }) => {
+    try {
+      const data = smartExportService.loadExportFile(arg.filePath)
+      const migrated = migrationService.migrateData(data)
+      const finalData = migrated.migrated ? migrated.data : data
+      return smartExportService.smartImport(finalData, arg.options, arg.userName || 'user')
+    } catch (err: any) {
+      return { success: false, errors: [{ table: 'general', error: err.message }] }
     }
   })
 }

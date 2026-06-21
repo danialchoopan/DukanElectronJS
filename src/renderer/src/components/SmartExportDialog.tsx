@@ -39,6 +39,7 @@ export default function SmartExportDialog({ open, mode, onClose }: Props) {
   const [warnings, setWarnings] = useState<string[]>([])
   const [importPreview, setImportPreview] = useState<any>(null)
   const [importFilePath, setImportFilePath] = useState('')
+  const [compatibility, setCompatibility] = useState<any>(null)
 
   useEffect(() => {
     if (!open) return
@@ -119,6 +120,12 @@ export default function SmartExportDialog({ open, mode, onClose }: Props) {
       const r = await window.api.dialog.openSmartImport()
       if (!r.success || !r.data) { setLoading(false); return }
       setImportFilePath(r.data)
+
+      const compat = await window.api.migration.check(r.data)
+      if (compat.success && compat.data) {
+        setCompatibility(compat.data)
+      }
+
       const preview = await window.api.smartImport.validate(r.data)
       if (preview.success && preview.data) {
         setImportPreview(preview.data)
@@ -143,22 +150,39 @@ export default function SmartExportDialog({ open, mode, onClose }: Props) {
   const handleImport = async () => {
     setLoading(true)
     try {
-      const fullData = await window.api.smartImport.preview(importFilePath)
-      if (!fullData.success || !fullData.data?.data) {
-        setResult({ success: false, message: 'خطا در خواندن فایل' })
-        setStep('result')
-        setLoading(false)
-        return
+      if (compatibility?.needsMigration) {
+        const backupR = await window.api.migration.preBackup()
+        if (!backupR.success) {
+          setResult({ success: false, message: 'خطا در ایجاد پشتیبان قبل از مهاجرت: ' + (backupR.error || '') })
+          setStep('result')
+          setLoading(false)
+          return
+        }
       }
-      const payload = fullData.data.data
+
       const opts = {
         modules: Array.from(selectedModules),
         conflictResolution,
         validate,
         password: usePassword ? password : undefined,
       }
-      const r = await window.api.smartImport.execute(payload, opts, 'user')
-      setResult(r.data ? { success: r.data.success, message: r.data.success ? 'واردات با موفقیت انجام شد' : 'واردات ناموفق', errors: r.data.errors, warnings: r.data.warnings, recordsImported: r.data.recordsImported, integrityPassed: r.data.integrityPassed } : { success: false, message: r.error || 'خطا' })
+
+      const r = await window.api.migration.smartImport(importFilePath, opts, 'user')
+      if (r.success && r.data) {
+        const migrated = compatibility?.needsMigration
+        setResult({
+          success: r.data.success,
+          message: r.data.success
+            ? (migrated ? 'مهاجرت و واردات با موفقیت انجام شد' : 'واردات با موفقیت انجام شد')
+            : 'واردات ناموفق',
+          errors: r.data.errors,
+          warnings: r.data.warnings,
+          recordsImported: r.data.recordsImported,
+          integrityPassed: r.data.integrityPassed,
+        })
+      } else {
+        setResult({ success: false, message: r.error || 'خطا' })
+      }
     } catch (e: any) {
       setResult({ success: false, message: e.message })
     }
@@ -290,6 +314,35 @@ export default function SmartExportDialog({ open, mode, onClose }: Props) {
                   </div>
                 )}
               </div>
+
+              {compatibility && (
+                <div className="p-3 rounded-xl mb-4" style={{
+                  backgroundColor: compatibility.needsMigration ? '#f59e0b15' : compatibility.compatible ? '#22c55e15' : '#ef444415',
+                  border: `1px solid ${compatibility.needsMigration ? '#f59e0b40' : compatibility.compatible ? '#22c55e40' : '#ef444440'}`,
+                }}>
+                  <div className="flex items-center gap-2 mb-1" style={{ color: compatibility.needsMigration ? '#f59e0b' : compatibility.compatible ? '#22c55e' : '#ef4444' }}>
+                    {compatibility.needsMigration ? WARNING_ICON : compatibility.compatible ? CHECK_ICON : WARNING_ICON}
+                    <span className="text-sm font-bold">
+                      {compatibility.needsMigration
+                        ? `نیاز به مهاجرت — از نسخه ${compatibility.fileVersion} به ${compatibility.currentVersion}`
+                        : compatibility.compatible
+                          ? `نسخه سازگار (${compatibility.fileVersion})`
+                          : `نسخه ناسازگار (${compatibility.fileVersion})`}
+                    </span>
+                  </div>
+                  {compatibility.warnings?.map((w: string, i: number) => (
+                    <div key={i} className="text-xs mt-1" style={{ color: compatibility.needsMigration ? '#f59e0b' : '#ef4444' }}>{w}</div>
+                  ))}
+                  {compatibility.needsMigration && compatibility.migrationSteps?.length > 0 && (
+                    <div className="mt-2 text-xs" style={{ color: textSecondary }}>
+                      <div className="font-bold mb-1">مراحل مهاجرت:</div>
+                      {compatibility.migrationSteps.map((s: any, i: number) => (
+                        <div key={i} className="ml-2">• {s.description}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="text-sm font-bold mb-2" style={{ color: textPrimary }}>بخش‌های موجود</div>
               <div className="space-y-1.5 mb-4">
