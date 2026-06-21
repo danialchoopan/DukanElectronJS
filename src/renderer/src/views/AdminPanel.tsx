@@ -5,6 +5,7 @@ import UISettings from './UISettings'
 import ShortcutsSettings from './accounting/ShortcutsSettings'
 import CustomizationSettings from './admin/CustomizationSettings'
 import { useHighlight } from '../hooks/useHighlight'
+import SmartExportDialog from '../components/SmartExportDialog'
 
 const primary = '#006194'
 
@@ -17,6 +18,7 @@ interface Props {
 export default function AdminPanel({ initialTab, highlightId, onHighlightDone }: Props) {
   const [tab, setTab] = useState<'users' | 'settings' | 'ui' | 'shortcuts' | 'customization'>((initialTab as any) || 'users')
   const isDark = document.documentElement.classList.contains('dark')
+  const [smartExportMode, setSmartExportMode] = useState<'export' | 'import' | null>(null)
 
   useEffect(() => {
     if (initialTab && ['users', 'settings', 'ui', 'shortcuts', 'customization'].includes(initialTab)) {
@@ -83,11 +85,13 @@ export default function AdminPanel({ initialTab, highlightId, onHighlightDone }:
 
       <div className="w-full">
         {tab === 'users' && <UsersTab />}
-        {tab === 'settings' && <SettingsTab />}
+        {tab === 'settings' && <SettingsTab onExport={() => setSmartExportMode('export')} onImport={() => setSmartExportMode('import')} />}
         {tab === 'ui' && <UISettings />}
         {tab === 'shortcuts' && <ShortcutsSettings />}
         {tab === 'customization' && <CustomizationSettings />}
       </div>
+
+      <SmartExportDialog open={smartExportMode !== null} mode={smartExportMode || 'export'} onClose={() => setSmartExportMode(null)} />
     </div>
   )
 }
@@ -554,7 +558,7 @@ function BackupSection() {
   )
 }
 
-function SettingsTab() {
+function SettingsTab({ onExport, onImport }: { onExport: () => void; onImport: () => void }) {
   const [taxRate, setTaxRate] = useState(0)
   const [taxEnabled, setTaxEnabled] = useState(false)
   const [storeName, setStoreName] = useState('')
@@ -711,6 +715,26 @@ function SettingsTab() {
           تمام اطلاعات فروشگاه شامل کالاها، فاکتورها، مشتریان و تنظیمات
         </p>
         <BackupSection />
+
+        <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${cardBorder}` }}>
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: isDark ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.08)' }}>
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </div>
+            <h3 className="font-extrabold text-sm" style={{ color: textPrimary }}>خروجی/واردات هوشمند</h3>
+          </div>
+          <p className="text-xs mb-3" style={{ color: textSecondary }}>
+            انتخاب بخش‌های دلخواه برای خروجی یا وارد کردن — با رمزگذاری و اعتبارسنجی
+          </p>
+          <div className="flex gap-2">
+            <button onClick={onExport} className="px-4 py-2 rounded-xl text-xs font-bold transition-all" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff', boxShadow: '0 2px 8px rgba(34,197,94,0.25)' }}>
+              خروجی هوشمند
+            </button>
+            <button onClick={onImport} className="px-4 py-2 rounded-xl text-xs font-bold transition-all" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)', color: '#fff', boxShadow: '0 2px 8px rgba(59,130,246,0.25)' }}>
+              واردات هوشمند
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
