@@ -346,6 +346,19 @@ export function registerAllHandlers(): void {
   })
 
   ipcMain.handle('backup:create', () => { try { return { success: true, data: backupService.createBackup() } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
+  ipcMain.handle('backup:delete', (_event, arg: { name: string }) => {
+    try {
+      const { unlinkSync, existsSync } = require('fs')
+      const { join } = require('path')
+      const { app } = require('electron')
+      const dir = join(app.getPath('userData'), 'backups')
+      for (const f of ['db', 'db-wal', 'db-shm', 'meta.json']) {
+        const file = join(dir, `${arg.name}.${f}`)
+        if (existsSync(file)) unlinkSync(file)
+      }
+      return { success: true }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
   ipcMain.handle('backup:auto', () => { try { return { success: true, data: backupService.autoBackup() } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
   ipcMain.handle('backup:list', () => { try { return { success: true, data: backupService.listBackups() } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
   ipcMain.handle('backup:stats', () => { try { return { success: true, data: backupService.getBackupStats() } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })

@@ -263,6 +263,7 @@ function BackupSection() {
   const [restorePreview, setRestorePreview] = useState<{ path: string; details: any; version: any } | null>(null)
   const [testResults, setTestResults] = useState<{ name: string; passed: boolean; error?: string }[] | null>(null)
   const [runningTests, setRunningTests] = useState(false)
+  const [selectedBackups, setSelectedBackups] = useState<Set<string>>(new Set())
   const isDark = document.documentElement.classList.contains('dark')
 
   const primary = '#006194'
@@ -335,9 +336,25 @@ function BackupSection() {
   }
 
   const handleCleanup = async () => {
-    const r = await window.api.backup.cleanup(30)
-    if (r.success && r.data) alert(`${r.data.deleted} پشتیبان قدیمی حذف شد`)
+    if (selectedBackups.size === 0) { alert('ابتدا پشتیبان‌های مورد نظر را انتخاب کنید'); return }
+    const msg = `آیا از حذف ${selectedBackups.size} پشتیبان انتخاب شده اطمینان دارید؟`
+    if (!window.confirm(msg)) return
+    setLoading(true)
+    let deleted = 0
+    for (const name of selectedBackups) {
+      const r = await window.api.backup.delete(name)
+      if (r.success) deleted++
+    }
+    setSelectedBackups(new Set())
+    setLoading(false)
+    alert(`${deleted} پشتیبان حذف شد`)
     loadData()
+  }
+
+  const toggleSelectBackup = (name: string) => {
+    const next = new Set(selectedBackups)
+    if (next.has(name)) next.delete(name); else next.add(name)
+    setSelectedBackups(next)
   }
 
   const handleRunTests = async () => {
@@ -390,11 +407,11 @@ function BackupSection() {
         </button>
         <button
           onClick={handleCleanup}
-          disabled={loading}
-          className="py-2 px-3 rounded-xl font-bold text-sm transition-all duration-200"
+          disabled={loading || selectedBackups.size === 0}
+          className="py-2 px-3 rounded-xl font-bold text-sm transition-all duration-200 disabled:opacity-40"
           style={{ backgroundColor: isDark ? 'rgba(239,68,68,0.1)' : '#fef2f2', color: '#ef4444' }}
         >
-          پاکسازی
+          حذف انتخاب شده{selectedBackups.size > 0 ? ` (${selectedBackups.size})` : ''}
         </button>
         <button
           onClick={handleRunTests}
@@ -472,15 +489,16 @@ function BackupSection() {
         <div className="space-y-1.5 max-h-64 overflow-auto">
           {backups.map((b) => {
             const details = backupDetails[b.name]
+            const isSelected = selectedBackups.has(b.name)
             return (
               <div
                 key={b.name}
-                className="flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all duration-150"
-                style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}` }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = primary }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = cardBorder }}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition-all duration-150 cursor-pointer"
+                style={{ backgroundColor: isSelected ? (isDark ? 'rgba(239,68,68,0.15)' : '#fef2f2') : inputBg, border: `1px solid ${isSelected ? '#ef4444' : cardBorder}` }}
                 onClick={() => loadBackupDetails(b.name, b.path)}
               >
+                <input type="checkbox" checked={isSelected} onChange={() => toggleSelectBackup(b.name)}
+                  className="accent-[#ef4444] cursor-pointer" onClick={(e) => e.stopPropagation()} />
                 <div className="flex-1 min-w-0">
                   <div className="font-bold truncate" style={{ color: textPrimary }}>{b.name}</div>
                   <div style={{ color: textSecondary }}>

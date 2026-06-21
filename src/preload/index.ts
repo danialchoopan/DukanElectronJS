@@ -242,6 +242,7 @@ const api = {
     checkVersion: (path: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:checkVersion', { path }),
     tableStats: (path: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:tableStats', { path }),
     runTests: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:runTests'),
+    delete: (name: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:delete', { name }),
   },
 
   dialog: {
