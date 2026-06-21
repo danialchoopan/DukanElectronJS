@@ -136,7 +136,8 @@ export function seedDatabase(): void {
   function getDateDaysAgo(days: number): string {
     const d = new Date()
     d.setDate(d.getDate() - days)
-    return d.toISOString().slice(0, 10)
+    d.setHours(randInt(8, 20), randInt(0, 59), randInt(0, 59))
+    return d.toISOString().slice(0, 19).replace('T', ' ')
   }
 
   const existingSaleCount = db.prepare('SELECT COUNT(*) as c FROM sales').get() as { c: number }

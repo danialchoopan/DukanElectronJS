@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import { formatJalaliDateTime } from '../../utils/jalali'
 import { downloadExcel, printA4Report } from '../../utils/a4Print'
+import Pagination from '../../components/Pagination'
 
 export default function AccountingDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0)
@@ -16,6 +17,8 @@ export default function AccountingDashboard() {
   const [journalForm, setJournalForm] = useState({ entryDate: new Date().toISOString().slice(0, 10), description: '', lines: [{ accountId: 0, debit: 0, credit: 0, description: '' }, { accountId: 0, debit: 0, credit: 0, description: '' }] })
   const [allAccounts, setAllAccounts] = useState<any[]>([])
   const [journalError, setJournalError] = useState('')
+  const [recentPage, setRecentPage] = useState(0)
+  const recentPageSize = 10
 
   const isDark = document.documentElement.classList.contains('dark')
   const cardBg = isDark ? '#1e293b' : '#ffffff'
@@ -27,7 +30,7 @@ export default function AccountingDashboard() {
   const load = async () => {
     const [plRes, jeRes, acRes] = await Promise.all([
       window.api.reports.getProfitLoss(),
-      window.api.journal.getEntries({ limit: 5 }),
+      window.api.journal.getEntries({ limit: 100, offset: recentPage * recentPageSize }),
       window.api.accounts.getAll(),
     ])
     if (plRes.success && plRes.data) {
@@ -355,6 +358,9 @@ export default function AccountingDashboard() {
             )}
           </tbody>
         </table>
+        <div className="px-3 pb-3">
+          <Pagination total={journalCount} pageSize={recentPageSize} page={recentPage} onPageChange={setRecentPage} onPageSizeChange={() => {}} />
+        </div>
       </div>
 
       {journalCount === 0 && (
