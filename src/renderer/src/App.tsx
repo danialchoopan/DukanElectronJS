@@ -126,16 +126,16 @@ export default function App() {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
-  if (isFirstRun === null) return <div className="h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)' }}>Loading...</div>
-  if (isFirstRun) return <SetupWizard onComplete={() => setIsFirstRun(false)} />
-  if (!user) return <LockScreen />
-
   const handleNavigate = useCallback((view: string, tab?: string, highlightId?: string) => {
     setCurrentView(view as View)
     const effectiveHighlight = highlightId || (tab ? `tab-${tab}` : undefined)
     if (tab || effectiveHighlight) setNavParams({ tab, highlightId: effectiveHighlight })
     else setNavParams(null)
   }, [])
+
+  if (isFirstRun === null) return <div className="h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)' }}>Loading...</div>
+  if (isFirstRun) return <SetupWizard onComplete={() => setIsFirstRun(false)} />
+  if (!user) return <LockScreen />
 
   return (
     <div className="h-screen flex" style={{ backgroundColor: 'var(--bg-primary)' }}>
