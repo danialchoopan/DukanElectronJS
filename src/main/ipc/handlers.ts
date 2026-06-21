@@ -18,6 +18,7 @@ import * as periodsRepo from '../database/repositories/periods'
 import * as reportsRepo from '../database/repositories/reports'
 import * as seedRepo from '../database/repositories/seed'
 import * as backupService from '../database/backup'
+import { runBackupTests } from '../database/backup.test'
 import { isFirstRun, getDatabase } from '../database/connection'
 import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync } from 'fs'
 import { join } from 'path'
@@ -356,7 +357,6 @@ export function registerAllHandlers(): void {
   handleArg<{ path: string }, any>('backup:checkVersion', (a) => backupService.checkBackupVersion(a.path))
   handleArg<{ path: string }, any>('backup:tableStats', (a) => backupService.getTableStats(a.path))
   handle('backup:runTests', () => {
-    const { runBackupTests } = require('../database/backup.test')
     return runBackupTests()
   })
 
