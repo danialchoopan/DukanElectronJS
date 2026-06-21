@@ -4,6 +4,7 @@ import { fa } from '../i18n'
 import { formatJalaliShort, formatJalaliDateTime } from '../utils/jalali'
 import { getProductImageUrl } from '../utils/productImage'
 import { printA4Report } from '../utils/a4Print'
+import { useHighlight } from '../hooks/useHighlight'
 
 type FilterType = 'all' | 'debtor' | 'creditor' | 'inactive' | 'real' | 'legal'
 
@@ -30,7 +31,12 @@ interface CustomerStats {
   totalCreditAmount: number
 }
 
-export default function CustomerManagement() {
+interface Props {
+  highlightId?: string
+  onHighlightDone?: () => void
+}
+
+export default function CustomerManagement({ highlightId, onHighlightDone }: Props) {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [stats, setStats] = useState<CustomerStats>({ totalCustomers: 0, totalDebtors: 0, totalCreditors: 0, totalDebtAmount: 0, totalCreditAmount: 0 })
   const [search, setSearch] = useState('')
@@ -76,6 +82,8 @@ export default function CustomerManagement() {
   }, [])
 
   useEffect(() => { loadAll() }, [loadAll])
+
+  useHighlight(highlightId, onHighlightDone)
 
   useEffect(() => {
     if (!selected) return
@@ -402,8 +410,9 @@ export default function CustomerManagement() {
               return (
                 <button
                   key={c.id}
+                  data-highlight-id={`customer-${c.id}`}
                   onClick={() => { setSelected(c); setDetailTab('details'); setDeleteConfirm(false); setDialog(null) }}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg text-right transition-all"
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg text-right transition-all ${highlightId === `customer-${c.id}` ? 'highlight-active' : ''}`}
                   style={{
                     backgroundColor: isSelected ? `${PRIMARY}18` : 'transparent',
                     border: `1px solid ${isSelected ? PRIMARY : 'transparent'}`,

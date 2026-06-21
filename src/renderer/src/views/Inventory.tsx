@@ -9,10 +9,17 @@ import HelpPopup from '../components/HelpPopup'
 import { printA4Report, downloadExcel } from '../utils/a4Print'
 import { useSortable } from '../hooks/useSortable'
 import PrintDialog from '../components/PrintDialog'
+import { useHighlight } from '../hooks/useHighlight'
 
 type AuditFilter = 'all' | 'create' | 'update' | 'delete' | 'restock'
 
-export default function Inventory() {
+interface Props {
+  initialTab?: string
+  highlightId?: string
+  onHighlightDone?: () => void
+}
+
+export default function Inventory({ initialTab, highlightId, onHighlightDone }: Props) {
   const [products, setProducts] = useState<Product[]>([])
   const [lowStock, setLowStock] = useState<Product[]>([])
   const [search, setSearch] = useState('')
@@ -25,7 +32,7 @@ export default function Inventory() {
   const [pageSize, setPageSize] = useState(10)
   const [catPage, setCatPage] = useState(0)
   const [slowPage, setSlowPage] = useState(0)
-  const [tab, setTab] = useState<'products' | 'report' | 'audit'>('products')
+  const [tab, setTab] = useState<'products' | 'report' | 'audit'>((initialTab as any) || 'products')
   const [auditLog, setAuditLog] = useState<any[]>([])
   const [auditFilter, setAuditFilter] = useState<AuditFilter>('all')
   const [auditStartDate, setAuditStartDate] = useState('')
@@ -33,6 +40,14 @@ export default function Inventory() {
   const [auditPage, setAuditPage] = useState(0)
   const [auditPageSize, setAuditPageSize] = useState(10)
   const [reportData, setReportData] = useState<{ byCategory: any[]; slowMoving: any[] }>({ byCategory: [], slowMoving: [] })
+
+  useEffect(() => {
+    if (initialTab && ['products', 'report', 'audit'].includes(initialTab)) {
+      setTab(initialTab as any)
+    }
+  }, [initialTab])
+
+  useHighlight(highlightId, onHighlightDone)
   const [returnStats, setReturnStats] = useState({ totalReturns: 0, totalRefund: 0, todayReturns: 0 })
   const [categories, setCategories] = useState<string[]>([])
   const [viewProduct, setViewProduct] = useState<Product | null>(null)
@@ -407,8 +422,8 @@ export default function Inventory() {
 
       <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
         {tabs.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${tab === t.key ? 'shadow-lg' : ''}`}
+          <button key={t.key} onClick={() => setTab(t.key)} data-highlight-id={`tab-${t.key}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${tab === t.key ? 'shadow-lg' : ''} ${highlightId === `tab-${t.key}` ? 'highlight-tab' : ''}`}
             style={
               tab === t.key 
                 ? {
@@ -562,7 +577,7 @@ export default function Inventory() {
                 const stockBarColor = isZero ? '#ef4444' : isLow ? '#f59e0b' : '#22c55e'
                 const margin = p.purchase_price > 0 ? (((p.sale_price - p.purchase_price) / p.purchase_price) * 100).toFixed(1) : '0'
                 return (
-                <tr key={p.id} style={{ borderBottom: `1px solid ${cardBorder}`, backgroundColor: rowBg }}
+                <tr key={p.id} data-highlight-id={`product-${p.id}`} style={{ borderBottom: `1px solid ${cardBorder}`, backgroundColor: rowBg }}
                   onClick={() => setViewProduct(p)}
                   onMouseEnter={(e) => { if (!isZero && !isLow) e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.03)' }}
                   onMouseLeave={(e) => { if (!isZero && !isLow) e.currentTarget.style.backgroundColor = 'transparent' }}>

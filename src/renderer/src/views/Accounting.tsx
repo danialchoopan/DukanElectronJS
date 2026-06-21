@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { fa } from '../i18n'
 import HelpPopup from '../components/HelpPopup'
 import AccountingDashboard from './accounting/AccountingDashboard'
@@ -11,15 +11,30 @@ import ARAging from './accounting/ARAging'
 import ExpenseManagement from './ExpenseManagement'
 import FiscalPeriods from './accounting/FiscalPeriods'
 import CashFlowStatement from './accounting/CashFlowStatement'
+import { useHighlight } from '../hooks/useHighlight'
 
 type AccountingTab = 'dashboard' | 'accounts' | 'journal' | 'trialBalance' | 'incomeStatement' | 'balanceSheet' | 'arAging' | 'expenses' | 'periods' | 'cashFlow'
 
-export default function Accounting() {
-  const [tab, setTab] = useState<AccountingTab>('dashboard')
+interface Props {
+  initialTab?: string
+  highlightId?: string
+  onHighlightDone?: () => void
+}
+
+export default function Accounting({ initialTab, highlightId, onHighlightDone }: Props) {
+  const [tab, setTab] = useState<AccountingTab>((initialTab as AccountingTab) || 'dashboard')
   const isDark = document.documentElement.classList.contains('dark')
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
   const textSecondary = isDark ? '#94a3b8' : '#64748b'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
+
+  useEffect(() => {
+    if (initialTab && (tabs.some(t => t.key === initialTab))) {
+      setTab(initialTab as AccountingTab)
+    }
+  }, [initialTab])
+
+  useHighlight(highlightId, onHighlightDone)
 
   const tabs: { key: AccountingTab; label: string; icon: JSX.Element; group: number }[] = [
     { key: 'dashboard', label: fa.accounting.tabs.dashboard, group: 0,
@@ -80,8 +95,8 @@ export default function Accounting() {
           <div key={g} className="flex gap-1 items-center">
             {gi > 0 && (<div className="w-px h-6 mx-1 flex-shrink-0" style={{ backgroundColor: cardBorder }} />)}
             {tabs.filter(t => t.group === g).map(t => (
-              <button key={t.key} onClick={() => setTab(t.key)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all"
+              <button key={t.key} onClick={() => setTab(t.key)} data-highlight-id={`tab-${t.key}`}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${highlightId === `tab-${t.key}` ? 'highlight-tab' : ''}`}
                 style={{ backgroundColor: tab === t.key ? '#3b82f6' : (isDark ? '#1e293b' : '#f8fafc'), color: tab === t.key ? '#ffffff' : textSecondary, border: `1px solid ${tab === t.key ? '#3b82f6' : cardBorder}` }}>
                 {t.icon}
                 {t.label}

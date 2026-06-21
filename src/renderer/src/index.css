@@ -121,7 +121,6 @@
   .input-field::placeholder { color: var(--text-muted); }
   .input-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
 
-  /* Ensure buttons keep white text in both themes */
   .btn-primary,
   .btn-success,
   .btn-danger {
@@ -154,10 +153,6 @@
     color: var(--text-secondary) !important; 
   }
   
-  /* REMOVED: This was causing the issue */
-  /* .light .text-white { color: var(--text-primary) !important; } */
-  
-  /* Instead, only override text-white for specific cases */
   .light .text-white:not(.btn-primary):not(.btn-success):not(.btn-danger) {
     color: var(--text-primary) !important;
   }
@@ -245,4 +240,38 @@
   .light ::-webkit-scrollbar-thumb { 
     background: #9ca3af; 
   }
+}
+
+@keyframes highlight-glow {
+  0% { box-shadow: 0 0 0 0 rgba(59,130,246,0); background-color: transparent; }
+  20% { box-shadow: 0 0 12px 4px rgba(59,130,246,0.4); background-color: rgba(59,130,246,0.08); }
+  40% { box-shadow: 0 0 20px 6px rgba(59,130,246,0.3); background-color: rgba(59,130,246,0.12); }
+  100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); background-color: transparent; }
+}
+
+@keyframes highlight-glow-dark {
+  0% { box-shadow: 0 0 0 0 rgba(59,130,246,0); background-color: transparent; }
+  20% { box-shadow: 0 0 14px 5px rgba(59,130,246,0.5); background-color: rgba(59,130,246,0.12); }
+  40% { box-shadow: 0 0 22px 7px rgba(59,130,246,0.35); background-color: rgba(59,130,246,0.15); }
+  100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); background-color: transparent; }
+}
+
+.highlight-active {
+  animation: highlight-glow 2s ease-out forwards;
+  border-radius: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.dark .highlight-active {
+  animation: highlight-glow-dark 2s ease-out forwards;
+}
+
+.highlight-tab {
+  animation: highlight-glow 2s ease-out forwards;
+  border-radius: 12px;
+}
+
+.dark .highlight-tab {
+  animation: highlight-glow-dark 2s ease-out forwards;
 }

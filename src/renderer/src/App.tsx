@@ -38,6 +38,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard')
   const [isFirstRun, setIsFirstRun] = useState<boolean | null>(null)
   const [showGlobalSearch, setShowGlobalSearch] = useState(false)
+  const [navParams, setNavParams] = useState<{ tab?: string; highlightId?: string } | null>(null)
   const { init: initSettings, language, theme, setTheme } = useSettingsStore()
   const { shortcuts, loadFromStorage } = useShortcutsStore()
 
@@ -129,6 +130,13 @@ export default function App() {
   if (isFirstRun) return <SetupWizard onComplete={() => setIsFirstRun(false)} />
   if (!user) return <LockScreen />
 
+  const handleNavigate = useCallback((view: string, tab?: string, highlightId?: string) => {
+    setCurrentView(view as View)
+    const effectiveHighlight = highlightId || (tab ? `tab-${tab}` : undefined)
+    if (tab || effectiveHighlight) setNavParams({ tab, highlightId: effectiveHighlight })
+    else setNavParams(null)
+  }, [])
+
   return (
     <div className="h-screen flex" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <Sidebar currentView={currentView} onNavigate={(v) => setCurrentView(v as View)} />
@@ -138,13 +146,13 @@ export default function App() {
         {currentView === 'sales' && <SalesHistory />}
         {currentView === 'addproduct' && <AddProduct />}
         {currentView === 'categories' && <Categories />}
-        {currentView === 'inventory' && <Inventory />}
-        {currentView === 'accounting' && <Accounting />}
-        {currentView === 'customers' && <CustomerManagement />}
-        {currentView === 'admin' && user.role === 'admin' && <AdminPanel />}
+        {currentView === 'inventory' && <Inventory initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
+        {currentView === 'accounting' && <Accounting initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
+        {currentView === 'customers' && <CustomerManagement highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
+        {currentView === 'admin' && user.role === 'admin' && <AdminPanel initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
         {currentView === 'help' && <Help />}
       </div>
-      <GlobalSearch open={showGlobalSearch} onClose={() => setShowGlobalSearch(false)} onNavigate={(v) => { setCurrentView(v as View); setShowGlobalSearch(false) }} />
+      <GlobalSearch open={showGlobalSearch} onClose={() => setShowGlobalSearch(false)} onNavigate={(view, tab, highlightId) => { handleNavigate(view, tab, highlightId); setShowGlobalSearch(false) }} />
     </div>
   )
 }

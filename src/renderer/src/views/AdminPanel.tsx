@@ -4,12 +4,27 @@ import { fa } from '../i18n'
 import UISettings from './UISettings'
 import ShortcutsSettings from './accounting/ShortcutsSettings'
 import CustomizationSettings from './admin/CustomizationSettings'
+import { useHighlight } from '../hooks/useHighlight'
 
 const primary = '#006194'
 
-export default function AdminPanel() {
-  const [tab, setTab] = useState<'users' | 'settings' | 'ui' | 'shortcuts' | 'customization'>('users')
+interface Props {
+  initialTab?: string
+  highlightId?: string
+  onHighlightDone?: () => void
+}
+
+export default function AdminPanel({ initialTab, highlightId, onHighlightDone }: Props) {
+  const [tab, setTab] = useState<'users' | 'settings' | 'ui' | 'shortcuts' | 'customization'>((initialTab as any) || 'users')
   const isDark = document.documentElement.classList.contains('dark')
+
+  useEffect(() => {
+    if (initialTab && ['users', 'settings', 'ui', 'shortcuts', 'customization'].includes(initialTab)) {
+      setTab(initialTab as any)
+    }
+  }, [initialTab])
+
+  useHighlight(highlightId, onHighlightDone)
 
   const tabs: { key: typeof tab; label: string; icon: string }[] = [
     { key: 'users', label: fa.admin.users, icon: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75' },
@@ -48,7 +63,8 @@ export default function AdminPanel() {
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2"
+            data-highlight-id={`tab-${t.key}`}
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2 ${highlightId === `tab-${t.key}` ? 'highlight-tab' : ''}`}
             style={{
               background: tab === t.key
                 ? `linear-gradient(135deg, ${primary}, #007bb9)`

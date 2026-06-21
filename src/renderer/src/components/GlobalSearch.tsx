@@ -13,7 +13,7 @@ type SearchResult = {
 interface Props {
   open: boolean
   onClose: () => void
-  onNavigate: (view: string) => void
+  onNavigate: (view: string, tab?: string, highlightId?: string) => void
 }
 
 const screenIcon = <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -57,9 +57,7 @@ export default function GlobalSearch({ open, onClose, onNavigate }: Props) {
     const q = query.toLowerCase()
     const searchResults: SearchResult[] = []
 
-    // All searchable items including screens and sub-features
     const allItems: SearchResult[] = [
-      // Screens
       { id: 'nav-dashboard', type: 'screen', title: 'داشبورد', subtitle: 'صفحه اصلی', action: () => onNavigate('dashboard'), icon: screenIcon },
       { id: 'nav-pos', type: 'screen', title: 'فروش', subtitle: 'صفحه فروش', action: () => onNavigate('pos'), icon: screenIcon },
       { id: 'nav-inventory', type: 'screen', title: 'انبارداری', subtitle: 'مدیریت موجودی', action: () => onNavigate('inventory'), icon: screenIcon },
@@ -70,35 +68,31 @@ export default function GlobalSearch({ open, onClose, onNavigate }: Props) {
       { id: 'nav-categories', type: 'screen', title: 'دسته\u200cبندی\u200cها', subtitle: 'مدیریت دسته‌بندی', action: () => onNavigate('categories'), icon: screenIcon },
       { id: 'nav-admin', type: 'screen', title: 'تنظیمات', subtitle: 'مدیریت سیستم', action: () => onNavigate('admin'), icon: screenIcon },
 
-      // Settings sub-features
-      { id: 'set-shopname', type: 'setting', title: 'نام فروشگاه', subtitle: 'تنظیمات \u2192 نام فروشگاه', action: () => onNavigate('admin'), icon: screenIcon },
-      { id: 'set-address', type: 'setting', title: 'آدرس فروشگاه', subtitle: 'تنظیمات \u2192 آدرس', action: () => onNavigate('admin'), icon: screenIcon },
-      { id: 'set-phone', type: 'setting', title: 'تلفن فروشگاه', subtitle: 'تنظیمات \u2192 تلفن', action: () => onNavigate('admin'), icon: screenIcon },
-      { id: 'set-tax', type: 'setting', title: 'مالیات بر ارزش افزوده', subtitle: 'تنظیمات \u2192 مالیات', action: () => onNavigate('admin'), icon: screenIcon },
-      { id: 'set-theme', type: 'setting', title: 'تنظیمات ظاهری', subtitle: 'تنظیمات \u2192 تم و زبان', action: () => onNavigate('admin'), icon: screenIcon },
-      { id: 'set-backup', type: 'setting', title: 'پشتیبان\u200cگیری', subtitle: 'تنظیمات \u2192 پشتیبانی', action: () => onNavigate('admin'), icon: screenIcon },
-      { id: 'set-users', type: 'setting', title: 'مدیریت کاربران', subtitle: 'تنظیمات \u2192 کاربران', action: () => onNavigate('admin'), icon: screenIcon },
-      { id: 'set-shortcuts', type: 'setting', title: 'میانبرها', subtitle: 'تنظیمات \u2192 میانبرهای کلیدی', action: () => onNavigate('admin'), icon: screenIcon },
-      { id: 'set-receipt', type: 'setting', title: 'تنظیمات فاکتور', subtitle: 'تنظیمات \u2192 پایان فاکتور', action: () => onNavigate('admin'), icon: screenIcon },
+      { id: 'set-shopname', type: 'setting', title: 'نام فروشگاه', subtitle: 'تنظیمات \u2192 نام فروشگاه', action: () => onNavigate('admin', 'settings', 'set-shopname'), icon: screenIcon },
+      { id: 'set-address', type: 'setting', title: 'آدرس فروشگاه', subtitle: 'تنظیمات \u2192 آدرس', action: () => onNavigate('admin', 'settings', 'set-address'), icon: screenIcon },
+      { id: 'set-phone', type: 'setting', title: 'تلفن فروشگاه', subtitle: 'تنظیمات \u2192 تلفن', action: () => onNavigate('admin', 'settings', 'set-phone'), icon: screenIcon },
+      { id: 'set-tax', type: 'setting', title: 'مالیات بر ارزش افزوده', subtitle: 'تنظیمات \u2192 مالیات', action: () => onNavigate('admin', 'settings', 'set-tax'), icon: screenIcon },
+      { id: 'set-theme', type: 'setting', title: 'تنظیمات ظاهری', subtitle: 'تنظیمات \u2192 تم و زبان', action: () => onNavigate('admin', 'ui', 'set-theme'), icon: screenIcon },
+      { id: 'set-backup', type: 'setting', title: 'پشتیبان\u200cگیری', subtitle: 'تنظیمات \u2192 پشتیبانی', action: () => onNavigate('admin', 'settings', 'set-backup'), icon: screenIcon },
+      { id: 'set-users', type: 'setting', title: 'مدیریت کاربران', subtitle: 'تنظیمات \u2192 کاربران', action: () => onNavigate('admin', 'users', 'set-users'), icon: screenIcon },
+      { id: 'set-shortcuts', type: 'setting', title: 'میانبرها', subtitle: 'تنظیمات \u2192 میانبرهای کلیدی', action: () => onNavigate('admin', 'shortcuts', 'set-shortcuts'), icon: screenIcon },
+      { id: 'set-receipt', type: 'setting', title: 'تنظیمات فاکتور', subtitle: 'تنظیمات \u2192 پایان فاکتور', action: () => onNavigate('admin', 'customization', 'set-receipt'), icon: screenIcon },
 
-      // Accounting sub-features
-      { id: 'acc-dashboard', type: 'feature', title: 'داشبورد حسابداری', subtitle: 'حسابداری \u2192 داشبورد', action: () => onNavigate('accounting'), icon: screenIcon },
-      { id: 'acc-accounts', type: 'feature', title: 'دفتر حسابها', subtitle: 'حسابداری \u2192 دفتر حسابها', action: () => onNavigate('accounting'), icon: screenIcon },
-      { id: 'acc-journal', type: 'feature', title: 'روزنامه', subtitle: 'حسابداری \u2192 روزنامه', action: () => onNavigate('accounting'), icon: screenIcon },
-      { id: 'acc-trial', type: 'feature', title: 'تراز آزمایشی', subtitle: 'حسابداری \u2192 تراز آزمایشی', action: () => onNavigate('accounting'), icon: screenIcon },
-      { id: 'acc-pnl', type: 'feature', title: 'صورت سود و زیان', subtitle: 'حسابداری \u2192 سود و زیان', action: () => onNavigate('accounting'), icon: screenIcon },
-      { id: 'acc-balance', type: 'feature', title: 'ترازنامه', subtitle: 'حسابداری \u2192 ترازنامه', action: () => onNavigate('accounting'), icon: screenIcon },
-      { id: 'acc-aging', type: 'feature', title: 'مانده مشتریان', subtitle: 'حسابداری \u2192 مانده مشتریان', action: () => onNavigate('accounting'), icon: screenIcon },
-      { id: 'acc-expenses', type: 'feature', title: 'هزینه\u200cها', subtitle: 'حسابداری \u2192 هزینه\u200cها', action: () => onNavigate('accounting'), icon: screenIcon },
-      { id: 'acc-periods', type: 'feature', title: 'دوره\u200cهای مالی', subtitle: 'حسابداری \u2192 دوره\u200cهای مالی', action: () => onNavigate('accounting'), icon: screenIcon },
-      { id: 'acc-cashflow', type: 'feature', title: 'صورت جریان نقدی', subtitle: 'حسابداری \u2192 جریان نقدی', action: () => onNavigate('accounting'), icon: screenIcon },
+      { id: 'acc-dashboard', type: 'feature', title: 'داشبورد حسابداری', subtitle: 'حسابداری \u2192 داشبورد', action: () => onNavigate('accounting', 'dashboard'), icon: screenIcon },
+      { id: 'acc-accounts', type: 'feature', title: 'دفتر حسابها', subtitle: 'حسابداری \u2192 دفتر حسابها', action: () => onNavigate('accounting', 'accounts'), icon: screenIcon },
+      { id: 'acc-journal', type: 'feature', title: 'روزنامه', subtitle: 'حسابداری \u2192 روزنامه', action: () => onNavigate('accounting', 'journal'), icon: screenIcon },
+      { id: 'acc-trial', type: 'feature', title: 'تراز آزمایشی', subtitle: 'حسابداری \u2192 تراز آزمایشی', action: () => onNavigate('accounting', 'trialBalance'), icon: screenIcon },
+      { id: 'acc-pnl', type: 'feature', title: 'صورت سود و زیان', subtitle: 'حسابداری \u2192 سود و زیان', action: () => onNavigate('accounting', 'incomeStatement'), icon: screenIcon },
+      { id: 'acc-balance', type: 'feature', title: 'ترازنامه', subtitle: 'حسابداری \u2192 ترازنامه', action: () => onNavigate('accounting', 'balanceSheet'), icon: screenIcon },
+      { id: 'acc-aging', type: 'feature', title: 'مانده مشتریان', subtitle: 'حسابداری \u2192 مانده مشتریان', action: () => onNavigate('accounting', 'arAging'), icon: screenIcon },
+      { id: 'acc-expenses', type: 'feature', title: 'هزینه\u200cها', subtitle: 'حسابداری \u2192 هزینه\u200cها', action: () => onNavigate('accounting', 'expenses'), icon: screenIcon },
+      { id: 'acc-periods', type: 'feature', title: 'دوره\u200cهای مالی', subtitle: 'حسابداری \u2192 دوره\u200cهای مالی', action: () => onNavigate('accounting', 'periods'), icon: screenIcon },
+      { id: 'acc-cashflow', type: 'feature', title: 'صورت جریان نقدی', subtitle: 'حسابداری \u2192 جریان نقدی', action: () => onNavigate('accounting', 'cashFlow'), icon: screenIcon },
 
-      // Inventory sub-features
-      { id: 'inv-products', type: 'feature', title: 'موجودی کالا', subtitle: 'انبارداری \u2192 موجودی', action: () => onNavigate('inventory'), icon: screenIcon },
-      { id: 'inv-report', type: 'feature', title: 'گزارش انبار', subtitle: 'انبارداری \u2192 گزارش', action: () => onNavigate('inventory'), icon: screenIcon },
-      { id: 'inv-history', type: 'feature', title: 'تاریخچه تغییرات', subtitle: 'انبارداری \u2192 تاریخچه', action: () => onNavigate('inventory'), icon: screenIcon },
+      { id: 'inv-products', type: 'feature', title: 'موجودی کالا', subtitle: 'انبارداری \u2192 موجودی', action: () => onNavigate('inventory', 'products'), icon: screenIcon },
+      { id: 'inv-report', type: 'feature', title: 'گزارش انبار', subtitle: 'انبارداری \u2192 گزارش', action: () => onNavigate('inventory', 'report'), icon: screenIcon },
+      { id: 'inv-history', type: 'feature', title: 'تاریخچه تغییرات', subtitle: 'انبارداری \u2192 تاریخچه', action: () => onNavigate('inventory', 'audit'), icon: screenIcon },
 
-      // Dashboard sub-features
       { id: 'dash-sales', type: 'feature', title: 'آمار فروش', subtitle: 'داشبورد \u2192 آمار', action: () => onNavigate('dashboard'), icon: screenIcon },
       { id: 'dash-performance', type: 'feature', title: 'عملکرد صندوک\u200cدارها', subtitle: 'داشبورد \u2192 عملکرد', action: () => onNavigate('dashboard'), icon: screenIcon },
       { id: 'dash-top', type: 'feature', title: 'پرفروش\u200cترین کالاها', subtitle: 'داشبورد \u2192 پرفروش\u200cها', action: () => onNavigate('dashboard'), icon: screenIcon },
@@ -117,7 +111,7 @@ export default function GlobalSearch({ open, onClose, onNavigate }: Props) {
           searchResults.push({
             id: `product-${p.id}`, type: 'product', title: p.title,
             subtitle: `${p.category || ''} — ${p.stock} عدد — ${p.sale_price.toLocaleString('fa-IR')} تومان`,
-            action: () => onNavigate('inventory'), icon: productIcon,
+            action: () => onNavigate('inventory', 'products', `product-${p.id}`), icon: productIcon,
           })
         })
       }
@@ -132,7 +126,7 @@ export default function GlobalSearch({ open, onClose, onNavigate }: Props) {
           searchResults.push({
             id: `customer-${c.id}`, type: 'customer', title: c.name,
             subtitle: `${c.phone || ''} — ${c.customerType === 'legal' ? 'حقوقی' : 'حقیقی'}`,
-            action: () => onNavigate('customers'), icon: customerIcon,
+            action: () => onNavigate('customers', undefined, `customer-${c.id}`), icon: customerIcon,
           })
         })
       }
