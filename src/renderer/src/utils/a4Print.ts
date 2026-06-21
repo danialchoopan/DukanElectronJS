@@ -1,4 +1,4 @@
-let cachedShopName = 'فروشگاه'
+let cachedShopName = ''
 let cachedShopPhone = ''
 let cachedTaxRate = 0
 let cachedCustomization: Record<string, string> = {}
@@ -65,7 +65,7 @@ export async function printA4Report(html: string, title: string, options?: {
     ? `body::after { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url('${cust.printWatermark}'); background-repeat: no-repeat; background-position: center; background-size: contain; opacity: ${wmOpacity}; pointer-events: none; z-index: -1; }`
     : ''
 
-  const footerText = cust.printFooter || `تاریخ در ${getJalaliNow()} چاپ شده است — ${name}`
+  const footerText = cust.printFooter || `${name} — تاریخ چاپ: ${getJalaliNow()}`
 
   const invoiceSection = isInvoice && showSignature ? `
     <div class="checkbox-group">

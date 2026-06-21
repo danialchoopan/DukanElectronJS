@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { printA4Report } from '../../utils/a4Print'
+import { setPrintCustomization } from '../../utils/a4Print'
 
 interface PrintSettings {
   printInvoiceTitle: string
@@ -83,6 +84,7 @@ export default function CustomizationSettings() {
     const r = await window.api.printSettings.getAll()
     if (r.success && r.data) {
       setSettings((prev) => ({ ...prev, ...r.data }))
+      setPrintCustomization(r.data)
       const p = { logo: '', signature: '', watermark: '' }
       if (r.data.printLogo) { const ar = await window.api.printSettings.getAsset(r.data.printLogo); if (ar.success && ar.data) p.logo = ar.data }
       if (r.data.printSignature) { const ar = await window.api.printSettings.getAsset(r.data.printSignature); if (ar.success && ar.data) p.signature = ar.data }
@@ -97,6 +99,23 @@ export default function CustomizationSettings() {
     const r = await window.api.settings.get('printTemplates')
     if (r.success && r.data) {
       try { setTemplates(JSON.parse(r.data)) } catch {}
+    }
+  }
+
+  const saveTemplateSettings = async (name: string) => {
+    const r = await window.api.settings.get('printTemplateData')
+    const allData: Record<string, any> = r.success && r.data ? JSON.parse(r.data || '{}') : {}
+    allData[name] = { ...settings }
+    await window.api.settings.set('printTemplateData', JSON.stringify(allData))
+  }
+
+  const loadTemplateSettings = async (name: string) => {
+    const r = await window.api.settings.get('printTemplateData')
+    if (r.success && r.data) {
+      const allData: Record<string, any> = JSON.parse(r.data || '{}')
+      if (allData[name]) {
+        setSettings((prev) => ({ ...prev, ...allData[name], printActiveTemplate: name }))
+      }
     }
   }
 
@@ -134,12 +153,17 @@ export default function CustomizationSettings() {
 
   const handleSave = async () => {
     await window.api.printSettings.save(settings as unknown as Record<string, string>)
+    setPrintCustomization(settings as unknown as Record<string, string>)
+    if (settings.printActiveTemplate && settings.printActiveTemplate !== 'default') {
+      await saveTemplateSettings(settings.printActiveTemplate)
+    }
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
 
   const selectTemplate = (name: string) => {
     updateField('printActiveTemplate', name)
+    if (name !== 'default') loadTemplateSettings(name)
   }
 
   const handleReset = async () => {
@@ -256,7 +280,34 @@ export default function CustomizationSettings() {
             {templates.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
           <input ref={templateInputRef} placeholder="نام قالب جدید" className="input-field text-sm w-40" style={{ display: showNewTemplateInput ? 'block' : 'none' }} />
-          <button onClick={() => setShowNewTemplateInput(!showNewTemplateInput)} className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: primary }}>قالب جدید</button>
+          {settings.printActiveTemplate && settings.printActiveTemplate !== 'default' && (
+            <button onClick={async () => {
+              const name = settings.printActiveTemplate
+              const newTemplates = templates.filter(t => t !== name)
+              setTemplates(newTemplates)
+              await window.api.settings.set('printTemplates', JSON.stringify(newTemplates))
+              updateField('printActiveTemplate', 'default')
+            }} className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444' }}>
+              حذف قالب
+            </button>
+          )}
+          <button onClick={async () => {
+            if (showNewTemplateInput && templateInputRef.current?.value.trim()) {
+              const name = templateInputRef.current.value.trim()
+              const newTemplates = [...templates, name]
+              setTemplates(newTemplates)
+              await window.api.settings.set('printTemplates', JSON.stringify(newTemplates))
+              await saveTemplateSettings(name)
+              updateField('printActiveTemplate', name)
+              templateInputRef.current.value = ''
+              setShowNewTemplateInput(false)
+            } else {
+              setShowNewTemplateInput(true)
+              setTimeout(() => templateInputRef.current?.focus(), 50)
+            }
+          }} className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: primary }}>
+            {showNewTemplateInput ? 'ذخیره قالب' : 'قالب جدید'}
+          </button>
         </div>
       </div>
       {/* Logo */}

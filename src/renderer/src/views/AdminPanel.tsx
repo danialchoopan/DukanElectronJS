@@ -6,6 +6,7 @@ import ShortcutsSettings from './accounting/ShortcutsSettings'
 import CustomizationSettings from './admin/CustomizationSettings'
 import { useHighlight } from '../hooks/useHighlight'
 import SmartExportDialog from '../components/SmartExportDialog'
+import { setShopName } from '../utils/a4Print'
 
 const primary = '#006194'
 
@@ -593,6 +594,7 @@ function SettingsTab({ onExport, onImport }: { onExport: () => void; onImport: (
       window.api.settings.set('receiptFooter', receiptFooter),
     ])
     setSaved(true); setTimeout(() => setSaved(false), 2000)
+    setShopName(storeName, storePhone)
   }
 
   const cardBg = isDark ? '#1e293b' : '#ffffff'
