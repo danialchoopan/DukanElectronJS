@@ -18,7 +18,9 @@ import * as periodsRepo from '../database/repositories/periods'
 import * as reportsRepo from '../database/repositories/reports'
 import * as seedRepo from '../database/repositories/seed'
 import * as backupService from '../database/backup'
+import * as smartExportService from '../database/smartExport'
 import { runBackupTests } from '../database/backup.test'
+import { runSmartExportTests } from '../database/smartExport.test'
 import { isFirstRun, getDatabase } from '../database/connection'
 import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync } from 'fs'
 import { join } from 'path'
@@ -373,12 +375,27 @@ export function registerAllHandlers(): void {
     return runBackupTests()
   })
 
+  handle('smartExport:runTests', () => {
+    return runSmartExportTests()
+  })
+
   // ─── Dialog ────────────────────────────────────────
   ipcMain.handle('dialog:openBackup', async () => {
     const win = BrowserWindow.getFocusedWindow()
     const result = await dialog.showOpenDialog(win!, {
       title: 'انتخاب فایل پشتیبان',
       filters: [{ name: 'SQLite Database', extensions: ['db', 'db-wal'] }],
+      properties: ['openFile'],
+    })
+    if (result.canceled || !result.filePaths[0]) return { success: false, error: 'cancelled' }
+    return { success: true, data: result.filePaths[0] }
+  })
+
+  ipcMain.handle('dialog:openSmartImport', async () => {
+    const win = BrowserWindow.getFocusedWindow()
+    const result = await dialog.showOpenDialog(win!, {
+      title: 'انتخاب فایل واردات',
+      filters: [{ name: 'Smart Export', extensions: ['hze', 'json'] }],
       properties: ['openFile'],
     })
     if (result.canceled || !result.filePaths[0]) return { success: false, error: 'cancelled' }
@@ -480,4 +497,55 @@ export function registerAllHandlers(): void {
 
   // ─── Seed Demo Data ──────────────────────────────────────
   handle('accounting:seedDemo', () => seedRepo.seedDemoData())
+
+  // ─── Smart Export/Import ──────────────────────────────────
+  handle('smartExport:modules', () => smartExportService.getExportModuleList())
+  handle('smartExport:presets', () => smartExportService.getExportPresets())
+  handleArg('smartExport:dependencies', (modules: string[]) => ({
+    dependencies: smartExportService.getModuleDependencies(modules as any),
+    warnings: smartExportService.getModuleWarnings(modules as any),
+  }))
+
+  handleArg('smartExport:execute', (arg: { options: any; userName?: string }) => {
+    const result = smartExportService.smartExport(arg.options, arg.userName || 'system')
+    if (result.success && result.data) {
+      const defaultName = `smart-export-${new Date().toISOString().slice(0, 10)}.hze`
+      const win = BrowserWindow.getFocusedWindow()
+      const savedPath = dialog.showSaveDialogSync(win || BrowserWindow.getAllWindows()[0], {
+        defaultPath: defaultName,
+        filters: [{ name: 'Smart Export', extensions: ['hze', 'json'] }],
+      })
+      if (savedPath) {
+        smartExportService.saveExportFile(result.data, savedPath)
+        return { success: true, data: { ...result.data, filePath: savedPath } }
+      }
+      return { success: true, data: result.data }
+    }
+    return result
+  })
+
+  handleArg('smartExport:save', (arg: { data: any; filePath: string }) => {
+    smartExportService.saveExportFile(arg.data, arg.filePath)
+    return true
+  })
+
+  handleArg('smartImport:preview', (arg: { filePath: string }) => {
+    const data = smartExportService.loadExportFile(arg.filePath)
+    const signature = smartExportService.verifySignature(data)
+    return { data, signature }
+  })
+
+  handleArg('smartImport:execute', (arg: { data: any; options: any; userName?: string }) => {
+    return smartExportService.smartImport(arg.data, arg.options)
+  })
+
+  handleArg('smartImport:validate', (arg: { filePath: string }) => {
+    try {
+      const data = smartExportService.loadExportFile(arg.filePath)
+      const signature = smartExportService.verifySignature(data)
+      return { valid: true, modules: data.modules.map((m: any) => ({ module: m.module, recordCount: m.recordCount })), signature, encrypted: data.encrypted }
+    } catch (err: any) {
+      return { valid: false, error: err.message }
+    }
+  })
 }

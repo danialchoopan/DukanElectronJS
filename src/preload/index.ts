@@ -247,6 +247,23 @@ const api = {
 
   dialog: {
     openBackup: (): Promise<IPCResponse<string>> => ipcRenderer.invoke('dialog:openBackup'),
+    openSmartExport: (): Promise<IPCResponse<string>> => ipcRenderer.invoke('dialog:openSmartExport'),
+    openSmartImport: (): Promise<IPCResponse<string>> => ipcRenderer.invoke('dialog:openSmartImport'),
+  },
+
+  smartExport: {
+    modules: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('smartExport:modules'),
+    presets: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('smartExport:presets'),
+    dependencies: (modules: string[]): Promise<IPCResponse<any>> => ipcRenderer.invoke('smartExport:dependencies', modules),
+    execute: (options: any, userName?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('smartExport:execute', { options, userName }),
+    save: (data: any, filePath: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('smartExport:save', { data, filePath }),
+    runTests: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('smartExport:runTests'),
+  },
+
+  smartImport: {
+    preview: (filePath: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('smartImport:preview', { filePath }),
+    execute: (data: any, options: any, userName?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('smartImport:execute', { data, options, userName }),
+    validate: (filePath: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('smartImport:validate', { filePath }),
   },
 
   onNavigate: (callback: (page: string) => void): (() => void) => {
