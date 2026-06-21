@@ -57,7 +57,7 @@ export default function JournalEntries() {
         <button onClick={async () => {
           let html = '<table><thead><tr><th>#</th><th>تاریخ</th><th>شرح</th><th>نوع</th></tr></thead><tbody>'
           entries.forEach((e, i) => {
-            html += `<tr><td>${page * pageSize + i + 1}</td><td>${e.entryDate}</td><td>${e.description}</td><td>${fa.accounting.journal.types[e.referenceType as keyof typeof fa.accounting.journal.types] || e.referenceType}</td></tr>`
+            html += `<tr><td>${page * pageSize + i + 1}</td><td>${formatJalaliDateTime(e.entryDate)}</td><td>${e.description}</td><td>${fa.accounting.journal.types[e.referenceType as keyof typeof fa.accounting.journal.types] || e.referenceType}</td></tr>`
           })
           html += '</tbody></table>'
           await printA4Report(html, 'روزنامه حسابداری')

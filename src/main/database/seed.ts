@@ -194,7 +194,7 @@ export function seedDatabase(): void {
             db.prepare("INSERT INTO customer_ledger (customerId, saleId, type, amount, description, createdAt) VALUES (?, ?, 'sale', ?, ?, ?)").run(customerId, saleId, subtotal, `فاکتور ${invoiceNum}`, saleDate)
           }
 
-          postSaleJournal(saleId, saleDate.slice(0, 10), {
+          postSaleJournal(saleId, saleDate, {
             items: journalItems,
             total_amount: subtotal,
             paymentMethod,
@@ -219,7 +219,7 @@ export function seedDatabase(): void {
         const retId = insertReturn.run(randomSale.id, randomSale.userId, item.productId, returnQty, 'خرید اشتباهی', refundAmount, 'completed', returnDate).lastInsertRowid as number
         db.prepare('UPDATE products SET stock = stock + ? WHERE id = ?').run(returnQty, item.productId)
         db.prepare('UPDATE sales SET total_amount = total_amount - ?, totalNetProfit = totalNetProfit - ? WHERE id = ?').run(refundAmount, refundAmount, randomSale.id)
-        postReturnJournal(retId as number, returnDate.slice(0, 10), refundAmount)
+        postReturnJournal(retId as number, returnDate, refundAmount)
       }
       createAuditEntry(1, 'create', 'return', null, 'ایجاد ۳ مرجوعی با سند حسابداری')
     }

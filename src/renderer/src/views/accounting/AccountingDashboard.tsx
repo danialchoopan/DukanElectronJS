@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
+import { formatJalaliDateTime } from '../../utils/jalali'
 import { downloadExcel, printA4Report } from '../../utils/a4Print'
 
 export default function AccountingDashboard() {
@@ -339,7 +340,7 @@ export default function AccountingDashboard() {
               const refFg = e.referenceType === 'sale' ? '#16a34a' : e.referenceType === 'expense' ? '#dc2626' : '#2563eb'
               return (
                 <tr key={e.id} style={{ borderBottom: `1px solid ${cardBorder}` }}>
-                  <td className="px-4 py-2 text-xs" style={{ color: textPrimary }}>{e.entryDate}</td>
+                  <td className="px-4 py-2 text-xs" style={{ color: textPrimary }}>{formatJalaliDateTime(e.entryDate)}</td>
                   <td className="px-4 py-2 font-medium" style={{ color: textPrimary }}>{e.description}</td>
                   <td className="px-4 py-2 text-center">
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: refBg, color: refFg }}>

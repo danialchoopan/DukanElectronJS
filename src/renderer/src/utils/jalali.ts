@@ -49,7 +49,8 @@ export function formatJalaliDateTime(dateStr: string): string {
       if (parts[1]) mins = parts[1].padStart(2, '0')
     }
   }
-  return `${jd} ${jMonths[jm - 1]} ${jy} — ${hours}:${mins}`
+  const timeStr = hours !== '00' || mins !== '00' ? ` — ${hours}:${mins}` : ''
+  return `${jd} ${jMonths[jm - 1]} ${jy}${timeStr}`
 }
 
 export function getTodayJalali(): string {
