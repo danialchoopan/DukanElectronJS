@@ -33,7 +33,7 @@ export function createBackup(label?: string): { success: boolean; path?: string;
     const hash = fileHash(dbCopy)
     const size = statSync(dbCopy).size
 
-    const meta = { name, hash, size, timestamp: new Date().toISOString(), label: label || 'auto' }
+    const meta = { name, hash, size, timestamp: new Date().toISOString(), appVersion: app.getVersion(), label: label || 'auto', tables: getTableStats() }
     writeFileSync(join(BACKUP_DIR, `${name}.meta.json`), JSON.stringify(meta, null, 2))
 
     return { success: true, path: dbCopy, hash, size }
@@ -106,6 +106,54 @@ export function listBackups(): { name: string; path: string; size: number; times
     const meta = JSON.parse(readFileSync(join(BACKUP_DIR, f), 'utf-8'))
     return { name: meta.name, path: join(BACKUP_DIR, `${meta.name}.db`), size: meta.size, timestamp: meta.timestamp, hash: meta.hash }
   }).sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+}
+
+export function getTableStats(dbPath?: string): Record<string, number> {
+  try {
+    const Database = require('better-sqlite3')
+    const targetDb = new Database(dbPath || DB_PATH, { readonly: true })
+    const tables = targetDb.prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all() as { name: string }[]
+    const stats: Record<string, number> = {}
+    for (const t of tables) {
+      const row = targetDb.prepare(`SELECT COUNT(*) as count FROM "${t.name}"`).get() as { count: number }
+      stats[t.name] = row.count
+    }
+    targetDb.close()
+    return stats
+  } catch {
+    return {}
+  }
+}
+
+export function checkBackupVersion(backupPath: string): { compatible: boolean; backupVersion: string; currentVersion: string; message: string; meta?: any } {
+  try {
+    const metaPath = backupPath.replace('.db', '.meta.json')
+    if (!existsSync(metaPath)) {
+      return { compatible: false, backupVersion: 'unknown', currentVersion: app.getVersion(), message: 'Backup metadata not found (created by older version). Compatibility unknown.', meta: null }
+    }
+    const meta = JSON.parse(readFileSync(metaPath, 'utf-8'))
+    return {
+      compatible: true,
+      backupVersion: meta.appVersion || 'unknown',
+      currentVersion: app.getVersion(),
+      message: `Backup created with version ${meta.appVersion || 'unknown'}. Current version: ${app.getVersion()}`,
+      meta,
+    }
+  } catch (err) {
+    return { compatible: false, backupVersion: 'unknown', currentVersion: app.getVersion(), message: err instanceof Error ? err.message : String(err), meta: null }
+  }
+}
+
+export function getBackupDetails(backupPath: string): { success: boolean; data?: { meta: any; tables: Record<string, number>; integrity: any }; error?: string } {
+  try {
+    const metaPath = backupPath.replace('.db', '.meta.json')
+    const meta = existsSync(metaPath) ? JSON.parse(readFileSync(metaPath, 'utf-8')) : null
+    const tables = getTableStats(backupPath)
+    const integrity = checkIntegrity(backupPath)
+    return { success: true, data: { meta, tables, integrity } }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : String(err) }
+  }
 }
 
 export function autoBackup(): { created: boolean; path?: string } {

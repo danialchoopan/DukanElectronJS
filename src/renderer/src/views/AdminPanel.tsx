@@ -259,6 +259,10 @@ function BackupSection() {
   const [stats, setStats] = useState<{ totalBackups: number; latestBackup: string | null; totalSize: number } | null>(null)
   const [loading, setLoading] = useState(false)
   const [integrityResult, setIntegrityResult] = useState<string | null>(null)
+  const [backupDetails, setBackupDetails] = useState<Record<string, { meta: any; tables: Record<string, number> }>>({})
+  const [restorePreview, setRestorePreview] = useState<{ path: string; details: any; version: any } | null>(null)
+  const [testResults, setTestResults] = useState<{ name: string; passed: boolean; error?: string }[] | null>(null)
+  const [runningTests, setRunningTests] = useState(false)
   const isDark = document.documentElement.classList.contains('dark')
 
   const primary = '#006194'
@@ -308,11 +312,24 @@ function BackupSection() {
     }
   }
 
-  const handleRestore = async (path: string) => {
-    if (!confirm('آیا از بازیابی اطمینان دارید؟ تمام اطلاعات فعلی جایگزین می‌شود.')) return
+  const handleRestorePreview = async (path: string) => {
     setLoading(true)
-    const r = await window.api.backup.restore(path)
+    const [detailsRes, versionRes] = await Promise.all([
+      window.api.backup.getDetails(path),
+      window.api.backup.checkVersion(path),
+    ])
     setLoading(false)
+    if (detailsRes.success && versionRes.success) {
+      setRestorePreview({ path, details: detailsRes.data, version: versionRes.data })
+    } else {
+      alert(`خطا: ${detailsRes.error || versionRes.error}`)
+    }
+  }
+
+  const handleConfirmRestore = async () => {
+    if (!restorePreview) return
+    const r = await window.api.backup.restore(restorePreview.path)
+    setRestorePreview(null)
     if (r.success) { alert('بازیابی با موفقیت انجام شد!'); window.location.reload() }
     else alert(`خطا: ${r.error}`)
   }
@@ -321,6 +338,26 @@ function BackupSection() {
     const r = await window.api.backup.cleanup(30)
     if (r.success && r.data) alert(`${r.data.deleted} پشتیبان قدیمی حذف شد`)
     loadData()
+  }
+
+  const handleRunTests = async () => {
+    setRunningTests(true)
+    setTestResults(null)
+    const r = await window.api.backup.runTests()
+    if (r.success && Array.isArray(r.data)) {
+      setTestResults(r.data)
+    } else {
+      setTestResults([{ name: 'test_runner', passed: false, error: r.error || 'Unknown error' }])
+    }
+    setRunningTests(false)
+  }
+
+  const loadBackupDetails = async (name: string, path: string) => {
+    if (backupDetails[name]) return
+    const r = await window.api.backup.getDetails(path)
+    if (r.success && r.data) {
+      setBackupDetails(prev => ({ ...prev, [name]: { meta: r.data.meta, tables: r.data.tables } }))
+    }
   }
 
   const formatSize = (bytes: number) => {
@@ -359,6 +396,14 @@ function BackupSection() {
         >
           پاکسازی
         </button>
+        <button
+          onClick={handleRunTests}
+          disabled={runningTests || loading}
+          className="py-2 px-3 rounded-xl font-bold text-sm transition-all duration-200"
+          style={{ backgroundColor: isDark ? 'rgba(99,102,241,0.1)' : '#eef2ff', color: '#6366f1' }}
+        >
+          {runningTests ? 'در حال تست...' : 'تست پشتیبان'}
+        </button>
       </div>
 
       {stats && (
@@ -374,26 +419,90 @@ function BackupSection() {
         </div>
       )}
 
-      {backups.length > 0 && (
-        <div className="space-y-1.5 max-h-48 overflow-auto">
-          {backups.map((b) => (
-            <div
-              key={b.name}
-              className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all duration-150"
-              style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}` }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = primary }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = cardBorder }}
-            >
-              <div className="flex-1 min-w-0">
-                <div className="font-bold truncate" style={{ color: textPrimary }}>{b.name}</div>
-                <div style={{ color: textSecondary }}>{new Date(b.timestamp).toLocaleString('fa-IR')} — {formatSize(b.size)}</div>
+      {testResults && (
+        <div className="rounded-xl p-3 text-xs" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}` }}>
+          <div className="font-bold mb-2" style={{ color: textPrimary }}>نتایج تست ({testResults.filter(r => r.passed).length}/{testResults.length} passed)</div>
+          <div className="space-y-1 max-h-32 overflow-auto">
+            {testResults.map((r, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span style={{ color: r.passed ? '#22c55e' : '#ef4444' }}>{r.passed ? '✓' : '✗'}</span>
+                <span style={{ color: textPrimary }}>{r.name}</span>
+                {r.error && <span className="text-[10px]" style={{ color: '#ef4444' }}>{r.error}</span>}
               </div>
-              <button onClick={() => handleRestore(b.path)} disabled={loading}
-                className="ml-2 px-2.5 py-1 rounded-lg text-xs font-bold" style={{ backgroundColor: isDark ? 'rgba(34,197,94,0.15)' : '#dcfce7', color: '#22c55e' }}>
-                بازیابی
-              </button>
+            ))}
+          </div>
+          <button onClick={() => setTestResults(null)} className="mt-2 text-[10px] font-bold" style={{ color: textSecondary }}>
+            بستن
+          </button>
+        </div>
+      )}
+
+      {restorePreview && (
+        <div className="rounded-xl p-3 text-xs space-y-2" style={{ backgroundColor: inputBg, border: `2px solid ${primary}` }}>
+          <div className="font-bold" style={{ color: textPrimary }}>پیش‌نمایش بازیابی</div>
+          {restorePreview.version?.meta && (
+            <div style={{ color: textSecondary }}>
+              نسخه: {restorePreview.version.meta.appVersion || '?'} | تاریخ: {new Date(restorePreview.version.meta.timestamp).toLocaleDateString('fa-IR')}
             </div>
-          ))}
+          )}
+          {restorePreview.details?.tables && (
+            <div className="flex flex-wrap gap-x-3 gap-y-1" style={{ color: textSecondary }}>
+              {Object.entries(restorePreview.details.tables as Record<string, number>).map(([table, count]) => (
+                <span key={table}>{table}: {count}</span>
+              ))}
+            </div>
+          )}
+          {restorePreview.details?.integrity && (
+            <div style={{ color: restorePreview.details.integrity.success ? '#22c55e' : '#ef4444' }}>
+              سلامت: {restorePreview.details.integrity.integrityCheck === 'ok' ? '✓' : '✗'}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <button onClick={handleConfirmRestore} disabled={loading} className="flex-1 py-2 rounded-lg text-xs font-bold" style={{ backgroundColor: '#22c55e', color: '#fff' }}>
+              تأیید بازیابی
+            </button>
+            <button onClick={() => setRestorePreview(null)} disabled={loading} className="flex-1 py-2 rounded-lg text-xs font-bold" style={{ backgroundColor: btnBg, color: textSecondary }}>
+              لغو
+            </button>
+          </div>
+        </div>
+      )}
+
+      {backups.length > 0 && (
+        <div className="space-y-1.5 max-h-64 overflow-auto">
+          {backups.map((b) => {
+            const details = backupDetails[b.name]
+            return (
+              <div
+                key={b.name}
+                className="flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all duration-150"
+                style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}` }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = primary }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = cardBorder }}
+                onClick={() => loadBackupDetails(b.name, b.path)}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold truncate" style={{ color: textPrimary }}>{b.name}</div>
+                  <div style={{ color: textSecondary }}>
+                    {new Date(b.timestamp).toLocaleString('fa-IR')} — {formatSize(b.size)}
+                    {details?.meta?.appVersion && ` — v${details.meta.appVersion}`}
+                  </div>
+                  {details?.tables && (
+                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1 text-[10px]" style={{ color: textSecondary }}>
+                      {Object.entries(details.tables).slice(0, 5).map(([t, c]) => (
+                        <span key={t}>{t}: {c}</span>
+                      ))}
+                      {Object.keys(details.tables).length > 5 && <span>...</span>}
+                    </div>
+                  )}
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); handleRestorePreview(b.path) }} disabled={loading}
+                  className="ml-2 px-2.5 py-1 rounded-lg text-xs font-bold" style={{ backgroundColor: isDark ? 'rgba(34,197,94,0.15)' : '#dcfce7', color: '#22c55e' }}>
+                  بازیابی
+                </button>
+              </div>
+            )
+          })}
         </div>
       )}
 

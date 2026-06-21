@@ -352,6 +352,25 @@ export function registerAllHandlers(): void {
   ipcMain.handle('backup:verify', (_event, arg: { path: string }) => { try { return { success: true, data: backupService.verifyBackup(arg.path) } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
   ipcMain.handle('backup:restore', (_event, arg: { path: string }) => { try { return { success: true, data: backupService.restoreBackup(arg.path) } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
   ipcMain.handle('backup:cleanup', (_event, arg: { keepCount?: number }) => { try { return { success: true, data: backupService.cleanupBackups(arg?.keepCount || 30) } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
+  handleArg<{ path: string }, any>('backup:details', (a) => backupService.getBackupDetails(a.path))
+  handleArg<{ path: string }, any>('backup:checkVersion', (a) => backupService.checkBackupVersion(a.path))
+  handleArg<{ path: string }, any>('backup:tableStats', (a) => backupService.getTableStats(a.path))
+  handle('backup:runTests', () => {
+    const { runBackupTests } = require('../database/backup.test')
+    return runBackupTests()
+  })
+
+  // ─── Dialog ────────────────────────────────────────
+  ipcMain.handle('dialog:openBackup', async () => {
+    const win = BrowserWindow.getFocusedWindow()
+    const result = await dialog.showOpenDialog(win!, {
+      title: 'انتخاب فایل پشتیبان',
+      filters: [{ name: 'SQLite Database', extensions: ['db', 'db-wal'] }],
+      properties: ['openFile'],
+    })
+    if (result.canceled || !result.filePaths[0]) return { success: false, error: 'cancelled' }
+    return { success: true, data: result.filePaths[0] }
+  })
 
   // ─── Categories ─────────────────────────────────────
   handle('categories:getAll', () => categoriesRepo.getAllCategories())

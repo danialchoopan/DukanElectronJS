@@ -2,6 +2,13 @@ import { useState, useRef, useCallback } from 'react'
 import { t, setLanguage } from '../i18n'
 import { useSettingsStore } from '../store/settingsStore'
 
+interface BackupPreview {
+  dbPath: string
+  meta: any
+  tables: Record<string, number>
+  versionCheck: { compatible: boolean; backupVersion: string; currentVersion: string; message: string }
+}
+
 const colors = {
   primary: '#006194',
   primaryContainer: '#007bb9',
@@ -82,6 +89,8 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
   const [adminPinConfirm, setAdminPinConfirm] = useState('')
   const [pinError, setPinError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [backupPreview, setBackupPreview] = useState<BackupPreview | null>(null)
+  const [restoring, setRestoring] = useState(false)
 
   const pinRefs = useRef<(HTMLInputElement | null)[]>([])
   const pinConfirmRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -140,6 +149,41 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
     useSettingsStore.getState().setTheme(theme)
     setSubmitting(false)
     onComplete()
+  }
+
+  const handleRestoreOld = async () => {
+    const dialogRes = await window.api.dialog.openBackup()
+    if (!dialogRes.success || !dialogRes.data) return
+    const dbPath = dialogRes.data
+    const [detailsRes, versionRes] = await Promise.all([
+      window.api.backup.getDetails(dbPath),
+      window.api.backup.checkVersion(dbPath),
+    ])
+    if (!detailsRes.success) { alert(`خطا در خواندن اطلاعات پشتیبان: ${detailsRes.error}`); return }
+    if (!versionRes.success) { alert(`خطا در بررسی نسخه: ${versionRes.error}`); return }
+    setBackupPreview({
+      dbPath,
+      meta: detailsRes.data?.meta,
+      tables: detailsRes.data?.tables || {},
+      versionCheck: versionRes.data,
+    })
+  }
+
+  const handleConfirmRestore = async () => {
+    if (!backupPreview) return
+    const ok = confirm(lang === 'fa'
+      ? 'آیا از بازیابی اطلاعات اطمینان دارید؟ تمام اطلاعات فعلی حذف و با اطلاعات پشتیبان جایگزین می‌شود.'
+      : 'Are you sure you want to restore? All current data will be replaced.')
+    if (!ok) return
+    setRestoring(true)
+    const r = await window.api.backup.restore(backupPreview.dbPath)
+    setRestoring(false)
+    if (r.success) {
+      setBackupPreview(null)
+      onComplete()
+    } else {
+      alert(`خطا در بازیابی: ${r.error}`)
+    }
   }
 
   const handlePinKeyDown = (e: React.KeyboardEvent, index: number, refs: React.MutableRefObject<(HTMLInputElement | null)[]>) => {
@@ -383,6 +427,55 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Restore Old Data Option */}
+              <div className="mt-6 pt-4" style={{ borderTop: `1px solid ${cardBorder}` }}>
+                <p className="text-sm font-bold mb-2" style={{ color: titleColor }}>
+                  {lang === 'fa' ? 'آیا اطلاعات قبلی دارید؟' : 'Have previous data?'}
+                </p>
+                <p className="text-xs mb-3" style={{ color: subtitleColor }}>
+                  {lang === 'fa' ? 'اگر قبلاً از این نرم‌افزار استفاده می‌کردید و پشتیبان دارید، می‌توانید فایل پشتیبان را بارگذاری کنید.' : 'If you used this app before and have a backup, you can load it here.'}
+                </p>
+                {!backupPreview ? (
+                  <button onClick={handleRestoreOld} className="text-xs px-4 py-2 rounded-lg font-bold transition-all" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: titleColor }}>
+                    {lang === 'fa' ? 'بارگذاری فایل پشتیبان' : 'Load Backup File'}
+                  </button>
+                ) : (
+                  <div className="rounded-xl p-3 text-xs space-y-2" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.2)' : '#f8fafc', border: `1px solid ${cardBorder}` }}>
+                    <div className="font-bold" style={{ color: titleColor }}>
+                      {lang === 'fa' ? 'اطلاعات پشتیبان:' : 'Backup Info:'}
+                    </div>
+                    {backupPreview.meta && (
+                      <>
+                        <div style={{ color: subtitleColor }}>
+                          {lang === 'fa' ? 'نسخه:' : 'Version:'} {backupPreview.meta.appVersion || '?'}
+                        </div>
+                        <div style={{ color: subtitleColor }}>
+                          {lang === 'fa' ? 'تاریخ:' : 'Date:'} {new Date(backupPreview.meta.timestamp).toLocaleDateString(lang === 'fa' ? 'fa-IR' : 'en-US')}
+                        </div>
+                      </>
+                    )}
+                    <div style={{ color: subtitleColor }}>
+                      {lang === 'fa' ? 'جداول:' : 'Tables:'} {Object.keys(backupPreview.tables).length}
+                    </div>
+                    {backupPreview.versionCheck && !backupPreview.versionCheck.compatible && (
+                      <div className="text-xs" style={{ color: '#ef4444' }}>
+                        {lang === 'fa' ? 'اخطار: نسخه پشتیبان نامشخص است' : 'Warning: Backup version unknown'}
+                      </div>
+                    )}
+                    <div className="flex gap-2 mt-2">
+                      <button onClick={handleConfirmRestore} disabled={restoring} className="flex-1 py-2 rounded-lg text-xs font-bold" style={{ backgroundColor: '#22c55e', color: '#fff' }}>
+                        {restoring ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
+                        ) : (lang === 'fa' ? 'بازیابی' : 'Restore')}
+                      </button>
+                      <button onClick={() => setBackupPreview(null)} disabled={restoring} className="flex-1 py-2 rounded-lg text-xs font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: subtitleColor }}>
+                        {lang === 'fa' ? 'لغو' : 'Cancel'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Next Button */}

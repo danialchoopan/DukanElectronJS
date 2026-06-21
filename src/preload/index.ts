@@ -238,6 +238,14 @@ const api = {
     verify: (path: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:verify', { path }),
     restore: (path: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:restore', { path }),
     cleanup: (keepCount?: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:cleanup', { keepCount }),
+    getDetails: (path: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:details', { path }),
+    checkVersion: (path: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:checkVersion', { path }),
+    tableStats: (path: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:tableStats', { path }),
+    runTests: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:runTests'),
+  },
+
+  dialog: {
+    openBackup: (): Promise<IPCResponse<string>> => ipcRenderer.invoke('dialog:openBackup'),
   },
 
   onNavigate: (callback: (page: string) => void): (() => void) => {
