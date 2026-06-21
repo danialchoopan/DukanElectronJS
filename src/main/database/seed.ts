@@ -1,5 +1,8 @@
 import { getDatabase, hashPin } from './connection'
 import { createCategory } from './repositories/categories'
+import { postSaleJournal, postExpenseJournal, postReturnJournal } from './repositories/journal'
+import { createPeriod } from './repositories/periods'
+import { createAuditEntry } from './repositories/audit'
 
 export function seedDatabase(): void {
   const db = getDatabase()
@@ -14,13 +17,14 @@ export function seedDatabase(): void {
   insertUser.run('محمد', hashPin('1111'), 'cashier')
   insertUser.run('زهرا', hashPin('2222'), 'cashier')
   insertUser.run('حسن', hashPin('3333'), 'cashier')
+  createAuditEntry(1, 'create', 'user', 1, 'ایجاد ۴ کاربر پیش‌فرض')
 
   const dairy = createCategory('لبنیات')
   createCategory('شیر', dairy.id); createCategory('ماست', dairy.id); createCategory('پنیر', dairy.id); createCategory('خامه', dairy.id); createCategory('بستنی', dairy.id)
   const bread = createCategory('نان و نانوا')
   createCategory('نان سنگک', bread.id); createCategory('نان بربری', bread.id); createCategory('نان لواش', bread.id)
   const dry = createCategory('خشکبار')
-  createCategory('برنج', dry.id); createCategory('حبوبات', dry.id); createCategory('آجیل', dry.id); createCategory('ادویه\u200cجات', dry.id)
+  createCategory('برنج', dry.id); createCategory('حبوبات', dry.id); createCategory('آجیل', dry.id); createCategory('ادویه‌جات', dry.id)
   createCategory('روغن و چربی')
   const can = createCategory('کنسروجات')
   createCategory('تن ماهی', can.id); createCategory('رب گوجه', can.id); createCategory('سس', can.id)
@@ -32,12 +36,13 @@ export function seedDatabase(): void {
   createCategory('شامپو', hygiene.id); createCategory('صابون', hygiene.id); createCategory('خمیردندان', hygiene.id)
   createCategory('شوینده')
   const protein = createCategory('پروتئین')
-  createCategory('گوشت قرمز', protein.id); createCategory('مرغ', protein.id); createCategory('تخم\u200cمرغ', protein.id)
+  createCategory('گوشت قرمز', protein.id); createCategory('مرغ', protein.id); createCategory('تخم‌مرغ', protein.id)
   createCategory('میوه')
   createCategory('سبزیجات')
   const sweet = createCategory('شیرینی')
   createCategory('کیک', sweet.id); createCategory('شیرینی خشک', sweet.id)
   createCategory('ماکارونی')
+  createAuditEntry(1, 'create', 'category', null, 'ایجاد دسته‌بندی‌ها')
 
   const insertProduct = db.prepare('INSERT INTO products (barcode, title, category, unit, purchase_price, sale_price, stock, minStock, isLoose) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
   const products = [
@@ -59,7 +64,7 @@ export function seedDatabase(): void {
     ['6260123456804', 'آب معدنی', 'آب معدنی', 'number', 5000, 8000, 60, 10, 0],
     ['6260123456805', 'دلستر فوکا', 'دلستر', 'number', 12000, 15000, 24, 5, 0],
     ['6260123456806', 'پفک نمکی', 'پفک', 'number', 18000, 22000, 20, 4, 0],
-    ['6260123456807', 'چیپس سیب\u200cزمینی', 'چیپس', 'number', 15000, 19000, 25, 5, 0],
+    ['6260123456807', 'چیپس سیب‌زمینی', 'چیپس', 'number', 15000, 19000, 25, 5, 0],
     ['6260123456808', 'بیسکوییت', 'بیسکوییت', 'number', 12000, 15000, 30, 5, 0],
     ['6260123456809', 'شکلات تابلیون', 'شکلات', 'number', 28000, 35000, 15, 3, 0],
     ['6260123456810', 'خمیر دندان', 'خمیردندان', 'number', 35000, 42000, 12, 3, 0],
@@ -67,7 +72,7 @@ export function seedDatabase(): void {
     ['6260123456812', 'شامپو', 'شامپو', 'number', 55000, 68000, 10, 3, 0],
     ['6260123456813', 'مایع ظرفشویی', 'شوینده', 'number', 42000, 52000, 15, 3, 0],
     ['6260123456814', 'پودر لباسشویی', 'شوینده', 'number', 78000, 92000, 8, 2, 0],
-    ['6260123456815', 'تخم مرغ شانه\u200cای', 'تخم\u200cمرغ', 'number', 65000, 78000, 15, 3, 0],
+    ['6260123456815', 'تخم مرغ شانه‌ای', 'تخم‌مرغ', 'number', 65000, 78000, 15, 3, 0],
     ['6260123456816', 'مرغ منجمد', 'مرغ', 'number', 95000, 115000, 10, 2, 0],
     ['6260123456817', 'سوسیس', 'پروتئین', 'number', 42000, 52000, 12, 3, 0],
     ['6260123456818', 'سیب سبز', 'میوه', 'weight', 35000, 45000, 40, 8, 1],
@@ -76,15 +81,46 @@ export function seedDatabase(): void {
   ]
 
   db.transaction(() => { for (const p of products) insertProduct.run(...p) })()
+  createAuditEntry(1, 'create', 'product', null, `ایجاد ${products.length} محصول`)
 
-  db.prepare('INSERT INTO customers (name, phone) VALUES (?, ?)').run('احمد محمدی', '09121234567')
-  db.prepare('INSERT INTO customers (name, phone) VALUES (?, ?)').run('فاطمه رضایی', '09351234567')
-  db.prepare('INSERT INTO customers (name, phone) VALUES (?, ?)').run('رضا عباسی', '09191234567')
+  const insertCustomer = db.prepare('INSERT INTO customers (name, phone, address, notes, customerType, description) VALUES (?, ?, ?, ?, ?, ?)')
+  const customerData = [
+    { name: 'احمد محمدی', phone: '09121234567', address: 'تهران، خیابان ولیعصر، پلاک ۳۴', notes: 'مشتری دائمی', customerType: 'real', description: 'خریدار عمده لبنیات و نوشیدنی' },
+    { name: 'فاطمه رضایی', phone: '09351234567', address: 'تهران، خیابان انقلاب، کوچه شیرزاد', notes: '', customerType: 'real', description: '' },
+    { name: 'رضا عباسی', phone: '09191234567', address: 'شیراز، خیابان سعدی', notes: 'مشتری عمده', customerType: 'legal', description: 'شرکت تجاری عباسی و شرکا' },
+    { name: 'شرکت تجارت ساحل', phone: '02112345678', address: 'تهران، خیابان شریعتی، بالاتر از میرداماد', notes: 'خرید عمده', customerType: 'legal', description: 'واردکننده مواد غذایی' },
+    { name: 'زهرا کریمی', phone: '09123456789', address: 'اصفهان، چهارباغ عباسی', notes: '', customerType: 'real', description: '' },
+    { name: 'حسین رحمانی', phone: '09155443322', address: 'تهران، شهرک غرب', notes: 'خرید هفتگی', customerType: 'real', description: 'دارای فروشگاه زنجیره‌ای' },
+    { name: 'فروشگاه رفاه شعبه ۲', phone: '02187654321', address: 'تهران، میدان ونک', notes: 'مشتری تجاری', customerType: 'legal', description: 'سفارشات هفتگی کالاهای اساسی' },
+    { name: 'مریم صادقی', phone: '09188776655', address: 'مشهد، بلوار وکیل‌آباد', notes: '', customerType: 'real', description: '' },
+  ]
+  const custIds: number[] = []
+  for (const c of customerData) {
+    const r = insertCustomer.run(c.name, c.phone, c.address, c.notes, c.customerType, c.description)
+    custIds.push(r.lastInsertRowid as number)
+  }
+  createAuditEntry(1, 'create', 'customer', null, `ایجاد ${customerData.length} مشتری`)
 
-  const today = new Date().toISOString().split('T')[0]
-  db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('اجاره', 'اجاره ماهانه', 15000000, today)
-  db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('قبوض', 'قبض برق', 2500000, today)
-  db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('حقوق', 'حقوق محمد', 8000000, today)
+  const existingExpCat = db.prepare('SELECT COUNT(*) as c FROM expenses').get() as { c: number }
+  if (existingExpCat.c === 0) {
+    db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('اجاره', 'اجاره ماهانه فروشگاه', 15000000, getDateDaysAgo(30))
+    db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('قبوض', 'قبض برق مهر ماه', 1850000, getDateDaysAgo(25))
+    db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('قبوض', 'قبض آب', 450000, getDateDaysAgo(25))
+    db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('حقوق', 'حقوق علی (مدیر)', 12000000, getDateDaysAgo(20))
+    db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('حقوق', 'حقوق محمد', 8000000, getDateDaysAgo(20))
+    db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('حقوق', 'حقوق زهرا', 8000000, getDateDaysAgo(20))
+    db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('حقوق', 'حقوق حسن', 8000000, getDateDaysAgo(20))
+    db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('لوازم', 'خرید کیسه فریزر و نایلون', 350000, getDateDaysAgo(15))
+    db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('تعمیرات', 'تعمیر یخچال فروشگاهی', 1200000, getDateDaysAgo(10))
+    db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('حمل‌ونقل', 'کرایه حمل بار', 250000, getDateDaysAgo(8))
+    db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('سایر', 'خرید لوازم التحریر', 85000, getDateDaysAgo(5))
+    db.prepare('INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)').run('اجاره', 'اجاره ماهانه فروشگاه', 15000000, getDateDaysAgo(0))
+    const allExp = db.prepare('SELECT id, amount, category, date FROM expenses').all() as { id: number; amount: number; category: string; date: string }[]
+    for (const e of allExp) {
+      postExpenseJournal(e.id, e.date, e.amount, e.category)
+    }
+  }
+  createAuditEntry(1, 'create', 'expense', null, 'ایجاد ۱۲ هزینه با سند حسابداری')
 
   function randInt(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min
@@ -92,64 +128,120 @@ export function seedDatabase(): void {
 
   function randomDateTime(daysBack: number): string {
     const d = new Date()
-    d.setDate(d.getDate() - daysBack)
+    d.setDate(d.getDate() - randInt(1, daysBack))
     d.setHours(randInt(8, 20), randInt(0, 59), randInt(0, 59))
     return d.toISOString().slice(0, 19).replace('T', ' ')
   }
 
-  const insertSale = db.prepare('INSERT INTO sales (invoiceNumber, userId, customerId, subtotal, total_amount, totalNetProfit, paymentMethod, customerPaid, changeAmount, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-  const insertSaleItem = db.prepare('INSERT INTO sale_items (saleId, productId, productTitle, quantity, unitPrice, purchasePrice, subtotal, netProfit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+  function getDateDaysAgo(days: number): string {
+    const d = new Date()
+    d.setDate(d.getDate() - days)
+    return d.toISOString().slice(0, 10)
+  }
 
-  const userIds = db.prepare('SELECT id FROM users').all() as { id: number }[]
-  const custIds = db.prepare('SELECT id FROM customers').all() as { id: number }[]
-  const allProducts = db.prepare('SELECT id, title, purchase_price, sale_price FROM products WHERE isActive = 1').all() as { id: number; title: string; purchase_price: number; sale_price: number }[]
+  const existingSaleCount = db.prepare('SELECT COUNT(*) as c FROM sales').get() as { c: number }
+  if (existingSaleCount.c === 0) {
+    const insertSale = db.prepare('INSERT INTO sales (invoiceNumber, userId, customerId, subtotal, total_amount, totalNetProfit, paymentMethod, customerPaid, changeAmount, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    const insertSaleItem = db.prepare('INSERT INTO sale_items (saleId, productId, productTitle, quantity, unitPrice, purchasePrice, subtotal, netProfit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
 
-  const methods: string[] = ['cash', 'card', 'ledger']
+    const userIds = db.prepare('SELECT id FROM users').all() as { id: number }[]
+    const allProducts = db.prepare('SELECT id, title, purchase_price, sale_price FROM products WHERE isActive = 1').all() as { id: number; title: string; purchase_price: number; sale_price: number }[]
 
-  for (let day = 0; day < 45; day++) {
-    const numSales = randInt(1, 3)
-    for (let s = 0; s < numSales; s++) {
-      const saleDate = randomDateTime(day + 1)
-      const userId = userIds[randInt(0, userIds.length - 1)].id
-      const paymentMethod = methods[randInt(0, methods.length - 1)]
-      const customerId = paymentMethod === 'ledger' ? custIds[randInt(0, custIds.length - 1)].id : (Math.random() > 0.3 ? custIds[randInt(0, custIds.length - 1)].id : null)
+    const methods: string[] = ['cash', 'card', 'ledger']
+    const saleIds: number[] = []
 
-      const numItems = randInt(2, 5)
-      const pickedProducts: { id: number; title: string; purchase_price: number; sale_price: number; qty: number }[] = []
-      const usedIds = new Set<number>()
-      for (let i = 0; i < numItems && i < allProducts.length; i++) {
-        let idx: number
-        do { idx = randInt(0, allProducts.length - 1) } while (usedIds.has(allProducts[idx].id))
-        usedIds.add(allProducts[idx].id)
-        pickedProducts.push({ ...allProducts[idx], qty: randInt(1, 3) })
+    const salesTx = db.transaction(() => {
+      for (let day = 0; day < 45; day++) {
+        const numSales = randInt(1, 3)
+        for (let s = 0; s < numSales; s++) {
+          const saleDate = randomDateTime(day + 1)
+          const userId = userIds[randInt(0, userIds.length - 1)].id
+          const paymentMethod = methods[randInt(0, methods.length - 1)]
+          const customerId = paymentMethod === 'ledger' ? custIds[randInt(0, custIds.length - 1)] : (Math.random() > 0.3 ? custIds[randInt(0, custIds.length - 1)] : null)
+
+          const numItems = randInt(2, 5)
+          const pickedItems: { id: number; title: string; purchase_price: number; sale_price: number; qty: number }[] = []
+          const usedIds = new Set<number>()
+          for (let i = 0; i < numItems && i < allProducts.length; i++) {
+            let idx: number
+            do { idx = randInt(0, allProducts.length - 1) } while (usedIds.has(allProducts[idx].id))
+            usedIds.add(allProducts[idx].id)
+            pickedItems.push({ ...allProducts[idx], qty: randInt(1, 3) })
+          }
+
+          let subtotal = 0
+          let totalCogs = 0
+          const journalItems: { purchasePrice: number; quantity: number }[] = []
+          for (const item of pickedItems) {
+            const lineTotal = item.sale_price * item.qty
+            subtotal += lineTotal
+            totalCogs += item.purchase_price * item.qty
+            journalItems.push({ purchasePrice: item.purchase_price, quantity: item.qty })
+          }
+          const netProfit = subtotal - totalCogs
+          const invoiceNum = `INV-${saleDate.replace(/[-: ]/g, '').slice(0, 14)}-${s}`
+
+          const r = insertSale.run(invoiceNum, userId, customerId, subtotal, subtotal, netProfit, paymentMethod, paymentMethod === 'ledger' ? 0 : subtotal, 0, saleDate)
+          const saleId = r.lastInsertRowid as number
+          saleIds.push(saleId)
+
+          for (const item of pickedItems) {
+            insertSaleItem.run(saleId, item.id, item.title, item.qty, item.sale_price, item.purchase_price, item.sale_price * item.qty, (item.sale_price - item.purchase_price) * item.qty)
+          }
+
+          if (paymentMethod === 'ledger' && customerId) {
+            db.prepare('UPDATE customers SET balance = balance - ? WHERE id = ?').run(subtotal, customerId)
+            db.prepare("INSERT INTO customer_ledger (customerId, saleId, type, amount, description, createdAt) VALUES (?, ?, 'sale', ?, ?, ?)").run(customerId, saleId, subtotal, `فاکتور ${invoiceNum}`, saleDate)
+          }
+
+          postSaleJournal(saleId, saleDate.slice(0, 10), {
+            items: journalItems,
+            total_amount: subtotal,
+            paymentMethod,
+          })
+        }
       }
+    })
+    salesTx()
+    createAuditEntry(1, 'create', 'sale', null, `ایجاد ${saleIds.length} فاکتور فروش با سند حسابداری`)
 
-      let subtotal = 0
-      let totalCogs = 0
-      for (const item of pickedProducts) {
-        subtotal += item.sale_price * item.qty
-        totalCogs += item.purchase_price * item.qty
+    if (saleIds.length >= 3) {
+      const insertReturn = db.prepare('INSERT INTO returns (saleId, userId, productId, quantity, reason, refundAmount, status, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+      for (let i = 0; i < 3; i++) {
+        const randomSale = db.prepare('SELECT id, userId, createdAt FROM sales ORDER BY RANDOM() LIMIT 1').get() as { id: number; userId: number; createdAt: string } | undefined
+        if (!randomSale) continue
+        const saleItems = db.prepare('SELECT * FROM sale_items WHERE saleId = ?').all(randomSale.id) as { id: number; productId: number; productTitle: string; quantity: number; unitPrice: number; purchasePrice: number }[]
+        if (saleItems.length === 0) continue
+        const item = saleItems[0]
+        const returnQty = Math.min(1, item.quantity)
+        const refundAmount = item.unitPrice * returnQty
+        const returnDate = randomDateTime(15)
+        const retId = insertReturn.run(randomSale.id, randomSale.userId, item.productId, returnQty, 'خرید اشتباهی', refundAmount, 'completed', returnDate).lastInsertRowid as number
+        db.prepare('UPDATE products SET stock = stock + ? WHERE id = ?').run(returnQty, item.productId)
+        db.prepare('UPDATE sales SET total_amount = total_amount - ?, totalNetProfit = totalNetProfit - ? WHERE id = ?').run(refundAmount, refundAmount, randomSale.id)
+        postReturnJournal(retId as number, returnDate.slice(0, 10), refundAmount)
       }
-      const netProfit = subtotal - totalCogs
-      const invoiceNum = `INV-${saleDate.replace(/[-: ]/g, '').slice(0, 14)}-${s}`
-
-      const r = insertSale.run(invoiceNum, userId, customerId, subtotal, subtotal, netProfit, paymentMethod, paymentMethod === 'ledger' ? 0 : subtotal, 0, saleDate)
-      const saleId = r.lastInsertRowid as number
-
-      for (const item of pickedProducts) {
-        insertSaleItem.run(saleId, item.id, item.title, item.qty, item.sale_price, item.purchase_price, item.sale_price * item.qty, (item.sale_price - item.purchase_price) * item.qty)
-      }
-
-      if (paymentMethod === 'ledger' && customerId) {
-        db.prepare('UPDATE customers SET balance = balance - ? WHERE id = ?').run(subtotal, customerId)
-        db.prepare("INSERT INTO customer_ledger (customerId, saleId, type, amount, description, createdAt) VALUES (?, ?, 'sale', ?, ?, ?)").run(customerId, saleId, subtotal, `فاکتور ${invoiceNum}`, saleDate)
-      }
+      createAuditEntry(1, 'create', 'return', null, 'ایجاد ۳ مرجوعی با سند حسابداری')
     }
+  }
+
+  const now = new Date()
+  const year = now.getFullYear()
+  const monthNames = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند']
+
+  const existingPeriods = db.prepare('SELECT COUNT(*) as c FROM fiscal_periods').get() as { c: number }
+  if (existingPeriods.c === 0) {
+    for (let i = 0; i < 12; i++) {
+      const start = `${year}-${String(i + 1).padStart(2, '0')}-01`
+      const end = new Date(year, i + 1, 0).toISOString().slice(0, 10)
+      createPeriod(monthNames[i] + ' ' + year, start, end)
+    }
+    createAuditEntry(1, 'create', 'fiscal_period', null, 'ایجاد ۱۲ دوره مالی ماهانه')
   }
 
   db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('isSetupComplete', 'true')").run()
   db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('storeName', 'فروشگاه نمونه')").run()
   db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('theme', 'dark')").run()
 
-  console.log('[SEED] Done: 4 users, 32 products, 15+ categories, 3 customers, 3 expenses, ~60 sales')
+  console.log('[SEED] Done: 4 users, 32 products, 15+ categories, 8 customers, ~60 sales, 12 expenses, 3 returns, 12 fiscal periods')
 }

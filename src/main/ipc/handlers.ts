@@ -408,6 +408,7 @@ export function registerAllHandlers(): void {
   handle('periods:getAll', () => periodsRepo.getAllPeriods())
   handle('periods:getActive', () => periodsRepo.getActivePeriod())
   handleArg<{ id: number; userId: number }, boolean>('periods:close', (a) => periodsRepo.closePeriod(a.id, a.userId))
+  handleArg<{ id: number }, boolean>('periods:reopen', (a) => periodsRepo.reopenPeriod(a.id))
   ipcMain.handle('periods:create', (_event, a: { name: string; startDate: string; endDate: string }) => {
     try {
       const db = getDatabase()

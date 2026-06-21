@@ -4,8 +4,7 @@ import { registerAllHandlers } from './ipc/handlers'
 import { getDatabase, closeDatabase } from './database/connection'
 import { readFileSync } from 'fs'
 import { appendFileSync } from 'fs'
-// Uncomment to auto-seed on first run:
-// import { seedDatabase } from './database/seed'
+import { seedDatabase } from './database/seed'
 import { autoBackup } from './database/backup'
 import * as settingsRepo from './database/repositories/settings'
 
@@ -79,6 +78,7 @@ function registerNavigationShortcuts(): void {
 app.whenReady().then(async () => {
   try {
     getDatabase()
+    seedDatabase()
     registerAllHandlers()
     await autoBackup()
     createWindow()

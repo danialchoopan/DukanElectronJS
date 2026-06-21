@@ -217,6 +217,7 @@ const api = {
     getAll: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('periods:getAll'),
     getActive: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('periods:getActive'),
     close: (id: number, userId: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('periods:close', { id, userId }),
+    reopen: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('periods:reopen', { id }),
     create: (data: { name: string; startDate: string; endDate: string }): Promise<IPCResponse<any>> => ipcRenderer.invoke('periods:create', data),
   },
   accounting: {

@@ -53,6 +53,14 @@ export default function FiscalPeriods() {
     load()
   }
 
+  const handleReopen = async (id: number) => {
+    if (!confirm('آیا از بازگشایی این دوره اطمینان دارید؟')) return
+    setLoading(true)
+    await window.api.periods.reopen(id)
+    setLoading(false)
+    load()
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -101,9 +109,13 @@ export default function FiscalPeriods() {
                   </span>
                 </td>
                 <td className="px-4 py-2 text-center">
-                  {!p.isClosed && (
+                  {!p.isClosed ? (
                     <button onClick={() => handleClose(p.id)} disabled={loading} className="text-xs font-bold px-3 py-1 rounded-lg" style={{ backgroundColor: '#fee2e2', color: '#dc2626' }}>
                       {fa.accounting.periods.closePeriod}
+                    </button>
+                  ) : (
+                    <button onClick={() => handleReopen(p.id)} disabled={loading} className="text-xs font-bold px-3 py-1 rounded-lg" style={{ backgroundColor: '#dbeafe', color: '#2563eb' }}>
+                      بازگشایی
                     </button>
                   )}
                 </td>
