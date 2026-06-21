@@ -8,6 +8,7 @@ interface CartState {
   addItem: (item: Omit<CartItem, 'quantity'>) => boolean
   addItems: (items: CartItem[]) => void
   updateQuantity: (productId: number, quantity: number) => void
+  updateUnitPrice: (productId: number, unitPrice: number) => void
   removeItem: (productId: number) => void
   getSubtotal: () => number
   getCount: () => number
@@ -80,6 +81,13 @@ export const useCartStore = create<CartState>((set, get) => ({
         }
       })
     }
+  },
+
+  updateUnitPrice: (productId, unitPrice) => {
+    if (unitPrice < 0) return
+    set((state) => ({
+      items: state.items.map((i) => i.productId === productId ? { ...i, unitPrice } : i),
+    }))
   },
 
   removeItem: (productId) => {
