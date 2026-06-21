@@ -30,6 +30,8 @@ export default function Inventory() {
   const [auditFilter, setAuditFilter] = useState<AuditFilter>('all')
   const [auditStartDate, setAuditStartDate] = useState('')
   const [auditEndDate, setAuditEndDate] = useState('')
+  const [auditPage, setAuditPage] = useState(0)
+  const [auditPageSize, setAuditPageSize] = useState(10)
   const [reportData, setReportData] = useState<{ byCategory: any[]; slowMoving: any[] }>({ byCategory: [], slowMoving: [] })
   const [returnStats, setReturnStats] = useState({ totalReturns: 0, totalRefund: 0, todayReturns: 0 })
   const [categories, setCategories] = useState<string[]>([])
@@ -948,7 +950,7 @@ export default function Inventory() {
               تاریخچه تغییرات ({filteredAuditLog.length})
             </div>
             <div className="max-h-[500px] overflow-y-auto">
-              {filteredAuditLog.map((entry: any) => {
+              {filteredAuditLog.slice(auditPage * auditPageSize, (auditPage + 1) * auditPageSize).map((entry: any) => {
                 const actionStyle = auditActionColors[entry.action] || { bg: isDark ? '#1e293b' : '#f8fafc', fg: textPrimary }
                 const detail = formatAuditDetail(entry)
                 const entityLabel = auditEntityLabels[entry.entityType] || entry.entityType
@@ -988,6 +990,11 @@ export default function Inventory() {
               })}
               {filteredAuditLog.length === 0 && <p className="text-center py-12 text-sm" style={{ color: textSecondary }}>هیچ تغییری ثبت نشده</p>}
             </div>
+            {filteredAuditLog.length > auditPageSize && (
+              <div className="px-4 pb-3">
+                <Pagination total={filteredAuditLog.length} pageSize={auditPageSize} page={auditPage} onPageChange={setAuditPage} onPageSizeChange={(s) => { setAuditPageSize(s); setAuditPage(0) }} />
+              </div>
+            )}
           </div>
         </>
       )}

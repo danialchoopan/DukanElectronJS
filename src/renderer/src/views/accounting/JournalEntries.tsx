@@ -15,7 +15,7 @@ export default function JournalEntries() {
   const [filterType, setFilterType] = useState('')
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [page, setPage] = useState(0)
-  const pageSize = 20
+  const [pageSize, setPageSize] = useState(20)
 
   const isDark = document.documentElement.classList.contains('dark')
   const cardBg = isDark ? '#1e293b' : '#ffffff'
@@ -146,7 +146,7 @@ export default function JournalEntries() {
         </table>
       </div>
 
-      <Pagination total={total} pageSize={pageSize} page={page} onPageChange={setPage} onPageSizeChange={() => {}} />
+      <Pagination total={total} pageSize={pageSize} page={page} onPageChange={setPage} onPageSizeChange={(s) => { setPageSize(s); setPage(0) }} />
 
       {expandedId && <ExpandedEntry entryId={expandedId} cardBg={cardBg} cardBorder={cardBorder} textPrimary={textPrimary} textSecondary={textSecondary} />}
     </div>
