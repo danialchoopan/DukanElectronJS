@@ -244,5 +244,74 @@ export function seedDatabase(): void {
   db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('storeName', 'فروشگاه نمونه')").run()
   db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('theme', 'dark')").run()
 
-  console.log('[SEED] Done: 4 users, 32 products, 15+ categories, 8 customers, ~60 sales, 12 expenses, 3 returns, 12 fiscal periods')
+  // Seed suppliers and purchases
+  const existingSuppliers = (db.prepare('SELECT COUNT(*) as c FROM suppliers').get() as { c: number }).c
+  if (existingSuppliers === 0) {
+    const suppliers = [
+      { name: 'شرکت پخش البرز', phone: '02188881111', company: 'پخش البرز' },
+      { name: 'عمده فروشی رضا', phone: '02177772222', company: 'رضا عمده' },
+      { name: 'ترخیص کاری نوین', phone: '02166663333', company: 'نوین ترخیص' },
+      { name: 'پخش مواد غذایی سعادت', phone: '02155554444', company: 'سعادت' },
+      { name: 'تکنوسان', phone: '02199995555', company: 'تکنوسان' },
+    ]
+    const insertSupplier = db.prepare('INSERT INTO suppliers (name, phone, company) VALUES (?, ?, ?)')
+    const insertLedger = db.prepare('INSERT INTO supplier_ledger (supplierId, type, amount, description, createdAt) VALUES (?, ?, ?, ?, ?)')
+    const insertPurchase = db.prepare('INSERT INTO purchases (invoiceNumber, supplierId, subtotal, taxAmount, discountAmount, totalAmount, paidAmount, paymentMethod, status, purchaseDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    const insertPurchaseItem = db.prepare('INSERT INTO purchase_items (purchaseId, productId, productTitle, quantity, unitCost, subtotal) VALUES (?, ?, ?, ?, ?, ?)')
+
+    const allProducts = db.prepare('SELECT id, title, purchase_price FROM products WHERE isActive = 1').all() as any[]
+
+    db.transaction(() => {
+      for (let i = 0; i < suppliers.length; i++) {
+        const s = suppliers[i]
+        const r = insertSupplier.run(s.name, s.phone, s.company)
+        const supId = r.lastInsertRowid as number
+
+        // Create 1-3 purchases per supplier
+        const purchaseCount = 1 + Math.floor(Math.random() * 3)
+        for (let j = 0; j < purchaseCount; j++) {
+          const items = allProducts.sort(() => Math.random() - 0.5).slice(0, 2 + Math.floor(Math.random() * 3))
+          let subtotal = 0
+          const purchaseItems: any[] = []
+          for (const p of items) {
+            const qty = 10 + Math.floor(Math.random() * 90)
+            const cost = p.purchase_price * (0.85 + Math.random() * 0.3)
+            const sub = qty * cost
+            subtotal += sub
+            purchaseItems.push({ productId: p.id, title: p.title, qty, cost, sub })
+          }
+          const tax = Math.round(subtotal * 0.09)
+          const discount = Math.round(subtotal * (Math.random() * 0.05))
+          const total = subtotal + tax - discount
+          const paid = j === 0 ? total : 0 // first purchase paid, rest credit
+          const daysAgo = Math.floor(Math.random() * 30)
+          const purchaseDate = getDateDaysAgo(daysAgo)
+          const invNum = `PUR-${purchaseDate.slice(0, 10).replace(/-/g, '')}-${String(i + 1).padStart(3, '0')}-${String(j + 1).padStart(2, '0')}`
+
+          const pR = insertPurchase.run(invNum, supId, Math.round(subtotal), tax, discount, Math.round(total), paid, paid >= total ? 'cash' : 'credit', 'received', purchaseDate)
+          const pId = pR.lastInsertRowid as number
+
+          for (const pi of purchaseItems) {
+            insertPurchaseItem.run(pId, pi.productId, pi.title, pi.qty, Math.round(pi.cost), Math.round(pi.sub))
+          }
+
+          // Update stock
+          for (const pi of purchaseItems) {
+            db.prepare('UPDATE products SET stock = stock + ? WHERE id = ?').run(pi.qty, pi.productId)
+          }
+
+          // Ledger entries
+          if (total - paid > 0) {
+            insertLedger.run(supId, 'purchase', Math.round(total - paid), `خرید فاکتور ${invNum}`, purchaseDate)
+          }
+          if (paid > 0) {
+            insertLedger.run(supId, 'payment', -paid, `پرداخت فاکتور ${invNum}`, purchaseDate)
+          }
+        }
+      }
+    })()
+    createAuditEntry(1, 'create', 'supplier', null, 'ایجاد ۵ تأمین‌کننده نمونه با خریدها')
+  }
+
+  console.log('[SEED] Done: 4 users, 32 products, 15+ categories, 8 customers, ~60 sales, 12 expenses, 3 returns, 12 fiscal periods, 5 suppliers')
 }

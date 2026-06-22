@@ -249,8 +249,8 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
   const pinBorder = isDark ? '2px solid rgba(191,199,210,0.2)' : '2px solid #bfc7d2'
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center p-4 overflow-hidden" style={{ background: bg, direction: 'rtl' }}>
-      <div className="w-full max-w-5xl rounded-xl shadow-sm overflow-hidden flex flex-col md:flex-row-reverse" style={{ background: cardBg, border: cardBorder, backdropFilter: isDark ? 'blur(12px)' : undefined }}>
+    <div className="h-screen w-screen flex items-center justify-center p-4 overflow-y-auto" style={{ background: bg, direction: 'rtl' }}>
+      <div className="w-full max-w-5xl rounded-xl shadow-sm overflow-hidden flex flex-col md:flex-row-reverse min-h-0" style={{ background: cardBg, border: cardBorder, backdropFilter: isDark ? 'blur(12px)' : undefined }}>
 
         {/* Brand Panel - Always visible */}
         <div className="md:w-1/2 flex flex-col items-center justify-center text-center relative overflow-hidden p-8" style={{ background: brandBg }}>
@@ -300,7 +300,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
         </div>
 
         {/* Form Panel */}
-        <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center overflow-y-auto">
+        <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center overflow-y-auto max-h-[85vh]">
           {step === 1 ? (
             // Step 1: Store Information
             <>
@@ -373,26 +373,26 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                 {/* Business Type */}
                 <div className="mb-4">
                   <label className="text-xs font-medium mb-2 block" style={{ color: subtitleColor }}>نوع کسب‌وکار خود را انتخاب کنید</label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-2 max-h-60 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
                     {([
-                      { key: 'online-store', label: 'فروشگاه اینترنتی', icon: '🌐' },
-                      { key: 'supermarket', label: 'سوپرمارکت', icon: '🛒' },
-                      { key: 'clothing', label: 'لباس‌فروشی', icon: '👔' },
-                      { key: 'electronics', label: 'لوازم الکترونیک', icon: '💻' },
-                      { key: 'bookstore', label: 'کتاب‌فروشی', icon: '📚' },
-                      { key: 'beauty', label: 'آرایشی و بهداشتی', icon: '💄' },
-                      { key: 'grocery', label: 'مواد غذایی', icon: '🍎' },
-                      { key: 'industrial', label: 'فروشگاه صنعتی', icon: '🏭' },
-                      { key: 'services', label: 'خدمات', icon: '🔧' },
-                      { key: 'wholesale', label: 'عمده‌فروشی', icon: '📦' },
-                      { key: 'restaurant', label: 'رستوران و کافی‌شاپ', icon: '🍽️' },
-                      { key: 'jewelry', label: 'طلا و جواهر', icon: '💎' },
-                      { key: 'other', label: 'سایر (دستی)', icon: '✏️' },
+                      { key: 'online-store', label: 'فروشگاه اینترنتی' },
+                      { key: 'supermarket', label: 'سوپرمارکت' },
+                      { key: 'clothing', label: 'لباس‌فروشی' },
+                      { key: 'electronics', label: 'لوازم الکترونیک' },
+                      { key: 'bookstore', label: 'کتاب‌فروشی' },
+                      { key: 'beauty', label: 'آرایشی و بهداشتی' },
+                      { key: 'grocery', label: 'مواد غذایی' },
+                      { key: 'industrial', label: 'فروشگاه صنعتی' },
+                      { key: 'services', label: 'خدمات' },
+                      { key: 'wholesale', label: 'عمده‌فروشی' },
+                      { key: 'restaurant', label: 'رستوران و کافی‌شاپ' },
+                      { key: 'jewelry', label: 'طلا و جواهر' },
+                      { key: 'other', label: 'سایر (دستی)' },
                     ]).map(b => (
                       <button key={b.key} onClick={() => { setBusinessType(b.key); applyBusinessDefaults(b.key) }}
-                        className="py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 justify-center"
+                        className="py-2.5 rounded-lg text-xs font-bold transition-all"
                         style={{ backgroundColor: businessType === b.key ? colors.primary : (isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9'), color: businessType === b.key ? '#fff' : subtitleColor, border: businessType === b.key ? 'none' : `1px solid ${cardBorder}` }}>
-                        <span>{b.icon}</span> {b.label}
+                        {b.label}
                       </button>
                     ))}
                   </div>
