@@ -11,31 +11,37 @@ import { setShopName } from '../utils/a4Print'
 const primary = '#006194'
 
 interface Props {
+  view?: 'settings' | 'admin'
   initialTab?: string
   highlightId?: string
   onHighlightDone?: () => void
 }
 
-export default function AdminPanel({ initialTab, highlightId, onHighlightDone }: Props) {
-  const [tab, setTab] = useState<'users' | 'settings' | 'ui' | 'shortcuts' | 'customization'>((initialTab as any) || 'users')
-  const isDark = document.documentElement.classList.contains('dark')
-  const [smartExportMode, setSmartExportMode] = useState<'export' | 'import' | null>(null)
-
-  useEffect(() => {
-    if (initialTab && ['users', 'settings', 'ui', 'shortcuts', 'customization'].includes(initialTab)) {
-      setTab(initialTab as any)
-    }
-  }, [initialTab])
-
-  useHighlight(highlightId, onHighlightDone)
-
-  const tabs: { key: typeof tab; label: string; icon: string }[] = [
+export default function AdminPanel({ view = 'admin', initialTab, highlightId, onHighlightDone }: Props) {
+  const allTabs: { key: 'users' | 'settings' | 'ui' | 'shortcuts' | 'customization'; label: string; icon: string }[] = [
     { key: 'users', label: fa.admin.users, icon: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75' },
     { key: 'settings', label: fa.admin.settings, icon: 'M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z' },
     { key: 'ui', label: 'ظاهر برنامه', icon: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 100-6 3 3 0 000 6z' },
     { key: 'shortcuts', label: 'میانبرها', icon: 'M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3' },
-    { key: 'customization', label: 'شخصی‌سازی', icon: 'M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z' },
+    { key: 'customization', label: 'شخصی\u200cسازی', icon: 'M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z' },
   ]
+
+  const tabs = view === 'settings'
+    ? allTabs.filter(t => ['settings', 'ui', 'customization'].includes(t.key))
+    : allTabs.filter(t => ['users', 'shortcuts'].includes(t.key))
+
+  const defaultTab = view === 'settings' ? 'settings' : 'users'
+  const [tab, setTab] = useState<typeof allTabs[0]['key']>((initialTab as any) || defaultTab)
+  const isDark = document.documentElement.classList.contains('dark')
+  const [smartExportMode, setSmartExportMode] = useState<'export' | 'import' | null>(null)
+
+  useEffect(() => {
+    if (initialTab && tabs.some(t => t.key === initialTab)) {
+      setTab(initialTab as any)
+    }
+  }, [initialTab, tabs])
+
+  useHighlight(highlightId, onHighlightDone)
 
   const bgColor = isDark ? '#0f172a' : '#f8fafc'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'

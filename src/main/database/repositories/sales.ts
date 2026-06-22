@@ -24,11 +24,12 @@ export function createSale(input: SaleInput): Sale {
 
   const createSaleTx = db.transaction(() => {
     const saleResult = db.prepare(`
-      INSERT INTO sales (invoiceNumber, userId, customerId, subtotal, total_amount, totalNetProfit, paymentMethod, customerPaid, changeAmount)
-      VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)
+      INSERT INTO sales (invoiceNumber, userId, customerId, subtotal, total_amount, totalNetProfit, paymentMethod, customerPaid, changeAmount, description, invoiceDescription)
+      VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)
     `).run(
       invoiceNumber, input.userId, input.customerId ?? null,
-      rawSubtotal, total_amount, input.paymentMethod, input.customerPaid, changeAmount
+      rawSubtotal, total_amount, input.paymentMethod, input.customerPaid, changeAmount,
+      input.description || '', input.invoiceDescription || ''
     )
     const saleId = saleResult.lastInsertRowid as number
 

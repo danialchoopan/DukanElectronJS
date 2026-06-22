@@ -301,6 +301,8 @@ try { db.prepare('ALTER TABLE customers ADD COLUMN imageBase64 TEXT DEFAULT ""')
 try { db.prepare('ALTER TABLE customers ADD COLUMN totalSpent REAL DEFAULT 0').run() } catch(e) {}
 try { db.prepare('ALTER TABLE customers ADD COLUMN totalPurchases INTEGER DEFAULT 0').run() } catch(e) {}
 try { db.prepare('ALTER TABLE customer_ledger ADD COLUMN images TEXT DEFAULT "[]"').run() } catch(e) {}
+try { db.prepare('ALTER TABLE sales ADD COLUMN description TEXT DEFAULT ""').run() } catch(e) {}
+try { db.prepare('ALTER TABLE sales ADD COLUMN invoiceDescription TEXT DEFAULT ""').run() } catch(e) {}
 
   // Supplier tables
   try {

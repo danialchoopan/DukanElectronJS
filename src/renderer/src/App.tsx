@@ -153,8 +153,8 @@ export default function App() {
         {currentView === 'accounting' && <Accounting initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
         {currentView === 'customers' && <CustomerManagement highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
         {currentView === 'suppliers' && <Suppliers />}
-        {currentView === 'settings' && <AdminPanel initialTab="settings" highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
-        {currentView === 'admin' && user.role === 'admin' && <AdminPanel initialTab={navParams?.tab || 'users'} highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
+        {currentView === 'settings' && <AdminPanel view="settings" initialTab="settings" highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
+        {currentView === 'admin' && user.role === 'admin' && <AdminPanel view="admin" initialTab={navParams?.tab || 'users'} highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
         {currentView === 'help' && <Help />}
       </div>
       <GlobalSearch open={showGlobalSearch} onClose={() => setShowGlobalSearch(false)} onNavigate={(view, tab, highlightId) => { handleNavigate(view, tab, highlightId); setShowGlobalSearch(false) }} />

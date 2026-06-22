@@ -74,6 +74,8 @@ export interface Sale {
   customerName?: string
   customerPaid: number
   changeAmount: number
+  description?: string
+  invoiceDescription?: string
   createdAt: string
 }
 
@@ -89,6 +91,8 @@ export interface SaleInput {
   paymentMethod: 'cash' | 'card' | 'ledger'
   customerId?: number
   customerPaid: number
+  description?: string
+  invoiceDescription?: string
 }
 
 export interface Customer {

@@ -112,6 +112,8 @@ export default function SalesTerminal() {
       paymentMethod: method,
       customerId: selectedCustomer?.id,
       customerPaid: paidAmt || 0,
+      description: invoiceDesc,
+      invoiceDescription: invoiceNote,
     })
     if (result.success && result.data) {
       setLastCustomer(selectedCustomer)
