@@ -17,6 +17,8 @@ import * as journalRepo from '../database/repositories/journal'
 import * as periodsRepo from '../database/repositories/periods'
 import * as reportsRepo from '../database/repositories/reports'
 import * as seedRepo from '../database/repositories/seed'
+import * as suppliersRepo from '../database/repositories/suppliers'
+import * as purchasesRepo from '../database/repositories/purchases'
 import * as backupService from '../database/backup'
 import * as smartExportService from '../database/smartExport'
 import * as migrationService from '../database/migration'
@@ -487,8 +489,31 @@ export function registerAllHandlers(): void {
       journalRepo.postSaleJournal(sale.id, sale.createdAt?.slice(0, 10) || new Date().toISOString().slice(0, 10), {
         items: items.map((i: any) => ({ purchasePrice: i.purchasePrice, quantity: i.quantity })),
         total_amount: sale.total_amount, paymentMethod: sale.paymentMethod
-      })
-    }
+  })
+
+  // ─── Suppliers ──────────────────────────────────────────
+  handle('suppliers:getAll', () => suppliersRepo.getAllSuppliers())
+  ipcMain.handle('suppliers:getById', (_e, a: { id: number }) => ({ success: true, data: suppliersRepo.getSupplierById(a.id) }))
+  ipcMain.handle('suppliers:search', (_e, a: { query: string }) => ({ success: true, data: suppliersRepo.searchSuppliers(a.query) }))
+  ipcMain.handle('suppliers:create', (_e, a: any) => ({ success: true, data: suppliersRepo.createSupplier(a) }))
+  ipcMain.handle('suppliers:update', (_e, a: { id: number; data: any }) => ({ success: true, data: suppliersRepo.updateSupplier(a.id, a.data) }))
+  ipcMain.handle('suppliers:delete', (_e, a: { id: number }) => ({ success: true, data: suppliersRepo.deleteSupplier(a.id) }))
+  handle('suppliers:stats', () => suppliersRepo.getSupplierStats())
+  ipcMain.handle('suppliers:ledger', (_e, a: { supplierId: number }) => ({ success: true, data: suppliersRepo.getSupplierLedgerEntries(a.supplierId) }))
+  ipcMain.handle('suppliers:deleteLedgerEntry', (_e, a: { entryId: number }) => ({ success: true, data: suppliersRepo.deleteSupplierLedgerEntry(a.entryId) }))
+
+  ipcMain.handle('suppliers:pay', (_event, a: { supplierId: number; amount: number; description?: string; purchaseId?: number }) => {
+    return { success: true, data: purchasesRepo.paySupplier(a.supplierId, a.amount, a.description, a.purchaseId) }
+  })
+
+  // ─── Purchases ──────────────────────────────────────────
+  handle('purchases:getAll', () => purchasesRepo.getAllPurchases())
+  ipcMain.handle('purchases:getById', (_e, a: { id: number }) => ({ success: true, data: purchasesRepo.getPurchaseById(a.id) }))
+  ipcMain.handle('purchases:getBySupplier', (_e, a: { supplierId: number }) => ({ success: true, data: purchasesRepo.getPurchasesBySupplier(a.supplierId) }))
+  ipcMain.handle('purchases:create', (_e, a: { input: any }) => ({ success: true, data: purchasesRepo.createPurchase(a.input) }))
+  handle('purchases:stats', () => purchasesRepo.getPurchaseStats())
+  ipcMain.handle('purchases:return', (_e, a: { purchaseId: number; items: any[] }) => ({ success: true, data: purchasesRepo.returnPurchase(a.purchaseId, a.items) }))
+}
     // Backfill expenses
     const allExpenses = db.prepare('SELECT * FROM expenses').all() as any[]
     for (const exp of allExpenses) {

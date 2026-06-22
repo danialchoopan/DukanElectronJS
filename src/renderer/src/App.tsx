@@ -15,12 +15,13 @@ import Accounting from './views/Accounting'
 import Inventory from './views/Inventory'
 import Categories from './views/Categories'
 import Help from './views/Help'
+import Suppliers from './views/Suppliers'
 import SetupWizard from './views/SetupWizard'
 import Sidebar from './components/Sidebar'
 import GlobalSearch from './components/GlobalSearch'
 import PrintPreviewDialog from './components/PrintPreviewDialog'
 
-type View = 'pos' | 'dashboard' | 'admin' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'help' | 'categories'
+type View = 'pos' | 'dashboard' | 'admin' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories'
 
 const NAV_MAP: Record<string, View> = {
   'nav-pos': 'pos', 'nav-inventory': 'inventory', 'nav-dashboard': 'dashboard',
@@ -31,7 +32,7 @@ const NAV_MAP: Record<string, View> = {
 const VIEW_MAP: Record<string, View> = {
   pos: 'pos', inventory: 'inventory', dashboard: 'dashboard', admin: 'admin',
   sales: 'sales', addproduct: 'addproduct', categories: 'categories',
-  customers: 'customers', accounting: 'accounting', help: 'help',
+  customers: 'customers', accounting: 'accounting', help: 'help', suppliers: 'suppliers',
 }
 
 export default function App() {
@@ -150,6 +151,7 @@ export default function App() {
         {currentView === 'inventory' && <Inventory initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
         {currentView === 'accounting' && <Accounting initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
         {currentView === 'customers' && <CustomerManagement highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
+        {currentView === 'suppliers' && <Suppliers />}
         {currentView === 'admin' && user.role === 'admin' && <AdminPanel initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
         {currentView === 'help' && <Help />}
       </div>

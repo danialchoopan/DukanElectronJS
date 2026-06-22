@@ -302,6 +302,72 @@ try { db.prepare('ALTER TABLE customers ADD COLUMN totalSpent REAL DEFAULT 0').r
 try { db.prepare('ALTER TABLE customers ADD COLUMN totalPurchases INTEGER DEFAULT 0').run() } catch(e) {}
 try { db.prepare('ALTER TABLE customer_ledger ADD COLUMN images TEXT DEFAULT "[]"').run() } catch(e) {}
 
+  // Supplier tables
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS suppliers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        phone TEXT DEFAULT '',
+        email TEXT DEFAULT '',
+        address TEXT DEFAULT '',
+        company TEXT DEFAULT '',
+        taxId TEXT DEFAULT '',
+        balance REAL NOT NULL DEFAULT 0,
+        description TEXT DEFAULT '',
+        isActive INTEGER NOT NULL DEFAULT 1,
+        createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_suppliers_name ON suppliers(name);
+      CREATE INDEX IF NOT EXISTS idx_suppliers_phone ON suppliers(phone);
+
+      CREATE TABLE IF NOT EXISTS supplier_ledger (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        supplierId INTEGER NOT NULL,
+        purchaseId INTEGER,
+        type TEXT NOT NULL CHECK(type IN ('purchase', 'payment', 'return', 'debt', 'adjustment')),
+        amount REAL NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (supplierId) REFERENCES suppliers(id),
+        FOREIGN KEY (purchaseId) REFERENCES purchases(id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_supplier_ledger_supplierId ON supplier_ledger(supplierId);
+
+      CREATE TABLE IF NOT EXISTS purchases (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        invoiceNumber TEXT UNIQUE NOT NULL,
+        supplierId INTEGER NOT NULL,
+        subtotal REAL NOT NULL DEFAULT 0,
+        taxAmount REAL NOT NULL DEFAULT 0,
+        discountAmount REAL NOT NULL DEFAULT 0,
+        totalAmount REAL NOT NULL DEFAULT 0,
+        paidAmount REAL NOT NULL DEFAULT 0,
+        paymentMethod TEXT NOT NULL DEFAULT 'credit' CHECK(paymentMethod IN ('cash', 'credit', 'partial')),
+        status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'received', 'invoiced', 'paid')),
+        notes TEXT DEFAULT '',
+        purchaseDate TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (supplierId) REFERENCES suppliers(id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_purchases_supplierId ON purchases(supplierId);
+      CREATE INDEX IF NOT EXISTS idx_purchases_date ON purchases(purchaseDate);
+
+      CREATE TABLE IF NOT EXISTS purchase_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        purchaseId INTEGER NOT NULL,
+        productId INTEGER NOT NULL,
+        productTitle TEXT NOT NULL,
+        quantity REAL NOT NULL,
+        unitCost REAL NOT NULL,
+        subtotal REAL NOT NULL,
+        FOREIGN KEY (purchaseId) REFERENCES purchases(id) ON DELETE CASCADE,
+        FOREIGN KEY (productId) REFERENCES products(id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_purchase_items_purchaseId ON purchase_items(purchaseId);
+    `)
+  } catch(e) {}
+
   const defaults: Record<string, string> = {
     storeName: 'فروشگاه من',
     storeAddress: '',
@@ -369,5 +435,20 @@ try { db.prepare('ALTER TABLE customer_ledger ADD COLUMN images TEXT DEFAULT "[]
       updateParent.run(ids['6000'], ids['6700'])
     })
     seedAccounts()
+
+    // Seed supplier accounts if missing
+    const supplierAccountExists = db.prepare("SELECT COUNT(*) as c FROM accounts WHERE code = '2110'").get() as { c: number }
+    if (supplierAccountExists.c === 0) {
+      const insertAccount = db.prepare('INSERT INTO accounts (code, name, type, parentId) VALUES (?, ?, ?, ?)')
+      const supplierAccounts: [string, string, string, number | null][] = [
+        ['2110', 'حساب\u200cهای پرداختنی تأمین\u200cکنندگان', 'liability', null],
+        ['5200', 'هزینه خرید کالا', 'expense', null],
+        ['5300', 'تخفیف دریافتی خرید', 'income', null],
+        ['1310', 'پیش\u200cپرداخت تأمین\u200cکنندگان', 'asset', null],
+      ]
+      for (const [code, name, type, pid] of supplierAccounts) {
+        insertAccount.run(code, name, type, pid)
+      }
+    }
   }
 }

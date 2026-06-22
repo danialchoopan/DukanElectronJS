@@ -278,6 +278,28 @@ const api = {
     smartImport: (filePath: string, options: any, userName?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('migration:smartImport', { filePath, options, userName }),
   },
 
+  suppliers: {
+    getAll: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('suppliers:getAll'),
+    getById: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('suppliers:getById', { id }),
+    search: (query: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('suppliers:search', { query }),
+    create: (input: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('suppliers:create', input),
+    update: (id: number, data: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('suppliers:update', { id, data }),
+    delete: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('suppliers:delete', { id }),
+    stats: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('suppliers:stats'),
+    ledger: (supplierId: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('suppliers:ledger', { supplierId }),
+    deleteLedgerEntry: (entryId: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('suppliers:deleteLedgerEntry', { entryId }),
+    pay: (supplierId: number, amount: number, description?: string, purchaseId?: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('suppliers:pay', { supplierId, amount, description, purchaseId }),
+  },
+
+  purchases: {
+    getAll: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('purchases:getAll'),
+    getById: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('purchases:getById', { id }),
+    getBySupplier: (supplierId: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('purchases:getBySupplier', { supplierId }),
+    create: (input: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('purchases:create', { input }),
+    stats: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('purchases:stats'),
+    return: (purchaseId: number, items: any[]): Promise<IPCResponse<any>> => ipcRenderer.invoke('purchases:return', { purchaseId, items }),
+  },
+
   onNavigate: (callback: (page: string) => void): (() => void) => {
     const handler = (_event: Electron.IpcRendererEvent, page: string): void => callback(page)
     ipcRenderer.on('navigate', handler)

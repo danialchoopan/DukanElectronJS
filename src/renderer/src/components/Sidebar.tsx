@@ -4,7 +4,7 @@ import { useSettingsStore } from '../store/settingsStore'
 import { t, fa } from '../i18n'
 import { DashboardIcon, UsersIcon, SettingsIcon, LogoutIcon, MoonIcon, SunIcon, LanguageIcon } from './Icons'
 
-type View = 'pos' | 'dashboard' | 'admin' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'help' | 'categories'
+type View = 'pos' | 'dashboard' | 'admin' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories'
 
 interface Props {
   currentView: View
@@ -28,6 +28,7 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
     { key: 'inventory', label: ui.nav.inventory, icon: <BoxIcon /> },
     { key: 'accounting', label: ui.nav.accounting, icon: <CalculatorIcon /> },
     { key: 'customers', label: ui.nav.customers, icon: <UsersIcon className="w-5 h-5" /> },
+    { key: 'suppliers', label: 'تأمین\u200cکنندگان', icon: <TruckIcon /> },
     { key: 'admin', label: ui.nav.admin, icon: <SettingsIcon className="w-5 h-5" />, adminOnly: true },
     { key: 'help', label: fa.nav.help, icon: <HelpIcon /> },
   ]
@@ -361,6 +362,14 @@ function StoreLogo() {
     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
       <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
+  )
+}
+
+function TruckIcon() {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="3" width="15" height="13" /><polygon points="16 8 20 8 23 11 23 16 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" />
     </svg>
   )
 }
