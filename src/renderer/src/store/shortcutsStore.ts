@@ -9,7 +9,7 @@ export interface Shortcut {
 }
 
 const DEFAULT_SHORTCUTS: Shortcut[] = [
-  { id: 'nav-pos', label: 'فروش (POS)', key: 'F1', category: 'nav', view: 'all' },
+  { id: 'nav-pos', label: 'فروش', key: 'F1', category: 'nav', view: 'all' },
   { id: 'nav-inventory', label: 'انبارداری', key: 'F2', category: 'nav', view: 'all' },
   { id: 'nav-dashboard', label: 'داشبورد', key: 'F3', category: 'nav', view: 'all' },
   { id: 'nav-customers', label: 'مشتریان', key: 'F8', category: 'nav', view: 'all' },

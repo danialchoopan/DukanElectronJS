@@ -25,7 +25,7 @@ function logError(message: string, stack?: string): void {
     const logPath = getLogPath()
     appendFileSync(logPath, logEntry, 'utf-8')
   } catch (e) { /* ignore */ }
-  console.error(`[POS ERROR] ${message}`, stack || '')
+  console.error(`[Danial Accounting] ${message}`, stack || '')
 }
 
 process.on('uncaughtException', (error) => {
@@ -110,7 +110,7 @@ function createWindow(): void {
     height: 900,
     minWidth: 1024,
     minHeight: 700,
-    title: 'POS',
+    title: 'Danial Accounting',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,

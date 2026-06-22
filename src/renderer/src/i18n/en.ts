@@ -1,5 +1,5 @@
 export const en = {
-  app: { title: 'SuperMarket POS', loading: 'Loading...' },
+  app: { title: 'HesabDari Danial', loading: 'Loading...' },
   auth: {
     enterPin: 'Enter your PIN',
     selectUser: 'Select your account',

@@ -7,7 +7,7 @@
  * - roundTo = 1000: rounds up to nearest 1000 Tomans
  *
  * Uses Math.ceil to always round UP (favorable to the store),
- * which is standard for Iranian POS rounding.
+  * which is standard for Iranian sales rounding.
  */
 export function roundToNearest(rawTotal: number, roundTo: number): number {
   if (roundTo <= 0 || isNaN(rawTotal)) return Math.max(0, rawTotal)

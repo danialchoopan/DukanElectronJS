@@ -5,7 +5,7 @@ import { useShortcutsStore } from './store/shortcutsStore'
 import { setLanguage } from './i18n'
 import { setShopName, setTaxRate, setPrintCustomization } from './utils/a4Print'
 import LockScreen from './views/LockScreen'
-import CashierPOS from './views/CashierPOS'
+import SalesTerminal from './views/SalesTerminal'
 import Dashboard from './views/Dashboard'
 import AdminPanel from './views/AdminPanel'
 import CustomerManagement from './views/CustomerManagement'
@@ -144,7 +144,7 @@ export default function App() {
       <Sidebar currentView={currentView} onNavigate={(v) => setCurrentView(v as View)} />
       <div className="flex-1 overflow-hidden">
         {currentView === 'dashboard' && <Dashboard />}
-        {currentView === 'pos' && <CashierPOS />}
+        {currentView === 'pos' && <SalesTerminal />}
         {currentView === 'sales' && <SalesHistory />}
         {currentView === 'addproduct' && <AddProduct />}
         {currentView === 'categories' && <Categories />}

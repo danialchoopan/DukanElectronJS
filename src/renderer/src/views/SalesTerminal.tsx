@@ -23,7 +23,7 @@ const success = '#22c55e'
 const error = '#ef4444'
 const warning = '#f59e0b'
 
-export default function CashierPOS() {
+export default function SalesTerminal() {
   const user = useAuthStore((s) => s.user)
   const { items, addItem, clearCart, getSubtotal, lastError, clearError } = useCartStore()
   const slots = useSuspendStore((s) => s.slots)

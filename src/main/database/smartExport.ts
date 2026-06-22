@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as crypto from 'crypto'
 import { getDatabase } from './connection'
 
-const SIGNATURE_KEY = 'hamtraz-smart-export-2026'
+const SIGNATURE_KEY = 'hesabdari-danial-export-2026'
 
 export type DataModule = 'products' | 'customers' | 'categories' | 'users' | 'settings' | 'sales' | 'expenses' | 'returns' | 'accounts' | 'journal' | 'fiscal_periods' | 'cash_register'
 

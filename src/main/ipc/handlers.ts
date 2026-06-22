@@ -489,9 +489,22 @@ export function registerAllHandlers(): void {
       journalRepo.postSaleJournal(sale.id, sale.createdAt?.slice(0, 10) || new Date().toISOString().slice(0, 10), {
         items: items.map((i: any) => ({ purchasePrice: i.purchasePrice, quantity: i.quantity })),
         total_amount: sale.total_amount, paymentMethod: sale.paymentMethod
+      })
+    }
+    // Backfill expenses
+    const allExpenses = db.prepare('SELECT * FROM expenses').all() as any[]
+    for (const exp of allExpenses) {
+      journalRepo.postExpenseJournal(exp.id, exp.date || new Date().toISOString().slice(0, 10), exp.amount, exp.category)
+    }
+    // Backfill returns
+    const allReturns = db.prepare('SELECT * FROM returns').all() as any[]
+    for (const ret of allReturns) {
+      journalRepo.postReturnJournal(ret.id, ret.createdAt?.slice(0, 10) || new Date().toISOString().slice(0, 10), ret.refundAmount)
+    }
+    return true
   })
 
-  // ─── Suppliers ──────────────────────────────────────────
+  handle('accounting:seedDemo', () => seedRepo.seedDemoData())
   handle('suppliers:getAll', () => suppliersRepo.getAllSuppliers())
   ipcMain.handle('suppliers:getById', (_e, a: { id: number }) => ({ success: true, data: suppliersRepo.getSupplierById(a.id) }))
   ipcMain.handle('suppliers:search', (_e, a: { query: string }) => ({ success: true, data: suppliersRepo.searchSuppliers(a.query) }))
@@ -513,22 +526,6 @@ export function registerAllHandlers(): void {
   ipcMain.handle('purchases:create', (_e, a: { input: any }) => ({ success: true, data: purchasesRepo.createPurchase(a.input) }))
   handle('purchases:stats', () => purchasesRepo.getPurchaseStats())
   ipcMain.handle('purchases:return', (_e, a: { purchaseId: number; items: any[] }) => ({ success: true, data: purchasesRepo.returnPurchase(a.purchaseId, a.items) }))
-}
-    // Backfill expenses
-    const allExpenses = db.prepare('SELECT * FROM expenses').all() as any[]
-    for (const exp of allExpenses) {
-      journalRepo.postExpenseJournal(exp.id, exp.date || new Date().toISOString().slice(0, 10), exp.amount, exp.category)
-    }
-    // Backfill returns
-    const allReturns = db.prepare('SELECT * FROM returns').all() as any[]
-    for (const ret of allReturns) {
-      journalRepo.postReturnJournal(ret.id, ret.createdAt?.slice(0, 10) || new Date().toISOString().slice(0, 10), ret.refundAmount)
-    }
-    return true
-  })
-
-  // ─── Seed Demo Data ──────────────────────────────────────
-  handle('accounting:seedDemo', () => seedRepo.seedDemoData())
 
   // ─── Smart Export/Import ──────────────────────────────────
   handle('smartExport:modules', () => smartExportService.getExportModuleList())
