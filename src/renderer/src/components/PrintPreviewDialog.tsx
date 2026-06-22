@@ -19,6 +19,7 @@ export default function PrintPreviewDialog() {
   const [activeTemplate, setActiveTemplate] = useState('default')
   const [loading, setLoading] = useState(false)
   const [customSettings, setCustomSettings] = useState<Record<string, any>>({})
+  const [shopName, setShopName] = useState('فروشگاه')
   const isDark = document.documentElement.classList.contains('dark')
 
   const cardBg = isDark ? '#1e293b' : '#ffffff'
@@ -41,6 +42,9 @@ export default function PrintPreviewDialog() {
 
       const s = await window.api.printSettings.getAll()
       if (s.success && s.data?.printActiveTemplate) setActiveTemplate(s.data.printActiveTemplate)
+
+      const shopR = await window.api.settings.getAll()
+      if (shopR.success && shopR.data?.storeName) setShopName(shopR.data.storeName)
     })()
   }, [pending])
 
@@ -68,7 +72,7 @@ export default function PrintPreviewDialog() {
 
     return `
       <div style="font-family:'Vazirmatn',sans-serif;font-size:11pt;line-height:1.5;color:#1a1a1a;padding:16px;border-top:${getBorderCSS()}">
-        <div style="text-align:${align};font-size:14pt;font-weight:700;color:${bgColor};margin-bottom:2px">فروشگاه</div>
+        <div style="text-align:${align};font-size:14pt;font-weight:700;color:${bgColor};margin-bottom:2px">${shopName}</div>
         <div style="text-align:center;font-size:12pt;font-weight:700;color:${bgColor};margin-bottom:4px">${pending.title}</div>
         ${pending.html}
         ${signatureHtml}
