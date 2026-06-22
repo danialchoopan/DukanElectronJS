@@ -55,7 +55,7 @@ export default function AdminPanel({ initialTab, highlightId, onHighlightDone }:
           </svg>
         </div>
         <div>
-          <h2 className="text-xl font-extrabold tracking-tight" style={{ color: textPrimary }}>تنظیمات و مدیریت</h2>
+          <h2 className="text-xl font-extrabold tracking-tight" style={{ color: textPrimary }}>{tab === 'users' ? 'مدیریت کاربران' : tab === 'settings' ? 'تنظیمات فروشگاه' : tab === 'ui' ? 'ظاهر برنامه' : tab === 'shortcuts' ? 'میانبرها' : 'شخصی‌سازی چاپ'}</h2>
           <p className="text-xs font-medium" style={{ color: textSecondary }}>{fa.admin.settings}</p>
         </div>
       </div>
@@ -569,8 +569,6 @@ function SettingsTab({ onExport, onImport }: { onExport: () => void; onImport: (
   const [saved, setSaved] = useState(false)
   const isDark = document.documentElement.classList.contains('dark')
 
-  const primary = '#006194'
-
   useEffect(() => {
     window.api.settings.getAll().then((r) => {
       if (r.success && r.data) {
@@ -593,149 +591,111 @@ function SettingsTab({ onExport, onImport }: { onExport: () => void; onImport: (
       window.api.settings.set('storePhone', storePhone),
       window.api.settings.set('receiptFooter', receiptFooter),
     ])
-    setSaved(true); setTimeout(() => setSaved(false), 2000)
     setShopName(storeName, storePhone)
+    setSaved(true); setTimeout(() => setSaved(false), 2000)
   }
 
-  const cardBg = isDark ? '#1e293b' : '#ffffff'
-  const cardBorder = isDark ? '#334155' : '#e2e8f0'
-  const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
-  const textSecondary = isDark ? '#94a3b8' : '#64748b'
-  const inputBg = isDark ? '#0f172a' : '#f8fafc'
+  const cBg = isDark ? '#1e293b' : '#ffffff'
+  const cBorder = isDark ? '#334155' : '#e2e8f0'
+  const tPri = isDark ? '#f1f5f9' : '#0f172a'
+  const tSec = isDark ? '#94a3b8' : '#64748b'
+  const inBg = isDark ? '#0f172a' : '#f8fafc'
+  const inStyle = { background: inBg, border: `1px solid ${cBorder}`, color: tPri }
 
-  const inputStyle = { background: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }
+  const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
+    <div className={`rounded-xl p-4 border ${className}`} style={{ backgroundColor: cBg, borderColor: cBorder }}>{children}</div>
+  )
+  const Label = ({ children }: { children: React.ReactNode }) => (
+    <label className="text-xs font-bold block mb-1.5" style={{ color: tSec }}>{children}</label>
+  )
+  const Input = ({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) => (
+    <div className="mb-3"><Label>{label}</Label><input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+      className="w-full px-3 py-2 rounded-lg text-sm font-bold transition-all outline-none" style={inStyle} /></div>
+  )
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-4">
-          <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}>
-            <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.storeName}</label>
-            <input
-              value={storeName}
-              onChange={(e) => setStoreName(e.target.value)}
-              className="input-field text-sm"
-              style={inputStyle}
-            />
-          </div>
+    <div className="w-full max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        {/* RIGHT: Inputs (3 cols) */}
+        <div className="lg:col-span-3 space-y-3">
+          <Card>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: isDark ? 'rgba(0,97,148,0.2)' : 'rgba(0,97,148,0.08)' }}>
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke={primary} strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              </div>
+              <h3 className="font-extrabold text-sm" style={{ color: tPri }}>اطلاعات فروشگاه</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Input label={fa.admin.storeName} value={storeName} onChange={setStoreName} placeholder="نام فروشگاه" />
+              <Input label={fa.admin.storePhone} value={storePhone} onChange={setStorePhone} placeholder="021..." />
+              <div className="col-span-2"><Input label={fa.admin.storeAddress} value={storeAddress} onChange={setStoreAddress} placeholder="آدرس فروشگاه" /></div>
+              <div className="col-span-2"><Input label={fa.admin.receiptFooter} value={receiptFooter} onChange={setReceiptFooter} placeholder="متن پایانی فاکتور" /></div>
+            </div>
+          </Card>
 
-          <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}>
-            <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.storeAddress}</label>
-            <input
-              value={storeAddress}
-              onChange={(e) => setStoreAddress(e.target.value)}
-              className="input-field text-sm"
-              style={inputStyle}
-            />
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}>
-            <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.storePhone}</label>
-            <input
-              value={storePhone}
-              onChange={(e) => setStorePhone(e.target.value)}
-              className="input-field text-sm"
-              style={inputStyle}
-            />
-          </div>
-
-          <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}>
-            <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.receiptFooter}</label>
-            <input
-              value={receiptFooter}
-              onChange={(e) => setReceiptFooter(e.target.value)}
-              className="input-field text-sm"
-              style={inputStyle}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-2xl p-4 border mt-4" style={{ backgroundColor: cardBg, borderColor: cardBorder, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}>
-        <div className="flex items-center justify-between mb-3">
-          <label className="text-xs font-bold" style={{ color: textSecondary }}>مالیات بر ارزش افزوده</label>
-          <button onClick={() => setTaxEnabled(!taxEnabled)}
-            className="relative w-10 h-5 rounded-full transition-all duration-200"
-            style={{ backgroundColor: taxEnabled ? primary : (isDark ? '#475569' : '#d1d5db') }}>
-            <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
-              style={{ left: taxEnabled ? '20px' : '2px' }} />
+          <button onClick={saveAll} className="w-full py-3 rounded-xl font-bold text-sm text-white transition-all"
+            style={{ background: saved ? 'linear-gradient(135deg, #22c55e, #16a34a)' : `linear-gradient(135deg, ${primary}, #007bb9)`, boxShadow: saved ? '0 4px 12px rgba(34,197,94,0.3)' : `0 4px 12px ${primary}4d` }}>
+            {saved ? 'ذخیره شد!' : fa.admin.save}
           </button>
         </div>
-        {taxEnabled && (
-          <div>
-            <label className="text-xs block mb-1" style={{ color: textSecondary }}>درصد مالیات (%)</label>
-            <div className="flex gap-2 items-center">
-              <input type="range" min="0" max="30" step="0.5" value={taxRate}
-                onChange={(e) => setTaxRate(parseFloat(e.target.value))}
-                className="flex-1 h-2 rounded-lg appearance-none cursor-pointer"
-                style={{ accentColor: primary }} />
-              <span className="text-sm font-bold font-mono min-w-[60px] text-center" style={{ color: primary }}>{taxRate}%</span>
-            </div>
-            <div className="flex gap-1 mt-2">
-              {[0, 5, 9, 10, 15].map((v) => (
-                <button key={v} onClick={() => setTaxRate(v)}
-                  className="flex-1 px-2 py-1.5 rounded-lg text-[11px] font-bold transition-all"
-                  style={{
-                    background: taxRate === v ? `linear-gradient(135deg, ${primary}, #007bb9)` : (isDark ? '#334155' : '#f1f5f9'),
-                    color: taxRate === v ? '#ffffff' : textSecondary,
-                  }}>
-                  {v}%
-                </button>
-              ))}
-            </div>
-            <p className="text-[10px] mt-2" style={{ color: textSecondary }}>
-              مالیات به صورت خودکار در چاپ فاکتور و صورتحساب‌ها اعمال می‌شود.
-            </p>
-          </div>
-        )}
-      </div>
 
-      <button
-        onClick={saveAll}
-        className="w-full py-3 text-lg mt-4 rounded-xl font-bold transition-all duration-200"
-        style={{
-          background: saved
-            ? 'linear-gradient(135deg, #22c55e, #16a34a)'
-            : `linear-gradient(135deg, ${primary}, #007bb9)`,
-          color: '#ffffff',
-          boxShadow: saved ? '0 4px 12px rgba(34,197,94,0.3)' : '0 4px 12px rgba(0,97,148,0.3)',
-        }}
-      >
-        {saved ? fa.admin.saved : fa.admin.save}
-      </button>
-
-      <div className="rounded-2xl p-5 border mt-5" style={{ backgroundColor: cardBg, borderColor: cardBorder, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}>
-        <div className="flex items-center gap-2.5 mb-3">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: isDark ? 'rgba(0,97,148,0.2)' : 'rgba(0,97,148,0.08)' }}>
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke={primary} strokeWidth="2"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-          </div>
-          <h3 className="font-extrabold text-sm" style={{ color: textPrimary }}>پشتیبان‌گیری و بازیابی</h3>
-        </div>
-        <p className="text-sm mb-4" style={{ color: textSecondary }}>
-          تمام اطلاعات فروشگاه شامل کالاها، فاکتورها، مشتریان و تنظیمات
-        </p>
-        <BackupSection />
-
-        <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${cardBorder}` }}>
-          <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: isDark ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.08)' }}>
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        {/* LEFT: Tax + Backup + Export (2 cols) */}
+        <div className="lg:col-span-2 space-y-3">
+          {/* Tax */}
+          <Card>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="text-sm font-bold" style={{ color: tPri }}>مالیات بر ارزش افزوده</div>
+                <div className="text-[10px]" style={{ color: tSec }}>اعمال خودکار در فاکتور</div>
+              </div>
+              <button onClick={() => setTaxEnabled(!taxEnabled)}
+                className="relative w-10 h-5 rounded-full transition-all" style={{ backgroundColor: taxEnabled ? primary : isDark ? '#475569' : '#d1d5db' }}>
+                <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all" style={{ left: taxEnabled ? '20px' : '2px' }} />
+              </button>
             </div>
-            <h3 className="font-extrabold text-sm" style={{ color: textPrimary }}>خروجی/واردات هوشمند</h3>
-          </div>
-          <p className="text-xs mb-3" style={{ color: textSecondary }}>
-            انتخاب بخش‌های دلخواه برای خروجی یا وارد کردن — با رمزگذاری و اعتبارسنجی
-          </p>
-          <div className="flex gap-2">
-            <button onClick={onExport} className="px-4 py-2 rounded-xl text-xs font-bold transition-all" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff', boxShadow: '0 2px 8px rgba(34,197,94,0.25)' }}>
-              خروجی هوشمند
-            </button>
-            <button onClick={onImport} className="px-4 py-2 rounded-xl text-xs font-bold transition-all" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)', color: '#fff', boxShadow: '0 2px 8px rgba(59,130,246,0.25)' }}>
-              واردات هوشمند
-            </button>
-          </div>
+            {taxEnabled && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <input type="range" min="0" max="30" step="0.5" value={taxRate} onChange={e => setTaxRate(parseFloat(e.target.value))}
+                    className="flex-1 h-2 rounded-lg appearance-none cursor-pointer" style={{ accentColor: primary }} />
+                  <span className="text-sm font-bold font-mono min-w-[45px] text-center" style={{ color: primary }}>{taxRate}%</span>
+                </div>
+                <div className="flex gap-1">
+                  {[0, 5, 9, 10, 15].map(v => (
+                    <button key={v} onClick={() => setTaxRate(v)} className="flex-1 py-1 rounded-lg text-[10px] font-bold"
+                      style={{ background: taxRate === v ? primary : inBg, color: taxRate === v ? '#fff' : tSec }}>{v}%</button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* Smart Export/Import */}
+          <Card>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: '#22c55e15' }}>
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </div>
+              <h3 className="font-extrabold text-xs" style={{ color: tPri }}>خروجی/واردات هوشمند</h3>
+            </div>
+            <p className="text-[10px] mb-3" style={{ color: tSec }}>انتخاب بخش‌ها + رمزگذاری + اعتبارسنجی</p>
+            <div className="flex gap-2">
+              <button onClick={onExport} className="flex-1 px-3 py-2 rounded-xl text-[10px] font-bold text-white" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>خروجی</button>
+              <button onClick={onImport} className="flex-1 px-3 py-2 rounded-xl text-[10px] font-bold text-white" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)' }}>واردات</button>
+            </div>
+          </Card>
+
+          {/* Backup */}
+          <Card>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: isDark ? 'rgba(0,97,148,0.2)' : 'rgba(0,97,148,0.08)' }}>
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke={primary} strokeWidth="2"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+              </div>
+              <h3 className="font-extrabold text-xs" style={{ color: tPri }}>پشتیبان‌گیری</h3>
+            </div>
+            <p className="text-[10px] mb-3" style={{ color: tSec }}>کالاها، فاکتورها، مشتریان، تنظیمات</p>
+            <BackupSection />
+          </Card>
         </div>
       </div>
     </div>
