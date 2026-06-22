@@ -3,6 +3,7 @@ import { useCartStore } from '../store/cartStore'
 import type { Customer } from '../../../types'
 import { fa } from '../i18n'
 import { MoneyIcon, BookIcon, SearchIcon, XIcon } from './Icons'
+import { formatNumberInput, parseFormattedNumber } from './FormattedPriceInput'
 
 type PaymentMethod = 'cash' | 'card' | 'ledger'
 
@@ -110,7 +111,7 @@ export default function PaymentPanel({ onPaymentComplete, selectedCustomer, onSe
         <div className="space-y-2">
           {!fullyPaid && (
             <>
-              <input type="number" value={paid} onChange={(e) => setPaid(e.target.value)} className="input-field text-2xl text-center font-bold py-3" placeholder="0" autoFocus />
+              <input type="text" inputMode="numeric" value={formatNumberInput(paid)} onChange={(e) => setPaid(String(parseFormattedNumber(e.target.value)))} className="input-field text-2xl text-center font-bold py-3" placeholder="0" autoFocus />
               {quickAmounts.length > 0 && (
                 <div className="grid grid-cols-4 gap-1.5">
                   {quickAmounts.map((amt) => (

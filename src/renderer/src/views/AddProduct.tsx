@@ -3,6 +3,7 @@ import { fa } from '../i18n'
 import { useSettingsStore } from '../store/settingsStore'
 import { printA4Report, downloadExcel } from '../utils/a4Print'
 import WebcamScanner from '../components/WebcamScanner'
+import FormattedPriceInput from '../components/FormattedPriceInput'
 import type { Product } from '../../../types'
 import { useSortable } from '../hooks/useSortable'
 import PrintDialog from '../components/PrintDialog'
@@ -274,10 +275,22 @@ export default function AddProduct() {
               </select>
               {!form.category && <p className="text-[10px] mt-1" style={{ color: '#ef4444' }}>انتخاب دسته‌بندی الزامی است</p>}
             </div>
-            <div>
-              <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.purchasePrice}</label>
-              <input type="number" value={form.purchase_price || ''} onChange={(e) => setForm((f) => ({ ...f, purchase_price: +e.target.value }))} className="input-field text-sm" style={inputStyle} />
-            </div>
+              <div>
+                <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.purchasePrice}</label>
+                <FormattedPriceInput value={form.purchase_price} onChange={(v) => setForm((f) => ({ ...f, purchase_price: v }))} className="input-field text-sm" style={inputStyle} />
+              </div>
+              <div>
+                <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.salePrice}</label>
+                <FormattedPriceInput value={form.sale_price} onChange={(v) => setForm((f) => ({ ...f, sale_price: v }))} className="input-field text-sm" style={inputStyle} />
+              </div>
+              <div>
+                <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.stock}</label>
+                <FormattedPriceInput value={form.stock} onChange={(v) => setForm((f) => ({ ...f, stock: v }))} className="input-field text-sm" style={inputStyle} />
+              </div>
+              <div>
+                <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.minStock}</label>
+                <FormattedPriceInput value={form.minStock} onChange={(v) => setForm((f) => ({ ...f, minStock: v }))} className="input-field text-sm" placeholder="0" style={inputStyle} />
+              </div>
             <div>
               <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.salePrice}</label>
               <input type="number" value={form.sale_price || ''} onChange={(e) => setForm((f) => ({ ...f, sale_price: +e.target.value }))} className="input-field text-sm" style={inputStyle} />

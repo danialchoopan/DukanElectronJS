@@ -21,7 +21,7 @@ import Sidebar from './components/Sidebar'
 import GlobalSearch from './components/GlobalSearch'
 import PrintPreviewDialog from './components/PrintPreviewDialog'
 
-type View = 'pos' | 'dashboard' | 'admin' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories'
+type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories'
 
 const NAV_MAP: Record<string, View> = {
   'nav-pos': 'pos', 'nav-inventory': 'inventory', 'nav-dashboard': 'dashboard',
@@ -33,6 +33,7 @@ const VIEW_MAP: Record<string, View> = {
   pos: 'pos', inventory: 'inventory', dashboard: 'dashboard', admin: 'admin',
   sales: 'sales', addproduct: 'addproduct', categories: 'categories',
   customers: 'customers', accounting: 'accounting', help: 'help', suppliers: 'suppliers',
+  settings: 'settings',
 }
 
 export default function App() {
@@ -152,7 +153,8 @@ export default function App() {
         {currentView === 'accounting' && <Accounting initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
         {currentView === 'customers' && <CustomerManagement highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
         {currentView === 'suppliers' && <Suppliers />}
-        {currentView === 'admin' && user.role === 'admin' && <AdminPanel initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
+        {currentView === 'settings' && <AdminPanel initialTab="settings" highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
+        {currentView === 'admin' && user.role === 'admin' && <AdminPanel initialTab={navParams?.tab || 'users'} highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
         {currentView === 'help' && <Help />}
       </div>
       <GlobalSearch open={showGlobalSearch} onClose={() => setShowGlobalSearch(false)} onNavigate={(view, tab, highlightId) => { handleNavigate(view, tab, highlightId); setShowGlobalSearch(false) }} />

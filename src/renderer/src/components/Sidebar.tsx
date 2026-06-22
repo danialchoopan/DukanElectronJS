@@ -4,7 +4,7 @@ import { useSettingsStore } from '../store/settingsStore'
 import { t, fa } from '../i18n'
 import { DashboardIcon, UsersIcon, SettingsIcon, LogoutIcon, MoonIcon, SunIcon, LanguageIcon } from './Icons'
 
-type View = 'pos' | 'dashboard' | 'admin' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories'
+type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories'
 
 interface Props {
   currentView: View
@@ -29,7 +29,8 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
     { key: 'accounting', label: ui.nav.accounting, icon: <CalculatorIcon /> },
     { key: 'customers', label: ui.nav.customers, icon: <UsersIcon className="w-5 h-5" /> },
     { key: 'suppliers', label: 'تأمین\u200cکنندگان', icon: <TruckIcon /> },
-    { key: 'admin', label: ui.nav.admin, icon: <SettingsIcon className="w-5 h-5" />, adminOnly: true },
+    { key: 'settings', label: 'تنظیمات', icon: <SettingsIcon className="w-5 h-5" /> },
+    { key: 'admin', label: 'مدیریت', icon: <AdminIcon />, adminOnly: true },
     { key: 'help', label: fa.nav.help, icon: <HelpIcon /> },
   ]
 
@@ -370,6 +371,14 @@ function TruckIcon() {
   return (
     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="1" y="3" width="15" height="13" /><polygon points="16 8 20 8 23 11 23 16 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" />
+    </svg>
+  )
+}
+
+function AdminIcon() {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
     </svg>
   )
 }

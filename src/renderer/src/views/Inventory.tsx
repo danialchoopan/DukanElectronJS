@@ -12,6 +12,7 @@ import PrintDialog from '../components/PrintDialog'
 import { useHighlight } from '../hooks/useHighlight'
 import { getProductImageUrl } from '../utils/productImage'
 import { generateQRSvg } from '../utils/qrCode'
+import { InlineEditCell } from '../components/FormattedPriceInput'
 
 type AuditFilter = 'all' | 'create' | 'update' | 'delete' | 'restock'
 
@@ -76,6 +77,11 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
         }
       })
     }
+  }
+
+  const handleInlineUpdate = async (id: number, field: string, value: number) => {
+    await window.api.products.update(id, { [field]: value } as any)
+    await loadProducts()
   }
 
   const loadLowStock = async () => {
@@ -598,8 +604,6 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
                 const isZero = p.stock <= 0
                 const isLow = p.stock > 0 && p.stock <= p.minStock
                 const rowBg = isZero ? (isDark ? 'rgba(239,68,68,0.08)' : 'rgba(239,68,68,0.05)') : isLow ? (isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.05)') : 'transparent'
-                const stockRatio = p.minStock > 0 ? Math.min(p.stock / p.minStock, 2) / 2 : p.stock > 0 ? 1 : 0
-                const stockBarColor = isZero ? '#ef4444' : isLow ? '#f59e0b' : '#22c55e'
                 const margin = p.purchase_price > 0 ? (((p.sale_price - p.purchase_price) / p.purchase_price) * 100).toFixed(1) : '0'
                 return (
                 <tr key={p.id} data-highlight-id={`product-${p.id}`} style={{ borderBottom: `1px solid ${cardBorder}`, backgroundColor: rowBg }}
@@ -625,14 +629,11 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
                   </td>
                   <td className="px-4 py-2" style={{ color: textSecondary }}>{p.category || '-'}</td>
                   <td className="px-4 py-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold font-mono" style={{ color: stockBarColor }}>{p.stock}</span>
-                      <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#334155' : '#e2e8f0' }}>
-                        <div className="h-full rounded-full transition-all" style={{ width: `${stockRatio * 100}%`, backgroundColor: stockBarColor }} />
-                      </div>
-                    </div>
+                    <InlineEditCell value={p.stock} onSave={(v) => handleInlineUpdate(p.id, 'stock', v)} align="center" />
                   </td>
-                  <td className="px-4 py-2" style={{ color: textPrimary }}>{p.purchase_price.toLocaleString('fa-IR')}</td>
+                  <td className="px-4 py-2" style={{ color: textPrimary }}>
+                    <InlineEditCell value={p.purchase_price} onSave={(v) => handleInlineUpdate(p.id, 'purchase_price', v)} display={p.purchase_price.toLocaleString('fa-IR')} align="right" />
+                  </td>
                   <td className="px-4 py-2" style={{ color: textPrimary }}>{(p.stock * p.purchase_price).toLocaleString('fa-IR')}</td>
                   <td className="px-4 py-2">
                     <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{
@@ -1056,10 +1057,10 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}><div className="text-xs" style={{ color: textSecondary }}>بارکد</div><div className="text-sm font-mono font-bold" style={{ color: textPrimary }}>{viewProduct.barcode}</div></div>
-              <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}><div className="text-xs" style={{ color: textSecondary }}>موجودی</div><div className="text-sm font-bold" style={{ color: viewProduct.stock <= 0 ? '#ef4444' : '#22c55e' }}>{viewProduct.stock}</div></div>
-              <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}><div className="text-xs" style={{ color: textSecondary }}>قیمت خرید</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{viewProduct.purchase_price.toLocaleString('fa-IR')}</div></div>
-              <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}><div className="text-xs" style={{ color: textSecondary }}>قیمت فروش</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{viewProduct.sale_price.toLocaleString('fa-IR')}</div></div>
-              <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}><div className="text-xs" style={{ color: textSecondary }}>حداقل موجودی</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{viewProduct.minStock}</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}><div className="text-xs mb-1" style={{ color: textSecondary }}>موجودی</div><InlineEditCell value={viewProduct.stock} onSave={(v) => { handleInlineUpdate(viewProduct.id, 'stock', v); setViewProduct({ ...viewProduct, stock: v }) }} display={String(viewProduct.stock)} align="center" /></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}><div className="text-xs mb-1" style={{ color: textSecondary }}>قیمت خرید</div><InlineEditCell value={viewProduct.purchase_price} onSave={(v) => { handleInlineUpdate(viewProduct.id, 'purchase_price', v); setViewProduct({ ...viewProduct, purchase_price: v }) }} display={viewProduct.purchase_price.toLocaleString('fa-IR')} align="right" /></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}><div className="text-xs mb-1" style={{ color: textSecondary }}>قیمت فروش</div><InlineEditCell value={viewProduct.sale_price} onSave={(v) => { handleInlineUpdate(viewProduct.id, 'sale_price', v); setViewProduct({ ...viewProduct, sale_price: v }) }} display={viewProduct.sale_price.toLocaleString('fa-IR')} align="right" /></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}><div className="text-xs mb-1" style={{ color: textSecondary }}>حداقل موجودی</div><InlineEditCell value={viewProduct.minStock} onSave={(v) => { handleInlineUpdate(viewProduct.id, 'minStock', v); setViewProduct({ ...viewProduct, minStock: v }) }} display={String(viewProduct.minStock)} align="center" /></div>
               <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}><div className="text-xs" style={{ color: textSecondary }}>واحد</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{viewProduct.unit === 'weight' ? 'کیلوگرم' : 'عدد'}</div></div>
             </div>
             <div className="flex gap-2 mt-4">
