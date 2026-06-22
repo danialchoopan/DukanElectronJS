@@ -41,6 +41,9 @@ export default function SalesTerminal() {
   const [fullyPaid, setFullyPaid] = useState(true)
   const [productRefreshKey, setProductRefreshKey] = useState(0)
   const barcodeRef = useRef<HTMLInputElement>(null)
+  const [invoiceDesc, setInvoiceDesc] = useState('')
+  const [invoiceCustomerName, setInvoiceCustomerName] = useState('')
+  const [invoiceNote, setInvoiceNote] = useState('')
 
   useEffect(() => {
     window.api.settings.getAll().then((r) => {
@@ -82,7 +85,10 @@ export default function SalesTerminal() {
     const total = getSubtotal()
     const paidAmt = fullyPaid ? total : (customerPaid || 0)
     setPendingPayment({ method, customerPaid: paidAmt })
-  }, [items, fullyPaid, getSubtotal, showNotif])
+    setInvoiceCustomerName(selectedCustomer?.name || '')
+    setInvoiceDesc('')
+    setInvoiceNote('')
+  }, [items, fullyPaid, getSubtotal, showNotif, selectedCustomer])
 
   const confirmSale = useCallback(async () => {
     if (!pendingPayment || items.length === 0) return
@@ -165,20 +171,61 @@ export default function SalesTerminal() {
 
       {showWebcam && <WebcamScanner onScan={handleBarcodeScan} onClose={() => setShowWebcam(false)} />}
 
-      {/* Payment Confirmation Modal */}
+      {/* Payment Confirmation Dialog — Full Customization */}
       {pendingPayment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
-          <div className="card p-8 max-w-sm w-full text-center" style={{ border: `2px solid ${warning}` }}>
-            <div className="w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center" style={{ backgroundColor: `${warning}20` }}>
-              <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke={warning} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
+          <div className="card p-6 max-w-md w-full" style={{ border: `2px solid ${primary}` }}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)` }}>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div>
+                <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>تکمیل فاکتور</h2>
+                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{pendingPayment.method === 'cash' ? fa.payment.cash : 'بدهی'} — {getSubtotal().toLocaleString('fa-IR')} {fa.common.toman}</p>
+              </div>
             </div>
-            <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{fa.common.confirm}؟</h2>
-            <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>{fa.pos.total}: <span className="font-bold" style={{ color: success }}>{getSubtotal().toLocaleString('fa-IR')} {fa.common.toman}</span></p>
-            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>{pendingPayment.method === 'cash' ? fa.payment.cash : pendingPayment.method === 'card' ? fa.payment.card : fa.payment.ledger}</p>
+
+            <div className="space-y-3 mb-4">
+              <div>
+                <label className="text-xs font-bold block mb-1" style={{ color: 'var(--text-secondary)' }}>نام مشتری</label>
+                <input value={invoiceCustomerName} onChange={e => setInvoiceCustomerName(e.target.value)}
+                  placeholder={selectedCustomer?.name || 'اختیاری'}
+                  className="input-field text-sm w-full" />
+              </div>
+              <div>
+                <label className="text-xs font-bold block mb-1" style={{ color: 'var(--text-secondary)' }}>توضیحات فاکتور</label>
+                <input value={invoiceDesc} onChange={e => setInvoiceDesc(e.target.value)}
+                  placeholder="مثلاً: شماره سفارش، نام پروژه..."
+                  className="input-field text-sm w-full" />
+              </div>
+              <div>
+                <label className="text-xs font-bold block mb-1" style={{ color: 'var(--text-secondary)' }}>یادداشت</label>
+                <textarea value={invoiceNote} onChange={e => setInvoiceNote(e.target.value)}
+                  placeholder="متن دلخواه برای چاپ روی فاکتور..."
+                  className="input-field text-sm w-full resize-none" rows={2} />
+              </div>
+            </div>
+
+            {/* Preview */}
+            <div className="rounded-xl p-3 mb-4" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+              <div className="text-[10px] font-bold mb-2" style={{ color: 'var(--text-secondary)' }}>پیش‌نمایش فاکتور</div>
+              <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: '#fff', color: '#1a1a1a', direction: 'rtl' }}>
+                {invoiceCustomerName && <div className="mb-1 font-bold">مشتری: {invoiceCustomerName}</div>}
+                {invoiceDesc && <div className="mb-1" style={{ color: '#666' }}>{invoiceDesc}</div>}
+                <table className="w-full text-[10px] mb-2" style={{ borderCollapse: 'collapse' }}>
+                  <thead><tr style={{ borderBottom: '1px solid #ddd' }}><th className="text-right py-0.5">کالا</th><th className="text-center">تعداد</th><th className="text-right">قیمت</th></tr></thead>
+                  <tbody>
+                    {items.slice(0, 3).map((item, i) => (
+                      <tr key={i} style={{ borderBottom: '1px solid #eee' }}><td className="py-0.5">{item.title}</td><td className="text-center">{item.quantity}</td><td className="text-right">{item.unitPrice.toLocaleString('fa-IR')}</td></tr>
+                    ))}
+                    {items.length > 3 && <tr><td colSpan={3} className="text-center py-0.5" style={{ color: '#999' }}>+{items.length - 3} کالای دیگر</td></tr>}
+                  </tbody>
+                </table>
+                <div className="font-bold text-right" style={{ color: '#006194' }}>جمع: {getSubtotal().toLocaleString('fa-IR')} تومان</div>
+                {invoiceNote && <div className="mt-2 pt-1 text-[10px]" style={{ color: '#999', borderTop: '1px dashed #ddd' }}>{invoiceNote}</div>}
+              </div>
+            </div>
+
             <div className="flex gap-3">
               <button onClick={() => setPendingPayment(null)} className="flex-1 py-3 rounded-xl font-bold text-sm transition-all" style={{ background: `linear-gradient(135deg, ${error}, #dc2626)`, color: '#fff', boxShadow: `0 4px 12px ${error}40` }}>{fa.common.cancel}</button>
               <button onClick={confirmSale} className="flex-1 py-3 rounded-xl font-bold text-sm transition-all" style={{ background: `linear-gradient(135deg, ${success}, #16a34a)`, color: '#fff', boxShadow: `0 4px 12px ${success}40` }}>{fa.common.confirm}</button>
