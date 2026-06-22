@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSettingsStore } from '../store/settingsStore'
+import FormattedPriceInput from '../components/FormattedPriceInput'
 
 type Tab = 'suppliers' | 'purchases'
 
@@ -17,20 +18,30 @@ export default function Suppliers() {
   const [dialog, setDialog] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState<{ type: string; id: number } | null>(null)
   const [form, setForm] = useState({ name: '', phone: '', email: '', address: '', company: '', taxId: '', description: '' })
   const [payAmount, setPayAmount] = useState('')
   const [payDesc, setPayDesc] = useState('')
+  const [purchaseForm, setPurchaseForm] = useState({ supplierId: 0, items: [{ productTitle: '', quantity: 1, unitCost: 0 }], taxAmount: 0, discountAmount: 0, paidAmount: 0, notes: '' })
 
-  const cardBg = isDark ? '#1e293b' : '#ffffff'
-  const cardBorder = isDark ? '#334155' : '#e2e8f0'
-  const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
-  const textSecondary = isDark ? '#94a3b8' : '#64748b'
-  const surfaceBg = isDark ? '#0f172a' : '#f8fafc'
-  const surfaceHover = isDark ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.03)'
+  const cBg = isDark ? '#1e293b' : '#ffffff'
+  const cBorder = isDark ? '#334155' : '#e2e8f0'
+  const tPri = isDark ? '#f1f5f9' : '#0f172a'
+  const tSec = isDark ? '#94a3b8' : '#64748b'
+  const sBg = isDark ? '#0f172a' : '#f8fafc'
   const primary = '#006194'
-  const ERROR = '#ef4444'
-  const SUCCESS = '#22c55e'
-  const WARNING = '#f59e0b'
+  const ERR = '#ef4444'
+  const SUC = '#22c55e'
+  const WRN = '#f59e0b'
+  const inBg = isDark ? '#0f172a' : '#f8fafc'
+  const inStyle = { background: inBg, border: `1px solid ${cBorder}`, color: tPri }
+
+  const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
+    <div className={`rounded-xl p-4 border ${className}`} style={{ backgroundColor: cBg, borderColor: cBorder }}>{children}</div>
+  )
+  const Label = ({ children }: { children: React.ReactNode }) => (
+    <label className="text-xs font-bold block mb-1.5" style={{ color: tSec }}>{children}</label>
+  )
 
   const load = useCallback(async () => {
     const sr = await window.api.suppliers.getAll()
@@ -69,16 +80,17 @@ export default function Suppliers() {
     setLoading(false)
   }
 
-  const handleDeleteSupplier = async (id: number) => {
-    if (!confirm('آیا از حذف این تأمین\u200cکننده اطمینان دارید؟')) return
-    await window.api.suppliers.delete(id)
-    if (selectedSupplier?.id === id) { setSelectedSupplier(null); setLedger([]) }
+  const handleDeleteSupplier = async () => {
+    if (!confirmDelete) return
+    await window.api.suppliers.delete(confirmDelete.id)
+    if (selectedSupplier?.id === confirmDelete.id) { setSelectedSupplier(null); setLedger([]) }
+    setConfirmDelete(null)
     await load()
   }
 
   const handlePay = async () => {
     if (!selectedSupplier || !payAmount) return
-    const amt = parseFloat(payAmount)
+    const amt = parseFloat(payAmount.replace(/,/g, ''))
     if (amt <= 0) return
     setLoading(true)
     await window.api.suppliers.pay(selectedSupplier.id, amt, payDesc || undefined)
@@ -90,21 +102,60 @@ export default function Suppliers() {
   }
 
   const handleDeleteLedger = async (entryId: number) => {
-    if (!confirm('آیا از حذف این رکورد اطمینان دارید؟')) return
-    await window.api.suppliers.deleteLedgerEntry(entryId)
-    if (selectedSupplier) await refreshSelected(selectedSupplier.id)
+    setConfirmDelete({ type: 'ledger', id: entryId })
   }
 
-  const tabs = [
-    { key: 'suppliers' as Tab, label: 'تأمین\u200cکنندگان', icon: (<svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>) },
-    { key: 'purchases' as Tab, label: 'خریدها', icon: (<svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>) },
-  ]
+  const confirmDeleteAction = async () => {
+    if (!confirmDelete) return
+    if (confirmDelete.type === 'ledger') {
+      await window.api.suppliers.deleteLedgerEntry(confirmDelete.id)
+      if (selectedSupplier) await refreshSelected(selectedSupplier.id)
+    } else if (confirmDelete.type === 'supplier') {
+      await handleDeleteSupplier()
+    }
+    setConfirmDelete(null)
+  }
+
+  const addPurchaseItem = () => {
+    setPurchaseForm(p => ({ ...p, items: [...p.items, { productTitle: '', quantity: 1, unitCost: 0 }] }))
+  }
+
+  const removePurchaseItem = (idx: number) => {
+    setPurchaseForm(p => ({ ...p, items: p.items.filter((_, i) => i !== idx) }))
+  }
+
+  const updatePurchaseItem = (idx: number, field: string, value: any) => {
+    setPurchaseForm(p => ({
+      ...p,
+      items: p.items.map((item, i) => i === idx ? { ...item, [field]: value } : item)
+    }))
+  }
+
+  const purchaseSubtotal = purchaseForm.items.reduce((s, i) => s + (i.quantity * i.unitCost), 0)
+  const purchaseTotal = purchaseSubtotal + purchaseForm.taxAmount - purchaseForm.discountAmount
+
+  const handleCreatePurchase = async () => {
+    if (!purchaseForm.supplierId || purchaseForm.items.length === 0) return
+    setLoading(true)
+    await window.api.purchases.create({
+      supplierId: purchaseForm.supplierId,
+      items: purchaseForm.items.filter(i => i.productTitle.trim()),
+      taxAmount: purchaseForm.taxAmount,
+      discountAmount: purchaseForm.discountAmount,
+      paidAmount: purchaseForm.paidAmount,
+      notes: purchaseForm.notes,
+    })
+    setDialog(null)
+    setPurchaseForm({ supplierId: 0, items: [{ productTitle: '', quantity: 1, unitCost: 0 }], taxAmount: 0, discountAmount: 0, paidAmount: 0, notes: '' })
+    await load()
+    setLoading(false)
+  }
 
   const kpis = [
     { label: 'تأمین\u200cکنندگان', value: stats.totalSuppliers, color: primary },
-    { label: 'بدهکار', value: stats.totalDebtors, color: ERROR },
-    { label: 'مبلغ بدهی', value: stats.totalDebtAmount.toLocaleString('fa-IR') + ' ت', color: WARNING },
-    { label: 'کل خریدها', value: purchaseStats.totalPurchases, color: SUCCESS },
+    { label: 'بدهکار', value: stats.totalDebtors, color: ERR },
+    { label: 'مبلغ بدهی', value: stats.totalDebtAmount.toLocaleString('fa-IR') + ' ت', color: WRN },
+    { label: 'کل خریدها', value: purchaseStats.totalPurchases, color: SUC },
   ]
 
   return (
@@ -115,131 +166,128 @@ export default function Suppliers() {
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
         </div>
         <div>
-          <h2 className="text-xl font-extrabold" style={{ color: textPrimary }}>تأمین\u200cکنندگان</h2>
-          <p className="text-xs" style={{ color: textSecondary }}>مدیریت تأمین\u200cکنندگان و خریدها</p>
+          <h2 className="text-xl font-extrabold" style={{ color: tPri }}>تأمین\u200cکنندگان</h2>
+          <p className="text-xs" style={{ color: tSec }}>مدیریت تأمین\u200cکنندگان و خریدها</p>
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI */}
       <div className="grid grid-cols-4 gap-3 mb-4">
         {kpis.map((kpi, i) => (
-          <div key={i} className="rounded-xl p-3 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-            <div className="text-[10px] font-bold" style={{ color: textSecondary }}>{kpi.label}</div>
+          <Card key={i}>
+            <div className="text-[10px] font-bold" style={{ color: tSec }}>{kpi.label}</div>
             <div className="text-lg font-extrabold mt-1" style={{ color: kpi.color }}>{kpi.value}</div>
-          </div>
+          </Card>
         ))}
       </div>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-4">
-        {tabs.map(t => (
+        {[{ key: 'suppliers' as Tab, label: 'تأمین\u200cکنندگان' }, { key: 'purchases' as Tab, label: 'خریدها' }].map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
-            style={{ background: tab === t.key ? `linear-gradient(135deg, ${primary}, #007bb9)` : cardBg, color: tab === t.key ? '#fff' : textSecondary, border: `1px solid ${tab === t.key ? primary : cardBorder}` }}>
-            {t.icon} {t.label}
+            className="px-4 py-2 rounded-xl text-sm font-bold transition-all"
+            style={{ background: tab === t.key ? `linear-gradient(135deg, ${primary}, #007bb9)` : cBg, color: tab === t.key ? '#fff' : tSec, border: `1px solid ${tab === t.key ? primary : cBorder}` }}>
+            {t.label}
           </button>
         ))}
       </div>
 
-      {/* Content */}
+      {/* Suppliers Tab */}
       {tab === 'suppliers' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Left: Supplier List */}
           <div className="lg:col-span-1">
-            <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-              <div className="p-3" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+            <Card className="!p-0 overflow-hidden">
+              <div className="p-3" style={{ borderBottom: `1px solid ${cBorder}` }}>
                 <div className="flex gap-2">
-                  <input value={search} onChange={e => setSearch(e.target.value)} placeholder="جستجو..." className="input-field text-sm flex-1" />
+                  <input value={search} onChange={e => setSearch(e.target.value)} placeholder="جستجو..." className="flex-1 px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} />
                   <button onClick={() => { setDialog('create'); setForm({ name: '', phone: '', email: '', address: '', company: '', taxId: '', description: '' }) }}
-                    className="px-3 py-1.5 rounded-lg text-xs font-bold text-white" style={{ background: `linear-gradient(135deg, ${SUCCESS}, #16a34a)` }}>+ جدید</button>
+                    className="px-3 py-2 rounded-lg text-xs font-bold text-white" style={{ background: `linear-gradient(135deg, ${SUC}, #16a34a)` }}>+ جدید</button>
                 </div>
               </div>
               <div className="max-h-[500px] overflow-y-auto">
                 {filtered.map(s => (
                   <button key={s.id} onClick={() => { setSelectedSupplier(s); refreshSelected(s.id) }}
-                    className="w-full text-right p-3 transition-all border-b flex justify-between items-center"
-                    style={{ borderColor: cardBorder, backgroundColor: selectedSupplier?.id === s.id ? primary + '10' : 'transparent', borderLeft: selectedSupplier?.id === s.id ? `3px solid ${primary}` : '3px solid transparent' }}
-                    onMouseEnter={e => { if (selectedSupplier?.id !== s.id) e.currentTarget.style.backgroundColor = surfaceHover }}
-                    onMouseLeave={e => { if (selectedSupplier?.id !== s.id) e.currentTarget.style.backgroundColor = 'transparent' }}>
+                    className="w-full text-right p-3 transition-all flex justify-between items-center"
+                    style={{ borderBottom: `1px solid ${cBorder}`, backgroundColor: selectedSupplier?.id === s.id ? primary + '10' : 'transparent', borderLeft: selectedSupplier?.id === s.id ? `3px solid ${primary}` : '3px solid transparent' }}>
                     <div>
-                      <div className="text-sm font-bold" style={{ color: textPrimary }}>{s.name}</div>
-                      <div className="text-[10px]" style={{ color: textSecondary }}>{s.company || s.phone || '-'}</div>
+                      <div className="text-sm font-bold" style={{ color: tPri }}>{s.name}</div>
+                      <div className="text-[10px]" style={{ color: tSec }}>{s.company || s.phone || '-'}</div>
                     </div>
-                    <div className="text-xs font-bold" style={{ color: s.balance > 0 ? ERROR : SUCCESS }}>
+                    <div className="text-xs font-bold" style={{ color: s.balance > 0 ? ERR : SUC }}>
                       {s.balance > 0 ? `${s.balance.toLocaleString('fa-IR')} بدهی` : 'تسویه'}
                     </div>
                   </button>
                 ))}
-                {filtered.length === 0 && <div className="text-center py-8 text-sm" style={{ color: textSecondary }}>تأمین\u200cکننده‌ای یافت نشد</div>}
+                {filtered.length === 0 && <div className="text-center py-8 text-sm" style={{ color: tSec }}>تأمین\u200cکننده‌ای یافت نشد</div>}
               </div>
-            </div>
+            </Card>
           </div>
 
-          {/* Right: Supplier Detail */}
           <div className="lg:col-span-2">
             {selectedSupplier ? (
               <div className="space-y-3">
-                {/* Supplier Info */}
-                <div className="rounded-xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+                <Card>
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <div className="text-lg font-extrabold" style={{ color: textPrimary }}>{selectedSupplier.name}</div>
-                      <div className="text-xs" style={{ color: textSecondary }}>{selectedSupplier.company} {selectedSupplier.phone ? `— ${selectedSupplier.phone}` : ''}</div>
+                      <div className="text-lg font-extrabold" style={{ color: tPri }}>{selectedSupplier.name}</div>
+                      <div className="text-xs" style={{ color: tSec }}>{selectedSupplier.company} {selectedSupplier.phone ? `— ${selectedSupplier.phone}` : ''}</div>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => { setDialog('pay'); setPayAmount(''); setPayDesc('') }} className="px-3 py-1.5 rounded-lg text-xs font-bold text-white" style={{ background: `linear-gradient(135deg, ${WARNING}, #d97706)` }}>پرداخت</button>
-                      <button onClick={() => { setDialog('edit'); setForm({ name: selectedSupplier.name, phone: selectedSupplier.phone, email: selectedSupplier.email, address: selectedSupplier.address, company: selectedSupplier.company, taxId: selectedSupplier.taxId, description: selectedSupplier.description }) }} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ backgroundColor: surfaceBg, color: textSecondary }}>ویرایش</button>
-                      <button onClick={() => handleDeleteSupplier(selectedSupplier.id)} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ backgroundColor: ERROR + '15', color: ERROR }}>حذف</button>
+                      <button onClick={() => { setDialog('pay'); setPayAmount(''); setPayDesc('') }} className="px-3 py-1.5 rounded-lg text-xs font-bold text-white" style={{ background: `linear-gradient(135deg, ${WRN}, #d97706)` }}>پرداخت</button>
+                      <button onClick={() => { setDialog('edit'); setForm({ name: selectedSupplier.name, phone: selectedSupplier.phone || '', email: selectedSupplier.email || '', address: selectedSupplier.address || '', company: selectedSupplier.company || '', taxId: selectedSupplier.taxId || '', description: selectedSupplier.description || '' }) }} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ backgroundColor: sBg, color: tSec }}>ویرایش</button>
+                      <button onClick={() => setConfirmDelete({ type: 'supplier', id: selectedSupplier.id })} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ backgroundColor: ERR + '15', color: ERR }}>حذف</button>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="rounded-lg p-2" style={{ backgroundColor: surfaceBg }}>
-                      <div className="text-[10px]" style={{ color: textSecondary }}>مانده حساب</div>
-                      <div className="text-sm font-bold" style={{ color: selectedSupplier.balance > 0 ? ERROR : SUCCESS }}>{selectedSupplier.balance.toLocaleString('fa-IR')} تومان</div>
+                    <div className="rounded-lg p-2" style={{ backgroundColor: sBg }}>
+                      <div className="text-[10px]" style={{ color: tSec }}>مانده حساب</div>
+                      <div className="text-sm font-bold" style={{ color: selectedSupplier.balance > 0 ? ERR : SUC }}>{selectedSupplier.balance.toLocaleString('fa-IR')} ت</div>
                     </div>
-                    <div className="rounded-lg p-2" style={{ backgroundColor: surfaceBg }}>
-                      <div className="text-[10px]" style={{ color: textSecondary }}>تلفن</div>
-                      <div className="text-sm font-bold" style={{ color: textPrimary }}>{selectedSupplier.phone || '-'}</div>
+                    <div className="rounded-lg p-2" style={{ backgroundColor: sBg }}>
+                      <div className="text-[10px]" style={{ color: tSec }}>تلفن</div>
+                      <div className="text-sm font-bold" style={{ color: tPri }}>{selectedSupplier.phone || '-'}</div>
                     </div>
-                    <div className="rounded-lg p-2" style={{ backgroundColor: surfaceBg }}>
-                      <div className="text-[10px]" style={{ color: textSecondary }}>شرکت</div>
-                      <div className="text-sm font-bold" style={{ color: textPrimary }}>{selectedSupplier.company || '-'}</div>
+                    <div className="rounded-lg p-2" style={{ backgroundColor: sBg }}>
+                      <div className="text-[10px]" style={{ color: tSec }}>شرکت</div>
+                      <div className="text-sm font-bold" style={{ color: tPri }}>{selectedSupplier.company || '-'}</div>
                     </div>
                   </div>
-                </div>
+                </Card>
 
-                {/* Ledger */}
-                <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-                  <div className="p-3 font-bold text-sm" style={{ borderBottom: `1px solid ${cardBorder}`, color: textPrimary }}>تاریخچه تراکنش‌ها</div>
+                <Card className="!p-0 overflow-hidden">
+                  <div className="p-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${cBorder}` }}>
+                    <span className="font-bold text-sm" style={{ color: tPri }}>تاریخچه تراکنش‌ها</span>
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: primary + '15', color: primary }}>{ledger.length}</span>
+                  </div>
                   {ledger.length === 0 ? (
-                    <div className="text-center py-8 text-sm" style={{ color: textSecondary }}>تراکنشی ثبت نشده</div>
+                    <div className="text-center py-8 text-sm" style={{ color: tSec }}>تراکنشی ثبت نشده</div>
                   ) : (
                     <table className="w-full text-sm">
-                      <thead><tr style={{ backgroundColor: surfaceBg }}>
-                        <th className="px-3 py-2 text-right text-xs" style={{ color: textSecondary }}>تاریخ</th>
-                        <th className="px-3 py-2 text-right text-xs" style={{ color: textSecondary }}>نوع</th>
-                        <th className="px-3 py-2 text-right text-xs" style={{ color: textSecondary }}>مبلغ</th>
-                        <th className="px-3 py-2 text-right text-xs" style={{ color: textSecondary }}>شرح</th>
+                      <thead><tr style={{ backgroundColor: sBg }}>
+                        <th className="px-3 py-2 text-right text-xs" style={{ color: tSec }}>تاریخ</th>
+                        <th className="px-3 py-2 text-right text-xs" style={{ color: tSec }}>نوع</th>
+                        <th className="px-3 py-2 text-right text-xs" style={{ color: tSec }}>مبلغ</th>
+                        <th className="px-3 py-2 text-right text-xs" style={{ color: tSec }}>شرح</th>
                         <th className="px-2 py-2 w-8"></th>
                       </tr></thead>
                       <tbody>
                         {ledger.map((e: any) => (
-                          <tr key={e.id} style={{ borderTop: `1px solid ${cardBorder}` }}>
-                            <td className="px-3 py-2 text-xs" style={{ color: textSecondary }}>{new Date(e.createdAt).toLocaleDateString('fa-IR')}</td>
+                          <tr key={e.id} style={{ borderTop: `1px solid ${cBorder}` }}>
+                            <td className="px-3 py-2 text-xs" style={{ color: tSec }}>{new Date(e.createdAt).toLocaleDateString('fa-IR')}</td>
                             <td className="px-3 py-2">
-                              <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{
-                                backgroundColor: e.type === 'purchase' ? primary + '15' : e.type === 'payment' ? SUCCESS + '15' : e.type === 'return' ? WARNING + '15' : ERROR + '15',
-                                color: e.type === 'purchase' ? primary : e.type === 'payment' ? SUCCESS : e.type === 'return' ? WARNING : ERROR,
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{
+                                backgroundColor: e.type === 'purchase' ? primary + '15' : e.type === 'payment' ? SUC + '15' : e.type === 'return' ? WRN + '15' : ERR + '15',
+                                color: e.type === 'purchase' ? primary : e.type === 'payment' ? SUC : e.type === 'return' ? WRN : ERR,
                               }}>
                                 {e.type === 'purchase' ? 'خرید' : e.type === 'payment' ? 'پرداخت' : e.type === 'return' ? 'برگشت' : e.type}
                               </span>
                             </td>
-                            <td className="px-3 py-2 font-bold text-xs" style={{ color: e.amount > 0 ? ERROR : SUCCESS }}>
+                            <td className="px-3 py-2 font-bold text-xs" style={{ color: e.amount > 0 ? ERR : SUC }}>
                               {e.amount > 0 ? '+' : ''}{e.amount.toLocaleString('fa-IR')}
                             </td>
-                            <td className="px-3 py-2 text-xs" style={{ color: textSecondary }}>{e.description}</td>
+                            <td className="px-3 py-2 text-xs" style={{ color: tSec }}>{e.description}</td>
                             <td className="px-2 py-2">
-                              <button onClick={() => handleDeleteLedger(e.id)} className="text-xs p-1 rounded hover:bg-red-500/10" style={{ color: ERROR }}>
+                              <button onClick={() => handleDeleteLedger(e.id)} className="text-xs p-1 rounded hover:bg-red-500/10" style={{ color: ERR }}>
                                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                               </button>
                             </td>
@@ -248,12 +296,12 @@ export default function Suppliers() {
                       </tbody>
                     </table>
                   )}
-                </div>
+                </Card>
               </div>
             ) : (
-              <div className="rounded-xl border p-12 text-center" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-                <div className="text-sm" style={{ color: textSecondary }}>یک تأمین\u200cکننده انتخاب کنید</div>
-              </div>
+              <Card className="p-12 text-center">
+                <div className="text-sm" style={{ color: tSec }}>یک تأمین\u200cکننده انتخاب کنید</div>
+              </Card>
             )}
           </div>
         </div>
@@ -261,80 +309,157 @@ export default function Suppliers() {
 
       {/* Purchases Tab */}
       {tab === 'purchases' && (
-        <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-          <table className="w-full text-sm">
-            <thead><tr style={{ backgroundColor: surfaceBg }}>
-              <th className="px-4 py-2 text-right text-xs" style={{ color: textSecondary }}>شماره فاکتور</th>
-              <th className="px-4 py-2 text-right text-xs" style={{ color: textSecondary }}>تأمین\u200cکننده</th>
-              <th className="px-4 py-2 text-right text-xs" style={{ color: textSecondary }}>تاریخ</th>
-              <th className="px-4 py-2 text-right text-xs" style={{ color: textSecondary }}>مبلغ کل</th>
-              <th className="px-4 py-2 text-right text-xs" style={{ color: textSecondary }}>پرداخت</th>
-              <th className="px-4 py-2 text-right text-xs" style={{ color: textSecondary }}>مانده</th>
-              <th className="px-4 py-2 text-right text-xs" style={{ color: textSecondary }}>وضعیت</th>
-            </tr></thead>
-            <tbody>
-              {purchases.map(p => (
-                <tr key={p.id} style={{ borderTop: `1px solid ${cardBorder}` }}>
-                  <td className="px-4 py-2 font-mono text-xs font-bold" style={{ color: primary }}>{p.invoiceNumber}</td>
-                  <td className="px-4 py-2 text-xs" style={{ color: textPrimary }}>{p.supplierName}</td>
-                  <td className="px-4 py-2 text-xs" style={{ color: textSecondary }}>{new Date(p.purchaseDate).toLocaleDateString('fa-IR')}</td>
-                  <td className="px-4 py-2 text-xs font-bold" style={{ color: textPrimary }}>{p.totalAmount.toLocaleString('fa-IR')}</td>
-                  <td className="px-4 py-2 text-xs font-bold" style={{ color: SUCCESS }}>{p.paidAmount.toLocaleString('fa-IR')}</td>
-                  <td className="px-4 py-2 text-xs font-bold" style={{ color: p.totalAmount - p.paidAmount > 0 ? ERROR : SUCCESS }}>{(p.totalAmount - p.paidAmount).toLocaleString('fa-IR')}</td>
-                  <td className="px-4 py-2">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{
-                      backgroundColor: p.status === 'paid' ? SUCCESS + '15' : p.status === 'received' ? primary + '15' : WARNING + '15',
-                      color: p.status === 'paid' ? SUCCESS : p.status === 'received' ? primary : WARNING,
-                    }}>
-                      {p.status === 'paid' ? 'پرداخت شده' : p.status === 'received' ? 'دریافت شده' : 'در انتظار'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-              {purchases.length === 0 && <tr><td colSpan={7} className="text-center py-8 text-sm" style={{ color: textSecondary }}>خریدی ثبت نشده</td></tr>}
-            </tbody>
-          </table>
+        <div className="space-y-3">
+          <div className="flex justify-end">
+            <button onClick={() => { setDialog('purchase'); setPurchaseForm({ supplierId: suppliers[0]?.id || 0, items: [{ productTitle: '', quantity: 1, unitCost: 0 }], taxAmount: 0, discountAmount: 0, paidAmount: 0, notes: '' }) }}
+              className="px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)` }}>+ خرید جدید</button>
+          </div>
+          <Card className="!p-0 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead><tr style={{ backgroundColor: sBg }}>
+                <th className="px-4 py-2 text-right text-xs" style={{ color: tSec }}>شماره فاکتور</th>
+                <th className="px-4 py-2 text-right text-xs" style={{ color: tSec }}>تأمین\u200cکننده</th>
+                <th className="px-4 py-2 text-right text-xs" style={{ color: tSec }}>تاریخ</th>
+                <th className="px-4 py-2 text-right text-xs" style={{ color: tSec }}>مبلغ کل</th>
+                <th className="px-4 py-2 text-right text-xs" style={{ color: tSec }}>پرداخت</th>
+                <th className="px-4 py-2 text-right text-xs" style={{ color: tSec }}>مانده</th>
+                <th className="px-4 py-2 text-right text-xs" style={{ color: tSec }}>وضعیت</th>
+              </tr></thead>
+              <tbody>
+                {purchases.map(p => (
+                  <tr key={p.id} className="cursor-pointer hover:bg-blue-500/5 transition-all" style={{ borderTop: `1px solid ${cBorder}` }}>
+                    <td className="px-4 py-2 font-mono text-xs font-bold" style={{ color: primary }}>{p.invoiceNumber}</td>
+                    <td className="px-4 py-2 text-xs" style={{ color: tPri }}>{p.supplierName}</td>
+                    <td className="px-4 py-2 text-xs" style={{ color: tSec }}>{new Date(p.purchaseDate).toLocaleDateString('fa-IR')}</td>
+                    <td className="px-4 py-2 text-xs font-bold" style={{ color: tPri }}>{p.totalAmount.toLocaleString('fa-IR')}</td>
+                    <td className="px-4 py-2 text-xs font-bold" style={{ color: SUC }}>{p.paidAmount.toLocaleString('fa-IR')}</td>
+                    <td className="px-4 py-2 text-xs font-bold" style={{ color: p.totalAmount - p.paidAmount > 0 ? ERR : SUC }}>{(p.totalAmount - p.paidAmount).toLocaleString('fa-IR')}</td>
+                    <td className="px-4 py-2">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{
+                        backgroundColor: p.status === 'paid' ? SUC + '15' : p.status === 'received' ? primary + '15' : WRN + '15',
+                        color: p.status === 'paid' ? SUC : p.status === 'received' ? primary : WRN,
+                      }}>
+                        {p.status === 'paid' ? 'پرداخت شده' : p.status === 'received' ? 'دریافت شده' : 'در انتظار'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {purchases.length === 0 && <tr><td colSpan={7} className="text-center py-8 text-sm" style={{ color: tSec }}>خریدی ثبت نشده</td></tr>}
+              </tbody>
+            </table>
+          </Card>
         </div>
       )}
 
-      {/* Dialogs */}
+      {/* ─── Dialogs ─────────────────────────────── */}
+
+      {/* Confirm Delete */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setConfirmDelete(null)}>
+          <div className="w-full max-w-sm rounded-2xl p-6 shadow-2xl" style={{ backgroundColor: cBg, border: `1px solid ${cBorder}` }} onClick={e => e.stopPropagation()}>
+            <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: ERR + '15' }}>
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke={ERR} strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <h3 className="text-center text-sm font-bold mb-2" style={{ color: tPri }}>آیا از حذف اطمینان دارید؟</h3>
+            <p className="text-center text-xs mb-4" style={{ color: tSec }}>{confirmDelete.type === 'supplier' ? 'تأمین\u200cکننده و تمام تراکنش‌ها حذف می‌شوند' : 'این رکورد از تاریخچه حذف می‌شود'}</p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: sBg, color: tSec }}>لغو</button>
+              <button onClick={confirmDeleteAction} className="flex-1 py-2 rounded-xl text-sm font-bold text-white" style={{ background: `linear-gradient(135deg, ${ERR}, #dc2626)` }}>حذف</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create/Edit Supplier */}
       {(dialog === 'create' || dialog === 'edit') && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-md rounded-2xl p-6 shadow-2xl" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }} onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold mb-4" style={{ color: textPrimary }}>{dialog === 'edit' ? 'ویرایش تأمین\u200cکننده' : 'تأمین\u200cکننده جدید'}</h3>
+          <div className="w-full max-w-md rounded-2xl p-6 shadow-2xl" style={{ backgroundColor: cBg, border: `1px solid ${cBorder}` }} onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4" style={{ color: tPri }}>{dialog === 'edit' ? 'ویرایش تأمین\u200cکننده' : 'تأمین\u200cکننده جدید'}</h3>
             <div className="space-y-3">
-              <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>نام *</label><input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="input-field text-sm" style={{ backgroundColor: surfaceBg, border: `1px solid ${cardBorder}`, color: textPrimary }} autoFocus /></div>
+              <div><Label>نام *</Label><input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} autoFocus /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>تلفن</label><input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} className="input-field text-sm" style={{ backgroundColor: surfaceBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
-                <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>شرکت</label><input value={form.company} onChange={e => setForm(f => ({ ...f, company: e.target.value }))} className="input-field text-sm" style={{ backgroundColor: surfaceBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
+                <div><Label>تلفن</Label><input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} /></div>
+                <div><Label>شرکت</Label><input value={form.company} onChange={e => setForm(f => ({ ...f, company: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} /></div>
               </div>
-              <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>آدرس</label><input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} className="input-field text-sm" style={{ backgroundColor: surfaceBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
+              <div><Label>آدرس</Label><input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>ایمیل</label><input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input-field text-sm" style={{ backgroundColor: surfaceBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
-                <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>شماره مالیاتی</label><input value={form.taxId} onChange={e => setForm(f => ({ ...f, taxId: e.target.value }))} className="input-field text-sm" style={{ backgroundColor: surfaceBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
+                <div><Label>ایمیل</Label><input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} /></div>
+                <div><Label>شماره مالیاتی</Label><input value={form.taxId} onChange={e => setForm(f => ({ ...f, taxId: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} /></div>
               </div>
-              <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>توضیحات</label><textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="input-field text-sm" rows={2} style={{ backgroundColor: surfaceBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
+              <div><Label>توضیحات</Label><textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none resize-none" rows={2} style={inStyle} /></div>
             </div>
             <div className="flex gap-2 mt-4">
-              <button onClick={() => setDialog(null)} className="flex-1 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: surfaceBg, color: textSecondary }}>لغو</button>
+              <button onClick={() => setDialog(null)} className="flex-1 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: sBg, color: tSec }}>لغو</button>
               <button onClick={handleSaveSupplier} disabled={loading || !form.name.trim()} className="flex-1 py-2 rounded-xl text-sm font-bold text-white" style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)`, opacity: loading || !form.name.trim() ? 0.5 : 1 }}>ذخیره</button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Pay Supplier */}
       {dialog === 'pay' && selectedSupplier && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-sm rounded-2xl p-6 shadow-2xl" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }} onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold mb-1" style={{ color: textPrimary }}>پرداخت به {selectedSupplier.name}</h3>
-            <p className="text-xs mb-4" style={{ color: textSecondary }}>مانده بدهی: {selectedSupplier.balance.toLocaleString('fa-IR')} تومان</p>
+          <div className="w-full max-w-sm rounded-2xl p-6 shadow-2xl" style={{ backgroundColor: cBg, border: `1px solid ${cBorder}` }} onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-1" style={{ color: tPri }}>پرداخت به {selectedSupplier.name}</h3>
+            <p className="text-xs mb-4" style={{ color: tSec }}>مانده بدهی: {selectedSupplier.balance.toLocaleString('fa-IR')} تومان</p>
             <div className="space-y-3">
-              <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>مبلغ پرداخت</label><input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)} className="input-field text-lg font-bold text-center" style={{ backgroundColor: surfaceBg, border: `1px solid ${cardBorder}`, color: textPrimary }} placeholder="0" autoFocus /></div>
-              <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>توضیحات</label><input value={payDesc} onChange={e => setPayDesc(e.target.value)} className="input-field text-sm" style={{ backgroundColor: surfaceBg, border: `1px solid ${cardBorder}`, color: textPrimary }} placeholder="اختیاری" /></div>
+              <div><Label>مبلغ پرداخت</Label><FormattedPriceInput value={parseFloat(payAmount.replace(/,/g, '')) || 0} onChange={(v) => setPayAmount(v ? String(v) : '')} className="w-full px-3 py-3 rounded-lg text-lg font-bold text-center outline-none" style={inStyle} placeholder="0" /></div>
+              <div><Label>توضیحات</Label><input value={payDesc} onChange={e => setPayDesc(e.target.value)} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} placeholder="اختیاری" /></div>
             </div>
             <div className="flex gap-2 mt-4">
-              <button onClick={() => setDialog(null)} className="flex-1 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: surfaceBg, color: textSecondary }}>لغو</button>
-              <button onClick={handlePay} disabled={loading || !payAmount || parseFloat(payAmount) <= 0} className="flex-1 py-2 rounded-xl text-sm font-bold text-white" style={{ background: `linear-gradient(135deg, ${SUCCESS}, #16a34a)`, opacity: loading || !payAmount ? 0.5 : 1 }}>پرداخت</button>
+              <button onClick={() => setDialog(null)} className="flex-1 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: sBg, color: tSec }}>لغو</button>
+              <button onClick={handlePay} disabled={loading || !payAmount || parseFloat(payAmount.replace(/,/g, '')) <= 0} className="flex-1 py-2 rounded-xl text-sm font-bold text-white" style={{ background: `linear-gradient(135deg, ${SUC}, #16a34a)`, opacity: loading || !payAmount ? 0.5 : 1 }}>پرداخت</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Purchase */}
+      {dialog === 'purchase' && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setDialog(null)}>
+          <div className="w-full max-w-lg rounded-2xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto" style={{ backgroundColor: cBg, border: `1px solid ${cBorder}` }} onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4" style={{ color: tPri }}>خرید جدید</h3>
+            <div className="space-y-3">
+              <div><Label>تأمین\u200cکننده *</Label>
+                <select value={purchaseForm.supplierId} onChange={e => setPurchaseForm(p => ({ ...p, supplierId: Number(e.target.value) }))}
+                  className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle}>
+                  <option value={0}>انتخاب کنید...</option>
+                  {suppliers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.company || ''})</option>)}
+                </select>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>اقلام خرید</Label>
+                  <button onClick={addPurchaseItem} className="text-xs font-bold px-2 py-1 rounded-lg" style={{ color: primary, backgroundColor: primary + '10' }}>+ افزودن</button>
+                </div>
+                <div className="space-y-2">
+                  {purchaseForm.items.map((item, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <input value={item.productTitle} onChange={e => updatePurchaseItem(idx, 'productTitle', e.target.value)} placeholder="نام کالا" className="flex-1 px-2 py-1.5 rounded-lg text-xs font-bold outline-none" style={inStyle} />
+                      <FormattedPriceInput value={item.quantity} onChange={v => updatePurchaseItem(idx, 'quantity', v)} className="w-20 px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={inStyle} />
+                      <FormattedPriceInput value={item.unitCost} onChange={v => updatePurchaseItem(idx, 'unitCost', v)} className="w-28 px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={inStyle} />
+                      <span className="text-[10px] font-bold min-w-[60px] text-left" style={{ color: tPri }}>{(item.quantity * item.unitCost).toLocaleString('fa-IR')}</span>
+                      {purchaseForm.items.length > 1 && <button onClick={() => removePurchaseItem(idx)} className="text-xs p-1 rounded" style={{ color: ERR }}>✕</button>}
+                    </div>
+                  ))}
+                </div>
+                <div className="flex text-[10px] font-bold gap-2 mt-1 px-1" style={{ color: tSec }}>
+                  <span className="flex-1">نام کالا</span><span className="w-20 text-center">تعداد</span><span className="w-28 text-center">قیمت واحد</span><span className="min-w-[60px] text-left">جمع</span><span className="w-5"></span>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div><Label>مالیات</Label><FormattedPriceInput value={purchaseForm.taxAmount} onChange={v => setPurchaseForm(p => ({ ...p, taxAmount: v }))} className="w-full px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={inStyle} /></div>
+                <div><Label>تخفیف</Label><FormattedPriceInput value={purchaseForm.discountAmount} onChange={v => setPurchaseForm(p => ({ ...p, discountAmount: v }))} className="w-full px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={inStyle} /></div>
+                <div><Label>پرداخت</Label><FormattedPriceInput value={purchaseForm.paidAmount} onChange={v => setPurchaseForm(p => ({ ...p, paidAmount: v }))} className="w-full px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={inStyle} /></div>
+              </div>
+              <div className="flex justify-between p-3 rounded-lg" style={{ backgroundColor: sBg }}>
+                <span className="text-sm font-bold" style={{ color: tSec }}>جمع کل:</span>
+                <span className="text-sm font-extrabold" style={{ color: primary }}>{purchaseTotal.toLocaleString('fa-IR')} تومان</span>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setDialog(null)} className="flex-1 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: sBg, color: tSec }}>لغو</button>
+              <button onClick={handleCreatePurchase} disabled={loading || !purchaseForm.supplierId || purchaseForm.items.length === 0} className="flex-1 py-2 rounded-xl text-sm font-bold text-white" style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)`, opacity: loading ? 0.5 : 1 }}>ثبت خرید</button>
             </div>
           </div>
         </div>

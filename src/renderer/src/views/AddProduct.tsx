@@ -454,7 +454,26 @@ export default function AddProduct() {
             {sorted.map((p) => {
               const isZero = p.stock <= 0
               const isLow = p.stock > 0 && p.stock <= p.minStock
-              return (
+  const openDetail = async (p: any) => {
+    setDetailProduct(p)
+    if (p.imageBase64 && !p.imageBase64.startsWith('data:')) {
+      const url = await getProductImageUrl(p.imageBase64)
+      setDetailImageUrl(url)
+    } else {
+      setDetailImageUrl(p.imageBase64 || '')
+    }
+    setDetailForm({ title: p.title, barcode: p.barcode || '', category: p.category || '', purchase_price: p.purchase_price, sale_price: p.sale_price, stock: p.stock, minStock: p.minStock || 0, description: p.description || '', imageBase64: p.imageBase64 || '' })
+    setDetailEditMode(false)
+    setShowDetailConfirm(false)
+  }
+
+  function startEdit(p: Product) {
+    setEditProduct(p)
+    setForm({ barcode: p.barcode, title: p.title, category: p.category, unit: p.unit, purchase_price: p.purchase_price, sale_price: p.sale_price, stock: p.stock, minStock: p.minStock, isLoose: p.isLoose, description: p.description || '', imageBase64: p.imageBase64 || '' })
+    setShowForm(true)
+  }
+
+  return (
                 <tr
                   key={p.id}
                   onClick={() => openDetail(p)}
@@ -704,25 +723,6 @@ export default function AddProduct() {
       <PrintDialog open={showPrintDialog} title="چاپ لیست کالاها" totalCount={products.length} onClose={() => setShowPrintDialog(false)} onPrint={(range) => { setShowPrintDialog(false); handlePrintProducts(range) }} />
     </div>
   )
-
-  function startEdit(p: Product) {
-    setEditProduct(p)
-    setForm({ barcode: p.barcode, title: p.title, category: p.category, unit: p.unit, purchase_price: p.purchase_price, sale_price: p.sale_price, stock: p.stock, minStock: p.minStock, isLoose: p.isLoose, description: p.description || '', imageBase64: p.imageBase64 || '' })
-    setShowForm(true)
-  }
-
-  const openDetail = async (p: any) => {
-    setDetailProduct(p)
-    if (p.imageBase64 && !p.imageBase64.startsWith('data:')) {
-      const url = await getProductImageUrl(p.imageBase64)
-      setDetailImageUrl(url)
-    } else {
-      setDetailImageUrl(p.imageBase64 || '')
-    }
-    setDetailForm({ title: p.title, barcode: p.barcode || '', category: p.category || '', purchase_price: p.purchase_price, sale_price: p.sale_price, stock: p.stock, minStock: p.minStock || 0, description: p.description || '', imageBase64: p.imageBase64 || '' })
-    setDetailEditMode(false)
-    setShowDetailConfirm(false)
-  }
 }
 
 function InfoField({ label, value, color }: { label: string; value: string; color?: string }) {
