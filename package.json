@@ -1,7 +1,7 @@
 {
-  "name": "hamtraz-accounting",
+  "name": "hesabdari-danial",
   "version": "1.0.0",
-  "description": "سیستم حسابداری و مدیریت فروشگاه — HamTraz Accounting",
+  "description": "حسابداری دانیال — نرم‌افزار جامع حسابداری، انبارداری و فروش برای کسب‌وکارهای مدرن",
   "main": "dist-electron/main/index.js",
   "scripts": {
     "start": "vite",

@@ -83,8 +83,9 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
   const [shopName, setShopName] = useState('')
   const [shopAddress, setShopAddress] = useState('')
   const [shopPhone, setShopPhone] = useState('')
-  const [businessType, setBusinessType] = useState<'supermarket' | 'restaurant' | 'clothing' | 'other'>('supermarket')
-  const [enableTax, setEnableTax] = useState(false)
+  const [businessType, setBusinessType] = useState<string>('online-store')
+  const [customBusinessName, setCustomBusinessName] = useState('')
+  const [enableTax, setEnableTax] = useState(true)
   const [adminPin, setAdminPin] = useState('')
   const [adminPinConfirm, setAdminPinConfirm] = useState('')
   const [pinError, setPinError] = useState('')
@@ -118,6 +119,26 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
     setStep(2)
   }
 
+  const applyBusinessDefaults = (type: string) => {
+    const defaults: Record<string, { tax: boolean; currency: string }> = {
+      'online-store': { tax: true, currency: 'تومان' },
+      'supermarket': { tax: true, currency: 'تومان' },
+      'clothing': { tax: true, currency: 'تومان' },
+      'electronics': { tax: true, currency: 'تومان' },
+      'bookstore': { tax: true, currency: 'تومان' },
+      'beauty': { tax: true, currency: 'تومان' },
+      'grocery': { tax: true, currency: 'تومان' },
+      'industrial': { tax: true, currency: 'تومان' },
+      'services': { tax: false, currency: 'تومان' },
+      'wholesale': { tax: true, currency: 'تومان' },
+      'restaurant': { tax: true, currency: 'تومان' },
+      'jewelry': { tax: true, currency: 'تومان' },
+      'other': { tax: true, currency: 'تومان' },
+    }
+    const d = defaults[type] || defaults['other']
+    setEnableTax(d.tax)
+  }
+
   const handleSubmit = async () => {
     if (adminPin.length < 4) {
       setPinError(lang === 'fa' ? 'رمز باید حداقل ۴ رقم باشد' : 'PIN must be at least 4 digits')
@@ -128,11 +149,12 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
       return
     }
     setSubmitting(true)
+    const finalBusinessType = businessType === 'other' ? (customBusinessName || 'سایر') : businessType
     await Promise.all([
       window.api.settings.set('storeName', shopName || (lang === 'fa' ? 'فروشگاه من' : 'My Store')),
       window.api.settings.set('storeAddress', shopAddress),
       window.api.settings.set('storePhone', shopPhone),
-      window.api.settings.set('businessType', businessType),
+      window.api.settings.set('businessType', finalBusinessType),
       window.api.settings.set('autoRounding', '500'),
       window.api.settings.set('taxEnabled', String(enableTax)),
       window.api.settings.set('language', lang),
@@ -238,7 +260,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
               {ui.app.title}
             </h1>
             <p className="text-lg max-w-sm" style={{ color: subtitleColor, fontFamily: "'Noto Sans', sans-serif" }}>
-              {lang === 'fa' ? 'نرم‌افزار جامع مالی و حسابداری برای مدیریت هوشمند کسب‌وکارهای مدرن.' : 'Comprehensive financial and accounting software for smart business management.'}
+              {lang === 'fa' ? 'حسابداری دانیال — نرم‌افزار جامع مالی و حسابداری برای مدیریت هوشمند کسب‌وکارهای مدرن.' : 'HesabDari Danial — Comprehensive financial and accounting software for smart business management.'}
             </p>
             
             {/* Step Indicator - with labels */}
@@ -350,21 +372,35 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
 
                 {/* Business Type */}
                 <div className="mb-4">
-                  <label className="text-xs font-medium mb-2 block" style={{ color: subtitleColor }}>نوع کسب‌وکار</label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <label className="text-xs font-medium mb-2 block" style={{ color: subtitleColor }}>نوع کسب‌وکار خود را انتخاب کنید</label>
+                  <div className="grid grid-cols-3 gap-2">
                     {([
-                      { key: 'supermarket', label: 'سوپرمارکت' },
-                      { key: 'restaurant', label: 'رستوران' },
-                      { key: 'clothing', label: 'پوشاک' },
-                      { key: 'other', label: 'سایر' },
+                      { key: 'online-store', label: 'فروشگاه اینترنتی', icon: '🌐' },
+                      { key: 'supermarket', label: 'سوپرمارکت', icon: '🛒' },
+                      { key: 'clothing', label: 'لباس‌فروشی', icon: '👔' },
+                      { key: 'electronics', label: 'لوازم الکترونیک', icon: '💻' },
+                      { key: 'bookstore', label: 'کتاب‌فروشی', icon: '📚' },
+                      { key: 'beauty', label: 'آرایشی و بهداشتی', icon: '💄' },
+                      { key: 'grocery', label: 'مواد غذایی', icon: '🍎' },
+                      { key: 'industrial', label: 'فروشگاه صنعتی', icon: '🏭' },
+                      { key: 'services', label: 'خدمات', icon: '🔧' },
+                      { key: 'wholesale', label: 'عمده‌فروشی', icon: '📦' },
+                      { key: 'restaurant', label: 'رستوران و کافی‌شاپ', icon: '🍽️' },
+                      { key: 'jewelry', label: 'طلا و جواهر', icon: '💎' },
+                      { key: 'other', label: 'سایر (دستی)', icon: '✏️' },
                     ]).map(b => (
-                      <button key={b.key} onClick={() => setBusinessType(b.key as any)}
-                        className="py-2.5 rounded-lg text-xs font-bold transition-all"
-                        style={{ backgroundColor: businessType === b.key ? colors.primary : (isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9'), color: businessType === b.key ? '#fff' : subtitleColor, border: businessType === b.key ? 'none' : cardBorder }}>
-                        {b.label}
+                      <button key={b.key} onClick={() => { setBusinessType(b.key); applyBusinessDefaults(b.key) }}
+                        className="py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 justify-center"
+                        style={{ backgroundColor: businessType === b.key ? colors.primary : (isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9'), color: businessType === b.key ? '#fff' : subtitleColor, border: businessType === b.key ? 'none' : `1px solid ${cardBorder}` }}>
+                        <span>{b.icon}</span> {b.label}
                       </button>
                     ))}
                   </div>
+                  {businessType === 'other' && (
+                    <input value={customBusinessName} onChange={e => setCustomBusinessName(e.target.value)} placeholder="نام نوع کسب‌وکار خود را وارد کنید..."
+                      className="w-full mt-2 py-2.5 px-4 rounded-lg text-sm outline-none transition-all"
+                      style={{ background: inputBg, border: inputBorder, color: inputColor }} autoFocus />
+                  )}
                 </div>
 
                 {/* Tax Toggle */}
