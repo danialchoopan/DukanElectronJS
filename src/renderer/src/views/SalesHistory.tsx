@@ -132,19 +132,35 @@ export default function SalesHistory() {
   const { sorted: sortedSales, sortKey, sortDir, toggleSort } = useSortable(pagedSales)
   const [showPrintDialog, setShowPrintDialog] = useState(false)
 
-  const handlePrintSales = async (range: { start: number; end: number } | 'all') => {
+  const handlePrintSales = async (range: { start: number; end: number } | 'all', selectedColumns?: string[]) => {
     let data = filteredSales
     if (range !== 'all') {
       data = filteredSales.slice(range.start - 1, range.end)
     }
+    const cols = selectedColumns || ['invoiceNumber', 'createdAt', 'userName', 'customerName', 'items', 'paymentMethod', 'total_amount']
+    const colMap: Record<string, { header: string; cell: (s: any) => string }> = {
+      invoiceNumber: { header: 'فاکتور', cell: s => s.invoiceNumber },
+      createdAt: { header: 'تاریخ', cell: s => formatJalaliDateTime(s.createdAt) },
+      userName: { header: 'صندوکدار', cell: s => s.userName },
+      customerName: { header: 'مشتری', cell: s => s.customerName || '-' },
+      items: { header: 'تعداد اقلام', cell: s => String(s.items?.length || 0) },
+      paymentMethod: { header: 'نوع پرداخت', cell: s => s.paymentMethod === 'cash' ? 'نقدی' : s.paymentMethod === 'card' ? 'کارتی' : 'بدهی' },
+      total_amount: { header: 'مبلغ', cell: s => s.total_amount.toLocaleString('fa-IR') },
+    }
     let html = '<h1>گزارش فروش</h1>'
     html += `<div class="header-info"><span>از: ${startDate || 'همه'} تا: ${endDate || 'همه'}</span><span>تعداد: ${data.length}</span></div>`
-    html += '<table><thead><tr><th>فاکتور</th><th>تاریخ</th><th>صندوکدار</th><th>مشتری</th><th>تعداد اقلام</th><th>نوع پرداخت</th><th>مبلغ</th></tr></thead><tbody>'
+    html += '<table><thead><tr>'
+    cols.forEach(c => { if (colMap[c]) html += `<th>${colMap[c].header}</th>` })
+    html += '</tr></thead><tbody>'
     data.forEach(s => {
-      html += `<tr><td>${s.invoiceNumber}</td><td>${formatJalaliDateTime(s.createdAt)}</td><td>${s.userName}</td><td>${s.customerName || '-'}</td><td>${s.items?.length || 0}</td><td>${s.paymentMethod === 'cash' ? 'نقدی' : s.paymentMethod === 'card' ? 'کارتی' : 'بدهی'}</td><td>${s.total_amount.toLocaleString('fa-IR')}</td></tr>`
+      html += '<tr>'
+      cols.forEach(c => { if (colMap[c]) html += `<td>${colMap[c].cell(s)}</td>` })
+      html += '</tr>'
     })
     html += '</tbody></table>'
-    html += `<p>جمع کل: ${data.reduce((sum, s) => sum + s.total_amount, 0).toLocaleString('fa-IR')} تومان</p>`
+    if (cols.includes('total_amount')) {
+      html += `<p>جمع کل: ${data.reduce((sum, s) => sum + s.total_amount, 0).toLocaleString('fa-IR')} تومان</p>`
+    }
     showPrint(html, 'گزارش فروش')
   }
 
@@ -533,7 +549,17 @@ export default function SalesHistory() {
         </div>
       )}
 
-      <PrintDialog open={showPrintDialog} title="چاپ گزارش فروش" totalCount={filteredSales.length} onClose={() => setShowPrintDialog(false)} onPrint={(range) => { setShowPrintDialog(false); handlePrintSales(range) }} />
+      <PrintDialog open={showPrintDialog} title="چاپ گزارش فروش" totalCount={filteredSales.length}
+        columns={[
+          { key: 'invoiceNumber', label: 'فاکتور' },
+          { key: 'createdAt', label: 'تاریخ' },
+          { key: 'userName', label: 'صندوکدار' },
+          { key: 'customerName', label: 'مشتری' },
+          { key: 'items', label: 'تعداد اقلام' },
+          { key: 'paymentMethod', label: 'نوع پرداخت' },
+          { key: 'total_amount', label: 'مبلغ' },
+        ]}
+        onClose={() => setShowPrintDialog(false)} onPrint={(range, cols) => { setShowPrintDialog(false); handlePrintSales(range, cols) }} />
     </div>
   )
 }
