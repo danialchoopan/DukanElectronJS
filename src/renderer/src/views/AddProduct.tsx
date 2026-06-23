@@ -428,6 +428,8 @@ export default function AddProduct() {
                         onClick={() => openDetail(p)}
                         className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-200"
                         style={{ color: primary, backgroundColor: isDark ? 'rgba(0,97,148,0.1)' : 'rgba(0,97,148,0.06)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(0,97,148,0.2)' : 'rgba(0,97,148,0.12)' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(0,97,148,0.1)' : 'rgba(0,97,148,0.06)' }}
                       >
                         جزئیات
                       </button>
@@ -435,6 +437,8 @@ export default function AddProduct() {
                         onClick={() => startEdit(p)}
                         className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-200"
                         style={{ color: '#22c55e', backgroundColor: isDark ? 'rgba(34,197,94,0.1)' : 'rgba(34,197,94,0.06)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.12)' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(34,197,94,0.1)' : 'rgba(34,197,94,0.06)' }}
                       >
                         {fa.admin.edit}
                       </button>
