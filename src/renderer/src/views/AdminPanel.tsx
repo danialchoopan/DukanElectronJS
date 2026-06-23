@@ -7,6 +7,7 @@ import CustomizationSettings from './admin/CustomizationSettings'
 import { useHighlight } from '../hooks/useHighlight'
 import SmartExportDialog from '../components/SmartExportDialog'
 import { setShopName } from '../utils/a4Print'
+import Dialog from '../components/Dialog'
 
 const primary = '#006194'
 
@@ -106,12 +107,33 @@ export default function AdminPanel({ view = 'admin', initialTab, highlightId, on
 function UsersTab() {
   const [users, setUsers] = useState<User[]>([])
   const [showForm, setShowForm] = useState(false)
-  const [showPin, setShowPin] = useState(true)
   const [form, setForm] = useState({ name: '', pinCode: '', role: 'cashier' as 'admin' | 'cashier' })
+  const [dialog, setDialog] = useState<string | null>(null)
+  const [editUser, setEditUser] = useState<User | null>(null)
+  const [editForm, setEditForm] = useState({ name: '', pinCode: '', role: 'cashier' as 'admin' | 'cashier' })
+  const [newPin, setNewPin] = useState('')
+  const [confirmDeleteUser, setConfirmDeleteUser] = useState<User | null>(null)
   const isDark = document.documentElement.classList.contains('dark')
 
   const load = async () => { const r = await window.api.auth.listUsers(); if (r.success && r.data) setUsers(r.data) }
   useEffect(() => { load() }, [])
+
+  const primary = '#006194'
+  const cBg = isDark ? '#1e293b' : '#ffffff'
+  const cBorder = isDark ? '#334155' : '#e2e8f0'
+  const tPri = isDark ? '#f1f5f9' : '#0f172a'
+  const tSec = isDark ? '#94a3b8' : '#64748b'
+  const inBg = isDark ? '#0f172a' : '#f8fafc'
+  const inStyle = { background: inBg, border: `1px solid ${cBorder}`, color: tPri }
+  const ERR = '#ef4444'
+
+  const Label = ({ children }: { children: React.ReactNode }) => (
+    <label className="text-xs font-bold block mb-1.5" style={{ color: tSec }}>{children}</label>
+  )
+
+  const UserCard = ({ children, className = '', style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) => (
+    <div className={`rounded-xl p-4 border ${className}`} style={{ backgroundColor: cBg, borderColor: cBorder, ...style }}>{children}</div>
+  )
 
   const handleSubmit = async () => {
     if (!form.name || form.pinCode.length < 4) return
@@ -119,164 +141,148 @@ function UsersTab() {
     setShowForm(false); setForm({ name: '', pinCode: '', role: 'cashier' }); load()
   }
 
-  const cardBg = isDark ? '#1e293b' : '#ffffff'
-  const cardBorder = isDark ? '#334155' : '#e2e8f0'
-  const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
-  const textSecondary = isDark ? '#94a3b8' : '#64748b'
-  const inputBg = isDark ? '#0f172a' : '#f8fafc'
-  const btnBg = isDark ? '#334155' : '#f1f5f9'
+  const handleEditUser = async () => {
+    if (!editUser || !editForm.name.trim()) return
+    await window.api.auth.updateUser(editUser.id, editForm)
+    setDialog(null); setEditUser(null); load()
+  }
 
-  const inputStyle = { background: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }
+  const handleChangePin = async () => {
+    if (!editUser || newPin.length < 4) return
+    await window.api.auth.updateUser(editUser.id, { pinCode: newPin })
+    setDialog(null); setEditUser(null); setNewPin(''); load()
+  }
+
+  const handleDeleteUser = async () => {
+    if (!confirmDeleteUser) return
+    await window.api.auth.deleteUser(confirmDeleteUser.id)
+    setConfirmDeleteUser(null); load()
+  }
 
   return (
-    <div className="w-full">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: isDark ? 'rgba(0,97,148,0.2)' : 'rgba(0,97,148,0.08)' }}>
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke={primary} strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          </div>
-          <h3 className="font-extrabold text-sm" style={{ color: textPrimary }}>{fa.admin.users}</h3>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="btn btn-primary text-sm"
-        >
-          + {fa.admin.addUser}
-        </button>
+    <div className="w-full space-y-4">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <UserCard>
+          <div className="text-[10px] font-bold" style={{ color: tSec }}>کل کاربران</div>
+          <div className="text-lg font-extrabold mt-1" style={{ color: primary }}>{users.length}</div>
+        </UserCard>
+        <UserCard>
+          <div className="text-[10px] font-bold" style={{ color: tSec }}>مدیران</div>
+          <div className="text-lg font-extrabold mt-1" style={{ color: '#f59e0b' }}>{users.filter(u => u.role === 'admin').length}</div>
+        </UserCard>
+        <UserCard>
+          <div className="text-[10px] font-bold" style={{ color: tSec }}>صندوک‌دارها</div>
+          <div className="text-lg font-extrabold mt-1" style={{ color: '#22c55e' }}>{users.filter(u => u.role === 'cashier').length}</div>
+        </UserCard>
+      </div>
+
+      {/* Add User Form */}
+      <div className="flex justify-between items-center">
+        <h3 className="text-sm font-extrabold" style={{ color: tPri }}>لیست کاربران</h3>
+        <button onClick={() => setShowForm(!showForm)} className="px-4 py-2 rounded-xl text-xs font-bold text-white" style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)` }}>+ کاربر جدید</button>
       </div>
 
       {showForm && (
-        <div
-          className="rounded-2xl p-5 mb-4 grid grid-cols-1 md:grid-cols-4 gap-3 items-end border overflow-hidden"
-          style={{
-            backgroundColor: cardBg,
-            borderColor: primary,
-            borderRightWidth: '4px',
-            boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(0,97,148,0.08)',
-          }}
-        >
-          <div>
-            <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.name}</label>
-            <input
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="input-field text-sm"
-              style={inputStyle}
-            />
-          </div>
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold" style={{ color: textSecondary }}>{fa.admin.pin}</label>
-              <button type="button" onClick={() => setShowPin(!showPin)}
-                className="text-[10px] px-2 py-0.5 rounded-lg font-bold"
-                style={{ background: btnBg, color: textSecondary }}>
-                {showPin ? '●●●' : '○○○'}
-              </button>
+        <UserCard className="border-l-4" style={{ borderLeftColor: primary }}>
+          <div className="grid grid-cols-4 gap-3">
+            <div><Label>نام</Label><input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} autoFocus /></div>
+            <div><Label>رمز (حداقل ۴ رقم)</Label><input type="number" value={form.pinCode} onChange={e => setForm(f => ({ ...f, pinCode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold font-mono tracking-widest outline-none" style={inStyle} maxLength={6} inputMode="numeric" /></div>
+            <div><Label>نقش</Label>
+              <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as any }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle}>
+                <option value="cashier">صندوک‌دار</option>
+                <option value="admin">مدیر</option>
+              </select>
             </div>
-            <input
-              type={showPin ? 'text' : 'password'}
-              value={form.pinCode}
-              onChange={(e) => setForm((f) => ({ ...f, pinCode: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
-              className="input-field text-sm tracking-widest font-mono"
-              style={inputStyle}
-              maxLength={6}
-              inputMode="numeric"
-            />
+            <div className="flex items-end gap-2">
+              <button onClick={handleSubmit} disabled={!form.name || form.pinCode.length < 4} className="flex-1 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', opacity: (!form.name || form.pinCode.length < 4) ? 0.5 : 1 }}>ایجاد</button>
+              <button onClick={() => setShowForm(false)} className="px-4 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: inBg, color: tSec }}>لغو</button>
+            </div>
           </div>
-          <div>
-            <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.role}</label>
-            <select
-              value={form.role}
-              onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as any }))}
-              className="input-field text-sm"
-              style={inputStyle}>
-              <option value="cashier">{fa.admin.cashier}</option>
-              <option value="admin">{fa.admin.admin}</option>
-            </select>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={handleSubmit} className="btn btn-success text-sm flex-1">
-              {fa.admin.create}
-            </button>
-            <button
-              onClick={() => setShowForm(false)}
-              className="flex-1 px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200"
-              style={{ backgroundColor: btnBg, color: textSecondary }}>
-              {fa.admin.cancel}
-            </button>
-          </div>
-        </div>
+        </UserCard>
       )}
 
-      <div
-        className="rounded-2xl border overflow-hidden w-full"
-        style={{
-          backgroundColor: cardBg,
-          borderColor: cardBorder,
-          boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)',
-        }}
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)' }}>
-                <th className="text-right px-4 py-2.5 text-xs font-bold" style={{ color: textSecondary, borderBottom: `2px solid ${cardBorder}` }}>ID</th>
-                <th className="text-right px-4 py-2.5 text-xs font-bold" style={{ color: textSecondary, borderBottom: `2px solid ${cardBorder}` }}>{fa.admin.name}</th>
-                <th className="text-right px-4 py-2.5 text-xs font-bold" style={{ color: textSecondary, borderBottom: `2px solid ${cardBorder}` }}>{fa.admin.role}</th>
-                <th className="text-right px-4 py-2.5 text-xs font-bold" style={{ color: textSecondary, borderBottom: `2px solid ${cardBorder}` }}>{fa.expense.date}</th>
-                <th className="px-4 py-2.5" style={{ borderBottom: `2px solid ${cardBorder}` }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr
-                  key={u.id}
-                  className="transition-all duration-150"
-                  style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(0,97,148,0.06)' : 'rgba(0,97,148,0.03)' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
-                >
-                  <td className="px-4 py-2.5" style={{ color: textSecondary }}>{u.id}</td>
-                  <td className="px-4 py-2.5 font-bold" style={{ color: textPrimary }}>{u.name}</td>
-                  <td className="px-4 py-2.5">
-                    <span className="px-2.5 py-1 rounded-full text-[11px] font-bold" style={{
-                      backgroundColor: u.role === 'admin' ? (isDark ? 'rgba(245,158,11,0.15)' : '#fef3c7') : (isDark ? 'rgba(0,97,148,0.15)' : '#e0f2fe'),
-                      color: u.role === 'admin' ? '#f59e0b' : primary,
-                    }}>{u.role === 'admin' ? fa.admin.admin : fa.admin.cashier}</span>
-                  </td>
-                  <td className="px-4 py-2.5 text-xs" style={{ color: textSecondary }}>{u.createdAt}</td>
-                  <td className="px-4 py-2.5">
+      {/* Users Table */}
+      <UserCard className="!p-0 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead><tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+            <th className="text-right px-4 py-2.5 text-xs font-bold" style={{ color: tSec }}>ID</th>
+            <th className="text-right px-4 py-2.5 text-xs font-bold" style={{ color: tSec }}>نام</th>
+            <th className="text-right px-4 py-2.5 text-xs font-bold" style={{ color: tSec }}>نقش</th>
+            <th className="text-right px-4 py-2.5 text-xs font-bold" style={{ color: tSec }}>تاریخ ایجاد</th>
+            <th className="px-4 py-2.5 text-xs font-bold" style={{ color: tSec }}>عملیات</th>
+          </tr></thead>
+          <tbody>
+            {users.map(u => (
+              <tr key={u.id} style={{ borderTop: `1px solid ${cBorder}` }}>
+                <td className="px-4 py-2.5 text-xs font-mono" style={{ color: tSec }}>{u.id}</td>
+                <td className="px-4 py-2.5 font-bold" style={{ color: tPri }}>{u.name}</td>
+                <td className="px-4 py-2.5"><span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: u.role === 'admin' ? '#f59e0b15' : '#22c55e15', color: u.role === 'admin' ? '#f59e0b' : '#22c55e' }}>{u.role === 'admin' ? 'مدیر' : 'صندوک‌دار'}</span></td>
+                <td className="px-4 py-2.5 text-xs" style={{ color: tSec }}>{u.createdAt?.slice(0, 10)}</td>
+                <td className="px-4 py-2.5">
+                  <div className="flex gap-1 justify-center" onClick={e => e.stopPropagation()}>
+                    <button onClick={() => { setEditUser(u); setEditForm({ name: u.name, pinCode: '', role: u.role }); setDialog('edit') }}
+                      className="text-[10px] font-bold px-2.5 py-1 rounded-lg" style={{ color: primary, backgroundColor: `${primary}15` }}>ویرایش</button>
+                    <button onClick={() => { setEditUser(u); setNewPin(''); setDialog('pin') }}
+                      className="text-[10px] font-bold px-2.5 py-1 rounded-lg" style={{ color: '#f59e0b', backgroundColor: '#f59e0b15' }}>تغییر رمز</button>
                     {u.role !== 'admin' && (
-                      <button onClick={async () => { await window.api.auth.deleteUser(u.id); load() }}
-                        className="text-xs font-bold px-2.5 py-1 rounded-lg transition-all duration-200"
-                        style={{ color: '#ef4444', backgroundColor: isDark ? 'rgba(239,68,68,0.1)' : '#fef2f2' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(239,68,68,0.2)' : '#fee2e2' }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(239,68,68,0.1)' : '#fef2f2' }}
-                      >
-                        {fa.admin.delete}
-                      </button>
+                      <button onClick={() => setConfirmDeleteUser(u)}
+                        className="text-[10px] font-bold px-2.5 py-1 rounded-lg" style={{ color: ERR, backgroundColor: `${ERR}15` }}>حذف</button>
                     )}
-                  </td>
-                </tr>
-              ))}
-              {users.length === 0 && (
-                <tr>
-                  <td colSpan={5}>
-                    <div className="flex flex-col items-center justify-center py-12 gap-3">
-                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }}>
-                        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke={textSecondary} strokeWidth="1" opacity="0.5">
-                          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
-                        </svg>
-                      </div>
-                      <span className="text-sm font-bold" style={{ color: textSecondary }}>{fa.admin.noUsers}</span>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {users.length === 0 && <tr><td colSpan={5} className="text-center py-8 text-sm" style={{ color: tSec }}>کاربری یافت نشد</td></tr>}
+          </tbody>
+        </table>
+      </UserCard>
+
+      {/* Edit User Dialog */}
+      <Dialog open={dialog === 'edit'} onClose={() => setDialog(null)} title="ویرایش کاربر" maxWidth="max-w-sm"
+        icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
+        footer={<>
+          <button onClick={() => setDialog(null)} className="px-4 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: inBg, color: tSec }}>لغو</button>
+          <button onClick={handleEditUser} className="px-5 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>ذخیره</button>
+        </>}>
+        <div className="mb-3"><Label>نام</Label><input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} autoFocus /></div>
+        <div><Label>نقش</Label>
+          <select value={editForm.role} onChange={e => setEditForm(f => ({ ...f, role: e.target.value as any }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle}>
+            <option value="cashier">صندوک‌دار</option>
+            <option value="admin">مدیر</option>
+          </select>
         </div>
-      </div>
+      </Dialog>
+
+      {/* Change PIN Dialog */}
+      <Dialog open={dialog === 'pin'} onClose={() => setDialog(null)} title="تغییر رمز عبور" maxWidth="max-w-xs"
+        subtitle={editUser?.name}
+        icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>}
+        footer={<>
+          <button onClick={() => setDialog(null)} className="px-4 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: inBg, color: tSec }}>لغو</button>
+          <button onClick={handleChangePin} disabled={newPin.length < 4} className="px-5 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', opacity: newPin.length < 4 ? 0.5 : 1 }}>ذخیره رمز جدید</button>
+        </>}>
+        <div className="text-center">
+          <input type="number" value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            className="w-40 text-center text-2xl font-bold font-mono tracking-widest px-4 py-3 rounded-xl outline-none"
+            style={inStyle} maxLength={6} inputMode="numeric" autoFocus placeholder="----" />
+          <p className="text-xs mt-2" style={{ color: tSec }}>حداقل ۴ رقم</p>
+        </div>
+      </Dialog>
+
+      {/* Confirm Delete Dialog */}
+      <Dialog open={!!confirmDeleteUser} onClose={() => setConfirmDeleteUser(null)} title="تأیید حذف کاربر" maxWidth="max-w-xs"
+        subtitle={confirmDeleteUser?.name}
+        icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>}
+        footer={<>
+          <button onClick={() => setConfirmDeleteUser(null)} className="px-4 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: inBg, color: tSec }}>لغو</button>
+          <button onClick={handleDeleteUser} className="px-5 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>حذف</button>
+        </>}>
+        <div className="text-center">
+          <p className="text-sm mb-2" style={{ color: tPri }}>آیا از حذف این کاربر اطمینان دارید؟</p>
+          <p className="text-xs" style={{ color: tSec }}>این عمل قابل بازگشت نیست</p>
+        </div>
+      </Dialog>
     </div>
   )
 }

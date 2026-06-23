@@ -38,6 +38,21 @@ export function deleteUser(id: number): boolean {
   return result.changes > 0
 }
 
+export function updateUser(id: number, data: { name?: string; pinCode?: string; role?: 'admin' | 'cashier' }): boolean {
+  const db = getDatabase()
+  const existing = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as Record<string, unknown> | undefined
+  if (!existing) return false
+  const newName = data.name ?? existing.name as string
+  const newRole = data.role ?? existing.role as string
+  if (data.pinCode && data.pinCode.length >= 4) {
+    const hashed = hashPin(data.pinCode)
+    db.prepare('UPDATE users SET name = ?, role = ?, pin_code = ? WHERE id = ?').run(newName, newRole, hashed, id)
+  } else {
+    db.prepare('UPDATE users SET name = ?, role = ? WHERE id = ?').run(newName, newRole, id)
+  }
+  return true
+}
+
 export function changePin(id: number, newPin: string): boolean {
   const db = getDatabase()
   const hashed = hashPin(newPin)

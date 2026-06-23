@@ -25,6 +25,8 @@ const api = {
       ipcRenderer.invoke('auth:deleteUser', { id }),
     changePin: (id: number, newPin: string): Promise<VoidResponse> =>
       ipcRenderer.invoke('auth:changePin', { id, newPin }),
+    updateUser: (id: number, data: { name?: string; pinCode?: string; role?: 'admin' | 'cashier' }): Promise<VoidResponse> =>
+      ipcRenderer.invoke('auth:updateUser', { id, ...data }),
   },
 
   products: {

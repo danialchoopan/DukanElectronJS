@@ -55,6 +55,7 @@ export function registerAllHandlers(): void {
   handleArg<{ name: string; pinCode: string; role: 'admin' | 'cashier' }, ReturnType<typeof auth.createUser>>('auth:createUser', (a) => auth.createUser(a.name, a.pinCode, a.role))
   handleArg<{ id: number }, boolean>('auth:deleteUser', (a) => auth.deleteUser(a.id))
   handleArg<{ id: number; newPin: string }, boolean>('auth:changePin', (a) => auth.changePin(a.id, a.newPin))
+  handleArg<{ id: number; name?: string; pinCode?: string; role?: 'admin' | 'cashier' }, boolean>('auth:updateUser', (a) => auth.updateUser(a.id, { name: a.name, pinCode: a.pinCode, role: a.role }))
 
   // ─── Products ───────────────────────────────────────────
   handle('products:getAll', () => products.getAllProducts())
