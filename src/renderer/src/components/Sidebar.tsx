@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuthStore } from '../store/authStore'
-import { useSettingsStore } from '../store/settingsStore'
+import { useSettingsStore, getNavColors } from '../store/settingsStore'
 import { t, fa } from '../i18n'
 import { DashboardIcon, UsersIcon, SettingsIcon, LogoutIcon, MoonIcon, SunIcon, LanguageIcon } from './Icons'
 
@@ -15,7 +15,7 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
   const [collapsed, setCollapsed] = useState(false)
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
-  const { theme, setTheme, language, setLanguage } = useSettingsStore()
+  const { theme, setTheme, language, setLanguage, navTheme } = useSettingsStore()
   const ui = t()
   const isDark = theme === 'dark'
 
@@ -34,7 +34,7 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
     { key: 'help', label: fa.nav.help, icon: <HelpIcon /> },
   ]
 
-  const primary = '#006194'
+  const primary = getNavColors(navTheme, isDark)
   const sidebarWidth = collapsed ? 64 : 220
 
   return (
