@@ -17,10 +17,10 @@ import { CameraIcon } from '../components/Icons'
 import PopularItems from '../components/PopularItems'
 import { formatJalaliDateTime } from '../utils/jalali'
 import type { Sale, Customer, Product } from "../../../types"
+import Dialog, { DialogField, DialogInput, DialogTextarea, DialogButton } from '../components/Dialog'
 
 const primary = '#006194'
 const success = '#22c55e'
-const error = '#ef4444'
 const warning = '#f59e0b'
 
 export default function SalesTerminal() {
@@ -175,138 +175,114 @@ export default function SalesTerminal() {
 
       {showWebcam && <WebcamScanner onScan={handleBarcodeScan} onClose={() => setShowWebcam(false)} />}
 
-      {/* Payment Confirmation Dialog — Full Customization */}
-      {pendingPayment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
-          <div className="card p-6 max-w-md w-full" style={{ border: `2px solid ${primary}` }}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)` }}>
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              </div>
-              <div>
-                <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>تکمیل فاکتور</h2>
-                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{pendingPayment.method === 'cash' ? fa.payment.cash : 'بدهی'} — {getSubtotal().toLocaleString('fa-IR')} {fa.common.toman}</p>
-              </div>
-            </div>
-
-            <div className="space-y-3 mb-4">
-              <div>
-                <label className="text-xs font-bold block mb-1" style={{ color: 'var(--text-secondary)' }}>نام مشتری</label>
-                <input value={invoiceCustomerName} onChange={e => setInvoiceCustomerName(e.target.value)}
-                  placeholder={selectedCustomer?.name || 'اختیاری'}
-                  className="input-field text-sm w-full" />
-              </div>
-              <div>
-                <label className="text-xs font-bold block mb-1" style={{ color: 'var(--text-secondary)' }}>توضیحات فاکتور</label>
-                <input value={invoiceDesc} onChange={e => setInvoiceDesc(e.target.value)}
-                  placeholder="مثلاً: شماره سفارش، نام پروژه..."
-                  className="input-field text-sm w-full" />
-              </div>
-              <div>
-                <label className="text-xs font-bold block mb-1" style={{ color: 'var(--text-secondary)' }}>یادداشت</label>
-                <textarea value={invoiceNote} onChange={e => setInvoiceNote(e.target.value)}
-                  placeholder="متن دلخواه برای چاپ روی فاکتور..."
-                  className="input-field text-sm w-full resize-none" rows={2} />
-              </div>
-            </div>
-
-            {/* Preview */}
-            <div className="rounded-xl p-3 mb-4" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-              <div className="text-[10px] font-bold mb-2" style={{ color: 'var(--text-secondary)' }}>پیش‌نمایش فاکتور</div>
-              <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: '#fff', color: '#1a1a1a', direction: 'rtl' }}>
-                {invoiceCustomerName && <div className="mb-1 font-bold">مشتری: {invoiceCustomerName}</div>}
-                {invoiceDesc && <div className="mb-1" style={{ color: '#666' }}>{invoiceDesc}</div>}
-                <table className="w-full text-[10px] mb-2" style={{ borderCollapse: 'collapse' }}>
-                  <thead><tr style={{ borderBottom: '1px solid #ddd' }}><th className="text-right py-0.5">کالا</th><th className="text-center">تعداد</th><th className="text-right">قیمت</th></tr></thead>
-                  <tbody>
-                    {items.slice(0, 3).map((item, i) => (
-                      <tr key={i} style={{ borderBottom: '1px solid #eee' }}><td className="py-0.5">{item.title}</td><td className="text-center">{item.quantity}</td><td className="text-right">{item.unitPrice.toLocaleString('fa-IR')}</td></tr>
-                    ))}
-                    {items.length > 3 && <tr><td colSpan={3} className="text-center py-0.5" style={{ color: '#999' }}>+{items.length - 3} کالای دیگر</td></tr>}
-                  </tbody>
-                </table>
-                <div className="font-bold text-right" style={{ color: '#006194' }}>جمع: {getSubtotal().toLocaleString('fa-IR')} تومان</div>
-                {invoiceNote && <div className="mt-2 pt-1 text-[10px]" style={{ color: '#999', borderTop: '1px dashed #ddd' }}>{invoiceNote}</div>}
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button onClick={() => setPendingPayment(null)} className="flex-1 py-3 rounded-xl font-bold text-sm transition-all" style={{ background: `linear-gradient(135deg, ${error}, #dc2626)`, color: '#fff', boxShadow: `0 4px 12px ${error}40` }}>{fa.common.cancel}</button>
-              <button onClick={confirmSale} className="flex-1 py-3 rounded-xl font-bold text-sm transition-all" style={{ background: `linear-gradient(135deg, ${success}, #16a34a)`, color: '#fff', boxShadow: `0 4px 12px ${success}40` }}>{fa.common.confirm}</button>
-            </div>
+      {/* Payment Confirmation Dialog */}
+      <Dialog open={!!pendingPayment} onClose={() => setPendingPayment(null)}
+        title="تکمیل فاکتور"
+        subtitle={`${pendingPayment?.method === 'cash' ? fa.payment.cash : 'بدهی'} — ${getSubtotal().toLocaleString('fa-IR')} ${fa.common.toman}`}
+        icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>}
+        footer={<>
+          <DialogButton variant="ghost" onClick={() => setPendingPayment(null)}>{fa.common.cancel}</DialogButton>
+          <DialogButton variant="success" onClick={confirmSale}>{fa.common.confirm}</DialogButton>
+        </>}>
+        <DialogField label="نام مشتری">
+          <DialogInput value={invoiceCustomerName} onChange={setInvoiceCustomerName} placeholder={selectedCustomer?.name || 'اختیاری'} autoFocus />
+        </DialogField>
+        <DialogField label="توضیحات فاکتور">
+          <DialogInput value={invoiceDesc} onChange={setInvoiceDesc} placeholder="مثلاً: شماره سفارش، نام پروژه..." />
+        </DialogField>
+        <DialogField label="یادداشت">
+          <DialogTextarea value={invoiceNote} onChange={setInvoiceNote} placeholder="متن دلخواه برای چاپ روی فاکتور..." rows={2} />
+        </DialogField>
+        <div className="rounded-xl p-3 mt-1" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+          <div className="text-[10px] font-bold mb-2" style={{ color: 'var(--text-secondary)' }}>پیش‌نمایش فاکتور</div>
+          <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: '#fff', color: '#1a1a1a', direction: 'rtl' }}>
+            {invoiceCustomerName && <div className="mb-1 font-bold">مشتری: {invoiceCustomerName}</div>}
+            {invoiceDesc && <div className="mb-1" style={{ color: '#666' }}>{invoiceDesc}</div>}
+            <table className="w-full text-[10px] mb-2" style={{ borderCollapse: 'collapse' }}>
+              <thead><tr style={{ borderBottom: '1px solid #ddd' }}><th className="text-right py-0.5">کالا</th><th className="text-center">تعداد</th><th className="text-right">قیمت</th></tr></thead>
+              <tbody>
+                {items.slice(0, 3).map((item, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #eee' }}><td className="py-0.5">{item.title}</td><td className="text-center">{item.quantity}</td><td className="text-right">{item.unitPrice.toLocaleString('fa-IR')}</td></tr>
+                ))}
+                {items.length > 3 && <tr><td colSpan={3} className="text-center py-0.5" style={{ color: '#999' }}>+{items.length - 3} کالای دیگر</td></tr>}
+              </tbody>
+            </table>
+            <div className="font-bold text-right" style={{ color: '#006194' }}>جمع: {getSubtotal().toLocaleString('fa-IR')} تومان</div>
+            {invoiceNote && <div className="mt-2 pt-1 text-[10px]" style={{ color: '#999', borderTop: '1px dashed #ddd' }}>{invoiceNote}</div>}
           </div>
         </div>
-      )}
+      </Dialog>
 
       {/* Sale Complete Modal */}
-      {saleComplete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
-          <div className="card p-8 max-w-md w-full" style={{ border: `2px solid ${success}` }}>
-            <div className="text-center mb-5">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${success}, #16a34a)`, boxShadow: `0 4px 16px ${success}40` }}>
-                <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+      <Dialog open={!!saleComplete} onClose={() => setSaleComplete(null)}
+        title="فروش با موفقیت ثبت شد"
+        subtitle={`${saleComplete?.total_amount.toLocaleString('fa-IR')} ${fa.common.toman}`}
+        icon={<svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
+        footer={<>
+          <DialogButton variant="ghost" onClick={() => setSaleComplete(null)}>{fa.common.close}</DialogButton>
+          <DialogButton variant="primary" onClick={() => { if (saleComplete) { setShowReceipt(saleComplete); setSaleComplete(null) } }}>{fa.receipt.print}</DialogButton>
+          <DialogButton variant="success" onClick={async () => {
+            if (!saleComplete) return
+            const customerName = saleComplete.customerName || lastCustomer?.name || ''
+            const saleDesc = saleComplete.description || ''
+            const saleNote = saleComplete.invoiceDescription || ''
+            let html = ''
+            if (customerName) html += `<div style="font-size:11pt;margin-bottom:4px"><strong>مشتری:</strong> ${customerName}</div>`
+            html += `<div class="header-info"><span>شماره فاکتور: ${saleComplete.invoiceNumber}</span><span>تاریخ: ${formatJalaliDateTime(saleComplete.createdAt || '')}</span></div>`
+            html += `<div class="header-info"><span>صندوکدار: ${user?.name || ''}</span><span>نوع پرداخت: ${saleComplete.paymentMethod === 'cash' ? 'نقدی' : saleComplete.paymentMethod === 'card' ? 'کارتی' : 'بدهی'}</span></div>`
+            if (saleDesc) html += `<div style="padding:6px 8px;margin:4px 0;font-size:9pt;background:#f0f4f8;border-radius:4px;color:#333">${saleDesc}</div>`
+            html += '<table><thead><tr><th>کالا</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>'
+            saleComplete.items?.forEach((item: any) => { html += `<tr><td>${item.productTitle}</td><td>${item.quantity}</td><td>${item.unitPrice.toLocaleString('fa-IR')}</td><td>${item.subtotal.toLocaleString('fa-IR')}</td></tr>` })
+            html += '</tbody></table>'
+            html += `<p><strong>جمع کل: ${saleComplete.total_amount.toLocaleString('fa-IR')} تومان</strong></p>`
+            if (saleNote) html += `<div style="margin-top:8px;padding:6px 8px;font-size:9pt;color:#666;border-top:1px dashed #ccc">${saleNote}</div>`
+            showPrint(html, 'فاکتور فروش', true)
+            setSaleComplete(null)
+          }}>چاپ A4</DialogButton>
+        </>}>
+        {saleComplete && (
+          <>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="rounded-xl p-3" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                <div className="text-[10px] mb-1" style={{ color: 'var(--text-secondary)' }}>{fa.receipt.invoice}</div>
+                <div className="text-sm font-bold font-mono" style={{ color: 'var(--text-primary)' }}>{saleComplete.invoiceNumber}</div>
               </div>
-              <h2 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{fa.pos.total}: <span style={{ color: success }}>{saleComplete.total_amount.toLocaleString('fa-IR')} {fa.common.toman}</span></h2>
+              <div className="rounded-xl p-3" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                <div className="text-[10px] mb-1" style={{ color: 'var(--text-secondary)' }}>{fa.receipt.method}</div>
+                <div className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{saleComplete.paymentMethod === 'cash' ? fa.payment.cash : saleComplete.paymentMethod === 'card' ? fa.payment.card : fa.payment.ledger}</div>
+              </div>
+              <div className="rounded-xl p-3" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                <div className="text-[10px] mb-1" style={{ color: 'var(--text-secondary)' }}>{fa.receipt.date}</div>
+                <div className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{formatJalaliDateTime(saleComplete.createdAt || '')}</div>
+              </div>
+              <div className="rounded-xl p-3" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                <div className="text-[10px] mb-1" style={{ color: 'var(--text-secondary)' }}>مشتری</div>
+                <div className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{saleComplete.customerName || 'ناشناس'}</div>
+              </div>
             </div>
-            <div className="rounded-xl p-4 mb-5" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-              <div className="flex justify-between text-sm mb-2">
-                <span style={{ color: 'var(--text-secondary)' }}>{fa.receipt.invoice}</span>
-                <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{saleComplete.invoiceNumber}</span>
+            {saleComplete.items && saleComplete.items.length > 0 && (
+              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+                <table className="w-full text-xs">
+                  <thead><tr style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                    <th className="px-3 py-2 text-right" style={{ color: 'var(--text-secondary)' }}>کالا</th>
+                    <th className="px-3 py-2 text-center" style={{ color: 'var(--text-secondary)' }}>تعداد</th>
+                    <th className="px-3 py-2 text-left" style={{ color: 'var(--text-secondary)' }}>جمع</th>
+                  </tr></thead>
+                  <tbody>
+                    {saleComplete.items.map((item: any, idx: number) => (
+                      <tr key={idx} style={{ borderTop: '1px solid var(--border-color)' }}>
+                        <td className="px-3 py-2 font-bold" style={{ color: 'var(--text-primary)' }}>{item.productTitle}</td>
+                        <td className="px-3 py-2 text-center" style={{ color: 'var(--text-secondary)' }}>{item.quantity}</td>
+                        <td className="px-3 py-2 text-left font-bold" style={{ color: 'var(--text-primary)' }}>{item.subtotal.toLocaleString('fa-IR')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <div className="flex justify-between text-sm mb-2">
-                <span style={{ color: 'var(--text-secondary)' }}>{fa.receipt.method}</span>
-                <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{saleComplete.paymentMethod === 'cash' ? fa.payment.cash : saleComplete.paymentMethod === 'card' ? fa.payment.card : fa.payment.ledger}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span style={{ color: 'var(--text-secondary)' }}>{fa.receipt.date}</span>
-                <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{saleComplete.createdAt?.split('T')[0]}</span>
-              </div>
-              {saleComplete.items && saleComplete.items.length > 0 && (
-                <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border-color)' }}>
-                  {saleComplete.items.map((item: any, idx: number) => (
-                    <div key={idx} className="flex justify-between text-xs mb-1">
-                      <span style={{ color: 'var(--text-secondary)' }}>{item.productTitle} x{item.quantity}</span>
-                      <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{item.subtotal.toLocaleString('fa-IR')}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <button onClick={() => { setShowReceipt(saleComplete); setSaleComplete(null) }} className="flex-1 py-3 rounded-xl font-bold text-sm transition-all" style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)`, color: '#fff', boxShadow: `0 4px 12px ${primary}40` }}>{fa.receipt.print}</button>
-              <button
-                onClick={async () => {
-                  if (!saleComplete) return
-                  const customerName = saleComplete.customerName || lastCustomer?.name || ''
-                  const saleDesc = saleComplete.description || ''
-                  const saleNote = saleComplete.invoiceDescription || ''
-                  let html = ''
-                  if (customerName) {
-                    html += `<div style="font-size:11pt;margin-bottom:4px"><strong>مشتری:</strong> ${customerName}</div>`
-                  }
-                  html += `<div class="header-info"><span>شماره فاکتور: ${saleComplete.invoiceNumber}</span><span>تاریخ: ${formatJalaliDateTime(saleComplete.createdAt || '')}</span></div>`
-                  html += `<div class="header-info"><span>صندوکدار: ${user?.name || ''}</span><span>نوع پرداخت: ${saleComplete.paymentMethod === 'cash' ? 'نقدی' : saleComplete.paymentMethod === 'card' ? 'کارتی' : 'بدهی'}</span></div>`
-                  if (saleDesc) {
-                    html += `<div style="padding:6px 8px;margin:4px 0;font-size:9pt;background:#f0f4f8;border-radius:4px;color:#333">${saleDesc}</div>`
-                  }
-                  html += '<table><thead><tr><th>کالا</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>'
-                  saleComplete.items?.forEach((item: any) => { html += `<tr><td>${item.productTitle}</td><td>${item.quantity}</td><td>${item.unitPrice.toLocaleString('fa-IR')}</td><td>${item.subtotal.toLocaleString('fa-IR')}</td></tr>` })
-                  html += '</tbody></table>'
-                  html += `<p><strong>جمع کل: ${saleComplete.total_amount.toLocaleString('fa-IR')} تومان</strong></p>`
-                  if (saleNote) {
-                    html += `<div style="margin-top:8px;padding:6px 8px;font-size:9pt;color:#666;border-top:1px dashed #ccc">${saleNote}</div>`
-                  }
-                  showPrint(html, 'فاکتور فروش', true)
-                  setSaleComplete(null)
-                }}
-                className="flex-1 py-3 rounded-xl font-bold text-sm transition-all"
-                style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)`, color: '#fff', boxShadow: `0 4px 12px ${primary}40` }}
-              >چاپ A4</button>
-              <button onClick={() => setSaleComplete(null)} className="flex-1 py-3 rounded-xl font-bold text-sm transition-all" style={{ background: `linear-gradient(135deg, ${success}, #16a34a)`, color: '#fff', boxShadow: `0 4px 12px ${success}40` }}>{fa.common.close}</button>
-            </div>
-          </div>
-        </div>
-      )}
+            )}
+          </>
+        )}
+      </Dialog>
 
       {showReceipt && (
         <ReceiptPrinter sale={showReceipt} storeName={storeSettings.storeName} storeAddress={storeSettings.storeAddress} storePhone={storeSettings.storePhone} receiptFooter={storeSettings.receiptFooter} onClose={() => setShowReceipt(null)} />

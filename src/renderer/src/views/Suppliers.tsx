@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSettingsStore } from '../store/settingsStore'
 import FormattedPriceInput from '../components/FormattedPriceInput'
+import Dialog, { DialogField, DialogInput, DialogTextarea, DialogButton } from '../components/Dialog'
 
 type Tab = 'suppliers' | 'purchases'
 
@@ -38,9 +39,6 @@ export default function Suppliers() {
 
   const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
     <div className={`rounded-xl p-4 border ${className}`} style={{ backgroundColor: cBg, borderColor: cBorder }}>{children}</div>
-  )
-  const Label = ({ children }: { children: React.ReactNode }) => (
-    <label className="text-xs font-bold block mb-1.5" style={{ color: tSec }}>{children}</label>
   )
 
   const load = useCallback(async () => {
@@ -354,116 +352,91 @@ export default function Suppliers() {
       {/* ─── Dialogs ─────────────────────────────── */}
 
       {/* Confirm Delete */}
-      {confirmDelete && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setConfirmDelete(null)}>
-          <div className="w-full max-w-sm rounded-2xl p-6 shadow-2xl" style={{ backgroundColor: cBg, border: `1px solid ${cBorder}` }} onClick={e => e.stopPropagation()}>
-            <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: ERR + '15' }}>
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke={ERR} strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            </div>
-            <h3 className="text-center text-sm font-bold mb-2" style={{ color: tPri }}>آیا از حذف اطمینان دارید؟</h3>
-            <p className="text-center text-xs mb-4" style={{ color: tSec }}>{confirmDelete.type === 'supplier' ? 'تأمین\u200cکننده و تمام تراکنش‌ها حذف می‌شوند' : 'این رکورد از تاریخچه حذف می‌شود'}</p>
-            <div className="flex gap-2">
-              <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: sBg, color: tSec }}>لغو</button>
-              <button onClick={confirmDeleteAction} className="flex-1 py-2 rounded-xl text-sm font-bold text-white" style={{ background: `linear-gradient(135deg, ${ERR}, #dc2626)` }}>حذف</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)} title="تأیید حذف"
+        subtitle={confirmDelete?.type === 'supplier' ? 'تأمین\u200cکننده و تمام تراکنش‌ها حذف می‌شوند' : 'این رکورد از تاریخچه حذف می‌شود'}
+        icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>}
+        footer={<>
+          <DialogButton variant="ghost" onClick={() => setConfirmDelete(null)}>لغو</DialogButton>
+          <DialogButton variant="danger" onClick={confirmDeleteAction}>حذف</DialogButton>
+        </>}>
+        <p className="text-center text-sm" style={{ color: tSec }}>آیا از حذف اطمینان دارید؟</p>
+      </Dialog>
 
       {/* Create/Edit Supplier */}
-      {(dialog === 'create' || dialog === 'edit') && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-md rounded-2xl p-6 shadow-2xl" style={{ backgroundColor: cBg, border: `1px solid ${cBorder}` }} onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold mb-4" style={{ color: tPri }}>{dialog === 'edit' ? 'ویرایش تأمین\u200cکننده' : 'تأمین\u200cکننده جدید'}</h3>
-            <div className="space-y-3">
-              <div><Label>نام *</Label><input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} autoFocus /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>تلفن</Label><input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} /></div>
-                <div><Label>شرکت</Label><input value={form.company} onChange={e => setForm(f => ({ ...f, company: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} /></div>
-              </div>
-              <div><Label>آدرس</Label><input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>ایمیل</Label><input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} /></div>
-                <div><Label>شماره مالیاتی</Label><input value={form.taxId} onChange={e => setForm(f => ({ ...f, taxId: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} /></div>
-              </div>
-              <div><Label>توضیحات</Label><textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none resize-none" rows={2} style={inStyle} /></div>
-            </div>
-            <div className="flex gap-2 mt-4">
-              <button onClick={() => setDialog(null)} className="flex-1 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: sBg, color: tSec }}>لغو</button>
-              <button onClick={handleSaveSupplier} disabled={loading || !form.name.trim()} className="flex-1 py-2 rounded-xl text-sm font-bold text-white" style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)`, opacity: loading || !form.name.trim() ? 0.5 : 1 }}>ذخیره</button>
-            </div>
-          </div>
+      <Dialog open={dialog === 'create' || dialog === 'edit'} onClose={() => setDialog(null)}
+        title={dialog === 'edit' ? 'ویرایش تأمین\u200cکننده' : 'تأمین\u200cکننده جدید'}
+        icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/></svg>}
+        footer={<>
+          <DialogButton variant="ghost" onClick={() => setDialog(null)}>لغو</DialogButton>
+          <DialogButton variant="primary" onClick={handleSaveSupplier} disabled={loading || !form.name.trim()}>ذخیره</DialogButton>
+        </>}>
+        <DialogField label="نام *"><DialogInput value={form.name} onChange={v => setForm(f => ({ ...f, name: v }))} autoFocus /></DialogField>
+        <div className="grid grid-cols-2 gap-3">
+          <DialogField label="تلفن"><DialogInput value={form.phone} onChange={v => setForm(f => ({ ...f, phone: v }))} /></DialogField>
+          <DialogField label="شرکت"><DialogInput value={form.company} onChange={v => setForm(f => ({ ...f, company: v }))} /></DialogField>
         </div>
-      )}
+        <DialogField label="آدرس"><DialogInput value={form.address} onChange={v => setForm(f => ({ ...f, address: v }))} /></DialogField>
+        <div className="grid grid-cols-2 gap-3">
+          <DialogField label="ایمیل"><DialogInput value={form.email} onChange={v => setForm(f => ({ ...f, email: v }))} /></DialogField>
+          <DialogField label="شماره مالیاتی"><DialogInput value={form.taxId} onChange={v => setForm(f => ({ ...f, taxId: v }))} /></DialogField>
+        </div>
+        <DialogField label="توضیحات"><DialogTextarea value={form.description} onChange={v => setForm(f => ({ ...f, description: v }))} rows={2} /></DialogField>
+      </Dialog>
 
       {/* Pay Supplier */}
-      {dialog === 'pay' && selectedSupplier && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-sm rounded-2xl p-6 shadow-2xl" style={{ backgroundColor: cBg, border: `1px solid ${cBorder}` }} onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold mb-1" style={{ color: tPri }}>پرداخت به {selectedSupplier.name}</h3>
-            <p className="text-xs mb-4" style={{ color: tSec }}>مانده بدهی: {selectedSupplier.balance.toLocaleString('fa-IR')} تومان</p>
-            <div className="space-y-3">
-              <div><Label>مبلغ پرداخت</Label><FormattedPriceInput value={parseFloat(payAmount.replace(/,/g, '')) || 0} onChange={(v) => setPayAmount(v ? String(v) : '')} className="w-full px-3 py-3 rounded-lg text-lg font-bold text-center outline-none" style={inStyle} placeholder="0" /></div>
-              <div><Label>توضیحات</Label><input value={payDesc} onChange={e => setPayDesc(e.target.value)} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} placeholder="اختیاری" /></div>
-            </div>
-            <div className="flex gap-2 mt-4">
-              <button onClick={() => setDialog(null)} className="flex-1 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: sBg, color: tSec }}>لغو</button>
-              <button onClick={handlePay} disabled={loading || !payAmount || parseFloat(payAmount.replace(/,/g, '')) <= 0} className="flex-1 py-2 rounded-xl text-sm font-bold text-white" style={{ background: `linear-gradient(135deg, ${SUC}, #16a34a)`, opacity: loading || !payAmount ? 0.5 : 1 }}>پرداخت</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog open={dialog === 'pay' && !!selectedSupplier} onClose={() => setDialog(null)}
+        title={`پرداخت به ${selectedSupplier?.name || ''}`}
+        subtitle={`مانده بدهی: ${selectedSupplier?.balance.toLocaleString('fa-IR') || 0} تومان`}
+        icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>}
+        footer={<>
+          <DialogButton variant="ghost" onClick={() => setDialog(null)}>لغو</DialogButton>
+          <DialogButton variant="success" onClick={handlePay} disabled={loading || !payAmount || parseFloat(payAmount.replace(/,/g, '')) <= 0}>پرداخت</DialogButton>
+        </>}>
+        <DialogField label="مبلغ پرداخت">
+          <FormattedPriceInput value={parseFloat(payAmount.replace(/,/g, '')) || 0} onChange={(v) => setPayAmount(v ? String(v) : '')} className="w-full px-3 py-3 rounded-xl text-lg font-bold text-center outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }} />
+        </DialogField>
+        <DialogField label="توضیحات"><DialogInput value={payDesc} onChange={setPayDesc} placeholder="اختیاری" /></DialogField>
+      </Dialog>
 
       {/* Create Purchase */}
-      {dialog === 'purchase' && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-lg rounded-2xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto" style={{ backgroundColor: cBg, border: `1px solid ${cBorder}` }} onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold mb-4" style={{ color: tPri }}>خرید جدید</h3>
-            <div className="space-y-3">
-              <div><Label>تأمین\u200cکننده *</Label>
-                <select value={purchaseForm.supplierId} onChange={e => setPurchaseForm(p => ({ ...p, supplierId: Number(e.target.value) }))}
-                  className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle}>
-                  <option value={0}>انتخاب کنید...</option>
-                  {suppliers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.company || ''})</option>)}
-                </select>
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <Label>اقلام خرید</Label>
-                  <button onClick={addPurchaseItem} className="text-xs font-bold px-2 py-1 rounded-lg" style={{ color: primary, backgroundColor: primary + '10' }}>+ افزودن</button>
-                </div>
-                <div className="space-y-2">
-                  {purchaseForm.items.map((item, idx) => (
-                    <div key={idx} className="flex gap-2 items-center">
-                      <input value={item.productTitle} onChange={e => updatePurchaseItem(idx, 'productTitle', e.target.value)} placeholder="نام کالا" className="flex-1 px-2 py-1.5 rounded-lg text-xs font-bold outline-none" style={inStyle} />
-                      <FormattedPriceInput value={item.quantity} onChange={v => updatePurchaseItem(idx, 'quantity', v)} className="w-20 px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={inStyle} />
-                      <FormattedPriceInput value={item.unitCost} onChange={v => updatePurchaseItem(idx, 'unitCost', v)} className="w-28 px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={inStyle} />
-                      <span className="text-[10px] font-bold min-w-[60px] text-left" style={{ color: tPri }}>{(item.quantity * item.unitCost).toLocaleString('fa-IR')}</span>
-                      {purchaseForm.items.length > 1 && <button onClick={() => removePurchaseItem(idx)} className="text-xs p-1 rounded" style={{ color: ERR }}>✕</button>}
-                    </div>
-                  ))}
-                </div>
-                <div className="flex text-[10px] font-bold gap-2 mt-1 px-1" style={{ color: tSec }}>
-                  <span className="flex-1">نام کالا</span><span className="w-20 text-center">تعداد</span><span className="w-28 text-center">قیمت واحد</span><span className="min-w-[60px] text-left">جمع</span><span className="w-5"></span>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div><Label>مالیات</Label><FormattedPriceInput value={purchaseForm.taxAmount} onChange={v => setPurchaseForm(p => ({ ...p, taxAmount: v }))} className="w-full px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={inStyle} /></div>
-                <div><Label>تخفیف</Label><FormattedPriceInput value={purchaseForm.discountAmount} onChange={v => setPurchaseForm(p => ({ ...p, discountAmount: v }))} className="w-full px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={inStyle} /></div>
-                <div><Label>پرداخت</Label><FormattedPriceInput value={purchaseForm.paidAmount} onChange={v => setPurchaseForm(p => ({ ...p, paidAmount: v }))} className="w-full px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={inStyle} /></div>
-              </div>
-              <div className="flex justify-between p-3 rounded-lg" style={{ backgroundColor: sBg }}>
-                <span className="text-sm font-bold" style={{ color: tSec }}>جمع کل:</span>
-                <span className="text-sm font-extrabold" style={{ color: primary }}>{purchaseTotal.toLocaleString('fa-IR')} تومان</span>
-              </div>
-            </div>
-            <div className="flex gap-2 mt-4">
-              <button onClick={() => setDialog(null)} className="flex-1 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: sBg, color: tSec }}>لغو</button>
-              <button onClick={handleCreatePurchase} disabled={loading || !purchaseForm.supplierId || purchaseForm.items.length === 0} className="flex-1 py-2 rounded-xl text-sm font-bold text-white" style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)`, opacity: loading ? 0.5 : 1 }}>ثبت خرید</button>
-            </div>
-          </div>
+      <Dialog open={dialog === 'purchase'} onClose={() => setDialog(null)} title="خرید جدید" maxWidth="max-w-lg"
+        icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>}
+        footer={<>
+          <DialogButton variant="ghost" onClick={() => setDialog(null)}>لغو</DialogButton>
+          <DialogButton variant="primary" onClick={handleCreatePurchase} disabled={loading || !purchaseForm.supplierId || purchaseForm.items.length === 0}>ثبت خرید</DialogButton>
+        </>}>
+        <DialogField label="تأمین\u200cکننده *">
+          <select value={purchaseForm.supplierId} onChange={e => setPurchaseForm(p => ({ ...p, supplierId: Number(e.target.value) }))}
+            className="w-full px-3 py-2.5 rounded-xl text-sm font-bold outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }}>
+            <option value={0}>انتخاب کنید...</option>
+            {suppliers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.company || ''})</option>)}
+          </select>
+        </DialogField>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-xs font-bold" style={{ color: tSec }}>اقلام خرید</label>
+          <button onClick={addPurchaseItem} className="text-xs font-bold px-2 py-1 rounded-lg" style={{ color: primary, backgroundColor: primary + '10' }}>+ افزودن</button>
         </div>
-      )}
+        <div className="space-y-2 mb-3">
+          {purchaseForm.items.map((item, idx) => (
+            <div key={idx} className="flex gap-2 items-center">
+              <input value={item.productTitle} onChange={e => updatePurchaseItem(idx, 'productTitle', e.target.value)} placeholder="نام کالا" className="flex-1 px-2 py-1.5 rounded-lg text-xs font-bold outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }} />
+              <FormattedPriceInput value={item.quantity} onChange={v => updatePurchaseItem(idx, 'quantity', v)} className="w-20 px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }} />
+              <FormattedPriceInput value={item.unitCost} onChange={v => updatePurchaseItem(idx, 'unitCost', v)} className="w-28 px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }} />
+              <span className="text-[10px] font-bold min-w-[60px] text-left" style={{ color: tPri }}>{(item.quantity * item.unitCost).toLocaleString('fa-IR')}</span>
+              {purchaseForm.items.length > 1 && <button onClick={() => removePurchaseItem(idx)} className="text-xs p-1 rounded" style={{ color: ERR }}>✕</button>}
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <DialogField label="مالیات"><FormattedPriceInput value={purchaseForm.taxAmount} onChange={v => setPurchaseForm(p => ({ ...p, taxAmount: v }))} className="w-full px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }} /></DialogField>
+          <DialogField label="تخفیف"><FormattedPriceInput value={purchaseForm.discountAmount} onChange={v => setPurchaseForm(p => ({ ...p, discountAmount: v }))} className="w-full px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }} /></DialogField>
+          <DialogField label="پرداخت"><FormattedPriceInput value={purchaseForm.paidAmount} onChange={v => setPurchaseForm(p => ({ ...p, paidAmount: v }))} className="w-full px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }} /></DialogField>
+        </div>
+        <div className="flex justify-between p-3 rounded-xl mt-2" style={{ backgroundColor: sBg }}>
+          <span className="text-sm font-bold" style={{ color: tSec }}>جمع کل:</span>
+          <span className="text-sm font-extrabold" style={{ color: primary }}>{purchaseTotal.toLocaleString('fa-IR')} تومان</span>
+        </div>
+      </Dialog>
     </div>
   )
 }
