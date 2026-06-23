@@ -37,10 +37,10 @@ export default function AdminPanel({ view = 'admin', initialTab, highlightId, on
   const [smartExportMode, setSmartExportMode] = useState<'export' | 'import' | null>(null)
 
   useEffect(() => {
-    if (initialTab && tabs.some(t => t.key === initialTab)) {
+    if (initialTab && allTabs.some(t => t.key === initialTab) && tabs.some(t => t.key === initialTab)) {
       setTab(initialTab as any)
     }
-  }, [initialTab, tabs])
+  }, [])
 
   useHighlight(highlightId, onHighlightDone)
 
