@@ -402,11 +402,8 @@ export default function AddProduct() {
   return (
                 <tr
                   key={p.id}
-                  onClick={() => openDetail(p)}
-                  className="cursor-pointer transition-all duration-150"
+                  className="transition-all duration-150"
                   style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(0,97,148,0.06)' : 'rgba(0,97,148,0.03)' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
                 >
                   <td className="px-4 py-2.5" style={{ color: textSecondary }}>{p.id}</td>
                   <td className="px-4 py-2.5 font-mono text-xs font-bold" style={{ color: primary }}>{p.barcode || '-'}</td>
@@ -426,15 +423,22 @@ export default function AddProduct() {
                     }}>{p.stock}</span>
                   </td>
                   <td className="px-4 py-2.5">
-                    <button
-                      onClick={() => startEdit(p)}
-                      className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-200"
-                      style={{ color: primary, backgroundColor: isDark ? 'rgba(0,97,148,0.1)' : 'rgba(0,97,148,0.06)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(0,97,148,0.2)' : 'rgba(0,97,148,0.12)' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(0,97,148,0.1)' : 'rgba(0,97,148,0.06)' }}
-                    >
-                      {fa.admin.edit}
-                    </button>
+                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => openDetail(p)}
+                        className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-200"
+                        style={{ color: primary, backgroundColor: isDark ? 'rgba(0,97,148,0.1)' : 'rgba(0,97,148,0.06)' }}
+                      >
+                        جزئیات
+                      </button>
+                      <button
+                        onClick={() => startEdit(p)}
+                        className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-200"
+                        style={{ color: '#22c55e', backgroundColor: isDark ? 'rgba(34,197,94,0.1)' : 'rgba(34,197,94,0.06)' }}
+                      >
+                        {fa.admin.edit}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )
