@@ -76,6 +76,7 @@ export interface Sale {
   changeAmount: number
   description?: string
   invoiceDescription?: string
+  manualCustomerName?: string
   createdAt: string
 }
 
@@ -93,6 +94,7 @@ export interface SaleInput {
   customerPaid: number
   description?: string
   invoiceDescription?: string
+  manualCustomerName?: string
 }
 
 export interface Customer {

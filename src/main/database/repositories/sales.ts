@@ -24,12 +24,12 @@ export function createSale(input: SaleInput): Sale {
 
   const createSaleTx = db.transaction(() => {
     const saleResult = db.prepare(`
-      INSERT INTO sales (invoiceNumber, userId, customerId, subtotal, total_amount, totalNetProfit, paymentMethod, customerPaid, changeAmount, description, invoiceDescription)
-      VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)
+      INSERT INTO sales (invoiceNumber, userId, customerId, subtotal, total_amount, totalNetProfit, paymentMethod, customerPaid, changeAmount, description, invoiceDescription, manualCustomerName)
+      VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)
     `).run(
       invoiceNumber, input.userId, input.customerId ?? null,
       rawSubtotal, total_amount, input.paymentMethod, input.customerPaid, changeAmount,
-      input.description || '', input.invoiceDescription || ''
+      input.description || '', input.invoiceDescription || '', input.manualCustomerName || ''
     )
     const saleId = saleResult.lastInsertRowid as number
 
@@ -83,7 +83,7 @@ export function getSaleById(id: number): Sale | undefined {
     userId: saleRow.userId as number,
     userName: (saleRow.userName as string) ?? undefined,
     customerId: (saleRow.customerId as number) ?? undefined,
-    customerName: (saleRow.customerName as string) ?? undefined,
+    customerName: (saleRow.customerName as string) ?? (saleRow.manualCustomerName as string) ?? undefined,
     items: items.map(mapSaleItem),
     subtotal: saleRow.subtotal as number,
     total_amount: saleRow.total_amount as number,
@@ -92,6 +92,7 @@ export function getSaleById(id: number): Sale | undefined {
     changeAmount: saleRow.changeAmount as number,
     description: (saleRow.description as string) ?? undefined,
     invoiceDescription: (saleRow.invoiceDescription as string) ?? undefined,
+    manualCustomerName: (saleRow.manualCustomerName as string) ?? undefined,
     createdAt: saleRow.createdAt as string,
   }
 }
@@ -110,7 +111,7 @@ export function getSalesByDateRange(startDate: string, endDate: string): Sale[] 
       userId: saleRow.userId as number,
       userName: (saleRow.userName as string) ?? undefined,
       customerId: (saleRow.customerId as number) ?? undefined,
-      customerName: (saleRow.customerName as string) ?? undefined,
+      customerName: (saleRow.customerName as string) ?? (saleRow.manualCustomerName as string) ?? undefined,
       items: items.map(mapSaleItem),
       subtotal: saleRow.subtotal as number,
       total_amount: saleRow.total_amount as number,
@@ -119,6 +120,7 @@ export function getSalesByDateRange(startDate: string, endDate: string): Sale[] 
       changeAmount: saleRow.changeAmount as number,
       description: (saleRow.description as string) ?? undefined,
       invoiceDescription: (saleRow.invoiceDescription as string) ?? undefined,
+      manualCustomerName: (saleRow.manualCustomerName as string) ?? undefined,
       createdAt: saleRow.createdAt as string,
     }
   })

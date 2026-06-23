@@ -115,6 +115,7 @@ export default function SalesTerminal() {
       customerPaid: paidAmt || 0,
       description: invoiceDesc,
       invoiceDescription: invoiceNote,
+      manualCustomerName: customerName,
     })
     if (result.success && result.data) {
       const saleData = { ...result.data, customerName }
