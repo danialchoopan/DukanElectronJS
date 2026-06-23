@@ -106,6 +106,7 @@ export default function SalesTerminal() {
       }
     }
 
+    const customerName = invoiceCustomerName.trim() || selectedCustomer?.name || ''
     const result = await window.api.sales.create({
       userId: user!.id,
       items: items.map((i) => ({ productId: i.productId, productTitle: i.title, quantity: i.quantity, unitPrice: i.unitPrice, purchasePrice: i.purchasePrice })),
@@ -116,8 +117,9 @@ export default function SalesTerminal() {
       invoiceDescription: invoiceNote,
     })
     if (result.success && result.data) {
+      const saleData = { ...result.data, customerName }
       setLastCustomer(selectedCustomer)
-      setSaleComplete(result.data)
+      setSaleComplete(saleData)
       clearCart()
       setSelectedCustomer(null)
       setFullyPaid(true)
@@ -125,7 +127,7 @@ export default function SalesTerminal() {
       barcodeRef.current?.focus()
     } else { showNotif(`${result.error}`) }
     setPendingPayment(null)
-  }, [pendingPayment, items, user, selectedCustomer, lastCustomer, clearCart, showNotif])
+  }, [pendingPayment, items, user, selectedCustomer, lastCustomer, clearCart, showNotif, invoiceCustomerName, invoiceDesc, invoiceNote])
 
   const handleSuspend = useCallback(async (slotIndex?: number) => {
     if (items.length === 0) { showNotif(fa.pos.nothingToHold); return }
@@ -275,15 +277,25 @@ export default function SalesTerminal() {
               <button
                 onClick={async () => {
                   if (!saleComplete) return
-                  let html = '<h1>فاکتور فروش</h1>'
-                  const customerInfo = lastCustomer ? `<div class="header-info"><span>مشتری: ${lastCustomer.name}</span><span>تلفن: ${lastCustomer.phone}</span></div>` : '<div class="header-info"><span>مشتری: ناشناس</span></div>'
-                  html += customerInfo
+                  const customerName = saleComplete.customerName || lastCustomer?.name || ''
+                  const saleDesc = saleComplete.description || ''
+                  const saleNote = saleComplete.invoiceDescription || ''
+                  let html = ''
+                  if (customerName) {
+                    html += `<div style="font-size:11pt;margin-bottom:4px"><strong>مشتری:</strong> ${customerName}</div>`
+                  }
                   html += `<div class="header-info"><span>شماره فاکتور: ${saleComplete.invoiceNumber}</span><span>تاریخ: ${formatJalaliDateTime(saleComplete.createdAt || '')}</span></div>`
+                  html += `<div class="header-info"><span>صندوکدار: ${user?.name || ''}</span><span>نوع پرداخت: ${saleComplete.paymentMethod === 'cash' ? 'نقدی' : saleComplete.paymentMethod === 'card' ? 'کارتی' : 'بدهی'}</span></div>`
+                  if (saleDesc) {
+                    html += `<div style="padding:6px 8px;margin:4px 0;font-size:9pt;background:#f0f4f8;border-radius:4px;color:#333">${saleDesc}</div>`
+                  }
                   html += '<table><thead><tr><th>کالا</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>'
                   saleComplete.items?.forEach((item: any) => { html += `<tr><td>${item.productTitle}</td><td>${item.quantity}</td><td>${item.unitPrice.toLocaleString('fa-IR')}</td><td>${item.subtotal.toLocaleString('fa-IR')}</td></tr>` })
                   html += '</tbody></table>'
                   html += `<p><strong>جمع کل: ${saleComplete.total_amount.toLocaleString('fa-IR')} تومان</strong></p>`
-                  html += `<p>نوع پرداخت: ${saleComplete.paymentMethod === 'cash' ? 'نقدی' : saleComplete.paymentMethod === 'card' ? 'کارتی' : 'بدهی'}</p>`
+                  if (saleNote) {
+                    html += `<div style="margin-top:8px;padding:6px 8px;font-size:9pt;color:#666;border-top:1px dashed #ccc">${saleNote}</div>`
+                  }
                   showPrint(html, 'فاکتور فروش', true)
                   setSaleComplete(null)
                 }}

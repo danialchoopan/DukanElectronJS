@@ -368,10 +368,27 @@ export default function SalesHistory() {
                 <div className="text-sm font-bold" style={{ color: textPrimary }}>{formatJalaliDateTime(selectedSale.createdAt)}</div>
               </div>
               <div className="rounded-xl p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : '#f8fafc' }}>
-                <div className="text-xs mb-1" style={{ color: textSecondary }}>{fa.admin.title}</div>
-                <div className="text-sm font-bold" style={{ color: textPrimary }}>{selectedSale.customerName || '-'}</div>
+                <div className="text-xs mb-1" style={{ color: textSecondary }}>مشتری</div>
+                <div className="text-sm font-bold" style={{ color: textPrimary }}>{selectedSale.customerName || 'ناشناس'}</div>
               </div>
             </div>
+
+            {(selectedSale.description || (selectedSale as any).invoiceDescription) && (
+              <div className="rounded-xl p-3 mb-4 space-y-2" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : '#f8fafc' }}>
+                {(selectedSale as any).invoiceDescription && (
+                  <div>
+                    <div className="text-[10px] font-bold mb-0.5" style={{ color: textSecondary }}>توضیحات فاکتور (قابل چاپ)</div>
+                    <div className="text-sm" style={{ color: textPrimary }}>{(selectedSale as any).invoiceDescription}</div>
+                  </div>
+                )}
+                {selectedSale.description && (
+                  <div>
+                    <div className="text-[10px] font-bold mb-0.5" style={{ color: textSecondary }}>توضیحات خصوصی</div>
+                    <div className="text-sm" style={{ color: textPrimary }}>{selectedSale.description}</div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="rounded-xl overflow-hidden mb-4" style={{ border: `1px solid ${cardBorder}` }}>
               <table className="w-full text-sm">
