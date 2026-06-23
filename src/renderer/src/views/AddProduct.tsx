@@ -8,6 +8,7 @@ import type { Product } from '../../../types'
 import { useSortable } from '../hooks/useSortable'
 import PrintDialog from '../components/PrintDialog'
 import { getProductImageUrl } from '../utils/productImage'
+import Dialog from '../components/Dialog'
 
 const primary = '#006194'
 
@@ -228,38 +229,15 @@ export default function AddProduct() {
       </div>
 
       {/* Product Form */}
-      {showForm && (
-        <div
-          key={editProduct ? `edit-${editProduct.id}` : 'new'}
-          className="rounded-2xl p-5 mb-5 border overflow-hidden"
-          style={{
-            backgroundColor: cardBg,
-            borderColor: primary,
-            borderRightWidth: '4px',
-            boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(0,97,148,0.08)',
-          }}
-        >
-          <div className="flex justify-between items-center mb-5">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: isDark ? 'rgba(0,97,148,0.2)' : 'rgba(0,97,148,0.08)' }}>
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke={primary} strokeWidth="2">
-                  {editProduct ? <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /> : <path d="M12 5v14M5 12h14" />}
-                </svg>
-              </div>
-              <h3 className="font-extrabold" style={{ color: textPrimary }}>{editProduct ? fa.admin.edit : fa.admin.addProduct}</h3>
-            </div>
-            <button
-              onClick={() => { setShowForm(false); setEditProduct(null) }}
-              className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
-              style={{ backgroundColor: btnBg, color: textSecondary }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444' }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = textSecondary }}
-            >
-              &times;
-            </button>
-          </div>
-
-          <div className="grid grid-cols-4 gap-4">
+      {/* Add/Edit Product Dialog */}
+      <Dialog open={showForm} onClose={() => { setShowForm(false); setEditProduct(null) }}
+        title={editProduct ? 'ویرایش کالا' : 'افزودن کالای جدید'}
+        icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>}
+        footer={<>
+          <button onClick={() => { setShowForm(false); setEditProduct(null) }} className="px-5 py-2.5 rounded-xl text-sm font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>{fa.admin.cancel}</button>
+          <button onClick={handleSubmit} disabled={!form.title || !form.category} className="px-6 py-2.5 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', opacity: (!form.title || !form.category) ? 0.5 : 1 }}>{editProduct ? fa.admin.save : fa.admin.create}</button>
+        </>}>
+          <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.title} *</label>
               <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="input-field text-sm" autoFocus style={inputStyle} />
@@ -275,33 +253,27 @@ export default function AddProduct() {
               </select>
               {!form.category && <p className="text-[10px] mt-1" style={{ color: '#ef4444' }}>انتخاب دسته‌بندی الزامی است</p>}
             </div>
-              <div>
-                <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.purchasePrice}</label>
-                <FormattedPriceInput value={form.purchase_price} onChange={(v) => setForm((f) => ({ ...f, purchase_price: v }))} className="input-field text-sm" style={inputStyle} />
+            <div className="flex items-end">
+              <div className="flex items-center gap-2">
+                <input type="checkbox" checked={form.isLoose} onChange={(e) => setForm((f) => ({ ...f, isLoose: e.target.checked }))} className="w-4 h-4 rounded" style={{ accentColor: primary }} />
+                <label className="text-sm font-bold" style={{ color: textSecondary }}>{fa.admin.looseItem}</label>
               </div>
-              <div>
-                <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.salePrice}</label>
-                <FormattedPriceInput value={form.sale_price} onChange={(v) => setForm((f) => ({ ...f, sale_price: v }))} className="input-field text-sm" style={inputStyle} />
-              </div>
-              <div>
-                <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.stock}</label>
-                <FormattedPriceInput value={form.stock} onChange={(v) => setForm((f) => ({ ...f, stock: v }))} className="input-field text-sm" style={inputStyle} />
-              </div>
-              <div>
-                <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.minStock}</label>
-                <FormattedPriceInput value={form.minStock} onChange={(v) => setForm((f) => ({ ...f, minStock: v }))} className="input-field text-sm" placeholder="0" style={inputStyle} />
-              </div>
+            </div>
+            <div>
+              <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.purchasePrice}</label>
+              <FormattedPriceInput value={form.purchase_price} onChange={(v) => setForm((f) => ({ ...f, purchase_price: v }))} className="input-field text-sm" style={inputStyle} />
+            </div>
             <div>
               <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.salePrice}</label>
-              <input type="number" value={form.sale_price || ''} onChange={(e) => setForm((f) => ({ ...f, sale_price: +e.target.value }))} className="input-field text-sm" style={inputStyle} />
+              <FormattedPriceInput value={form.sale_price} onChange={(v) => setForm((f) => ({ ...f, sale_price: v }))} className="input-field text-sm" style={inputStyle} />
             </div>
             <div>
               <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.stock}</label>
-              <input type="number" value={form.stock || ''} onChange={(e) => setForm((f) => ({ ...f, stock: +e.target.value }))} className="input-field text-sm" style={inputStyle} />
+              <FormattedPriceInput value={form.stock} onChange={(v) => setForm((f) => ({ ...f, stock: v }))} className="input-field text-sm" style={inputStyle} />
             </div>
             <div>
-              <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>حداقل موجودی (هشدار)</label>
-              <input type="number" value={form.minStock || ''} onChange={(e) => setForm((f) => ({ ...f, minStock: +e.target.value }))} className="input-field text-sm" placeholder="0" style={inputStyle} />
+              <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.minStock}</label>
+              <FormattedPriceInput value={form.minStock} onChange={(v) => setForm((f) => ({ ...f, minStock: v }))} className="input-field text-sm" placeholder="0" style={inputStyle} />
             </div>
             <div className="col-span-2">
               <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>توضیحات / یادداشت</label>
@@ -328,63 +300,17 @@ export default function AddProduct() {
                   </label>
                 </div>
                 {form.imageBase64 && (
-                  <>
+                  <div className="flex gap-2 items-start">
                     <div className="w-16 h-16 rounded-xl overflow-hidden border flex-shrink-0" style={{ borderColor: cardBorder }}>
                       <img src={form.imageBase64} alt="preview" className="w-full h-full object-cover" />
                     </div>
                     <button onClick={() => setForm((f) => ({ ...f, imageBase64: '' }))} className="text-xs px-2 py-1 rounded-lg font-bold" style={{ color: '#ef4444', backgroundColor: isDark ? 'rgba(239,68,68,0.1)' : '#fef2f2' }}>حذف</button>
-                  </>
+                  </div>
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2 pt-2">
-              <input type="checkbox" checked={form.isLoose} onChange={(e) => setForm((f) => ({ ...f, isLoose: e.target.checked }))} className="w-4 h-4 rounded" style={{ accentColor: primary }} />
-              <label className="text-sm" style={{ color: textSecondary }}>{fa.admin.looseItem}</label>
-            </div>
           </div>
-          <div className="flex gap-2 mt-5 pt-4" style={{ borderTop: `1px solid ${cardBorder}` }}>
-            <button onClick={handleSubmit} disabled={!form.title || !form.category} className="btn btn-success disabled:opacity-40">{editProduct ? fa.admin.save : fa.admin.create}</button>
-            <button onClick={() => { setShowForm(false); setEditProduct(null) }} className="btn btn-danger">{fa.admin.cancel}</button>
-            {editProduct && (
-              <button onClick={() => setShowDeleteConfirm(true)} className="btn btn-danger ml-auto opacity-70 hover:opacity-100">{fa.admin.delete}</button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Category Tabs */}
-      {categories.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          <button
-            onClick={() => { setSearchQuery(''); setPage(0) }}
-            className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200"
-            style={{
-              background: !searchQuery ? `linear-gradient(135deg, ${primary}, #007bb9)` : btnBg,
-              color: !searchQuery ? '#ffffff' : textSecondary,
-              boxShadow: !searchQuery ? '0 4px 12px rgba(0,97,148,0.3)' : 'none',
-            }}
-          >
-            همه ({products.length})
-          </button>
-          {categories.map((cat) => {
-            const count = products.filter((p) => p.category === cat.name).length
-            return (
-              <button
-                key={cat.id}
-                onClick={() => { setSearchQuery(cat.name); setPage(0) }}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200"
-                style={{
-                  background: searchQuery === cat.name ? `linear-gradient(135deg, ${primary}, #007bb9)` : btnBg,
-                  color: searchQuery === cat.name ? '#ffffff' : textSecondary,
-                  boxShadow: searchQuery === cat.name ? '0 4px 12px rgba(0,97,148,0.3)' : 'none',
-                }}
-              >
-                {cat.name} ({count})
-              </button>
-            )
-          })}
-        </div>
-      )}
+      </Dialog>
 
       {/* Product Table */}
       <div
