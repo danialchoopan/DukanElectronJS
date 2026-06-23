@@ -54,6 +54,9 @@ export default function CustomizationSettings() {
   const [customTemplates, setCustomTemplates] = useState<string[]>([])
   const [newTemplateName, setNewTemplateName] = useState('')
   const [showNewInput, setShowNewInput] = useState(false)
+  const [templateShopNames, setTemplateShopNames] = useState<Record<string, string>>({})
+  const [editingShopName, setEditingShopName] = useState(false)
+  const [tempShopName, setTempShopName] = useState('')
   const logoRef = useRef<HTMLInputElement>(null)
   const sigRef = useRef<HTMLInputElement>(null)
   const wmRef = useRef<HTMLInputElement>(null)
@@ -76,7 +79,7 @@ export default function CustomizationSettings() {
     <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{children}</label>
   )
 
-  useEffect(() => { loadSettings(); loadCustomTemplates() }, [])
+  useEffect(() => { loadSettings(); loadCustomTemplates(); loadTemplateShopNames() }, [])
 
   const loadSettings = async () => {
     const r = await window.api.printSettings.getAll()
@@ -94,6 +97,11 @@ export default function CustomizationSettings() {
   const loadCustomTemplates = async () => {
     const r = await window.api.settings.get('printTemplates')
     if (r.success && r.data) { try { setCustomTemplates(JSON.parse(r.data)) } catch {} }
+  }
+
+  const loadTemplateShopNames = async () => {
+    const r = await window.api.settings.get('printTemplateShopNames')
+    if (r.success && r.data) { try { setTemplateShopNames(JSON.parse(r.data)) } catch {} }
   }
 
   const saveCustomTemplates = async (list: string[]) => {
@@ -170,13 +178,14 @@ export default function CustomizationSettings() {
 
   const handlePreview = async () => {
     let logoData = previews.logo || '', sigData = previews.signature || '', wmData = previews.watermark || ''
+    const templateShopName = templateShopNames[settings.printActiveTemplate || 'default']
     await printA4Report(
       `<table><thead><tr><th>ردیف</th><th>کالا</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>
       <tr><td>۱</td><td>محصول نمونه</td><td>۲</td><td>۵۰,۰۰۰</td><td>۱۰۰,۰۰۰</td></tr>
       <tr><td>۲</td><td>محصول نمونه ۲</td><td>۱</td><td>۳۰,۰۰۰</td><td>۳۰,۰۰۰</td></tr>
       <tr style="font-weight:bold;background:#e8f0fe"><td colspan="4">جمع کل</td><td>۱۳۰,۰۰۰</td></tr></tbody></table>`,
       settings.printInvoiceTitle,
-      { isInvoice: true, customization: { ...settings, printLogo: logoData, printSignature: sigData, printWatermark: wmData } }
+      { isInvoice: true, shopName: templateShopName, customization: { ...settings, printLogo: logoData, printSignature: sigData, printWatermark: wmData } }
     )
   }
 
@@ -245,6 +254,30 @@ export default function CustomizationSettings() {
             <button onClick={() => { setShowNewInput(false); setNewTemplateName('') }} className="text-xs px-3 rounded-lg" style={{ color: textSecondary, backgroundColor: inputBg }}>لغو</button>
           </div>
         )}
+
+        {/* Per-template Shop Name */}
+        <div className="mt-3 pt-3 flex items-center gap-3" style={{ borderTop: `1px solid ${cardBorder}` }}>
+          <div className="flex-1">
+            <Label>نام فروشگاه این قالب</Label>
+            <div className="text-[10px] mb-1" style={{ color: textSecondary }}>
+              هر قالب می‌تواند نام فروشگاه متفاوتی داشته باشد. مثلاً برای فروش آنلاین نام فروشگاه اینترنتی و برای فروش حضوری نام فروشگاه فیزیکی
+            </div>
+            {editingShopName ? (
+              <div className="flex gap-2 items-center">
+                <input value={tempShopName} onChange={e => setTempShopName(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { setTemplateShopNames(prev => ({ ...prev, [settings.printActiveTemplate || 'default']: tempShopName })); window.api.settings.set('printTemplateShopNames', JSON.stringify({ ...templateShopNames, [settings.printActiveTemplate || 'default']: tempShopName })); setEditingShopName(false) } if (e.key === 'Escape') setEditingShopName(false) }}
+                  className={`${inputClass} flex-1`} style={inputStyle} autoFocus placeholder="نام فروشگاه برای این قالب" />
+                <button onClick={() => { const key = settings.printActiveTemplate || 'default'; setTemplateShopNames(prev => ({ ...prev, [key]: tempShopName })); window.api.settings.set('printTemplateShopNames', JSON.stringify({ ...templateShopNames, [key]: tempShopName })); setEditingShopName(false) }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>ذخیره</button>
+              </div>
+            ) : (
+              <button onClick={() => { setEditingShopName(true); setTempShopName(templateShopNames[settings.printActiveTemplate || 'default'] || settings.printInvoiceTitle || '') }}
+                className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold transition-all" style={{ background: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }}>
+                {templateShopNames[settings.printActiveTemplate || 'default'] || 'از نام فروشگاه پیش‌فرض استفاده کن'}
+              </button>
+            )}
+          </div>
+        </div>
       </Card>
 
       {/* Split Layout: Settings Left | Quick Preview Right */}
