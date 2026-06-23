@@ -90,6 +90,8 @@ export function getSaleById(id: number): Sale | undefined {
     paymentMethod: saleRow.paymentMethod as 'cash' | 'card' | 'ledger',
     customerPaid: saleRow.customerPaid as number,
     changeAmount: saleRow.changeAmount as number,
+    description: (saleRow.description as string) ?? undefined,
+    invoiceDescription: (saleRow.invoiceDescription as string) ?? undefined,
     createdAt: saleRow.createdAt as string,
   }
 }
@@ -115,6 +117,8 @@ export function getSalesByDateRange(startDate: string, endDate: string): Sale[] 
       paymentMethod: saleRow.paymentMethod as 'cash' | 'card' | 'ledger',
       customerPaid: saleRow.customerPaid as number,
       changeAmount: saleRow.changeAmount as number,
+      description: (saleRow.description as string) ?? undefined,
+      invoiceDescription: (saleRow.invoiceDescription as string) ?? undefined,
       createdAt: saleRow.createdAt as string,
     }
   })

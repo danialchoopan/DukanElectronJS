@@ -260,12 +260,12 @@ export default function SalesHistory() {
                 { key: 'id' as keyof Sale, label: '#' },
                 { key: 'invoiceNumber' as keyof Sale, label: 'فاکتور' },
                 { key: 'userName' as keyof Sale, label: fa.admin.cashier },
-                { key: 'customerName' as keyof Sale, label: fa.admin.title },
+                { key: 'customerName' as keyof Sale, label: 'مشتری' },
                 { key: 'total_amount' as keyof Sale, label: fa.pos.total },
                 { key: 'createdAt' as keyof Sale, label: 'تاریخ' },
               ]).map(col => (
                 <th key={String(col.key)}
-                  className="px-5 py-2.5 cursor-pointer select-none transition-all duration-200 text-xs font-bold text-right"
+                  className="px-4 py-2.5 cursor-pointer select-none transition-all duration-200 text-xs font-bold text-right"
                   style={{ color: sortKey === col.key ? primary : textSecondary }}
                   onClick={() => toggleSort(col.key)}>
                   <span className="inline-flex items-center gap-1">
@@ -274,13 +274,13 @@ export default function SalesHistory() {
                   </span>
                 </th>
               ))}
-              <th className="text-center px-5 py-2.5 text-xs font-bold" style={{ color: textSecondary }}>{fa.pos.items}</th>
-              <th className="text-center px-5 py-2.5 text-xs font-bold" style={{ color: textSecondary }}>{fa.payment.method}</th>
-              <th className="text-center px-5 py-2.5 text-xs font-bold" style={{ color: textSecondary }}>وضعیت</th>
+              <th className="text-center px-4 py-2.5 text-xs font-bold" style={{ color: textSecondary }}>اقلام</th>
+              <th className="text-center px-4 py-2.5 text-xs font-bold" style={{ color: textSecondary }}>{fa.payment.method}</th>
+              <th className="text-center px-4 py-2.5 text-xs font-bold" style={{ color: textSecondary }}>وضعیت</th>
             </tr>
           </thead>
           <tbody>
-            {sortedSales.map((s, idx) => {
+            {sortedSales.map((s) => {
               const hasReturns = s.items?.some((item: any) => returnedIds.has(`${s.id}-${item.productId}`))
               const isFullyReturned = s.items?.every((item: any) => returnedIds.has(`${s.id}-${item.productId}`))
               return (
@@ -293,19 +293,19 @@ export default function SalesHistory() {
                   onClick={() => setSelectedSale(s)}
                   onMouseEnter={(e) => { if (!hasReturns) e.currentTarget.style.backgroundColor = isDark ? 'rgba(0,97,148,0.06)' : 'rgba(0,97,148,0.03)' }}
                   onMouseLeave={(e) => { if (!hasReturns) e.currentTarget.style.backgroundColor = isFullyReturned ? 'rgba(239,68,68,0.08)' : hasReturns ? 'rgba(245,158,11,0.08)' : 'transparent' }}>
-                  <td className="px-5 py-2.5" style={{ color: textSecondary }}>{idx + 1}</td>
-                  <td className="px-5 py-2.5 font-mono text-xs font-bold" style={{ color: primary }}>{s.invoiceNumber}</td>
-                  <td className="px-5 py-2.5 font-bold" style={{ color: textPrimary }}>{s.userName}</td>
-                  <td className="px-5 py-2.5" style={{ color: s.customerName ? textPrimary : textSecondary }}>{s.customerName || '-'}</td>
-                  <td className="px-5 py-2.5 text-center font-bold" style={{ color: textPrimary }}>{s.items.length}</td>
-                  <td className="px-5 py-2.5 text-center">
-                    <span className="px-2.5 py-1 rounded-full text-[11px] font-bold inline-block" style={{
+                  <td className="px-4 py-2.5 font-mono text-xs" style={{ color: textSecondary }}>{s.id}</td>
+                  <td className="px-4 py-2.5 font-mono text-xs font-bold" style={{ color: primary }}>{s.invoiceNumber}</td>
+                  <td className="px-4 py-2.5 font-bold" style={{ color: textPrimary }}>{s.userName}</td>
+                  <td className="px-4 py-2.5" style={{ color: s.customerName ? textPrimary : textSecondary }}>{s.customerName || '-'}</td>
+                  <td className="px-4 py-2.5 text-center font-bold" style={{ color: textPrimary }}>{s.items.length}</td>
+                  <td className="px-4 py-2.5 text-center">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold inline-block" style={{
                       backgroundColor: s.paymentMethod === 'cash' ? (isDark ? 'rgba(34,197,94,0.15)' : '#dcfce7') : s.paymentMethod === 'card' ? (isDark ? 'rgba(59,130,246,0.15)' : '#dbeafe') : (isDark ? 'rgba(168,85,247,0.15)' : '#f3e8ff'),
                       color: s.paymentMethod === 'cash' ? '#22c55e' : s.paymentMethod === 'card' ? '#3b82f6' : '#a855f7',
                     }}>{s.paymentMethod === 'cash' ? fa.payment.cash : s.paymentMethod === 'card' ? fa.payment.card : fa.payment.ledger}</span>
                   </td>
-                  <td className="px-5 py-2.5 font-extrabold text-right" style={{ color: isFullyReturned ? '#ef4444' : textPrimary, textDecoration: isFullyReturned ? 'line-through' : 'none' }}>{s.total_amount.toLocaleString('fa-IR')}</td>
-                  <td className="px-5 py-2.5 text-center">
+                  <td className="px-4 py-2.5 font-extrabold text-right" style={{ color: isFullyReturned ? '#ef4444' : textPrimary, textDecoration: isFullyReturned ? 'line-through' : 'none' }}>{s.total_amount.toLocaleString('fa-IR')}</td>
+                  <td className="px-4 py-2.5 text-center">
                     {isFullyReturned ? (
                       <span className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ backgroundColor: isDark ? 'rgba(239,68,68,0.15)' : '#fee2e2', color: '#ef4444' }}>بازگشت کامل</span>
                     ) : hasReturns ? (
