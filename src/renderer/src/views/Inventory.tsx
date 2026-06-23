@@ -14,6 +14,8 @@ import { getProductImageUrl } from '../utils/productImage'
 import { generateQRSvg } from '../utils/qrCode'
 import { InlineEditCell } from '../components/FormattedPriceInput'
 
+const primary = '#006194'
+
 type AuditFilter = 'all' | 'create' | 'update' | 'delete' | 'restock'
 
 interface Props {
@@ -606,10 +608,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
                 const rowBg = isZero ? (isDark ? 'rgba(239,68,68,0.08)' : 'rgba(239,68,68,0.05)') : isLow ? (isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.05)') : 'transparent'
                 const margin = p.purchase_price > 0 ? (((p.sale_price - p.purchase_price) / p.purchase_price) * 100).toFixed(1) : '0'
                 return (
-                <tr key={p.id} data-highlight-id={`product-${p.id}`} style={{ borderBottom: `1px solid ${cardBorder}`, backgroundColor: rowBg }}
-                  onClick={() => setViewProduct(p)}
-                  onMouseEnter={(e) => { if (!isZero && !isLow) e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.03)' }}
-                  onMouseLeave={(e) => { if (!isZero && !isLow) e.currentTarget.style.backgroundColor = 'transparent' }}>
+                <tr key={p.id} data-highlight-id={`product-${p.id}`} style={{ borderBottom: `1px solid ${cardBorder}`, backgroundColor: rowBg }}>
                   <td className="px-3 py-2" style={{ borderBottom: `1px solid ${cardBorder}`, backgroundColor: rowBg }}>
                     <input type="checkbox" checked={selectedProducts.has(p.id)} onChange={() => { const next = new Set(selectedProducts); if (next.has(p.id)) next.delete(p.id); else next.add(p.id); setSelectedProducts(next) }} onClick={e => e.stopPropagation()} style={{ accentColor: '#3b82f6' }} />
                   </td>
@@ -643,6 +642,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
                   </td>
                   <td className="px-4 py-2">
                     <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                      <button onClick={(e) => { e.stopPropagation(); setViewProduct(p) }} className="text-xs font-bold px-2 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: primary }}>جزئیات</button>
                       <button onClick={(e) => { e.stopPropagation(); setSelectedProduct(p); setRestockQty(''); setRestockReason('') }} className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: '#22c55e' }}>+ تامین</button>
                       <button onClick={(e) => { e.stopPropagation(); handlePrintBarcode(p) }} className="text-xs font-bold px-2 py-1.5 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: '#3b82f6' }}>
                         <svg className="w-3 h-3 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>

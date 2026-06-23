@@ -338,7 +338,7 @@ export default function AccountingDashboard() {
             </tr>
           </thead>
           <tbody>
-            {recentEntries.map((e) => {
+            {recentEntries.slice(0, recentPageSize).map((e) => {
               const refBg = e.referenceType === 'sale' ? '#dcfce7' : e.referenceType === 'expense' ? '#fee2e2' : '#dbeafe'
               const refFg = e.referenceType === 'sale' ? '#16a34a' : e.referenceType === 'expense' ? '#dc2626' : '#2563eb'
               return (
