@@ -111,13 +111,17 @@ export function createPurchase(input: PurchaseInput): Purchase {
     const discountAcc = getAccountByCode('5300')
     if (discountAcc) lines.push({ accountId: discountAcc.id, debit: 0, credit: input.discountAmount, description: `تخفیف خرید ${invoiceNumber}` })
   }
-    if (payableAcc && balanceChange > 0) {
-      lines.push({ accountId: payableAcc.id, debit: 0, credit: totalAmount, description: `بدهی به تأمین\u200cکننده ${invoiceNumber}` })
-  }
-  const payAcc = paidAmount > 0 ? (input.paymentMethod === 'cash' ? cashAcc : bankAcc) : null
-  if (payAcc && payableAcc) {
-    lines.push({ accountId: payableAcc.id, debit: paidAmount, credit: 0, description: `پرداخت فاکتور ${invoiceNumber}` })
-    lines.push({ accountId: payAcc.id, debit: 0, credit: paidAmount, description: `پرداخت فاکتور ${invoiceNumber}` })
+  if (payableAcc) {
+    if (paidAmount > 0) {
+      const payAcc = input.paymentMethod === 'cash' ? cashAcc : bankAcc
+      if (payAcc) {
+        lines.push({ accountId: payableAcc.id, debit: paidAmount, credit: 0, description: `پرداخت فاکتور ${invoiceNumber}` })
+        lines.push({ accountId: payAcc.id, debit: 0, credit: paidAmount, description: `پرداخت فاکتور ${invoiceNumber}` })
+      }
+    }
+    if (balanceChange > 0) {
+      lines.push({ accountId: payableAcc.id, debit: 0, credit: balanceChange, description: `بدهی به تأمین\u200cکننده ${invoiceNumber}` })
+    }
   }
 
   if (lines.length > 0) {

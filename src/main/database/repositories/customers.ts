@@ -127,6 +127,8 @@ export function deleteLedgerEntry(entryId: number): { success: boolean; error?: 
     if (entry.type === 'charge' || entry.type === 'debt') {
       db.prepare('UPDATE customers SET balance = balance - ? WHERE id = ?').run(entry.amount, entry.customerId)
     } else if (entry.type === 'payment') {
+      db.prepare('UPDATE customers SET balance = balance - ? WHERE id = ?').run(entry.amount, entry.customerId)
+    } else if (entry.type === 'sale') {
       db.prepare('UPDATE customers SET balance = balance + ? WHERE id = ?').run(entry.amount, entry.customerId)
     }
     db.prepare('DELETE FROM customer_ledger WHERE id = ?').run(entryId)

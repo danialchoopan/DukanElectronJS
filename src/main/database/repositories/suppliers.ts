@@ -108,7 +108,7 @@ export function deleteSupplierLedgerEntry(entryId: number): { success: boolean; 
     if (entry.type === 'purchase' || entry.type === 'debt' || entry.type === 'adjustment') {
       db.prepare('UPDATE suppliers SET balance = balance - ? WHERE id = ?').run(entry.amount, entry.supplierId)
     } else if (entry.type === 'payment' || entry.type === 'return') {
-      db.prepare('UPDATE suppliers SET balance = balance + ? WHERE id = ?').run(entry.amount, entry.supplierId)
+      db.prepare('UPDATE suppliers SET balance = balance - ? WHERE id = ?').run(entry.amount, entry.supplierId)
     }
     db.prepare('DELETE FROM supplier_ledger WHERE id = ?').run(entryId)
   })()

@@ -69,7 +69,7 @@ export function generateBalanceSheet(asOfDate?: string): BalanceSheetReport {
   const equityRows = getDetails('3')
   const pl = generateProfitLoss(undefined, asOfDate)
   const equityItems = [...equityRows.map(r => ({ accountCode: r.accountCode, accountName: r.accountName, amount: Math.abs(r.rawBalance) }))]
-  if (pl.netProfit !== 0) equityItems.push({ accountCode: '3200', accountName: 'سود انباشته', amount: Math.abs(pl.netProfit) })
+  if (pl.netProfit !== 0) equityItems.push({ accountCode: '3200', accountName: pl.netProfit >= 0 ? 'سود انباشته' : 'زیان انباشته', amount: pl.netProfit })
   const totalEquity = equityItems.reduce((s, e) => s + e.amount, 0)
 
   return {

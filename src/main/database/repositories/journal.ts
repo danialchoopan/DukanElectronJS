@@ -81,8 +81,6 @@ export function postExpenseJournal(expenseId: number, expenseDate: string, amoun
 export function postReturnJournal(returnId: number, returnDate: string, refundAmount: number): void {
   const cashAcct = getAccountByCode('1100')!
   const salesAcct = getAccountByCode('4100')!
-  const inventoryAcct = getAccountByCode('1300')!
-  const cogsAcct = getAccountByCode('5100')!
 
   createJournalEntry({
     entryDate: returnDate, description: `مرجوعی فاکتور #${returnId}`,
@@ -90,8 +88,6 @@ export function postReturnJournal(returnId: number, returnDate: string, refundAm
     lines: [
       { accountId: salesAcct.id, debit: refundAmount, credit: 0, description: 'کاهش درآمد' },
       { accountId: cashAcct.id, debit: 0, credit: refundAmount, description: 'بازپرداخت وجه' },
-      { accountId: inventoryAcct.id, debit: refundAmount, credit: 0, description: 'افزایش موجودی' },
-      { accountId: cogsAcct.id, debit: 0, credit: refundAmount, description: 'کاهش بهای تمام شده' },
     ]
   })
 }
