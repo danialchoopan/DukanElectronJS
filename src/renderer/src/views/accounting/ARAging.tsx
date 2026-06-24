@@ -37,10 +37,10 @@ export default function ARAging() {
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
+    <div className="max-w-7xl mx-auto px-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.arAging.title}</h3>
+          <h3 className="text-xl font-bold" style={{ color: textPrimary }}>{fa.accounting.arAging.title}</h3>
           <HelpPopup title="راهنمای مانده مشتریان" sections={[
             { heading: 'گزارش بدهی مشتریان', items: ['بدهی مشتریان بر اساس سنین مختلف نمایش داده می‌شود', 'جاری (۰-۳۰ روز): سبز', '۳۱-۶۰ روز: زرد', '۶۱-۹۰ روز: نارنجی', 'بیش از ۹۰ روز: قرمز'] }
           ]} />
@@ -58,6 +58,19 @@ export default function ARAging() {
         </button>
       </div>
 
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+        <div className="rounded-xl p-3 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+          <div className="text-xs" style={{ color: textSecondary }}>تعداد مشتریان</div>
+          <div className="text-lg font-bold mt-1" style={{ color: textPrimary }}>{data.rows.length}</div>
+        </div>
+        {bucketPcts.map((b, i) => (
+          <div key={i} className="rounded-xl p-3 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+            <div className="text-xs" style={{ color: b.color }}>{b.label}</div>
+            <div className="text-lg font-bold mt-1" style={{ color: b.color }}>{b.value.toLocaleString('fa-IR')}</div>
+          </div>
+        ))}
+      </div>
+
       <div className="rounded-2xl p-4 border mb-4" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
         <div className="flex items-center justify-between mb-2">
           {bucketPcts.map((b, i) => (
@@ -72,43 +85,50 @@ export default function ARAging() {
       </div>
 
       <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-        <table className="w-full text-sm">
-          <thead>
-            <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.accounting.arAging.customer}</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.accounting.arAging.phone}</th>
-              <th className="text-center px-3 py-2" style={{ color: '#22c55e' }}>{fa.accounting.arAging.current}</th>
-              <th className="text-center px-3 py-2" style={{ color: '#f59e0b' }}>{fa.accounting.arAging.days31to60}</th>
-              <th className="text-center px-3 py-2" style={{ color: '#ea580c' }}>{fa.accounting.arAging.days61to90}</th>
-              <th className="text-center px-3 py-2" style={{ color: '#ef4444' }}>{fa.accounting.arAging.over90}</th>
-              <th className="text-center px-4 py-2" style={{ color: textPrimary }}>{fa.accounting.arAging.total}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.rows.map((r: any) => (
-              <tr key={r.customerId} style={{ borderBottom: `1px solid ${cardBorder}` }}>
-                <td className="px-4 py-2 font-medium" style={{ color: textPrimary }}>{r.customerName}</td>
-                <td className="px-4 py-2 text-xs" style={{ color: textSecondary }}>{r.phone || '-'}</td>
-                <td className="px-3 py-2 text-center font-mono text-xs font-bold" style={{ color: cellColor(r.current, r.current) }}>{r.current > 0 ? r.current.toLocaleString('fa-IR') : '-'}</td>
-                <td className="px-3 py-2 text-center font-mono text-xs font-bold" style={{ color: cellColor(r.days31to60, r.days31to60) }}>{r.days31to60 > 0 ? r.days31to60.toLocaleString('fa-IR') : '-'}</td>
-                <td className="px-3 py-2 text-center font-mono text-xs font-bold" style={{ color: cellColor(r.days61to90, r.days61to90) }}>{r.days61to90 > 0 ? r.days61to90.toLocaleString('fa-IR') : '-'}</td>
-                <td className="px-3 py-2 text-center font-mono text-xs font-bold" style={{ color: cellColor(r.over90, r.over90) }}>{r.over90 > 0 ? r.over90.toLocaleString('fa-IR') : '-'}</td>
-                <td className="px-4 py-2 text-center font-mono font-bold" style={{ color: '#ef4444' }}>{r.total.toLocaleString('fa-IR')}</td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm table-fixed">
+            <colgroup>
+              <col className="w-[22%]" />
+              <col className="w-[15%]" />
+              <col className="w-[15%]" />
+              <col className="w-[15%]" />
+              <col className="w-[15%]" />
+              <col className="w-[18%]" />
+            </colgroup>
+            <thead>
+              <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+                <th className="text-right px-4 py-2.5 text-xs uppercase tracking-wider" style={{ color: textSecondary }}>{fa.accounting.arAging.customer}</th>
+                <th className="text-right px-4 py-2.5 text-xs uppercase tracking-wider" style={{ color: textSecondary }}>{fa.accounting.arAging.phone}</th>
+                <th className="text-center px-3 py-2.5 text-xs uppercase tracking-wider" style={{ color: '#22c55e' }}>{fa.accounting.arAging.current}</th>
+                <th className="text-center px-3 py-2.5 text-xs uppercase tracking-wider" style={{ color: '#f59e0b' }}>{fa.accounting.arAging.days31to60}</th>
+                <th className="text-center px-3 py-2.5 text-xs uppercase tracking-wider" style={{ color: '#ea580c' }}>{fa.accounting.arAging.days61to90}</th>
+                <th className="text-center px-3 py-2.5 text-xs uppercase tracking-wider" style={{ color: '#ef4444' }}>{fa.accounting.arAging.over90}</th>
               </tr>
-            ))}
-            {data.rows.length === 0 && <tr><td colSpan={7} className="text-center py-8" style={{ color: textSecondary }}>{fa.accounting.arAging.noData}</td></tr>}
-            {data.rows.length > 0 && (
-              <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', borderTop: `2px solid ${cardBorder}` }}>
-                <td className="px-4 py-3 font-bold" colSpan={2} style={{ color: textPrimary }}>{fa.accounting.trialBalance.totals}</td>
-                <td className="px-3 py-3 text-center font-mono font-bold text-xs" style={{ color: '#22c55e' }}>{data.totals.current.toLocaleString('fa-IR')}</td>
-                <td className="px-3 py-3 text-center font-mono font-bold text-xs" style={{ color: '#f59e0b' }}>{data.totals.days31to60.toLocaleString('fa-IR')}</td>
-                <td className="px-3 py-3 text-center font-mono font-bold text-xs" style={{ color: '#ea580c' }}>{data.totals.days61to90.toLocaleString('fa-IR')}</td>
-                <td className="px-3 py-3 text-center font-mono font-bold text-xs" style={{ color: '#ef4444' }}>{data.totals.over90.toLocaleString('fa-IR')}</td>
-                <td className="px-4 py-3 text-center font-mono font-bold" style={{ color: '#ef4444' }}>{data.totals.total.toLocaleString('fa-IR')}</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.rows.map((r: any) => (
+                <tr key={r.customerId} className="hover:bg-opacity-5 hover:bg-blue-500 transition-colors" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                  <td className="px-4 py-2.5 font-medium" style={{ color: textPrimary }}>{r.customerName}</td>
+                  <td className="px-4 py-2.5 text-xs" style={{ color: textSecondary }}>{r.phone || '-'}</td>
+                  <td className="px-3 py-2.5 text-center font-mono text-xs font-bold" style={{ color: cellColor(r.current, r.current) }}>{r.current > 0 ? r.current.toLocaleString('fa-IR') : '-'}</td>
+                  <td className="px-3 py-2.5 text-center font-mono text-xs font-bold" style={{ color: cellColor(r.days31to60, r.days31to60) }}>{r.days31to60 > 0 ? r.days31to60.toLocaleString('fa-IR') : '-'}</td>
+                  <td className="px-3 py-2.5 text-center font-mono text-xs font-bold" style={{ color: cellColor(r.days61to90, r.days61to90) }}>{r.days61to90 > 0 ? r.days61to90.toLocaleString('fa-IR') : '-'}</td>
+                  <td className="px-3 py-2.5 text-center font-mono text-xs font-bold" style={{ color: cellColor(r.over90, r.over90) }}>{r.over90 > 0 ? r.over90.toLocaleString('fa-IR') : '-'}</td>
+                </tr>
+              ))}
+              {data.rows.length === 0 && <tr><td colSpan={6} className="text-center py-8" style={{ color: textSecondary }}>{fa.accounting.arAging.noData}</td></tr>}
+              {data.rows.length > 0 && (
+                <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', borderTop: `2px solid ${cardBorder}` }}>
+                  <td className="px-4 py-3 font-bold" colSpan={2} style={{ color: textPrimary }}>{fa.accounting.trialBalance.totals}</td>
+                  <td className="px-3 py-3 text-center font-mono font-bold text-xs" style={{ color: '#22c55e' }}>{data.totals.current.toLocaleString('fa-IR')}</td>
+                  <td className="px-3 py-3 text-center font-mono font-bold text-xs" style={{ color: '#f59e0b' }}>{data.totals.days31to60.toLocaleString('fa-IR')}</td>
+                  <td className="px-3 py-3 text-center font-mono font-bold text-xs" style={{ color: '#ea580c' }}>{data.totals.days61to90.toLocaleString('fa-IR')}</td>
+                  <td className="px-3 py-3 text-center font-mono font-bold text-xs" style={{ color: '#ef4444' }}>{data.totals.over90.toLocaleString('fa-IR')}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )

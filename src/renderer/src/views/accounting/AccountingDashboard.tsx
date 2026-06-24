@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
-import { formatJalaliDateTime } from '../../utils/jalali'
 import { downloadExcel, printA4Report } from '../../utils/a4Print'
-import Pagination from '../../components/Pagination'
 
 export default function AccountingDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0)
@@ -10,15 +8,12 @@ export default function AccountingDashboard() {
   const [totalOpEx, setTotalOpEx] = useState(0)
   const [netProfit, setNetProfit] = useState(0)
   const [journalCount, setJournalCount] = useState(0)
-  const [recentEntries, setRecentEntries] = useState<any[]>([])
   const [opExpenses, setOpExpenses] = useState<{ name: string; amount: number }[]>([])
   const [seeded, setSeeded] = useState(false)
   const [showJournalForm, setShowJournalForm] = useState(false)
   const [journalForm, setJournalForm] = useState({ entryDate: new Date().toISOString().slice(0, 10), description: '', lines: [{ accountId: 0, debit: 0, credit: 0, description: '' }, { accountId: 0, debit: 0, credit: 0, description: '' }] })
   const [allAccounts, setAllAccounts] = useState<any[]>([])
   const [journalError, setJournalError] = useState('')
-  const [recentPage, setRecentPage] = useState(0)
-  const recentPageSize = 10
 
   const isDark = document.documentElement.classList.contains('dark')
   const cardBg = isDark ? '#1e293b' : '#ffffff'
@@ -30,7 +25,7 @@ export default function AccountingDashboard() {
   const load = async () => {
     const [plRes, jeRes, acRes] = await Promise.all([
       window.api.reports.getProfitLoss(),
-      window.api.journal.getEntries({ limit: 100, offset: recentPage * recentPageSize }),
+      window.api.journal.getEntries({ limit: 10 }),
       window.api.accounts.getAll(),
     ])
     if (plRes.success && plRes.data) {
@@ -45,7 +40,6 @@ export default function AccountingDashboard() {
     }
     if (jeRes.success && jeRes.data) {
       setJournalCount(jeRes.data.total || 0)
-      setRecentEntries(jeRes.data.entries || [])
     }
     if (acRes.success && acRes.data) setAllAccounts(acRes.data)
   }
@@ -324,44 +318,6 @@ export default function AccountingDashboard() {
         </div>
       </div>
 
-      <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: `1px solid ${cardBorder}` }}>
-          <span className="text-sm font-bold" style={{ color: textPrimary }}>{fa.accounting.journal.title}</span>
-          <span className="text-xs" style={{ color: textSecondary }}>{recentEntries.length} / {journalCount}</span>
-        </div>
-        <table className="w-full text-sm">
-          <thead>
-            <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.accounting.journal.date}</th>
-              <th className="text-right px-4 py-2" style={{ color: textSecondary }}>{fa.accounting.journal.description}</th>
-              <th className="text-center px-4 py-2" style={{ color: textSecondary }}>{fa.accounting.journal.reference}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {recentEntries.slice(0, recentPageSize).map((e) => {
-              const refBg = e.referenceType === 'sale' ? '#dcfce7' : e.referenceType === 'expense' ? '#fee2e2' : '#dbeafe'
-              const refFg = e.referenceType === 'sale' ? '#16a34a' : e.referenceType === 'expense' ? '#dc2626' : '#2563eb'
-              return (
-                <tr key={e.id} style={{ borderBottom: `1px solid ${cardBorder}` }}>
-                  <td className="px-4 py-2 text-xs" style={{ color: textPrimary }}>{formatJalaliDateTime(e.entryDate)}</td>
-                  <td className="px-4 py-2 font-medium" style={{ color: textPrimary }}>{e.description}</td>
-                  <td className="px-4 py-2 text-center">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: refBg, color: refFg }}>
-                      {fa.accounting.journal.types[e.referenceType as keyof typeof fa.accounting.journal.types] || e.referenceType}
-                    </span>
-                  </td>
-                </tr>
-              )
-            })}
-            {recentEntries.length === 0 && (
-              <tr><td colSpan={3} className="text-center py-6 text-sm" style={{ color: textSecondary }}>{fa.accounting.journal.noEntries}</td></tr>
-            )}
-          </tbody>
-        </table>
-        <div className="px-3 pb-3">
-          <Pagination total={journalCount} pageSize={recentPageSize} page={recentPage} onPageChange={setRecentPage} onPageSizeChange={() => {}} />
-        </div>
-      </div>
 
       {journalCount === 0 && (
         <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>

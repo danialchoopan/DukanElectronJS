@@ -33,7 +33,7 @@ export default function IncomeStatement() {
 
   const Section = ({ title, sortedItems, total, color, sortKey, sortDir, onSort }: { title: string; sortedItems: any[]; total: number; color: string; sortKey: any; sortDir: any; onSort: any }) => (
     <div className="mb-4">
-      <div className="text-sm font-bold mb-2 flex items-center gap-2 cursor-pointer select-none" style={{ color: textPrimary }} onClick={onSort}>
+      <div className="text-sm font-bold mb-2 flex items-center gap-2 cursor-pointer select-none px-4 py-1" style={{ color: textPrimary }} onClick={onSort}>
         {title}
         <span className="text-[10px] opacity-50">{sortKey ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
       </div>
@@ -59,10 +59,10 @@ export default function IncomeStatement() {
   )
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
+    <div className="max-w-7xl mx-auto px-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.profitLoss.title}</h3>
+          <h3 className="text-xl font-bold" style={{ color: textPrimary }}>{fa.accounting.profitLoss.title}</h3>
           <HelpPopup title="راهنمای صورت سود و زیان" sections={[
             { heading: 'صورت سود و زیان', items: ['درآمدها (حساب‌های ۴xxx) جمع می‌شوند', 'بهای تمام شده کالا (حساب‌های ۵xxx) کم می‌شود', 'هزینه‌های عملیاتی (حساب‌های ۶xxx) کم می‌شود', 'نتیجه: سود یا زیان خالص'] },
             { heading: 'خروجی', items: ['چاپ گزارش A4', 'خروجی اکسل'] }
@@ -98,29 +98,52 @@ export default function IncomeStatement() {
           </button>
         </div>
       </div>
-      <div className="flex gap-3 mb-4">
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div className="rounded-xl p-3 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+          <div className="text-xs" style={{ color: textSecondary }}>{fa.accounting.profitLoss.revenue}</div>
+          <div className="text-lg font-bold mt-1" style={{ color: '#22c55e' }}>{data.totalRevenue.toLocaleString('fa-IR')}</div>
+        </div>
+        <div className="rounded-xl p-3 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+          <div className="text-xs" style={{ color: textSecondary }}>{fa.accounting.profitLoss.cogs}</div>
+          <div className="text-lg font-bold mt-1" style={{ color: '#ef4444' }}>{data.totalCogs.toLocaleString('fa-IR')}</div>
+        </div>
+        <div className="rounded-xl p-3 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+          <div className="text-xs" style={{ color: textSecondary }}>{fa.accounting.profitLoss.grossProfit}</div>
+          <div className="text-lg font-bold mt-1" style={{ color: data.grossProfit >= 0 ? '#22c55e' : '#ef4444' }}>{data.grossProfit.toLocaleString('fa-IR')}</div>
+        </div>
+        <div className="rounded-xl p-3 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+          <div className="text-xs" style={{ color: textSecondary }}>{data.netProfit >= 0 ? fa.accounting.profitLoss.netProfit : fa.accounting.profitLoss.netLoss}</div>
+          <div className="text-lg font-bold mt-1" style={{ color: data.netProfit >= 0 ? '#22c55e' : '#ef4444' }}>{Math.abs(data.netProfit).toLocaleString('fa-IR')}</div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-3 mb-4">
         <ShamsiDateInput value={startDate} onChange={setStartDate} label={fa.dashboard.dateFrom} />
         <ShamsiDateInput value={endDate} onChange={setEndDate} label={fa.dashboard.dateTo} />
       </div>
 
       <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-        <Section title={fa.accounting.profitLoss.revenue} sortedItems={sortedRevenue} total={data.totalRevenue} color="#22c55e" sortKey={revSortKey} sortDir={revSortDir} onSort={() => revToggleSort('amount' as any)} />
-        <Section title={fa.accounting.profitLoss.cogs} sortedItems={sortedCogs} total={data.totalCogs} color="#ef4444" sortKey={cogsSortKey} sortDir={cogsSortDir} onSort={() => cogsToggleSort('amount' as any)} />
+        <div className="p-4">
+          <Section title={fa.accounting.profitLoss.revenue} sortedItems={sortedRevenue} total={data.totalRevenue} color="#22c55e" sortKey={revSortKey} sortDir={revSortDir} onSort={() => revToggleSort('amount' as any)} />
+          
+          <Section title={fa.accounting.profitLoss.cogs} sortedItems={sortedCogs} total={data.totalCogs} color="#ef4444" sortKey={cogsSortKey} sortDir={cogsSortDir} onSort={() => cogsToggleSort('amount' as any)} />
 
-        <div className="flex justify-between px-4 py-3 mx-4 mb-4 rounded-xl" style={{ backgroundColor: isDark ? '#052e16' : '#dcfce7' }}>
-          <span className="font-bold" style={{ color: '#22c55e' }}>{fa.accounting.profitLoss.grossProfit}</span>
-          <span className="font-bold font-mono" style={{ color: '#22c55e' }}>{data.grossProfit.toLocaleString('fa-IR')}</span>
-        </div>
+          <div className="flex justify-between px-4 py-3 rounded-xl mb-4" style={{ backgroundColor: isDark ? '#052e16' : '#dcfce7' }}>
+            <span className="font-bold" style={{ color: '#22c55e' }}>{fa.accounting.profitLoss.grossProfit}</span>
+            <span className="font-bold font-mono" style={{ color: '#22c55e' }}>{data.grossProfit.toLocaleString('fa-IR')}</span>
+          </div>
 
-        <Section title={fa.accounting.profitLoss.operatingExpenses} sortedItems={sortedOpEx} total={data.totalOperatingExpenses} color="#f59e0b" sortKey={opexSortKey} sortDir={opexSortDir} onSort={() => opexToggleSort('amount' as any)} />
+          <Section title={fa.accounting.profitLoss.operatingExpenses} sortedItems={sortedOpEx} total={data.totalOperatingExpenses} color="#f59e0b" sortKey={opexSortKey} sortDir={opexSortDir} onSort={() => opexToggleSort('amount' as any)} />
 
-        <div className="flex justify-between px-4 py-4 mx-4 mb-4 rounded-xl" style={{ backgroundColor: data.netProfit >= 0 ? (isDark ? '#052e16' : '#dcfce7') : (isDark ? '#450a0a' : '#fee2e2') }}>
-          <span className="text-lg font-bold" style={{ color: data.netProfit >= 0 ? '#22c55e' : '#ef4444' }}>
-            {data.netProfit >= 0 ? fa.accounting.profitLoss.netProfit : fa.accounting.profitLoss.netLoss}
-          </span>
-          <span className="text-lg font-bold font-mono" style={{ color: data.netProfit >= 0 ? '#22c55e' : '#ef4444' }}>
-            {Math.abs(data.netProfit).toLocaleString('fa-IR')}
-          </span>
+          <div className="flex justify-between px-4 py-4 rounded-xl" style={{ backgroundColor: data.netProfit >= 0 ? (isDark ? '#052e16' : '#dcfce7') : (isDark ? '#450a0a' : '#fee2e2') }}>
+            <span className="text-lg font-bold" style={{ color: data.netProfit >= 0 ? '#22c55e' : '#ef4444' }}>
+              {data.netProfit >= 0 ? fa.accounting.profitLoss.netProfit : fa.accounting.profitLoss.netLoss}
+            </span>
+            <span className="text-lg font-bold font-mono" style={{ color: data.netProfit >= 0 ? '#22c55e' : '#ef4444' }}>
+              {Math.abs(data.netProfit).toLocaleString('fa-IR')}
+            </span>
+          </div>
         </div>
       </div>
     </div>

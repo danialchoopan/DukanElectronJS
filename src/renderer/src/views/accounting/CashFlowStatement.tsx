@@ -50,9 +50,9 @@ export default function CashFlowStatement() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="text-sm font-bold" style={{ color: textPrimary }}>{fa.accounting.tabs.cashFlow}</div>
+    <div className="max-w-7xl mx-auto px-4 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-xl font-bold" style={{ color: textPrimary }}>{fa.accounting.tabs.cashFlow}</h3>
         <div className="flex gap-2">
           <button onClick={handlePrint} className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
@@ -64,32 +64,36 @@ export default function CashFlowStatement() {
         </div>
       </div>
 
-      <div className="flex gap-3 items-end">
+      <div className="flex flex-wrap gap-3 items-end">
         <ShamsiDateInput value={startDate} onChange={setStartDate} label={fa.dashboard.dateFrom} />
         <ShamsiDateInput value={endDate} onChange={setEndDate} label={fa.dashboard.dateTo} />
-        <button onClick={load} className="px-4 py-2 rounded-lg text-sm font-bold" style={{ backgroundColor: PRIMARY, color: '#ffffff' }}>
+        <button onClick={load} className="px-4 py-2 rounded-lg text-sm font-bold transition-all hover:opacity-80" style={{ backgroundColor: PRIMARY, color: '#ffffff' }}>
           {loading ? '...' : fa.dashboard.refresh}
         </button>
       </div>
 
       {data && (
         <>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-xl p-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-              <div className="text-xs font-medium mb-1" style={{ color: textSecondary }}>ورودی نقدی</div>
-              <div className="text-xl font-bold font-mono" style={{ color: '#16a34a' }}>{data.totalInflow.toLocaleString('fa-IR')}</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="rounded-xl p-3 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+              <div className="text-xs" style={{ color: textSecondary }}>تعداد اقلام</div>
+              <div className="text-lg font-bold mt-1" style={{ color: textPrimary }}>{data.operating.length}</div>
             </div>
-            <div className="rounded-xl p-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-              <div className="text-xs font-medium mb-1" style={{ color: textSecondary }}>خروجی نقدی</div>
-              <div className="text-xl font-bold font-mono" style={{ color: '#dc2626' }}>{data.totalOutflow.toLocaleString('fa-IR')}</div>
+            <div className="rounded-xl p-3 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+              <div className="text-xs" style={{ color: textSecondary }}>ورودی نقدی</div>
+              <div className="text-lg font-bold mt-1" style={{ color: '#16a34a' }}>{data.totalInflow.toLocaleString('fa-IR')}</div>
             </div>
-            <div className="rounded-xl p-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-              <div className="text-xs font-medium mb-1" style={{ color: textSecondary }}>تغییر خالص</div>
-              <div className="text-xl font-bold font-mono" style={{ color: data.netChange >= 0 ? '#16a34a' : '#dc2626' }}>{data.netChange.toLocaleString('fa-IR')}</div>
+            <div className="rounded-xl p-3 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+              <div className="text-xs" style={{ color: textSecondary }}>خروجی نقدی</div>
+              <div className="text-lg font-bold mt-1" style={{ color: '#dc2626' }}>{data.totalOutflow.toLocaleString('fa-IR')}</div>
+            </div>
+            <div className="rounded-xl p-3 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+              <div className="text-xs" style={{ color: textSecondary }}>تغییر خالص</div>
+              <div className="text-lg font-bold mt-1" style={{ color: data.netChange >= 0 ? '#16a34a' : '#dc2626' }}>{data.netChange.toLocaleString('fa-IR')}</div>
             </div>
           </div>
 
-          <div className="rounded-xl p-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+          <div className="rounded-xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
             <div className="text-sm font-bold mb-4" style={{ color: textPrimary }}>مقایسه ورودی و خروجی</div>
             <svg viewBox="0 0 300 120" className="w-full h-28">
               <rect x={20} y={120 - (data.totalInflow / maxVal) * 100} width={80} height={(data.totalInflow / maxVal) * 100} rx={4} fill="#16a34a" />
@@ -110,27 +114,33 @@ export default function CashFlowStatement() {
             </svg>
           </div>
 
-          <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
-                  <th className="text-right px-4 py-2" style={{ color: textSecondary }}>شرح</th>
-                  <th className="text-right px-4 py-2" style={{ color: textSecondary }}>مبلغ ({fa.common.toman})</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.operating.map((row, i) => (
-                  <tr key={i} style={{ borderTop: `1px solid ${cardBorder}` }}>
-                    <td className="px-4 py-2" style={{ color: textPrimary }}>{row.label}</td>
-                    <td className="px-4 py-2 font-bold" style={{ color: row.amount >= 0 ? '#16a34a' : '#dc2626' }}>{row.amount.toLocaleString('fa-IR')}</td>
+          <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm table-fixed">
+                <colgroup>
+                  <col className="w-[70%]" />
+                  <col className="w-[30%]" />
+                </colgroup>
+                <thead>
+                  <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+                    <th className="text-right px-4 py-2.5 text-xs uppercase tracking-wider" style={{ color: textSecondary }}>شرح</th>
+                    <th className="text-right px-4 py-2.5 text-xs uppercase tracking-wider" style={{ color: textSecondary }}>مبلغ ({fa.common.toman})</th>
                   </tr>
-                ))}
-                <tr className="total-row" style={{ borderTop: `2px solid ${cardBorder}` }}>
-                  <td className="px-4 py-2 font-bold" style={{ color: textPrimary }}>تغییر خالص نقد</td>
-                  <td className="px-4 py-2 font-bold" style={{ color: data.netChange >= 0 ? '#16a34a' : '#dc2626' }}>{data.netChange.toLocaleString('fa-IR')}</td>
-                </tr>
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {data.operating.map((row, i) => (
+                    <tr key={i} className="hover:bg-opacity-5 hover:bg-blue-500 transition-colors" style={{ borderTop: `1px solid ${cardBorder}` }}>
+                      <td className="px-4 py-2.5" style={{ color: textPrimary }}>{row.label}</td>
+                      <td className="px-4 py-2.5 font-mono font-bold" style={{ color: row.amount >= 0 ? '#16a34a' : '#dc2626' }}>{row.amount.toLocaleString('fa-IR')}</td>
+                    </tr>
+                  ))}
+                  <tr className="total-row" style={{ borderTop: `2px solid ${cardBorder}` }}>
+                    <td className="px-4 py-3 font-bold" style={{ color: textPrimary }}>تغییر خالص نقد</td>
+                    <td className="px-4 py-3 font-mono font-bold" style={{ color: data.netChange >= 0 ? '#16a34a' : '#dc2626' }}>{data.netChange.toLocaleString('fa-IR')}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </>
       )}

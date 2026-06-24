@@ -30,14 +30,24 @@ export default function TrialBalance() {
   const typeColors: Record<string, string> = {
     asset: '#3b82f6', liability: '#ef4444', equity: '#a855f7', income: '#22c55e', expense: '#f59e0b',
   }
+  
   const filteredRows = rows.filter((r: any) => r.totalDebit !== 0 || r.totalCredit !== 0)
   const { sorted, sortKey, sortDir, toggleSort } = useSortable(filteredRows)
 
+  // کارت خلاصه
+  const SummaryCard = ({ title, value }: any) => (
+    <div className="rounded-xl p-3 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+      <div className="text-xs" style={{ color: textSecondary }}>{title}</div>
+      <div className="text-lg font-bold mt-1" style={{ color: textPrimary }}>{value}</div>
+    </div>
+  )
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
+    <div className="max-w-7xl mx-auto px-4">
+      {/* هدر */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.trialBalance.title}</h3>
+          <h3 className="text-xl font-bold" style={{ color: textPrimary }}>{fa.accounting.trialBalance.title}</h3>
           <HelpPopup title="راهنمای تراز آزمایشی" sections={[
             { heading: 'تراز آزمایشی چیست؟', items: ['نمایش مانده تمام حساب‌ها در یک نگاه', 'جمع بدهکار باید با جمع بستانکار برابر باشد', 'اگر برابر نباشد، اشکالی در ثبت اسناد وجود دارد'] },
             { heading: 'نحوه استفاده', items: ['فیلتر تاریخی برای بررسی دوره خاص', 'رنگ‌بندی: سبز=مثبت، قرمز=منفی', 'نمودار نواری نسبت بدهکار به بستانکار'] }
@@ -67,78 +77,89 @@ export default function TrialBalance() {
         </div>
       </div>
 
+      {/* فیلتر تاریخ */}
       <div className="flex flex-wrap gap-3 mb-4">
         <ShamsiDateInput value={startDate} onChange={setStartDate} label={fa.dashboard.dateFrom} />
         <ShamsiDateInput value={endDate} onChange={setEndDate} label={fa.dashboard.dateTo} />
       </div>
 
+      {/* کارت‌های خلاصه */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <SummaryCard title="تعداد حساب‌ها" value={filteredRows.length} />
+        <SummaryCard title="مجموع بدهکار" value={totalDebit.toLocaleString('fa-IR')} color="green" />
+        <SummaryCard title="مجموع بستانکار" value={totalCredit.toLocaleString('fa-IR')} color="red" />
+        <SummaryCard title="وضعیت" value={isBalanced ? '✅ متوازن' : '❌ نامتوازن'} />
+      </div>
+
+      {/* جدول بهینه‌شده */}
       <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-        <table className="w-full text-sm">
-          <thead>
-            <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
-              {([
-                { key: 'accountName' as any, label: fa.accounting.trialBalance.account },
-                { key: 'accountType' as any, label: 'نوع', align: 'center' as const },
-                { key: 'totalDebit' as any, label: fa.accounting.trialBalance.totalDebit, align: 'left' as const },
-                { key: 'totalCredit' as any, label: fa.accounting.trialBalance.totalCredit, align: 'left' as const },
-                { key: 'balance' as any, label: fa.accounting.trialBalance.balance, align: 'left' as const },
-              ]).map(col => (
-                <th key={String(col.key)}
-                  className={`px-4 py-2 cursor-pointer select-none transition-all hover:bg-blue-500/10 ${col.align === 'center' ? 'text-center' : col.align === 'left' ? 'text-left' : 'text-right'}`}
-                  style={{ color: sortKey === col.key ? '#3b82f6' : textSecondary }}
-                  onClick={() => toggleSort(col.key)}>
-                  <span className="inline-flex items-center gap-1">
-                    {col.label}
-                    <span className="text-[10px] opacity-50">{sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
-                  </span>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((r: any) => {
-              const maxRow = Math.max(r.totalDebit, r.totalCredit, 1)
-              const debitPct = (r.totalDebit / maxRow) * 100
-              const creditPct = (r.totalCredit / maxRow) * 100
-              return (
-                <tr key={r.accountId} style={{ borderBottom: `1px solid ${cardBorder}` }}>
-                  <td className="px-4 py-2">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm table-fixed">
+            <colgroup>
+              <col className="w-[30%]" />
+              <col className="w-[12%]" />
+              <col className="w-[22%]" />
+              <col className="w-[22%]" />
+              <col className="w-[14%]" />
+            </colgroup>
+            <thead>
+              <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+                {([
+                  { key: 'accountName' as any, label: fa.accounting.trialBalance.account },
+                  { key: 'accountType' as any, label: 'نوع', align: 'center' as const },
+                  { key: 'totalDebit' as any, label: fa.accounting.trialBalance.totalDebit, align: 'left' as const },
+                  { key: 'totalCredit' as any, label: fa.accounting.trialBalance.totalCredit, align: 'left' as const },
+                  { key: 'balance' as any, label: fa.accounting.trialBalance.balance, align: 'left' as const },
+                ]).map(col => (
+                  <th key={String(col.key)}
+                    className={`px-3 py-2.5 cursor-pointer select-none transition-all hover:bg-blue-500/10 text-xs uppercase tracking-wider ${col.align === 'center' ? 'text-center' : col.align === 'left' ? 'text-left' : 'text-right'}`}
+                    style={{ color: sortKey === col.key ? '#3b82f6' : textSecondary }}
+                    onClick={() => toggleSort(col.key)}>
+                    <span className="inline-flex items-center gap-1">
+                      {col.label}
+                      <span className="text-[10px] opacity-50">{sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
+                    </span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map((r: any) => (
+                <tr key={r.accountId} className="hover:bg-opacity-5 hover:bg-blue-500 transition-colors" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                  <td className="px-3 py-2.5">
                     <span className="text-xs font-mono font-bold mr-2" style={{ color: typeColors[r.accountType] || textSecondary }}>{r.accountCode}</span>
                     <span style={{ color: textPrimary }}>{r.accountName}</span>
                   </td>
-                  <td className="px-4 py-2 text-center">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: typeColors[r.accountType] || textSecondary }}>
+                  <td className="px-3 py-2.5 text-center">
+                    <span className="text-[10px] px-2.5 py-1 rounded-full font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: typeColors[r.accountType] || textSecondary }}>
                       {fa.accounting.accounts.types[r.accountType as keyof typeof fa.accounting.accounts.types] || r.accountType}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-left font-mono" style={{ color: r.totalDebit > 0 ? '#22c55e' : textSecondary }}>
-                    <div className="flex items-center gap-2">
-                      <span className="flex-shrink-0 w-20 text-left">{r.totalDebit > 0 ? r.totalDebit.toLocaleString('fa-IR') : '-'}</span>
-                      {r.totalDebit > 0 && <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#0f172a' : '#f1f5f9' }}><div className="h-full rounded-full" style={{ width: `${debitPct}%`, backgroundColor: '#22c55e' }} /></div>}
-                    </div>
+                  <td className="px-3 py-2.5 text-left font-mono" style={{ color: r.totalDebit > 0 ? '#22c55e' : textSecondary }}>
+                    {r.totalDebit > 0 ? r.totalDebit.toLocaleString('fa-IR') : '-'}
                   </td>
-                  <td className="px-4 py-2 text-left font-mono" style={{ color: r.totalCredit > 0 ? '#ef4444' : textSecondary }}>
-                    <div className="flex items-center gap-2">
-                      <span className="flex-shrink-0 w-20 text-left">{r.totalCredit > 0 ? r.totalCredit.toLocaleString('fa-IR') : '-'}</span>
-                      {r.totalCredit > 0 && <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#0f172a' : '#f1f5f9' }}><div className="h-full rounded-full" style={{ width: `${creditPct}%`, backgroundColor: '#ef4444' }} /></div>}
-                    </div>
+                  <td className="px-3 py-2.5 text-left font-mono" style={{ color: r.totalCredit > 0 ? '#ef4444' : textSecondary }}>
+                    {r.totalCredit > 0 ? r.totalCredit.toLocaleString('fa-IR') : '-'}
                   </td>
-                  <td className="px-4 py-2 text-left font-mono font-bold" style={{ color: r.balance >= 0 ? '#22c55e' : '#ef4444' }}>{Math.abs(r.balance).toLocaleString('fa-IR')}</td>
+                  <td className="px-3 py-2.5 text-left font-mono font-bold" style={{ color: r.balance >= 0 ? '#22c55e' : '#ef4444' }}>
+                    {Math.abs(r.balance).toLocaleString('fa-IR')}
+                  </td>
                 </tr>
-              )
-            })}
-            <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', borderTop: `2px solid ${cardBorder}` }}>
-              <td className="px-4 py-3 font-bold" colSpan={2} style={{ color: textPrimary }}>{fa.accounting.trialBalance.totals}</td>
-              <td className="px-4 py-3 text-left font-mono font-bold" style={{ color: '#22c55e' }}>{totalDebit.toLocaleString('fa-IR')}</td>
-              <td className="px-4 py-3 text-left font-mono font-bold" style={{ color: '#ef4444' }}>{totalCredit.toLocaleString('fa-IR')}</td>
-              <td className="px-4 py-3 text-left">
-                <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${isBalanced ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  {isBalanced ? fa.accounting.trialBalance.isBalanced : fa.accounting.trialBalance.isNotBalanced}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              ))}
+              {/* رجوع جمع کل */}
+              <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', borderTop: `2px solid ${cardBorder}` }}>
+                <td className="px-3 py-3 font-bold" colSpan={2} style={{ color: textPrimary }}>{fa.accounting.trialBalance.totals}</td>
+                <td className="px-3 py-3 text-left font-mono font-bold" style={{ color: '#22c55e' }}>{totalDebit.toLocaleString('fa-IR')}</td>
+                <td className="px-3 py-3 text-left font-mono font-bold" style={{ color: '#ef4444' }}>{totalCredit.toLocaleString('fa-IR')}</td>
+                <td className="px-3 py-3 text-left">
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${isBalanced ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                    {isBalanced ? fa.accounting.trialBalance.isBalanced : fa.accounting.trialBalance.isNotBalanced}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )

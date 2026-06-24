@@ -150,27 +150,25 @@ export default function Suppliers() {
   }
 
   const kpis = [
-    { label: 'تأمین\u200cکنندگان', value: stats.totalSuppliers, color: primary },
+    { label: 'تأمین کنندگان', value: stats.totalSuppliers, color: primary },
     { label: 'بدهکار', value: stats.totalDebtors, color: ERR },
     { label: 'مبلغ بدهی', value: stats.totalDebtAmount.toLocaleString('fa-IR') + ' ت', color: WRN },
     { label: 'کل خریدها', value: purchaseStats.totalPurchases, color: SUC },
   ]
 
   return (
-    <div className="h-full p-4 overflow-auto">
-      {/* Header */}
+    <div className="max-w-7xl mx-auto px-4 h-full p-4 overflow-auto">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)` }}>
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)` }}>
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
         </div>
         <div>
-          <h2 className="text-xl font-extrabold" style={{ color: tPri }}>تأمین\u200cکنندگان</h2>
-          <p className="text-xs" style={{ color: tSec }}>مدیریت تأمین\u200cکنندگان و خریدها</p>
+          <h2 className="text-xl font-extrabold" style={{ color: tPri }}>تأمین کنندگان</h2>
+          <p className="text-xs" style={{ color: tSec }}>مدیریت تأمین کنندگان و خریدها</p>
         </div>
       </div>
 
-      {/* KPI */}
-      <div className="grid grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         {kpis.map((kpi, i) => (
           <Card key={i}>
             <div className="text-[10px] font-bold" style={{ color: tSec }}>{kpi.label}</div>
@@ -179,9 +177,8 @@ export default function Suppliers() {
         ))}
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-2 mb-4">
-        {[{ key: 'suppliers' as Tab, label: 'تأمین\u200cکنندگان' }, { key: 'purchases' as Tab, label: 'خریدها' }].map(t => (
+        {[{ key: 'suppliers' as Tab, label: 'تأمین کنندگان' }, { key: 'purchases' as Tab, label: 'خریدها' }].map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
             className="px-4 py-2 rounded-xl text-sm font-bold transition-all"
             style={{ background: tab === t.key ? `linear-gradient(135deg, ${primary}, #007bb9)` : cBg, color: tab === t.key ? '#fff' : tSec, border: `1px solid ${tab === t.key ? primary : cBorder}` }}>
@@ -190,7 +187,6 @@ export default function Suppliers() {
         ))}
       </div>
 
-      {/* Suppliers Tab */}
       {tab === 'suppliers' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-1">
@@ -199,13 +195,13 @@ export default function Suppliers() {
                 <div className="flex gap-2">
                   <input value={search} onChange={e => setSearch(e.target.value)} placeholder="جستجو..." className="flex-1 px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} />
                   <button onClick={() => { setDialog('create'); setForm({ name: '', phone: '', email: '', address: '', company: '', taxId: '', description: '' }) }}
-                    className="px-3 py-2 rounded-lg text-xs font-bold text-white" style={{ background: `linear-gradient(135deg, ${SUC}, #16a34a)` }}>+ جدید</button>
+                    className="px-3 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-80" style={{ background: `linear-gradient(135deg, ${SUC}, #16a34a)` }}>+ جدید</button>
                 </div>
               </div>
               <div className="max-h-[500px] overflow-y-auto">
                 {filtered.map(s => (
                   <button key={s.id} onClick={() => { setSelectedSupplier(s); refreshSelected(s.id) }}
-                    className="w-full text-right p-3 transition-all flex justify-between items-center"
+                    className="w-full text-right p-3 transition-all flex justify-between items-center hover:bg-blue-500/5"
                     style={{ borderBottom: `1px solid ${cBorder}`, backgroundColor: selectedSupplier?.id === s.id ? primary + '10' : 'transparent', borderLeft: selectedSupplier?.id === s.id ? `3px solid ${primary}` : '3px solid transparent' }}>
                     <div>
                       <div className="text-sm font-bold" style={{ color: tPri }}>{s.name}</div>
@@ -216,7 +212,7 @@ export default function Suppliers() {
                     </div>
                   </button>
                 ))}
-                {filtered.length === 0 && <div className="text-center py-8 text-sm" style={{ color: tSec }}>تأمین\u200cکننده‌ای یافت نشد</div>}
+                {filtered.length === 0 && <div className="text-center py-8 text-sm" style={{ color: tSec }}>تأمین کننده‌ای یافت نشد</div>}
               </div>
             </Card>
           </div>
@@ -225,18 +221,18 @@ export default function Suppliers() {
             {selectedSupplier ? (
               <div className="space-y-3">
                 <Card>
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                     <div>
                       <div className="text-lg font-extrabold" style={{ color: tPri }}>{selectedSupplier.name}</div>
                       <div className="text-xs" style={{ color: tSec }}>{selectedSupplier.company} {selectedSupplier.phone ? `— ${selectedSupplier.phone}` : ''}</div>
                     </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => { setDialog('pay'); setPayAmount(''); setPayDesc('') }} className="px-3 py-1.5 rounded-lg text-xs font-bold text-white" style={{ background: `linear-gradient(135deg, ${WRN}, #d97706)` }}>پرداخت</button>
-                      <button onClick={() => { setDialog('edit'); setForm({ name: selectedSupplier.name, phone: selectedSupplier.phone || '', email: selectedSupplier.email || '', address: selectedSupplier.address || '', company: selectedSupplier.company || '', taxId: selectedSupplier.taxId || '', description: selectedSupplier.description || '' }) }} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ backgroundColor: sBg, color: tSec }}>ویرایش</button>
-                      <button onClick={() => setConfirmDelete({ type: 'supplier', id: selectedSupplier.id })} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ backgroundColor: ERR + '15', color: ERR }}>حذف</button>
+                    <div className="flex gap-2 flex-wrap">
+                      <button onClick={() => { setDialog('pay'); setPayAmount(''); setPayDesc('') }} className="px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:opacity-80" style={{ background: `linear-gradient(135deg, ${WRN}, #d97706)` }}>پرداخت</button>
+                      <button onClick={() => { setDialog('edit'); setForm({ name: selectedSupplier.name, phone: selectedSupplier.phone || '', email: selectedSupplier.email || '', address: selectedSupplier.address || '', company: selectedSupplier.company || '', taxId: selectedSupplier.taxId || '', description: selectedSupplier.description || '' }) }} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-70" style={{ backgroundColor: sBg, color: tSec }}>ویرایش</button>
+                      <button onClick={() => setConfirmDelete({ type: 'supplier', id: selectedSupplier.id })} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-70" style={{ backgroundColor: ERR + '15', color: ERR }}>حذف</button>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     <div className="rounded-lg p-2" style={{ backgroundColor: sBg }}>
                       <div className="text-[10px]" style={{ color: tSec }}>مانده حساب</div>
                       <div className="text-sm font-bold" style={{ color: selectedSupplier.balance > 0 ? ERR : SUC }}>{selectedSupplier.balance.toLocaleString('fa-IR')} ت</div>
@@ -260,100 +256,116 @@ export default function Suppliers() {
                   {ledger.length === 0 ? (
                     <div className="text-center py-8 text-sm" style={{ color: tSec }}>تراکنشی ثبت نشده</div>
                   ) : (
-                    <table className="w-full text-sm">
-                      <thead><tr style={{ backgroundColor: sBg }}>
-                        <th className="px-3 py-2 text-right text-xs" style={{ color: tSec }}>تاریخ</th>
-                        <th className="px-3 py-2 text-right text-xs" style={{ color: tSec }}>نوع</th>
-                        <th className="px-3 py-2 text-right text-xs" style={{ color: tSec }}>مبلغ</th>
-                        <th className="px-3 py-2 text-right text-xs" style={{ color: tSec }}>شرح</th>
-                        <th className="px-2 py-2 w-8"></th>
-                      </tr></thead>
-                      <tbody>
-                        {ledger.map((e: any) => (
-                          <tr key={e.id} style={{ borderTop: `1px solid ${cBorder}` }}>
-                            <td className="px-3 py-2 text-xs" style={{ color: tSec }}>{new Date(e.createdAt).toLocaleDateString('fa-IR')}</td>
-                            <td className="px-3 py-2">
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{
-                                backgroundColor: e.type === 'purchase' ? primary + '15' : e.type === 'payment' ? SUC + '15' : e.type === 'return' ? WRN + '15' : ERR + '15',
-                                color: e.type === 'purchase' ? primary : e.type === 'payment' ? SUC : e.type === 'return' ? WRN : ERR,
-                              }}>
-                                {e.type === 'purchase' ? 'خرید' : e.type === 'payment' ? 'پرداخت' : e.type === 'return' ? 'برگشت' : e.type}
-                              </span>
-                            </td>
-                            <td className="px-3 py-2 font-bold text-xs" style={{ color: e.amount > 0 ? ERR : SUC }}>
-                              {e.amount > 0 ? '+' : ''}{e.amount.toLocaleString('fa-IR')}
-                            </td>
-                            <td className="px-3 py-2 text-xs" style={{ color: tSec }}>{e.description}</td>
-                            <td className="px-2 py-2">
-                              <button onClick={() => handleDeleteLedger(e.id)} className="text-xs p-1 rounded hover:bg-red-500/10" style={{ color: ERR }}>
-                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm table-fixed">
+                        <colgroup>
+                          <col className="w-[18%]" />
+                          <col className="w-[18%]" />
+                          <col className="w-[18%]" />
+                          <col className="w-[38%]" />
+                          <col className="w-[8%]" />
+                        </colgroup>
+                        <thead><tr style={{ backgroundColor: sBg }}>
+                          <th className="px-3 py-2 text-right text-xs" style={{ color: tSec }}>تاریخ</th>
+                          <th className="px-3 py-2 text-right text-xs" style={{ color: tSec }}>نوع</th>
+                          <th className="px-3 py-2 text-right text-xs" style={{ color: tSec }}>مبلغ</th>
+                          <th className="px-3 py-2 text-right text-xs" style={{ color: tSec }}>شرح</th>
+                          <th className="px-2 py-2 w-8"></th>
+                        </tr></thead>
+                        <tbody>
+                          {ledger.map((e: any) => (
+                            <tr key={e.id} style={{ borderTop: `1px solid ${cBorder}` }}>
+                              <td className="px-3 py-2 text-xs" style={{ color: tSec }}>{new Date(e.createdAt).toLocaleDateString('fa-IR')}</td>
+                              <td className="px-3 py-2">
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{
+                                  backgroundColor: e.type === 'purchase' ? primary + '15' : e.type === 'payment' ? SUC + '15' : e.type === 'return' ? WRN + '15' : ERR + '15',
+                                  color: e.type === 'purchase' ? primary : e.type === 'payment' ? SUC : e.type === 'return' ? WRN : ERR,
+                                }}>
+                                  {e.type === 'purchase' ? 'خرید' : e.type === 'payment' ? 'پرداخت' : e.type === 'return' ? 'برگشت' : e.type}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2 font-mono font-bold text-xs" style={{ color: e.amount > 0 ? ERR : SUC }}>
+                                {e.amount > 0 ? '+' : ''}{e.amount.toLocaleString('fa-IR')}
+                              </td>
+                              <td className="px-3 py-2 text-xs truncate" style={{ color: tSec }}>{e.description}</td>
+                              <td className="px-2 py-2">
+                                <button onClick={() => handleDeleteLedger(e.id)} className="text-xs p-1 rounded transition-all hover:bg-red-500/10" style={{ color: ERR }}>
+                                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   )}
                 </Card>
               </div>
             ) : (
               <Card className="p-12 text-center">
-                <div className="text-sm" style={{ color: tSec }}>یک تأمین\u200cکننده انتخاب کنید</div>
+                <div className="text-sm" style={{ color: tSec }}>یک تأمین کننده انتخاب کنید</div>
               </Card>
             )}
           </div>
         </div>
       )}
 
-      {/* Purchases Tab */}
       {tab === 'purchases' && (
         <div className="space-y-3">
           <div className="flex justify-end">
             <button onClick={() => { setDialog('purchase'); setPurchaseForm({ supplierId: suppliers[0]?.id || 0, items: [{ productTitle: '', quantity: 1, unitCost: 0 }], taxAmount: 0, discountAmount: 0, paidAmount: 0, notes: '' }) }}
-              className="px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)` }}>+ خرید جدید</button>
+              className="px-4 py-2 rounded-xl text-sm font-bold text-white transition-all hover:opacity-80" style={{ background: `linear-gradient(135deg, ${primary}, #007bb9)` }}>+ خرید جدید</button>
           </div>
           <Card className="!p-0 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead><tr style={{ backgroundColor: sBg }}>
-                <th className="px-4 py-2 text-right text-xs" style={{ color: tSec }}>شماره فاکتور</th>
-                <th className="px-4 py-2 text-right text-xs" style={{ color: tSec }}>تأمین\u200cکننده</th>
-                <th className="px-4 py-2 text-right text-xs" style={{ color: tSec }}>تاریخ</th>
-                <th className="px-4 py-2 text-right text-xs" style={{ color: tSec }}>مبلغ کل</th>
-                <th className="px-4 py-2 text-right text-xs" style={{ color: tSec }}>پرداخت</th>
-                <th className="px-4 py-2 text-right text-xs" style={{ color: tSec }}>مانده</th>
-                <th className="px-4 py-2 text-right text-xs" style={{ color: tSec }}>وضعیت</th>
-              </tr></thead>
-              <tbody>
-                {purchases.map(p => (
-                  <tr key={p.id} className="cursor-pointer hover:bg-blue-500/5 transition-all" style={{ borderTop: `1px solid ${cBorder}` }}>
-                    <td className="px-4 py-2 font-mono text-xs font-bold" style={{ color: primary }}>{p.invoiceNumber}</td>
-                    <td className="px-4 py-2 text-xs" style={{ color: tPri }}>{p.supplierName}</td>
-                    <td className="px-4 py-2 text-xs" style={{ color: tSec }}>{new Date(p.purchaseDate).toLocaleDateString('fa-IR')}</td>
-                    <td className="px-4 py-2 text-xs font-bold" style={{ color: tPri }}>{p.totalAmount.toLocaleString('fa-IR')}</td>
-                    <td className="px-4 py-2 text-xs font-bold" style={{ color: SUC }}>{p.paidAmount.toLocaleString('fa-IR')}</td>
-                    <td className="px-4 py-2 text-xs font-bold" style={{ color: p.totalAmount - p.paidAmount > 0 ? ERR : SUC }}>{(p.totalAmount - p.paidAmount).toLocaleString('fa-IR')}</td>
-                    <td className="px-4 py-2">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{
-                        backgroundColor: p.status === 'paid' ? SUC + '15' : p.status === 'received' ? primary + '15' : WRN + '15',
-                        color: p.status === 'paid' ? SUC : p.status === 'received' ? primary : WRN,
-                      }}>
-                        {p.status === 'paid' ? 'پرداخت شده' : p.status === 'received' ? 'دریافت شده' : 'در انتظار'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-                {purchases.length === 0 && <tr><td colSpan={7} className="text-center py-8 text-sm" style={{ color: tSec }}>خریدی ثبت نشده</td></tr>}
-              </tbody>
-            </table>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm table-fixed">
+                <colgroup>
+                  <col className="w-[12%]" />
+                  <col className="w-[18%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[22%]" />
+                </colgroup>
+                <thead><tr style={{ backgroundColor: sBg }}>
+                  <th className="px-4 py-2 text-right text-xs uppercase tracking-wider" style={{ color: tSec }}>شماره فاکتور</th>
+                  <th className="px-4 py-2 text-right text-xs uppercase tracking-wider" style={{ color: tSec }}>تأمین کننده</th>
+                  <th className="px-4 py-2 text-right text-xs uppercase tracking-wider" style={{ color: tSec }}>تاریخ</th>
+                  <th className="px-4 py-2 text-right text-xs uppercase tracking-wider" style={{ color: tSec }}>مبلغ کل</th>
+                  <th className="px-4 py-2 text-right text-xs uppercase tracking-wider" style={{ color: tSec }}>پرداخت</th>
+                  <th className="px-4 py-2 text-right text-xs uppercase tracking-wider" style={{ color: tSec }}>مانده</th>
+                  <th className="px-4 py-2 text-right text-xs uppercase tracking-wider" style={{ color: tSec }}>وضعیت</th>
+                </tr></thead>
+                <tbody>
+                  {purchases.map(p => (
+                    <tr key={p.id} className="cursor-pointer hover:bg-blue-500/5 transition-all" style={{ borderTop: `1px solid ${cBorder}` }}>
+                      <td className="px-4 py-2 font-mono text-xs font-bold" style={{ color: primary }}>{p.invoiceNumber}</td>
+                      <td className="px-4 py-2 text-xs truncate" style={{ color: tPri }}>{p.supplierName}</td>
+                      <td className="px-4 py-2 text-xs" style={{ color: tSec }}>{new Date(p.purchaseDate).toLocaleDateString('fa-IR')}</td>
+                      <td className="px-4 py-2 text-xs font-mono font-bold" style={{ color: tPri }}>{p.totalAmount.toLocaleString('fa-IR')}</td>
+                      <td className="px-4 py-2 text-xs font-mono font-bold" style={{ color: SUC }}>{p.paidAmount.toLocaleString('fa-IR')}</td>
+                      <td className="px-4 py-2 text-xs font-mono font-bold" style={{ color: p.totalAmount - p.paidAmount > 0 ? ERR : SUC }}>{(p.totalAmount - p.paidAmount).toLocaleString('fa-IR')}</td>
+                      <td className="px-4 py-2">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{
+                          backgroundColor: p.status === 'paid' ? SUC + '15' : p.status === 'received' ? primary + '15' : WRN + '15',
+                          color: p.status === 'paid' ? SUC : p.status === 'received' ? primary : WRN,
+                        }}>
+                          {p.status === 'paid' ? 'پرداخت شده' : p.status === 'received' ? 'دریافت شده' : 'در انتظار'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {purchases.length === 0 && <tr><td colSpan={7} className="text-center py-8 text-sm" style={{ color: tSec }}>خریدی ثبت نشده</td></tr>}
+                </tbody>
+              </table>
+            </div>
           </Card>
         </div>
       )}
 
-      {/* ─── Dialogs ─────────────────────────────── */}
-
-      {/* Confirm Delete */}
       <Dialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)} title="تأیید حذف"
-        subtitle={confirmDelete?.type === 'supplier' ? 'تأمین\u200cکننده و تمام تراکنش‌ها حذف می‌شوند' : 'این رکورد از تاریخچه حذف می‌شود'}
+        subtitle={confirmDelete?.type === 'supplier' ? 'تأمین کننده و تمام تراکنش‌ها حذف می‌شوند' : 'این رکورد از تاریخچه حذف می‌شود'}
         icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>}
         footer={<>
           <DialogButton variant="ghost" onClick={() => setConfirmDelete(null)}>لغو</DialogButton>
@@ -362,9 +374,8 @@ export default function Suppliers() {
         <p className="text-center text-sm" style={{ color: tSec }}>آیا از حذف اطمینان دارید؟</p>
       </Dialog>
 
-      {/* Create/Edit Supplier */}
       <Dialog open={dialog === 'create' || dialog === 'edit'} onClose={() => setDialog(null)}
-        title={dialog === 'edit' ? 'ویرایش تأمین\u200cکننده' : 'تأمین\u200cکننده جدید'}
+        title={dialog === 'edit' ? 'ویرایش تأمین کننده' : 'تأمین کننده جدید'}
         icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/></svg>}
         footer={<>
           <DialogButton variant="ghost" onClick={() => setDialog(null)}>لغو</DialogButton>
@@ -383,7 +394,6 @@ export default function Suppliers() {
         <DialogField label="توضیحات"><DialogTextarea value={form.description} onChange={v => setForm(f => ({ ...f, description: v }))} rows={2} /></DialogField>
       </Dialog>
 
-      {/* Pay Supplier */}
       <Dialog open={dialog === 'pay' && !!selectedSupplier} onClose={() => setDialog(null)}
         title={`پرداخت به ${selectedSupplier?.name || ''}`}
         subtitle={`مانده بدهی: ${selectedSupplier?.balance.toLocaleString('fa-IR') || 0} تومان`}
@@ -398,14 +408,13 @@ export default function Suppliers() {
         <DialogField label="توضیحات"><DialogInput value={payDesc} onChange={setPayDesc} placeholder="اختیاری" /></DialogField>
       </Dialog>
 
-      {/* Create Purchase */}
       <Dialog open={dialog === 'purchase'} onClose={() => setDialog(null)} title="خرید جدید" maxWidth="max-w-lg"
         icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>}
         footer={<>
           <DialogButton variant="ghost" onClick={() => setDialog(null)}>لغو</DialogButton>
           <DialogButton variant="primary" onClick={handleCreatePurchase} disabled={loading || !purchaseForm.supplierId || purchaseForm.items.length === 0}>ثبت خرید</DialogButton>
         </>}>
-        <DialogField label="تأمین\u200cکننده *">
+        <DialogField label="تأمین کننده *">
           <select value={purchaseForm.supplierId} onChange={e => setPurchaseForm(p => ({ ...p, supplierId: Number(e.target.value) }))}
             className="w-full px-3 py-2.5 rounded-xl text-sm font-bold outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }}>
             <option value={0}>انتخاب کنید...</option>
@@ -414,16 +423,16 @@ export default function Suppliers() {
         </DialogField>
         <div className="flex items-center justify-between mb-2">
           <label className="text-xs font-bold" style={{ color: tSec }}>اقلام خرید</label>
-          <button onClick={addPurchaseItem} className="text-xs font-bold px-2 py-1 rounded-lg" style={{ color: primary, backgroundColor: primary + '10' }}>+ افزودن</button>
+          <button onClick={addPurchaseItem} className="text-xs font-bold px-2 py-1 rounded-lg transition-all hover:opacity-70" style={{ color: primary, backgroundColor: primary + '10' }}>+ افزودن</button>
         </div>
-        <div className="space-y-2 mb-3">
+        <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
           {purchaseForm.items.map((item, idx) => (
             <div key={idx} className="flex gap-2 items-center">
               <input value={item.productTitle} onChange={e => updatePurchaseItem(idx, 'productTitle', e.target.value)} placeholder="نام کالا" className="flex-1 px-2 py-1.5 rounded-lg text-xs font-bold outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }} />
               <FormattedPriceInput value={item.quantity} onChange={v => updatePurchaseItem(idx, 'quantity', v)} className="w-20 px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }} />
               <FormattedPriceInput value={item.unitCost} onChange={v => updatePurchaseItem(idx, 'unitCost', v)} className="w-28 px-2 py-1.5 rounded-lg text-xs font-bold text-center outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }} />
               <span className="text-[10px] font-bold min-w-[60px] text-left" style={{ color: tPri }}>{(item.quantity * item.unitCost).toLocaleString('fa-IR')}</span>
-              {purchaseForm.items.length > 1 && <button onClick={() => removePurchaseItem(idx)} className="text-xs p-1 rounded" style={{ color: ERR }}>✕</button>}
+              {purchaseForm.items.length > 1 && <button onClick={() => removePurchaseItem(idx)} className="text-xs p-1 rounded transition-all hover:opacity-70" style={{ color: ERR }}>✕</button>}
             </div>
           ))}
         </div>

@@ -1,5 +1,5 @@
-import { t, setLanguage } from '../i18n'
-import { useSettingsStore, type NavTheme, getNavColors } from '../store/settingsStore'
+import { t, setLanguage } from '../../i18n'
+import { useSettingsStore, type NavTheme, getNavColors } from '../../store/settingsStore'
 
 const themes: { key: NavTheme; name: string; colors: string[] }[] = [
   { key: 'blue', name: 'آبی', colors: ['#006194', '#007bb9'] },

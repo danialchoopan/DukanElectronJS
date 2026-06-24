@@ -217,7 +217,6 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
   const handlePinInput = (e: React.ChangeEvent<HTMLInputElement>, index: number, val: string, setVal: (v: string) => void, refs: React.MutableRefObject<(HTMLInputElement | null)[]>) => {
     const digit = e.target.value.replace(/\D/g, '')
     
-    // Allow clearing the input
     if (e.target.value === '') {
       const arr = val.split('')
       arr[index] = ''
@@ -250,10 +249,10 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
 
   return (
     <div className="h-screen w-screen flex items-center justify-center p-4 overflow-y-auto" style={{ background: bg, direction: 'rtl' }}>
-      <div className="w-full max-w-5xl rounded-xl shadow-sm overflow-hidden flex flex-col md:flex-row-reverse min-h-0" style={{ background: cardBg, border: cardBorder, backdropFilter: isDark ? 'blur(12px)' : undefined }}>
+      <div className="w-full max-w-5xl rounded-xl shadow-sm overflow-hidden flex flex-col md:flex-row-reverse max-h-[95vh] min-h-0" style={{ background: cardBg, border: cardBorder, backdropFilter: isDark ? 'blur(12px)' : undefined }}>
 
         {/* Brand Panel - Always visible */}
-        <div className="md:w-1/2 flex flex-col items-center justify-center text-center relative overflow-hidden p-8" style={{ background: brandBg }}>
+        <div className="md:w-1/2 flex flex-col items-center justify-center text-center relative overflow-hidden p-8 md:py-12 flex-shrink-0" style={{ background: brandBg }}>
           <div className="z-10 flex flex-col items-center gap-6">
             <LogoIcon size={128} />
             <h1 className="text-4xl font-bold tracking-tight" style={{ color: colors.primary, fontFamily: "'IBM Plex Sans', sans-serif" }}>
@@ -263,7 +262,6 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
               {lang === 'fa' ? 'حسابداری دانیال — نرم‌افزار جامع مالی و حسابداری برای مدیریت هوشمند کسب‌وکارهای مدرن.' : 'HesabDari Danial — Comprehensive financial and accounting software for smart business management.'}
             </p>
             
-            {/* Step Indicator - with labels */}
             <div className="flex flex-col items-center gap-3 mt-4 w-full">
               <div className="flex gap-3 w-full max-w-[200px]">
                 <div className="flex-1 flex flex-col items-center gap-1">
@@ -299,10 +297,9 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
           </div>
         </div>
 
-        {/* Form Panel */}
-        <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center overflow-y-auto max-h-[85vh]">
+        {/* Form Panel - with scroll */}
+        <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center overflow-y-auto max-h-[95vh]" style={{ scrollbarWidth: 'thin' }}>
           {step === 1 ? (
-            // Step 1: Store Information
             <>
               <div className="mb-8">
                 <h2 className="text-2xl font-semibold mb-1" style={{ color: titleColor, fontFamily: "'IBM Plex Sans', sans-serif" }}>
@@ -313,7 +310,6 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                 </p>
               </div>
 
-              {/* Language & Theme Toggles */}
               <div className="flex gap-3 mb-6">
                 <div className="flex-1">
                   <label className="text-xs font-medium mb-1.5 block" style={{ color: subtitleColor }}>{ui.setup.selectLanguage}</label>
@@ -344,7 +340,6 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
               </div>
 
               <div className="space-y-5">
-                {/* Shop Name */}
                 <div>
                   <label className="text-xs font-medium mb-1.5 block" style={{ color: subtitleColor }}>
                     {lang === 'fa' ? 'نام فروشگاه یا واحد تجاری' : 'Store or business name'}
@@ -370,10 +365,9 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                   </div>
                 </div>
 
-                {/* Business Type */}
                 <div className="mb-4">
                   <label className="text-xs font-medium mb-2 block" style={{ color: subtitleColor }}>نوع کسب‌وکار خود را انتخاب کنید</label>
-                  <div className="grid grid-cols-3 gap-2 max-h-60 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
+                  <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
                     {([
                       { key: 'online-store', label: 'فروشگاه اینترنتی' },
                       { key: 'supermarket', label: 'سوپرمارکت' },
@@ -403,7 +397,6 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                   )}
                 </div>
 
-                {/* Tax Toggle */}
                 <div className="mb-4">
                   <div className="flex items-center justify-between p-3 rounded-xl" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc' }}>
                     <div>
@@ -416,7 +409,6 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                   </div>
                 </div>
 
-                {/* Phone */}
                 <div>
                   <label className="text-xs font-medium mb-1.5 block" style={{ color: subtitleColor }}>{ui.setup.shopPhone}</label>
                   <div className="relative">
@@ -439,7 +431,6 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                   </div>
                 </div>
 
-                {/* Address */}
                 <div>
                   <label className="text-xs font-medium mb-1.5 block" style={{ color: subtitleColor }}>{ui.setup.shopAddress}</label>
                   <div className="relative">
@@ -465,7 +456,6 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                 </div>
               </div>
 
-              {/* Restore Old Data Option */}
               <div className="mt-6 pt-4" style={{ borderTop: `1px solid ${cardBorder}` }}>
                 <p className="text-sm font-bold mb-2" style={{ color: titleColor }}>
                   {lang === 'fa' ? 'آیا اطلاعات قبلی دارید؟' : 'Have previous data?'}
@@ -514,7 +504,6 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                 )}
               </div>
 
-              {/* Next Button */}
               <button
                 onClick={handleNext}
                 disabled={!shopName.trim()}
@@ -532,7 +521,6 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
               </button>
             </>
           ) : (
-            // Step 2: PIN Setup
             <>
               <div className="mb-8">
                 <div className="flex items-center gap-3 mb-1">
@@ -555,7 +543,6 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
               </div>
 
               <div className="space-y-6">
-                {/* PIN */}
                 <div>
                   <label className="text-xs font-medium mb-2 block" style={{ color: subtitleColor }}>
                     {lang === 'fa' ? 'رمز عبور ۴ رقمی (PIN)' : '4-digit PIN'}
@@ -593,7 +580,6 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                   </p>
                 </div>
 
-                {/* PIN Confirm */}
                 <div>
                   <label className="text-xs font-medium mb-2 block" style={{ color: subtitleColor }}>
                     {lang === 'fa' ? 'تأیید رمز عبور' : 'Confirm PIN'}
@@ -643,7 +629,6 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                 </div>
               </div>
 
-              {/* Create Account Button */}
               <button
                 onClick={handleSubmit}
                 disabled={adminPin.length < 4 || adminPin !== adminPinConfirm || submitting}

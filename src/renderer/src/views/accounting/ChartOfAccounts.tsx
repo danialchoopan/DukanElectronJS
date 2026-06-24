@@ -98,7 +98,7 @@ export default function ChartOfAccounts() {
     const hasActivity = bal && (bal.totalDebit !== 0 || bal.totalCredit !== 0)
     return (
       <div key={a.id}>
-        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-1 transition-all cursor-pointer group" style={{ marginLeft: depth * 20, backgroundColor: isDark ? 'rgba(59,130,246,0.04)' : 'rgba(59,130,246,0.02)', border: '1px solid transparent', opacity: a.isActive ? 1 : 0.5 }}
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-1 transition-all cursor-pointer group" style={{ marginRight: depth * 20, backgroundColor: isDark ? 'rgba(59,130,246,0.04)' : 'rgba(59,130,246,0.02)', border: '1px solid transparent', opacity: a.isActive ? 1 : 0.5 }}
           onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.08)' : 'rgba(59,130,246,0.05)' }}
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.backgroundColor = isDark ? 'rgba(59,130,246,0.04)' : 'rgba(59,130,246,0.02)' }}>
           {hasChildren && (
@@ -113,7 +113,7 @@ export default function ChartOfAccounts() {
           <span className="text-xs font-mono font-bold px-2 py-0.5 rounded shrink-0" style={{ backgroundColor: tc.bg, color: tc.fg }}>{a.code}</span>
           <span className="text-sm font-medium flex-1" style={{ color: textPrimary }}>{a.name}</span>
           {hasActivity && (
-            <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full shrink-0 ${bal.balance >= 0 ? '' : ''}`}
+            <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full shrink-0`}
               style={{ backgroundColor: bal.balance > 0 ? '#dcfce7' : bal.balance < 0 ? '#fee2e2' : (isDark ? '#1e293b' : '#f1f5f9'), color: bal.balance > 0 ? '#16a34a' : bal.balance < 0 ? '#dc2626' : textSecondary }}>
               {Math.abs(bal.balance).toLocaleString('fa-IR')}
             </span>
@@ -141,7 +141,7 @@ export default function ChartOfAccounts() {
           </div>
         </div>
         {deleteConfirmId === a.id && (
-          <div className="ml-6 mb-2 rounded-xl p-3" style={{ marginLeft: (depth + 1) * 20, backgroundColor: isDark ? '#450a0a' : '#fef2f2', border: '1px solid #ef4444' }}>
+          <div className="mr-6 mb-2 rounded-xl p-3" style={{ marginRight: (depth + 1) * 20, backgroundColor: isDark ? '#450a0a' : '#fef2f2', border: '1px solid #ef4444' }}>
             <p className="text-xs font-bold mb-2" style={{ color: '#ef4444' }}>آیا از حذف حساب «{a.name}» اطمینان دارید؟</p>
             <div className="flex gap-2"><button onClick={() => handleDelete(a.id)} className="text-xs px-3 py-1 rounded-lg font-bold" style={{ backgroundColor: '#ef4444', color: '#fff' }}>بله</button><button onClick={() => setDeleteConfirmId(null)} className="text-xs px-3 py-1 rounded-lg font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>لغو</button></div>
           </div>
@@ -159,12 +159,12 @@ export default function ChartOfAccounts() {
   }, {} as Record<string, number>)
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto px-4">
       {toast && <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-6 py-2 rounded-xl text-sm font-bold text-white shadow-lg" style={{ background: toast.type === 'success' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #ef4444, #dc2626)' }}>{toast.msg}</div>}
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.accounts.title}</h3>
+          <h3 className="text-xl font-bold" style={{ color: textPrimary }}>{fa.accounting.accounts.title}</h3>
           <HelpPopup title="راهنمای دفتر حسابها" sections={[
             { heading: 'دفتر حسابها چیست؟', items: ['ساختار اصلی حسابداری برای دسته‌بندی تراکنش‌ها', 'هر حساب دارای کد، نام، و نوع (دارایی/بدهی/سرمایه/درآمد/هزینه)', 'مانده هر حساب به صورت خودکار از تراکنش‌ها محاسبه می‌شود'] },
             { heading: 'روش کار', items: ['با کلیک روی دکمه + می‌توان حساب جدید ایجاد کرد', 'حساب‌ها به صورت سلسله‌مراتبی (والد و زیرمجموعه) سازماندهی می‌شوند', 'برای مشاهده تراکنش‌های یک حساب روی دکمه سند کلیک کنید'] },
@@ -185,13 +185,13 @@ export default function ChartOfAccounts() {
           }} className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg> چاپ
           </button>
-          <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: '#006194' }}>
+          <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white transition-all hover:opacity-80" style={{ backgroundColor: '#006194' }}>
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg> + {fa.accounting.accounts.addAccount}
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-5 gap-2 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
         {types.filter(t => t !== 'all').map(t => (
           <div key={t} className="rounded-xl p-2.5 text-center" style={{ backgroundColor: typeColors[t]?.bg }}>
             <div className="text-[10px] font-bold" style={{ color: typeColors[t]?.fg }}>{fa.accounting.accounts.types[t as keyof typeof fa.accounting.accounts.types]}</div>
@@ -204,7 +204,7 @@ export default function ChartOfAccounts() {
       <div className="flex items-center gap-2 mb-3">
         <div className="relative flex-1 max-w-xs">
           <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke={textSecondary} strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-          <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="جستجو..." className="input-field text-sm w-full pr-9" />
+          <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="جستجو..." className="input-field text-sm w-full pr-9" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', borderColor: cardBorder, color: textPrimary }} />
         </div>
       </div>
 
@@ -229,23 +229,23 @@ export default function ChartOfAccounts() {
           <div className="rounded-2xl p-6 max-w-md w-full mx-4 border-2" style={{ backgroundColor: cardBg, borderColor: '#006194' }} onClick={e => e.stopPropagation()}>
             <h3 className="font-bold text-lg mb-4" style={{ color: textPrimary }}>{editingId ? fa.accounting.accounts.editAccount : fa.accounting.accounts.addAccount}</h3>
             <div className="space-y-3">
-              <div><label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.accounts.code} *</label><input value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} className="input-field text-sm" placeholder="مثال: 1000" /></div>
-              <div><label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.accounts.name} *</label><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="input-field text-sm" /></div>
+              <div><label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.accounts.code} *</label><input value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} className="input-field text-sm" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', borderColor: cardBorder, color: textPrimary }} placeholder="مثال: 1000" /></div>
+              <div><label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.accounts.name} *</label><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="input-field text-sm" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', borderColor: cardBorder, color: textPrimary }} /></div>
               <div><label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.accounts.type}</label>
-                <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className="input-field text-sm">
+                <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className="input-field text-sm" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', borderColor: cardBorder, color: textPrimary }}>
                   {['asset', 'liability', 'equity', 'income', 'expense'].map(t => <option key={t} value={t}>{fa.accounting.accounts.types[t as keyof typeof fa.accounting.accounts.types]}</option>)}
                 </select>
               </div>
               <div><label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.accounts.parent}</label>
-                <select value={form.parentId ?? ''} onChange={e => setForm({ ...form, parentId: e.target.value ? Number(e.target.value) : null })} className="input-field text-sm">
+                <select value={form.parentId ?? ''} onChange={e => setForm({ ...form, parentId: e.target.value ? Number(e.target.value) : null })} className="input-field text-sm" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', borderColor: cardBorder, color: textPrimary }}>
                   <option value="">—</option>
                   {allAccounts.filter(a => a.id !== editingId && a.isActive).map(a => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
                 </select>
               </div>
-              <div><label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.accounts.description}</label><input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="input-field text-sm" /></div>
+              <div><label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.accounts.description}</label><input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="input-field text-sm" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', borderColor: cardBorder, color: textPrimary }} /></div>
             </div>
             <div className="flex gap-2 mt-4">
-              <button onClick={handleSave} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: '#006194' }}>{fa.accounting.accounts.save}</button>
+              <button onClick={handleSave} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-80" style={{ backgroundColor: '#006194' }}>{fa.accounting.accounts.save}</button>
               <button onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl text-sm font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>{fa.accounting.accounts.cancel}</button>
             </div>
           </div>
@@ -263,31 +263,33 @@ export default function ChartOfAccounts() {
               <p className="text-center py-8 text-sm" style={{ color: textSecondary }}>تراکنشی ثبت نشده</p>
             ) : (
               <div className="rounded-xl border overflow-hidden" style={{ borderColor: cardBorder }}>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
-                      <th className="px-3 py-2 text-right" style={{ color: textSecondary }}>تاریخ</th>
-                      <th className="px-3 py-2 text-right" style={{ color: textSecondary }}>شرح</th>
-                      <th className="px-3 py-2 text-left" style={{ color: textSecondary }}>بدهکار</th>
-                      <th className="px-3 py-2 text-left" style={{ color: textSecondary }}>بستانکار</th>
-                      <th className="px-3 py-2 text-left" style={{ color: textSecondary }}>مانده</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {ledgerEntries.map((e, i) => (
-                      <tr key={i} style={{ borderTop: `1px solid ${cardBorder}` }}>
-                        <td className="px-3 py-2 text-xs" style={{ color: textSecondary }}>{formatJalaliDateTime(e.entryDate)}</td>
-                        <td className="px-3 py-2" style={{ color: textPrimary }}>{e.description}</td>
-                        <td className="px-3 py-2 text-left font-mono text-xs" style={{ color: e.debit > 0 ? '#22c55e' : textSecondary }}>{e.debit > 0 ? e.debit.toLocaleString('fa-IR') : '-'}</td>
-                        <td className="px-3 py-2 text-left font-mono text-xs" style={{ color: e.credit > 0 ? '#ef4444' : textSecondary }}>{e.credit > 0 ? e.credit.toLocaleString('fa-IR') : '-'}</td>
-                        <td className="px-3 py-2 text-left font-mono font-bold text-xs" style={{ color: e.balance >= 0 ? '#22c55e' : '#ef4444' }}>{Math.abs(e.balance).toLocaleString('fa-IR')}</td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+                        <th className="px-3 py-2 text-right" style={{ color: textSecondary }}>تاریخ</th>
+                        <th className="px-3 py-2 text-right" style={{ color: textSecondary }}>شرح</th>
+                        <th className="px-3 py-2 text-left" style={{ color: textSecondary }}>بدهکار</th>
+                        <th className="px-3 py-2 text-left" style={{ color: textSecondary }}>بستانکار</th>
+                        <th className="px-3 py-2 text-left" style={{ color: textSecondary }}>مانده</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {ledgerEntries.map((e, i) => (
+                        <tr key={i} style={{ borderTop: `1px solid ${cardBorder}` }}>
+                          <td className="px-3 py-2 text-xs" style={{ color: textSecondary }}>{formatJalaliDateTime(e.entryDate)}</td>
+                          <td className="px-3 py-2" style={{ color: textPrimary }}>{e.description}</td>
+                          <td className="px-3 py-2 text-left font-mono text-xs" style={{ color: e.debit > 0 ? '#22c55e' : textSecondary }}>{e.debit > 0 ? e.debit.toLocaleString('fa-IR') : '-'}</td>
+                          <td className="px-3 py-2 text-left font-mono text-xs" style={{ color: e.credit > 0 ? '#ef4444' : textSecondary }}>{e.credit > 0 ? e.credit.toLocaleString('fa-IR') : '-'}</td>
+                          <td className="px-3 py-2 text-left font-mono font-bold text-xs" style={{ color: e.balance >= 0 ? '#22c55e' : '#ef4444' }}>{Math.abs(e.balance).toLocaleString('fa-IR')}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
-            <button onClick={() => setLedgerAccount(null)} className="w-full mt-4 py-2.5 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: '#006194' }}>بستن</button>
+            <button onClick={() => setLedgerAccount(null)} className="w-full mt-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-80" style={{ backgroundColor: '#006194' }}>بستن</button>
           </div>
         </div>
       )}

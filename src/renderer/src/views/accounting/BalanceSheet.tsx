@@ -56,10 +56,10 @@ export default function BalanceSheet() {
   const levPct = (data.totalLiabilitiesAndEquity / maxSide) * 100
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
+    <div className="max-w-7xl mx-auto px-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <h3 className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.balanceSheet.title}</h3>
+          <h3 className="text-xl font-bold" style={{ color: textPrimary }}>{fa.accounting.balanceSheet.title}</h3>
           <HelpPopup title="راهنمای ترازنامه" sections={[
             { heading: 'ترازنامه چیست؟', items: ['دارایی‌ها = بدهی‌ها + سرمایه', 'دارایی‌های جاری (حساب‌های ۱xxx)', 'بدهی‌های جاری (حساب‌های ۲xxx)', 'سرمایه (حساب‌های ۳xxx)', 'سود انباشته از صورت سود و زیان اضافه می‌شود'] }
           ]} />
@@ -92,7 +92,29 @@ export default function BalanceSheet() {
           </button>
         </div>
       </div>
-      <div className="flex gap-3 mb-4">
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div className="rounded-xl p-3 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+          <div className="text-xs" style={{ color: textSecondary }}>{fa.accounting.balanceSheet.totalAssets}</div>
+          <div className="text-lg font-bold mt-1" style={{ color: '#3b82f6' }}>{data.totalAssets.toLocaleString('fa-IR')}</div>
+        </div>
+        <div className="rounded-xl p-3 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+          <div className="text-xs" style={{ color: textSecondary }}>{fa.accounting.balanceSheet.totalLiabilities}</div>
+          <div className="text-lg font-bold mt-1" style={{ color: '#ef4444' }}>{data.totalLiabilities.toLocaleString('fa-IR')}</div>
+        </div>
+        <div className="rounded-xl p-3 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+          <div className="text-xs" style={{ color: textSecondary }}>{fa.accounting.balanceSheet.totalEquity}</div>
+          <div className="text-lg font-bold mt-1" style={{ color: '#a855f7' }}>{data.totalEquity.toLocaleString('fa-IR')}</div>
+        </div>
+        <div className="rounded-xl p-3 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+          <div className="text-xs" style={{ color: textSecondary }}>وضعیت</div>
+          <div className="text-lg font-bold mt-1" style={{ color: isBalanced ? '#22c55e' : '#ef4444' }}>
+            {isBalanced ? 'متوازن' : 'نامتوازن'}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-3 mb-4">
         <ShamsiDateInput value={asOfDate} onChange={setAsOfDate} label="تا تاریخ" />
       </div>
 
@@ -106,7 +128,7 @@ export default function BalanceSheet() {
           <div className="h-full rounded-r-full" style={{ width: `${levPct}%`, backgroundColor: '#a855f7' }} />
         </div>
         <div className="flex justify-center mt-1.5">
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isBalanced ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${isBalanced ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
             {isBalanced ? fa.accounting.trialBalance.isBalanced : fa.accounting.trialBalance.isNotBalanced}
           </span>
         </div>
@@ -125,17 +147,21 @@ export default function BalanceSheet() {
         <div className="p-4" style={{ borderBottom: `2px solid ${cardBorder}` }}>
           <Section title={fa.accounting.balanceSheet.currentLiabilities} sortedItems={sortedCL} total={data.totalCurrentLiabilities} color="#ef4444" sortKey={clSortKey} sortDir={clSortDir} onSort={() => clToggleSort('amount' as any)} />
           {data.longTermLiabilities?.length > 0 && <Section title={fa.accounting.balanceSheet.longTermLiabilities} sortedItems={sortedLTL} total={data.totalLongTermLiabilities} color="#ef4444" sortKey={ltlSortKey} sortDir={ltlSortDir} onSort={() => ltlToggleSort('amount' as any)} />}
-          <div className="flex justify-between px-4 py-2 rounded-xl mb-2" style={{ backgroundColor: isDark ? '#450a0a' : '#fee2e2' }}>
-            <span className="font-bold text-sm" style={{ color: '#ef4444' }}>{fa.accounting.balanceSheet.totalLiabilities}</span>
-            <span className="font-bold font-mono text-sm" style={{ color: '#ef4444' }}>{data.totalLiabilities.toLocaleString('fa-IR')}</span>
+          <div className="flex justify-between px-4 py-3 rounded-xl" style={{ backgroundColor: isDark ? '#450a0a' : '#fee2e2' }}>
+            <span className="font-bold" style={{ color: '#ef4444' }}>{fa.accounting.balanceSheet.totalLiabilities}</span>
+            <span className="font-bold font-mono" style={{ color: '#ef4444' }}>{data.totalLiabilities.toLocaleString('fa-IR')}</span>
           </div>
         </div>
 
         <div className="p-4" style={{ borderBottom: `2px solid ${cardBorder}` }}>
           <Section title={fa.accounting.balanceSheet.equity} sortedItems={sortedEq} total={data.totalEquity} color="#a855f7" sortKey={eqSortKey} sortDir={eqSortDir} onSort={() => eqToggleSort('amount' as any)} />
+          <div className="flex justify-between px-4 py-3 rounded-xl" style={{ backgroundColor: isDark ? '#2e1065' : '#f3e8ff' }}>
+            <span className="font-bold" style={{ color: '#a855f7' }}>{fa.accounting.balanceSheet.totalEquity}</span>
+            <span className="font-bold font-mono" style={{ color: '#a855f7' }}>{data.totalEquity.toLocaleString('fa-IR')}</span>
+          </div>
         </div>
 
-        <div className="p-4 flex justify-between">
+        <div className="p-4 flex justify-between" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
           <span className="text-lg font-bold" style={{ color: textPrimary }}>{fa.accounting.balanceSheet.totalLiabilitiesAndEquity}</span>
           <span className="text-lg font-bold font-mono" style={{ color: isBalanced ? '#22c55e' : '#ef4444' }}>{data.totalLiabilitiesAndEquity.toLocaleString('fa-IR')}</span>
         </div>
