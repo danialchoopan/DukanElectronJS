@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import HelpPopup from '../../components/ui/HelpPopup'
+import Pagination from '../../components/ui/Pagination'
 import { printA4Report } from '../../utils/a4Print'
 
 export default function ARAging() {
   const [data, setData] = useState<any>(null)
+  const [page, setPage] = useState(0)
+  const pageSize = 10
 
   const isDark = document.documentElement.classList.contains('dark')
   const cardBg = isDark ? '#1e293b' : '#ffffff'
@@ -106,7 +109,7 @@ export default function ARAging() {
               </tr>
             </thead>
             <tbody>
-              {data.rows.map((r: any) => (
+              {data.rows.slice(page * pageSize, (page + 1) * pageSize).map((r: any) => (
                 <tr key={r.customerId} className="hover:bg-opacity-5 hover:bg-blue-500 transition-colors" style={{ borderBottom: `1px solid ${cardBorder}` }}>
                   <td className="px-4 py-2.5 font-medium" style={{ color: textPrimary }}>{r.customerName}</td>
                   <td className="px-4 py-2.5 text-xs" style={{ color: textSecondary }}>{r.phone || '-'}</td>
@@ -130,6 +133,11 @@ export default function ARAging() {
           </table>
         </div>
       </div>
+      {data.rows.length > pageSize && (
+        <div className="mt-3">
+          <Pagination total={data.rows.length} pageSize={pageSize} page={page} onPageChange={setPage} onPageSizeChange={() => {}} />
+        </div>
+      )}
     </div>
   )
 }
