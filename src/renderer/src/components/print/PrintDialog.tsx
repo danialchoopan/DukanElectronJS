@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSettingsStore } from '../store/settingsStore'
+import { useSettingsStore } from '../../store/settingsStore'
 
 interface PrintColumn {
   key: string

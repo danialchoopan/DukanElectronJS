@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import { downloadExcel, printA4Report } from '../../utils/a4Print'
-import ShamsiDateInput from '../../components/ShamsiDateInput'
+import ShamsiDateInput from '../../components/business/ShamsiDateInput'
 
 export default function CashFlowStatement() {
   const [data, setData] = useState<{ operating: { label: string; amount: number }[]; totalInflow: number; totalOutflow: number; netChange: number } | null>(null)

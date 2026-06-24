@@ -1,7 +1,7 @@
-import { useAuthStore } from '../store/authStore'
-import { useSettingsStore, getNavColors } from '../store/settingsStore'
-import { t, fa } from '../i18n'
-import { DashboardIcon, UsersIcon, SettingsIcon, LogoutIcon, LanguageIcon, MoonIcon, SunIcon } from './Icons'
+import { useAuthStore } from '../../store/authStore'
+import { useSettingsStore, getNavColors } from '../../store/settingsStore'
+import { t, fa } from '../../i18n'
+import { DashboardIcon, UsersIcon, SettingsIcon, LogoutIcon, LanguageIcon, MoonIcon, SunIcon } from '../ui/Icons'
 
 type View = 'pos' | 'dashboard' | 'admin' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'help'
 

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useCartStore } from '../store/cartStore'
-import type { Customer } from '../../../types'
-import { fa } from '../i18n'
-import { MoneyIcon, BookIcon, SearchIcon, XIcon } from './Icons'
-import { formatNumberInput, parseFormattedNumber } from './FormattedPriceInput'
+import { useCartStore } from '../../store/cartStore'
+import type { Customer } from '../../../../types'
+import { fa } from '../../i18n'
+import { MoneyIcon, BookIcon, SearchIcon, XIcon } from '../ui/Icons'
+import { formatNumberInput, parseFormattedNumber } from '../ui/FormattedPriceInput'
 
 type PaymentMethod = 'cash' | 'card' | 'ledger'
 

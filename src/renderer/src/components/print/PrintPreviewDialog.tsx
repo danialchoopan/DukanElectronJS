@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { printA4Report } from '../utils/a4Print'
-import { usePrintPreviewStore } from '../store/printPreviewStore'
+import { printA4Report } from '../../utils/a4Print'
+import { usePrintPreviewStore } from '../../store/printPreviewStore'
 
 interface TemplateInfo { key: string; name: string; color: string; border: string; align: string; shopName?: string }
 

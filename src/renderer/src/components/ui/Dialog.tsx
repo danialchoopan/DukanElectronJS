@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useSettingsStore } from '../store/settingsStore'
+import { useSettingsStore } from '../../store/settingsStore'
 
 interface DialogProps {
   open: boolean

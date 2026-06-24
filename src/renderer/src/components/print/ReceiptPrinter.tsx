@@ -1,7 +1,7 @@
-import type { Sale } from '../../../types'
-import { fa } from '../i18n'
-import { formatJalaliDateTime } from '../utils/jalali'
-import { generateReceiptHTML, printContent } from '../utils/receipt'
+import type { Sale } from '../../../../types'
+import { fa } from '../../i18n'
+import { formatJalaliDateTime } from '../../utils/jalali'
+import { generateReceiptHTML, printContent } from '../../utils/receipt'
 
 interface Props {
   sale: Sale

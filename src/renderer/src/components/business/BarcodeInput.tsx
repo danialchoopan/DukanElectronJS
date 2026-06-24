@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, forwardRef, useImperativeHandle } from 'react'
-import type { Product } from '../../../types'
-import { fa } from '../i18n'
+import type { Product } from '../../../../types'
+import { fa } from '../../i18n'
 
 interface Props {
   onBarcodeScanned: (barcode: string) => void

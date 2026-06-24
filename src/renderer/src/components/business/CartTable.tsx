@@ -1,8 +1,8 @@
-import { useCartStore } from '../store/cartStore'
-import type { CartItem } from '../../../types'
-import { fa } from '../i18n'
+import { useCartStore } from '../../store/cartStore'
+import type { CartItem } from '../../../../types'
+import { fa } from '../../i18n'
 import { useState, useEffect, useRef } from 'react'
-import { getProductImageUrl } from '../utils/productImage'
+import { getProductImageUrl } from '../../utils/productImage'
 
 interface Props { items: CartItem[] }
 

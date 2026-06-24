@@ -1,7 +1,7 @@
-import { useCartStore } from '../store/cartStore'
+import { useCartStore } from '../../store/cartStore'
 import { useEffect, useState } from 'react'
-import type { Product } from '../../../types'
-import { fa } from '../i18n'
+import type { Product } from '../../../../types'
+import { fa } from '../../i18n'
 
 interface Props {
   refreshKey?: number

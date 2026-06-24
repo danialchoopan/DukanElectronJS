@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import type { Expense } from '../../../../types'
 import { fa } from '../../i18n'
 import { formatJalaliShort, getTodayGregorian } from '../../utils/jalali'
-import ShamsiDateInput from '../../components/ShamsiDateInput'
-import Pagination from '../../components/Pagination'
+import ShamsiDateInput from '../../components/business/ShamsiDateInput'
+import Pagination from '../../components/ui/Pagination'
 import { useSortable } from '../../hooks/useSortable'
 
 export default function ExpenseManagement() {

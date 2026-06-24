@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { useAuthStore } from '../store/authStore'
-import { useSettingsStore, getNavColors } from '../store/settingsStore'
-import { t, fa } from '../i18n'
-import { DashboardIcon, UsersIcon, SettingsIcon, LogoutIcon, MoonIcon, SunIcon, LanguageIcon } from './Icons'
+import { useAuthStore } from '../../store/authStore'
+import { useSettingsStore, getNavColors } from '../../store/settingsStore'
+import { t, fa } from '../../i18n'
+import { DashboardIcon, UsersIcon, SettingsIcon, LogoutIcon, MoonIcon, SunIcon, LanguageIcon } from '../ui/Icons'
 
 type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories'
 

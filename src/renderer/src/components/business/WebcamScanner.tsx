@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
-import { fa } from '../i18n'
+import { fa } from '../../i18n'
 
 interface Props {
   onScan: (code: string) => void

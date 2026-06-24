@@ -17,9 +17,9 @@ import Categories from './views/Categories'
 import Help from './views/Help'
 import Suppliers from './views/Suppliers'
 import SetupWizard from './views/SetupWizard'
-import Sidebar from './components/Sidebar'
-import GlobalSearch from './components/GlobalSearch'
-import PrintPreviewDialog from './components/PrintPreviewDialog'
+import Sidebar from './components/layout/Sidebar'
+import GlobalSearch from './components/business/GlobalSearch'
+import PrintPreviewDialog from './components/print/PrintPreviewDialog'
 
 type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories'
 

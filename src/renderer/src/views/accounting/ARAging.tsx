@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
-import HelpPopup from '../../components/HelpPopup'
+import HelpPopup from '../../components/ui/HelpPopup'
 import { printA4Report } from '../../utils/a4Print'
 
 export default function ARAging() {

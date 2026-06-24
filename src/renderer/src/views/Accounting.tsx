@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../i18n'
-import HelpPopup from '../components/HelpPopup'
+import HelpPopup from '../components/ui/HelpPopup'
 import AccountingDashboard from './accounting/AccountingDashboard'
 import ChartOfAccounts from './accounting/ChartOfAccounts'
 import JournalEntries from './accounting/JournalEntries'

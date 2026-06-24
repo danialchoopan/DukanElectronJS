@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import { printA4Report } from '../../utils/a4Print'
 import { formatJalaliDateTime } from '../../utils/jalali'
-import HelpPopup from '../../components/HelpPopup'
+import HelpPopup from '../../components/ui/HelpPopup'
 
 interface AccountNode { account: any; children: AccountNode[] }
 

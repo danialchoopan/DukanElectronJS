@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
-import ShamsiDateInput from '../../components/ShamsiDateInput'
+import ShamsiDateInput from '../../components/business/ShamsiDateInput'
 import { printA4Report, downloadExcel } from '../../utils/a4Print'
-import HelpPopup from '../../components/HelpPopup'
+import HelpPopup from '../../components/ui/HelpPopup'
 import { useSortable } from '../../hooks/useSortable'
 
 export default function BalanceSheet() {

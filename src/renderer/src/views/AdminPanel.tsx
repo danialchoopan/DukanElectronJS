@@ -5,9 +5,9 @@ import UISettings from './settings/UISettings'
 import ShortcutsSettings from './settings/ShortcutsSettings'
 import CustomizationSettings from './settings/CustomizationSettings'
 import { useHighlight } from '../hooks/useHighlight'
-import SmartExportDialog from '../components/SmartExportDialog'
+import SmartExportDialog from '../components/print/SmartExportDialog'
 import { setShopName } from '../utils/a4Print'
-import Dialog from '../components/Dialog'
+import Dialog from '../components/ui/Dialog'
 
 const primary = '#006194'
 

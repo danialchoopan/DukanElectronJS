@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import { printA4Report } from '../../utils/a4Print'
 import { formatJalaliDateTime } from '../../utils/jalali'
-import ShamsiDateInput from '../../components/ShamsiDateInput'
-import Pagination from '../../components/Pagination'
-import HelpPopup from '../../components/HelpPopup'
+import ShamsiDateInput from '../../components/business/ShamsiDateInput'
+import Pagination from '../../components/ui/Pagination'
+import HelpPopup from '../../components/ui/HelpPopup'
 import { useSortable } from '../../hooks/useSortable'
 
 export default function JournalEntries() {

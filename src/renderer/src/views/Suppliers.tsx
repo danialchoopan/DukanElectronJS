@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSettingsStore } from '../store/settingsStore'
-import FormattedPriceInput from '../components/FormattedPriceInput'
-import Dialog, { DialogField, DialogInput, DialogTextarea, DialogButton } from '../components/Dialog'
+import FormattedPriceInput from '../components/ui/FormattedPriceInput'
+import Dialog, { DialogField, DialogInput, DialogTextarea, DialogButton } from '../components/ui/Dialog'
 
 type Tab = 'suppliers' | 'purchases'
 

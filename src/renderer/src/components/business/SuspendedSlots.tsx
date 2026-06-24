@@ -1,5 +1,5 @@
-import { useSuspendStore } from '../store/suspendStore'
-import { fa } from '../i18n'
+import { useSuspendStore } from '../../store/suspendStore'
+import { fa } from '../../i18n'
 
 interface Props { onSelect: (slotIndex: number) => void }
 
