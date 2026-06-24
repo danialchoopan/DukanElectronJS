@@ -86,28 +86,29 @@ export function generateBalanceSheet(asOfDate?: string): BalanceSheetReport {
 
 export function generateARAging(): ARAgingReport {
   const db = getDatabase()
-  const customers = db.prepare('SELECT id, name, phone, balance FROM customers WHERE balance > 0 AND isActive = 1').all() as { id: number; name: string; phone: string; balance: number }[]
+  const customers = db.prepare('SELECT id, name, phone, balance FROM customers WHERE balance < 0 AND isActive = 1').all() as { id: number; name: string; phone: string; balance: number }[]
   const today = new Date()
   const rows: ARAgingRow[] = customers.map(c => {
     const entries = db.prepare(
       "SELECT createdAt FROM customer_ledger WHERE customerId = ? AND type = 'sale' ORDER BY createdAt"
     ).all(c.id) as { createdAt: string }[]
+    const absBalance = Math.abs(c.balance)
     let current = 0, d31 = 0, d61 = 0, over90 = 0
     if (entries.length === 0) {
-      current = c.balance
+      current = absBalance
     } else {
-      let remaining = c.balance
       for (const e of entries) {
         const entryDate = new Date(e.createdAt)
         const days = Math.floor((today.getTime() - entryDate.getTime()) / 86400000)
-        if (days <= 30) current += remaining / entries.length
-        else if (days <= 60) d31 += remaining / entries.length
-        else if (days <= 90) d61 += remaining / entries.length
-        else over90 += remaining / entries.length
+        const share = absBalance / entries.length
+        if (days <= 30) current += share
+        else if (days <= 60) d31 += share
+        else if (days <= 90) d61 += share
+        else over90 += share
       }
       current = Math.round(current); d31 = Math.round(d31); d61 = Math.round(d61); over90 = Math.round(over90)
     }
-    return { customerId: c.id, customerName: c.name, phone: c.phone, current, days31to60: d31, days61to90: d61, over90, total: c.balance }
+    return { customerId: c.id, customerName: c.name, phone: c.phone, current, days31to60: d31, days61to90: d61, over90, total: absBalance }
   })
   const totals = rows.reduce((acc, r) => ({
     current: acc.current + r.current, days31to60: acc.days31to60 + r.days31to60,
