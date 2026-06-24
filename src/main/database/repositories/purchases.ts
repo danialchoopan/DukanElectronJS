@@ -114,9 +114,11 @@ export function createPurchase(input: PurchaseInput): Purchase {
   if (payableAcc) {
     if (paidAmount > 0) {
       const payAcc = input.paymentMethod === 'cash' ? cashAcc : bankAcc
-      if (payAcc) {
+      if (payAcc && balanceChange > 0) {
         lines.push({ accountId: payableAcc.id, debit: paidAmount, credit: 0, description: `پرداخت فاکتور ${invoiceNumber}` })
         lines.push({ accountId: payAcc.id, debit: 0, credit: paidAmount, description: `پرداخت فاکتور ${invoiceNumber}` })
+      } else if (payAcc) {
+        lines.push({ accountId: payAcc.id, debit: 0, credit: totalAmount, description: `پرداخت کامل فاکتور ${invoiceNumber}` })
       }
     }
     if (balanceChange > 0) {
