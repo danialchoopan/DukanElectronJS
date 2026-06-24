@@ -113,15 +113,21 @@ export default function App() {
   }, [user, shortcuts, currentView, navigateTo, theme, setTheme])
 
   useEffect(() => {
-    let lastShiftTime = 0
     const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault()
+        e.stopPropagation()
+        setShowGlobalSearch(true)
+        return
+      }
       if (e.key === 'Shift') {
         const now = Date.now()
-        if (now - lastShiftTime < 500) {
+        const last = (window as any).__lastShiftTime || 0
+        if (now - last < 500) {
           setShowGlobalSearch(true)
-          lastShiftTime = 0
+          ;(window as any).__lastShiftTime = 0
         } else {
-          lastShiftTime = now
+          ;(window as any).__lastShiftTime = now
         }
       }
     }

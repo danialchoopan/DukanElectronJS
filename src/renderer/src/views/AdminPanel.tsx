@@ -19,8 +19,9 @@ interface Props {
 }
 
 export default function AdminPanel({ view = 'admin', initialTab, highlightId, onHighlightDone }: Props) {
-  const allTabs: { key: 'users' | 'settings' | 'ui' | 'shortcuts' | 'customization'; label: string; icon: string }[] = [
+  const allTabs: { key: 'users' | 'settings' | 'ui' | 'shortcuts' | 'customization' | 'login'; label: string; icon: string }[] = [
     { key: 'users', label: fa.admin.users, icon: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75' },
+    { key: 'login', label: 'تنظیمات ورود', icon: 'M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3' },
     { key: 'settings', label: fa.admin.settings, icon: 'M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z' },
     { key: 'ui', label: 'ظاهر برنامه', icon: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 100-6 3 3 0 000 6z' },
     { key: 'shortcuts', label: 'میانبرها', icon: 'M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3' },
@@ -28,8 +29,8 @@ export default function AdminPanel({ view = 'admin', initialTab, highlightId, on
   ]
 
   const tabs = view === 'settings'
-    ? allTabs.filter(t => ['settings', 'ui', 'customization'].includes(t.key))
-    : allTabs.filter(t => ['users', 'shortcuts'].includes(t.key))
+    ? allTabs.filter(t => ['settings', 'ui', 'shortcuts', 'customization'].includes(t.key))
+    : allTabs.filter(t => ['users', 'login'].includes(t.key))
 
   const defaultTab = view === 'settings' ? 'settings' : 'users'
   const [tab, setTab] = useState<typeof allTabs[0]['key']>((initialTab as any) || defaultTab)
@@ -62,7 +63,7 @@ export default function AdminPanel({ view = 'admin', initialTab, highlightId, on
           </svg>
         </div>
         <div>
-          <h2 className="text-xl font-extrabold tracking-tight" style={{ color: textPrimary }}>{tab === 'users' ? 'مدیریت کاربران' : tab === 'settings' ? 'تنظیمات فروشگاه' : tab === 'ui' ? 'ظاهر برنامه' : tab === 'shortcuts' ? 'میانبرها' : 'شخصی‌سازی چاپ'}</h2>
+          <h2 className="text-xl font-extrabold tracking-tight" style={{ color: textPrimary }}>{tab === 'users' ? 'مدیریت کاربران' : tab === 'login' ? 'تنظیمات ورود' : tab === 'settings' ? 'تنظیمات فروشگاه' : tab === 'ui' ? 'ظاهر برنامه' : tab === 'shortcuts' ? 'میانبرها' : 'شخصی‌سازی چاپ'}</h2>
           <p className="text-xs font-medium" style={{ color: textSecondary }}>{fa.admin.settings}</p>
         </div>
       </div>
@@ -93,6 +94,7 @@ export default function AdminPanel({ view = 'admin', initialTab, highlightId, on
 
       <div className="w-full">
         {tab === 'users' && <UsersTab />}
+        {tab === 'login' && <LoginSettingsTab />}
         {tab === 'settings' && <SettingsTab onExport={() => setSmartExportMode('export')} onImport={() => setSmartExportMode('import')} />}
         {tab === 'ui' && <UISettings />}
         {tab === 'shortcuts' && <ShortcutsSettings />}
@@ -246,8 +248,8 @@ function UsersTab() {
           <button onClick={handleEditUser} className="px-5 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>ذخیره</button>
         </>}>
         <div className="mb-3"><Label>نام</Label><input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} autoFocus /></div>
-        <div><Label>نقش</Label>
-          <select value={editForm.role} onChange={e => setEditForm(f => ({ ...f, role: e.target.value as any }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle}>
+        <div><Label>نقش {editUser?.role === 'admin' && <span style={{ color: '#f59e0b', fontSize: '10px' }}>(غیرقابل تغییر)</span>}</Label>
+          <select value={editForm.role} onChange={e => { if (editUser?.role !== 'admin') setEditForm(f => ({ ...f, role: e.target.value as any })) }} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" disabled={editUser?.role === 'admin'} style={{ ...inStyle, opacity: editUser?.role === 'admin' ? 0.5 : 1 }}>
             <option value="cashier">صندوک‌دار</option>
             <option value="admin">مدیر</option>
           </select>
@@ -567,6 +569,89 @@ function BackupSection() {
           <p className="text-xs text-center" style={{ color: textSecondary }}>هنوز پشتیبانی وجود ندارد</p>
         </div>
       )}
+    </div>
+  )
+}
+
+function LoginSettingsTab() {
+  const [loginMethod, setLoginMethod] = useState<'pin' | 'password' | 'none'>('pin')
+  const [showDisableWarning, setShowDisableWarning] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const isDark = document.documentElement.classList.contains('dark')
+  const cBg = isDark ? '#1e293b' : '#ffffff'
+  const cBorder = isDark ? '#334155' : '#e2e8f0'
+  const tPri = isDark ? '#f1f5f9' : '#0f172a'
+  const tSec = isDark ? '#94a3b8' : '#64748b'
+  const inBg = isDark ? '#0f172a' : '#f8fafc'
+
+  const LoginCard = ({ children }: { children: React.ReactNode }) => (
+    <div className="rounded-xl p-4 border" style={{ backgroundColor: cBg, borderColor: cBorder }}>{children}</div>
+  )
+
+  useEffect(() => {
+    window.api.settings.getAll().then(r => {
+      if (r.success && r.data) {
+        setLoginMethod((r.data.loginMethod as 'pin' | 'password' | 'none') || 'pin')
+      }
+    })
+  }, [])
+
+  const handleSave = async () => {
+    await window.api.settings.set('loginMethod', loginMethod)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  const methods = [
+    { key: 'pin' as const, label: 'ورود با رمز', desc: 'کاربران با رمز ۴ رقمی وارد می‌شوند', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
+    { key: 'password' as const, label: 'ورود با رمز عبور', desc: 'کاربران با رمز عبور (متنی) وارد می‌شوند', icon: 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-4.586a1 1 0 01.293-.707l5-5a1 1 0 011.414 0L15 10.586' },
+    { key: 'none' as const, label: 'بدون رمز', desc: 'ورود بدون نیاز به رمز (فقط برای تست)', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+  ]
+
+  return (
+    <div className="space-y-4">
+      <LoginCard>
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#f59e0b15' }}>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <h3 className="text-sm font-extrabold" style={{ color: tPri }}>روش ورود</h3>
+        </div>
+        <p className="text-xs mb-4" style={{ color: tSec }}>روش ورود کاربران به برنامه را انتخاب کنید</p>
+        <div className="space-y-2">
+          {methods.map(m => (
+            <button key={m.key} onClick={() => {
+              if (m.key === 'none') { setShowDisableWarning(true); return }
+              setLoginMethod(m.key)
+            }}
+              className="w-full text-right p-3 rounded-xl flex items-center gap-3 transition-all"
+              style={{ backgroundColor: loginMethod === m.key ? '#00619410' : inBg, border: `1px solid ${loginMethod === m.key ? '#006194' : cBorder}` }}>
+              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke={loginMethod === m.key ? '#006194' : tSec} strokeWidth="2"><path d={m.icon}/></svg>
+              <div className="flex-1">
+                <div className="text-sm font-bold" style={{ color: loginMethod === m.key ? '#006194' : tPri }}>{m.label}</div>
+                <div className="text-[10px]" style={{ color: tSec }}>{m.desc}</div>
+              </div>
+              {loginMethod === m.key && <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#006194' }}><svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg></div>}
+            </button>
+          ))}
+        </div>
+      </LoginCard>
+
+      <button onClick={handleSave} className="px-6 py-3 rounded-xl font-bold text-sm text-white transition-all"
+        style={{ background: saved ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #006194, #007bb9)' }}>
+        {saved ? 'ذخیره شد!' : 'ذخیره تنظیمات'}
+      </button>
+
+      {/* Disable warning dialog */}
+      <Dialog open={showDisableWarning} onClose={() => setShowDisableWarning(false)} title="هشدار امنیتی" maxWidth="max-w-sm"
+        icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>}
+        footer={<>
+          <button onClick={() => setShowDisableWarning(false)} className="px-4 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: inBg, color: tSec }}>لغو</button>
+          <button onClick={() => { setLoginMethod('none'); setShowDisableWarning(false) }} className="px-5 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>فعال کردن بدون رمز</button>
+        </>}>
+        <p className="text-sm text-center" style={{ color: tPri }}>آیا مطمئن هستید که می‌خواید ورود بدون رمز را فعال کنید؟</p>
+        <p className="text-xs text-center mt-2" style={{ color: tSec }}>این کار امنیت سیستم را کاهش می‌دهد. هر کسی بدون رمز به برنامه دسترسی خواهد داشت.</p>
+      </Dialog>
     </div>
   )
 }
