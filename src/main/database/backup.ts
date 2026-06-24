@@ -1,3 +1,9 @@
+/**
+ * Backup module — handles database backup, restore, integrity checks,
+ * and auto-backup scheduling. Backups are stored as .db files with
+ * .meta.json sidecar containing hash, size, version, and table stats.
+ */
+
 import { app } from 'electron'
 import { join } from 'path'
 import { copyFileSync, existsSync, readdirSync, unlinkSync, statSync, mkdirSync, readFileSync, writeFileSync } from 'fs'

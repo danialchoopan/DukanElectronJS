@@ -1,6 +1,13 @@
+/**
+ * Accounts repository — manages the chart of accounts for double-entry bookkeeping.
+ * Accounts form a tree structure via parentId. Types: asset, liability, equity, income, expense.
+ * Code-based lookup (e.g. '1100' for cash, '2110' for accounts payable) is used throughout the system.
+ */
+
 import { getDatabase } from '../connection'
 import type { Account, CreateAccountInput, AccountTreeNode, AccountType } from '../../../types'
 
+/** Returns all active accounts sorted by code. */
 export function getAllAccounts(): Account[] {
   return getDatabase().prepare('SELECT * FROM accounts ORDER BY code').all() as Account[]
 }

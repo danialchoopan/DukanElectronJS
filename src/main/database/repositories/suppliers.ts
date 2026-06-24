@@ -1,3 +1,11 @@
+/**
+ * Supplier repository — manages supplier CRUD, balance tracking,
+ * and ledger entries for purchase-related transactions.
+ *
+ * Balance convention: positive = store owes supplier (debt).
+ * Purchase entries increase balance; payment entries decrease it.
+ */
+
 import { getDatabase } from '../connection'
 
 export interface Supplier {

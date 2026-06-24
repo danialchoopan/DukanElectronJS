@@ -1,3 +1,9 @@
+/**
+ * Reports repository — generates financial reports from the general ledger.
+ * Uses account code prefixes to classify items (1xxx=asset, 2xxx=liability, etc.).
+ * All calculations derive from journal_entry_lines, ensuring consistency.
+ */
+
 import { getDatabase } from '../connection'
 import type { ProfitLossReport, BalanceSheetReport, ARAgingReport, ARAgingRow } from '../../../types'
 

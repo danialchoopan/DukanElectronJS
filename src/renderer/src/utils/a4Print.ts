@@ -1,3 +1,14 @@
+/**
+ * A4 Print utilities — generates printable HTML reports with RTL Farsi support.
+ * Uses module-level caches for shop name, phone, tax rate, and customization
+ * settings (populated on app startup from the settings store).
+ *
+ * Key exports:
+ * - printA4Report(): Opens a new window with styled HTML, calls window.print()
+ * - downloadExcel(): Generates CSV with BOM for Farsi compatibility in Excel
+ * - setShopName/setTaxRate/setPrintCustomization(): Populate module caches
+ */
+
 let cachedShopName = ''
 let cachedShopPhone = ''
 let cachedTaxRate = 0
