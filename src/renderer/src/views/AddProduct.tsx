@@ -34,7 +34,7 @@ export default function AddProduct() {
   const [detailImageUrl, setDetailImageUrl] = useState('')
   const [detailEditMode, setDetailEditMode] = useState(false)
   const [detailForm, setDetailForm] = useState<any>({})
-  const [showDetailConfirm, setShowDetailConfirm] = useState(false)
+  const [_showDetailConfirm, setShowDetailConfirm] = useState(false)
 
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
@@ -582,89 +582,50 @@ export default function AddProduct() {
         </div>
       )}
       {detailProduct && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setDetailProduct(null)}>
-          <div className="rounded-2xl p-6 max-w-lg w-full mx-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, maxHeight: '85vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold" style={{ color: textPrimary }}>جزئیات کالا</h3>
-              <div className="flex gap-2">
-                {!detailEditMode && (
-                  <button onClick={() => setDetailEditMode(true)} className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textPrimary }}>
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    ویرایش
-                  </button>
-                )}
-                <button onClick={() => setDetailProduct(null)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>✕</button>
-              </div>
+        <Dialog open={!!detailProduct} onClose={() => setDetailProduct(null)} maxWidth="max-w-xl"
+          title={detailEditMode ? 'ویرایش کالا' : 'جزئیات کالا'}
+          icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
+          footer={<>
+            <button onClick={() => setDetailProduct(null)} className="px-4 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>بستن</button>
+            {!detailEditMode ? (
+              <button onClick={() => { setDetailEditMode(true); setDetailForm({ title: detailProduct.title, barcode: detailProduct.barcode || '', category: detailProduct.category || '', purchase_price: detailProduct.purchase_price, sale_price: detailProduct.sale_price, stock: detailProduct.stock, minStock: detailProduct.minStock || 0, description: detailProduct.description || '', imageBase64: detailProduct.imageBase64 || '' }) }} className="px-5 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #006194, #007bb9)' }}>ویرایش</button>
+            ) : (
+              <button onClick={async () => { await window.api.products.update(detailProduct.id, detailForm); setDetailProduct(null); setDetailEditMode(false); loadProducts() }} className="px-5 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>ذخیره تغییرات</button>
+            )}
+          </>}>
+          {detailImageUrl && (
+            <div className="flex justify-center mb-4">
+              <img src={detailImageUrl} className="w-24 h-24 rounded-xl object-cover" style={{ border: `1px solid ${cardBorder}` }} />
             </div>
-            
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              {detailImageUrl && (
-                <div className="col-span-2 flex justify-center">
-                  <img src={detailImageUrl} className="w-32 h-32 rounded-xl object-cover" style={{ border: `1px solid ${cardBorder}` }} />
-                </div>
-              )}
-              {!detailEditMode ? (
-                <>
-                  <InfoField label="نام" value={detailProduct.title} />
-                  <InfoField label="بارکد" value={detailProduct.barcode || '-'} />
-                  <InfoField label="دسته" value={detailProduct.category || '-'} />
-                  <InfoField label="موجودی" value={String(detailProduct.stock)} color={detailProduct.stock <= 0 ? '#ef4444' : '#22c55e'} />
-                  <InfoField label="قیمت خرید" value={detailProduct.purchase_price.toLocaleString('fa-IR')} />
-                  <InfoField label="قیمت فروش" value={detailProduct.sale_price.toLocaleString('fa-IR')} />
-                  <InfoField label="حداقل موجودی" value={String(detailProduct.minStock || 0)} />
-                  <InfoField label="واحد" value={detailProduct.unit === 'weight' ? 'وزنی' : 'عددی'} />
-                </>
-              ) : (
-                <div className="col-span-2 space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    {['title','barcode','category','stock','minStock','purchase_price','sale_price'].map(field => (
-                      <div key={field}>
-                        <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{field}</label>
-                        <input type={field.includes('price') || field === 'stock' || field === 'minStock' ? 'number' : 'text'}
-                          value={detailForm[field] || ''} onChange={e => setDetailForm({ ...detailForm, [field]: field.includes('price') || field === 'stock' || field === 'minStock' ? parseFloat(e.target.value) || 0 : e.target.value })}
-                          className="input-field text-sm w-full" />
-                      </div>
-                    ))}
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>توضیحات</label>
-                    <textarea value={detailForm.description || ''} onChange={e => setDetailForm({ ...detailForm, description: e.target.value })} className="input-field text-sm w-full" rows={2} />
-                  </div>
-                  {!showDetailConfirm ? (
-                    <button onClick={() => setShowDetailConfirm(true)} className="w-full py-2.5 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: '#006194' }}>ذخیره تغییرات</button>
-                  ) : (
-                    <div className="rounded-xl p-3" style={{ backgroundColor: isDark ? '#450a0a' : '#fef2f2', border: '1px solid #ef4444' }}>
-                      <p className="text-xs font-bold mb-2 text-center" style={{ color: '#ef4444' }}>آیا از ذخیره تغییرات اطمینان دارید؟</p>
-                      <div className="flex gap-2">
-                        <button onClick={async () => {
-                          await window.api.products.update(detailProduct.id, detailForm)
-                          setDetailProduct(null)
-                          setDetailEditMode(false)
-                          setShowDetailConfirm(false)
-                          loadProducts()
-                        }} className="flex-1 py-2 rounded-lg text-xs font-bold text-white" style={{ backgroundColor: '#ef4444' }}>بله، ذخیره شود</button>
-                        <button onClick={() => setShowDetailConfirm(false)} className="flex-1 py-2 rounded-lg text-xs font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>لغو</button>
-                      </div>
-                    </div>
-                  )}
-                  <button onClick={() => { setDetailEditMode(false); setShowDetailConfirm(false); setDetailForm({ title: detailProduct.title, barcode: detailProduct.barcode || '', category: detailProduct.category || '', purchase_price: detailProduct.purchase_price, sale_price: detailProduct.sale_price, stock: detailProduct.stock, minStock: detailProduct.minStock || 0, description: detailProduct.description || '', imageBase64: detailProduct.imageBase64 || '' }) }} className="text-xs py-2" style={{ color: textSecondary }}>لغو ویرایش</button>
-                </div>
-              )}
+          )}
+          {!detailEditMode ? (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>نام</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{detailProduct.title}</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>بارکد</div><div className="text-sm font-bold font-mono" style={{ color: textPrimary }}>{detailProduct.barcode || '-'}</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>دسته‌بندی</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{detailProduct.category || '-'}</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>موجودی</div><div className="text-sm font-bold" style={{ color: detailProduct.stock <= 0 ? '#ef4444' : '#22c55e' }}>{detailProduct.stock}</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>قیمت خرید</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{detailProduct.purchase_price.toLocaleString('fa-IR')} تومان</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>قیمت فروش</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{detailProduct.sale_price.toLocaleString('fa-IR')} تومان</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>حداقل موجودی</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{detailProduct.minStock || 0}</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>واحد</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{detailProduct.unit === 'weight' ? 'کیلوگرم' : 'عددی'}</div></div>
+              {detailProduct.description && <div className="col-span-2 rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>توضیحات</div><div className="text-sm" style={{ color: textPrimary }}>{detailProduct.description}</div></div>}
             </div>
-          </div>
-        </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>نام</label><input value={detailForm.title} onChange={e => setDetailForm({ ...detailForm, title: e.target.value })} className="input-field text-sm" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
+              <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>بارکد</label><input value={detailForm.barcode} onChange={e => setDetailForm({ ...detailForm, barcode: e.target.value })} className="input-field text-sm font-mono" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
+              <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>دسته‌بندی</label><input value={detailForm.category} onChange={e => setDetailForm({ ...detailForm, category: e.target.value })} className="input-field text-sm" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
+              <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>موجودی</label><FormattedPriceInput value={detailForm.stock} onChange={v => setDetailForm({ ...detailForm, stock: v })} className="input-field text-sm" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
+              <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>قیمت خرید</label><FormattedPriceInput value={detailForm.purchase_price} onChange={v => setDetailForm({ ...detailForm, purchase_price: v })} className="input-field text-sm" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
+              <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>قیمت فروش</label><FormattedPriceInput value={detailForm.sale_price} onChange={v => setDetailForm({ ...detailForm, sale_price: v })} className="input-field text-sm" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
+              <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>حداقل موجودی</label><FormattedPriceInput value={detailForm.minStock} onChange={v => setDetailForm({ ...detailForm, minStock: v })} className="input-field text-sm" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
+              <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>واحد</label><select value={detailForm.unit || 'number'} onChange={e => setDetailForm({ ...detailForm, unit: e.target.value })} className="input-field text-sm" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }}><option value="number">عددی</option><option value="weight">کیلوگرم</option></select></div>
+              <div className="col-span-2"><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>توضیحات</label><textarea value={detailForm.description || ''} onChange={e => setDetailForm({ ...detailForm, description: e.target.value })} className="input-field text-sm" rows={2} style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
+            </div>
+          )}
+      </Dialog>
       )}
       <PrintDialog open={showPrintDialog} title="چاپ لیست کالاها" totalCount={products.length} onClose={() => setShowPrintDialog(false)} onPrint={(range) => { setShowPrintDialog(false); handlePrintProducts(range) }} />
-    </div>
-  )
-}
-
-function InfoField({ label, value, color }: { label: string; value: string; color?: string }) {
-  const isDark = document.documentElement.classList.contains('dark')
-  return (
-    <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc' }}>
-      <div className="text-xs" style={{ color: '#94a3b8' }}>{label}</div>
-      <div className="text-sm font-bold" style={{ color: color || '#0f172a' }}>{value}</div>
     </div>
   )
 }
