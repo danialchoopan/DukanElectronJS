@@ -1,19 +1,39 @@
+/**
+ * Cart Store — manages the shopping cart state using Zustand.
+ *
+ * Handles adding products, updating quantities, removing items,
+ * and computing totals. Validates stock availability before allowing
+ * quantity increases beyond maxStock.
+ *
+ * Usage:
+ *   const { items, addItem, updateQuantity, removeItem, getSubtotal } = useCartStore()
+ */
+
 import { create } from 'zustand'
 import type { CartItem } from '../../../types'
 
 interface CartState {
   items: CartItem[]
   lastError: string
-
+  /** Add item to cart. Returns false if stock exceeded. */
   addItem: (item: Omit<CartItem, 'quantity'>) => boolean
+  /** Add multiple items at once (e.g. from suspended invoice). */
   addItems: (items: CartItem[]) => void
+  /** Update quantity for a specific product. Removes if quantity <= 0. */
   updateQuantity: (productId: number, quantity: number) => void
+  /** Update unit price for a specific product (invoice-only override). */
   updateUnitPrice: (productId: number, unitPrice: number) => void
+  /** Remove a product from the cart entirely. */
   removeItem: (productId: number) => void
+  /** Get total price of all items (unitPrice * quantity). */
   getSubtotal: () => number
+  /** Get total item count across all products. */
   getCount: () => number
+  /** Clear all items from cart. */
   clearCart: () => void
+  /** Reset cart and clear any error state. */
   resetAll: () => void
+  /** Clear the last error message. */
   clearError: () => void
 }
 
@@ -83,6 +103,8 @@ export const useCartStore = create<CartState>((set, get) => ({
     }
   },
 
+  /** Updates the unit price for a specific item in the cart.
+   * This is an invoice-only override — does NOT change the product's actual price in DB. */
   updateUnitPrice: (productId, unitPrice) => {
     if (unitPrice < 0) return
     set((state) => ({

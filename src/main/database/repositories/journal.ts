@@ -1,11 +1,30 @@
+/**
+ * Journal repository — manages double-entry accounting entries.
+ *
+ * Core principle: every journal entry must have equal total debits and credits
+ * (within 0.01 tolerance for floating-point rounding).
+ *
+ * Auto-posting functions create journal entries automatically when sales,
+ * expenses, or returns are recorded — ensuring the general ledger stays
+ * in sync with business transactions without manual intervention.
+ */
+
 import { getDatabase } from '../connection'
 import type { JournalEntry, JournalLine, JournalEntryWithLines, TrialBalanceRow, LedgerRow } from '../../../types'
 import { getAccountByCode } from './accounts'
 
+/** Single journal entry line with debit/credit amounts */
 interface JournalLineInput {
   accountId: number; debit: number; credit: number; description?: string
 }
 
+/**
+ * Creates a balanced journal entry with multiple lines.
+ * Validates that total debits == total credits (within 0.01 tolerance).
+ * Wraps the insert in a database transaction for atomicity.
+ *
+ * @throws Error if debits and credits are not balanced
+ */
 export function createJournalEntry(data: {
   entryDate: string; description: string
   referenceType?: string; referenceId?: number
@@ -33,6 +52,13 @@ export function createJournalEntry(data: {
   return db.prepare('SELECT * FROM journal_entries WHERE id = ?').get(entry) as JournalEntry
 }
 
+/**
+ * Auto-posts a 4-line journal entry for a completed sale:
+ *   Debit:  Receive account (cash=1100, bank=1200, or A/R=1400)
+ *   Credit: Sales revenue (4100)
+ *   Debit:  Cost of goods sold (5100)
+ *   Credit: Inventory reduction (1300)
+ */
 export function postSaleJournal(saleId: number, saleDate: string, data: {
   items: { purchasePrice: number; quantity: number }[]
   total_amount: number; paymentMethod: string
@@ -59,6 +85,11 @@ export function postSaleJournal(saleId: number, saleDate: string, data: {
   })
 }
 
+/**
+ * Auto-posts a 2-line journal entry for an expense:
+ *   Debit:  Expense account (mapped by category name, e.g. اجاره→6100)
+ *   Credit: Cash (1100)
+ */
 export function postExpenseJournal(expenseId: number, expenseDate: string, amount: number, category: string): void {
   const cashAcct = getAccountByCode('1100')!
   const categoryMap: Record<string, string> = {
@@ -78,6 +109,11 @@ export function postExpenseJournal(expenseId: number, expenseDate: string, amoun
   })
 }
 
+/**
+ * Auto-posts a 2-line journal entry for a sale return:
+ *   Debit:  Sales revenue reversal (4100)
+ *   Credit: Cash refund (1100)
+ */
 export function postReturnJournal(returnId: number, returnDate: string, refundAmount: number): void {
   const cashAcct = getAccountByCode('1100')!
   const salesAcct = getAccountByCode('4100')!
@@ -92,6 +128,10 @@ export function postReturnJournal(returnId: number, returnDate: string, refundAm
   })
 }
 
+/**
+ * Returns paginated journal entries with optional date range and type filters.
+ * Orders by date descending (newest first).
+ */
 export function getJournalEntries(filters: {
   startDate?: string; endDate?: string; referenceType?: string
   limit?: number; offset?: number
@@ -109,6 +149,7 @@ export function getJournalEntries(filters: {
   return { entries, total }
 }
 
+/** Returns a single journal entry with all its debit/credit lines. */
 export function getJournalEntryById(id: number): JournalEntryWithLines | undefined {
   const db = getDatabase()
   const entry = db.prepare('SELECT * FROM journal_entries WHERE id = ?').get(id) as JournalEntry | undefined
@@ -117,6 +158,11 @@ export function getJournalEntryById(id: number): JournalEntryWithLines | undefin
   return { ...entry, lines }
 }
 
+/**
+ * Returns trial balance: aggregated debit, credit, and net balance per account.
+ * Optionally filtered by date range.
+ * Balance = totalDebit - totalCredit (positive for asset/expense, negative for liability/income).
+ */
 export function getTrialBalance(startDate?: string, endDate?: string): TrialBalanceRow[] {
   const db = getDatabase()
   let joinClause = ''
@@ -141,6 +187,10 @@ export function getTrialBalance(startDate?: string, endDate?: string): TrialBala
   `).all(...params) as TrialBalanceRow[]
 }
 
+/**
+ * Generates a cash flow report by summing debits (inflows) and credits (outflows)
+ * on cash/bank accounts (codes 1100 and 1200).
+ */
 export function generateCashFlow(startDate?: string, endDate?: string): { operating: { label: string; amount: number }[]; totalInflow: number; totalOutflow: number; netChange: number } {
   const db = getDatabase()
   let where = 'WHERE 1=1'
@@ -175,6 +225,10 @@ export function generateCashFlow(startDate?: string, endDate?: string): { operat
   }
 }
 
+/**
+ * Returns the general ledger for a specific account with running balance.
+ * Each row shows: date, description, debit, credit, and cumulative balance.
+ */
 export function getGeneralLedger(accountId: number, startDate?: string, endDate?: string): LedgerRow[] {
   const db = getDatabase()
   let where = 'WHERE jel.accountId = ?'
