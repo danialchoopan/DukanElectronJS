@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>حسابداری دانیال — مستندات فنی</title>
+  <style>
+    :root { --primary: #006194; --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f1f5f9; --muted: #94a3b8; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); direction: rtl; }
+    .sidebar { position: fixed; top: 0; right: 0; width: 260px; height: 100vh; background: var(--card); border-left: 1px solid var(--border); padding: 20px; overflow-y: auto; }
+    .sidebar h1 { font-size: 16px; margin-bottom: 24px; color: var(--primary); }
+    .sidebar a { display: block; padding: 8px 12px; color: var(--muted); text-decoration: none; font-size: 13px; border-radius: 6px; margin-bottom: 2px; transition: all 0.2s; }
+    .sidebar a:hover, .sidebar a.active { background: var(--primary); color: #fff; }
+    .sidebar .section-title { font-size: 11px; text-transform: uppercase; color: var(--muted); margin: 16px 0 8px 12px; letter-spacing: 1px; }
+    .main { margin-right: 260px; padding: 40px; max-width: 900px; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 20px; margin: 32px 0 12px; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 8px; }
+    h3 { font-size: 16px; margin: 20px 0 8px; }
+    p { line-height: 1.8; margin-bottom: 12px; color: var(--muted); font-size: 14px; }
+    code { background: var(--card); padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #22c55e; }
+    pre { background: var(--card); padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid var(--border); font-size: 13px; line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { padding: 10px 12px; text-align: right; border: 1px solid var(--border); font-size: 13px; }
+    th { background: var(--card); font-weight: 600; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .badge-green { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .badge-blue { background: rgba(59,130,246,0.15); color: #3b82f6; }
+    .badge-yellow { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    @media (max-width: 768px) { .sidebar { display: none; } .main { margin-right: 0; } }
+  </style>
+</head>
+<body>
+  <nav class="sidebar">
+    <h1>حسابداری دانیال</h1>
+    <div class="section-title">معرفی</div>
+    <a href="#overview">نمای کلی</a>
+    <a href="#architecture">معماری سیستم</a>
+    <a href="#tech-stack">تکنولوژی‌ها</a>
+    <div class="section-title">پایگاه داده</div>
+    <a href="#schema">ساختار جداول</a>
+    <a href="#repositories">لایه دسترسی به داده</a>
+    <a href="#accounting-sync">همگام‌سازی حسابداری</a>
+    <div class="section-title">API (IPC)</div>
+    <a href="#ipc-handlers">هندلرهای IPC</a>
+    <a href="#preload">لایه Preload</a>
+    <div class="section-title">رابط کاربری</div>
+    <a href="#components">کامپوننت‌ها</a>
+    <a href="#views">صفحات</a>
+    <a href="#store">مدیریت وضعیت</a>
+    <div class="section-title">امکانات</div>
+    <a href="#smart-export">خروجی/واردات هوشمند</a>
+    <a href="#migration">مهاجرت نسخه‌ها</a>
+    <a href="#backup">پشتیبان‌گیری</a>
+    <div class="section-title">توسعه</div>
+    <a href="#structure">ساختار پوشه‌ها</a>
+    <a href="#conventions">قراردادها</a>
+    <a href="#testing">تست‌ها</a>
+  </nav>
+
+  <main class="main">
+    <h1>حسابداری دانیال</h1>
+    <p>نرم‌افزار جامع حسابداری، انبارداری و فروش برای کسب‌وکارهای مدرن — از فروشگاه اینترنتی تا فروشگاه فیزیکی</p>
+
+    <h2 id="overview">نمای کلی</h2>
+    <p>حسابداری دانیال یک سیستم دسکتاپ مبتنی بر Electron است که شامل ماژول‌های زیر می‌باشد:</p>
+    <table>
+      <tr><th>ماژول</th><th>توضیح</th><th>وضعیت</th></tr>
+      <tr><td>حسابداری دوطرفه</td><td>دفتر حسابها، روزنامه، تراز آزمایشی، سود و زیان، ترازنامه</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>انبارداری</td><td>مدیریت کالاها، موجودی، چاپ بارکد و QR</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>فروش</td><td>صفحه فروش با اسکنر بارکد، فاکتور الکترونیکی</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>مشتریان</td><td>مدیریت مشتریان با دفتر کل و پیگیری بدهی</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>تأمین‌کنندگان</td><td>مدیریت تأمین‌کنندگان، خرید، پرداخت، حسابداری</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>خروجی/واردات هوشمند</td><td>انتخاب بخش‌ها، رمزگذاری، مهاجرت نسخه</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>پشتیبان‌گیری</td><td>پشتیبان خودکار، بازیابی، بررسی یکپارچگی</td><td><span class="badge badge-green">فعال</span></td></tr>
+    </table>
+
+    <h2 id="architecture">معماری سیستم</h2>
+    <pre>
+┌─────────────────────────────────┐
+│  Electron Main Process          │
+│  └── SQLite (better-sqlite3)    │
+│  └── IPC Handlers               │
+│  └── Database Repositories      │
+├─────────────────────────────────┤
+│  Preload Bridge                 │
+├─────────────────────────────────┤
+│  React UI (Renderer)            │
+│  ├── Views (صفحات)             │
+│  ├── Components (کامپوننت‌ها)   │
+│  ├── Store (Zustand)            │
+│  └── Utils (ابزارها)            │
+└─────────────────────────────────┘</pre>
+    <p>لایه اصلی ارتباط بین UI و دیتابیس از طریق <code>preload</code> و <code>ipcRenderer.invoke()</code> انجام می‌شود. هیچ کد مستقیم Node.js در renderer اجرا نمی‌شود.</p>
+
+    <h2 id="tech-stack">تکنولوژی‌ها</h2>
+    <table>
+      <tr><th>لایه</th><th>تکنولوژی</th></tr>
+      <tr><td>فرانت‌اند</td><td>React 18 + TypeScript 5 + Tailwind CSS</td></tr>
+      <tr><td>بک‌اند</td><td>Electron 33 + Node.js</td></tr>
+      <tr><td>پایگاه داده</td><td>SQLite (better-sqlite3)</td></tr>
+      <tr><td>مدیریت وضعیت</td><td>Zustand 5</td></tr>
+      <tr><td>بیلد</td><td>Vite 6</td></tr>
+      <tr><td>تقویم</td><td>jalaali-js (Jalali/Persian)</td></tr>
+      <tr><td>فونت</td><td>Vazirmatn (woff2 local)</td></tr>
+    </table>
+
+    <h2 id="schema">ساختار جداول پایگاه داده</h2>
+    <p>پایگاه داده SQLite شامل ۲۰ جدول اصلی است:</p>
+    <table>
+      <tr><th>جدول</th><th>توضیح</th><th>کلیدها</th></tr>
+      <tr><td><code>users</code></td><td>کاربران سیستم</td><td>id, pin_code, role</td></tr>
+      <tr><td><code>products</code></td><td>کالاها با بارکد</td><td>id, barcode, title</td></tr>
+      <tr><td><code>customers</code></td><td>مشتریان با حساب دفتری</td><td>id, name, balance</td></tr>
+      <tr><td><code>suppliers</code></td><td>تأمین‌کنندگان</td><td>id, name, balance</td></tr>
+      <tr><td><code>sales</code></td><td>فاکتورهای فروش</td><td>id, invoiceNumber</td></tr>
+      <tr><td><code>sale_items</code></td><td>اقلام فروش</td><td>id, saleId, productId</td></tr>
+      <tr><td><code>purchases</code></td><td>فاکتورهای خرید</td><td>id, invoiceNumber, supplierId</td></tr>
+      <tr><td><code>purchase_items</code></td><td>اقلام خرید</td><td>id, purchaseId, productId</td></tr>
+      <tr><td><code>accounts</code></td><td>دفتر حسابها (درختی)</td><td>id, code, type, parentId</td></tr>
+      <tr><td><code>journal_entries</code></td><td>اسناد حسابداری</td><td>id, entryDate, referenceType</td></tr>
+      <tr><td><code>journal_entry_lines</code></td><td>خطوط دفتر کل</td><td>id, entryId, accountId</td></tr>
+      <tr><td><code>customer_ledger</code></td><td>دفتر کل مشتریان</td><td>id, customerId, type</td></tr>
+      <tr><td><code>supplier_ledger</code></td><td>دفتر کل تأمین‌کنندگان</td><td>id, supplierId, type</td></tr>
+      <tr><td><code>fiscal_periods</code></td><td>دوره‌های مالی</td><td>id, name, isClosed</td></tr>
+      <tr><td><code>expenses</code></td><td>هزینه‌ها</td><td>id, category, amount</td></tr>
+      <tr><td><code>returns</code></td><td>مرجوعی‌ها</td><td>id, saleId, productId</td></tr>
+      <tr><td><code>audit_log</code></td><td>لاگ عملیات</td><td>id, action, entityType</td></tr>
+      <tr><td><code>settings</code></td><td>تنظیمات کلید-مقدار</td><td>key (PK)</td></tr>
+    </table>
+
+    <h2 id="accounting-sync">همگام‌سازی خودکار با حسابداری</h2>
+    <p>هر تراکنش خودکار در دفتر کل ثبت می‌شود:</p>
+    <table>
+      <tr><th>رویداد</th><th>بدهکار</th><th>بستانکار</th></tr>
+      <tr><td>فروش نقدی</td><td>صندوق (۱۱۰۰)</td><td>فروش کالا (۴۱۰۰)</td></tr>
+      <tr><td>فروش اعتباری</td><td>حساب دریافتنی (۱۴۰۰)</td><td>فروش کالا (۴۱۰۰)</td></tr>
+      <tr><td>خرید از تأمین‌کننده</td><td>موجودی (۱۳۰۰)</td><td>حساب پرداختنی (۲۱۱۰)</td></tr>
+      <tr><td>پرداخت به تأمین‌کننده</td><td>حساب پرداختنی (۲۱۱۰)</td><td>بانک/صندوق (۱۲۰۰/۱۱۰۰)</td></tr>
+      <tr><td>مرجوعی فروش</td><td>فروش کالا (۴۱۰۰)</td><td>صندوق (۱۱۰۰)</td></tr>
+      <tr><td>ثبت هزینه</td><td>حساب هزینه (۶۱۰۰-۶۷۰۰)</td><td>صندوق (۱۱۰۰)</td></tr>
+    </table>
+
+    <h2 id="ipc-handlers">هندلرهای IPC</h2>
+    <p>تمام ارتباط بین UI و دیتابیس از طریق هندلرهای IPC در فایل <code>src/main/ipc/handlers.ts</code> انجام می‌شود.</p>
+    <table>
+      <tr><th>کانال</th><th>توضیح</th></tr>
+      <tr><td><code>auth:login</code></td><td>ورود با رمز</td></tr>
+      <tr><td><code>auth:createUser</code></td><td>ایجاد کاربر</td></tr>
+      <tr><td><code>auth:updateUser</code></td><td>ویرایش کاربر</td></tr>
+      <tr><td><code>products:getAll</code></td><td>لیست تمام کالاها</td></tr>
+      <tr><td><code>products:create</code></td><td>ایجاد کالا</td></tr>
+      <tr><td><code>products:update</code></td><td>ویرایش کالا</td></tr>
+      <tr><td><code>customers:getAll</code></td><td>لیست مشتریان</td></tr>
+      <tr><td><code>customers:charge</code></td><td>افزایش مانده / افزودن بدهی</td></tr>
+      <tr><td><code>customers:pay</code></td><td>پرداخت بدهی</td></tr>
+      <tr><td><code>suppliers:getAll</code></td><td>لیست تأمین‌کنندگان</td></tr>
+      <tr><td><code>purchases:create</code></td><td>ثبت خرید با حسابداری خودکار</td></tr>
+      <tr><td><code>suppliers:pay</code></td><td>پرداخت به تأمین‌کننده</td></tr>
+      <tr><td><code>sales:create</code></td><td>ثبت فروش با کنترل موجودی</td></tr>
+      <tr><td><code>journal:getEntries</code></td><td>روزنامه حسابداری</td></tr>
+      <tr><td><code>reports:getTrialBalance</code></td><td>تراز آزمایشی</td></tr>
+      <tr><td><code>reports:getProfitLoss</code></td><td>صورت سود و زیان</td></tr>
+      <tr><td><code>reports:getBalanceSheet</code></td><td>ترازنامه</td></tr>
+      <tr><td><code>backup:create</code></td><td>ایجاد پشتیبان</td></tr>
+      <tr><td><code>backup:restore</code></td><td>بازیابی از پشتیبان</td></tr>
+      <tr><td><code>smartExport:execute</code></td><td>خروجی هوشمند</td></tr>
+      <tr><td><code>smartImport:execute</code></td><td>واردات هوشمند</td></tr>
+    </table>
+
+    <h2 id="views">صفحات (Views)</h2>
+    <table>
+      <tr><th>صفحه</th><th>فایل</th><th>توضیح</th></tr>
+      <tr><td>داشبورد</td><td><code>views/Dashboard.tsx</code></td><td>نمای کلی فروش و سود</td></tr>
+      <tr><td>فروش</td><td><code>views/SalesTerminal.tsx</code></td><td>صفحه فروش با اسکنر بارکد</td></tr>
+      <tr><td>تاریخچه فروش</td><td><code>views/SalesHistory.tsx</code></td><td>لیست فاکتورها با فیلتر و جستجو</td></tr>
+      <tr><td>محصولات</td><td><code>views/AddProduct.tsx</code></td><td>ایجاد/ویرایش/مدیریت کالاها</td></tr>
+      <tr><td>انبارداری</td><td><code>views/Inventory.tsx</code></td><td>موجودی، گزارش، چاپ بارکد QR</td></tr>
+      <tr><td>حسابداری</td><td><code>views/Accounting.tsx</code></td><td>۱۰ زبانه حسابداری</td></tr>
+      <tr><td>مشتریان</td><td><code>views/CustomerManagement.tsx</code></td><td>مدیریت مشتریان و دفتر کل</td></tr>
+      <tr><td>تأمین‌کنندگان</td><td><code>views/Suppliers.tsx</code></td><td>تأمین‌کنندگان، خرید، پرداخت</td></tr>
+      <tr><td>تنظیمات</td><td><code>views/AdminPanel.tsx</code></td><td>تنظیمات فروشگاه، UI، میانبرها، چاپ</td></tr>
+      <tr><td>مدیریت</td><td><code>views/AdminPanel.tsx</code></td><td>کاربران، تنظیمات ورود</td></tr>
+    </table>
+
+    <h2 id="smart-export">خروجی/واردات هوشمند</h2>
+    <p>امکان انتخاب بخش‌های دلخواه برای خروجی/واردات با ویژگی‌های زیر:</p>
+    <ul style="color: var(--muted); line-height: 2;">
+      <li>۱۲ ماژول قابل انتخاب (محصولات، مشتریان، فروش‌ها و ...)</li>
+      <li>تشخیص خودکار وابستگی بین بخش‌ها</li>
+      <li>رمزنگاری AES-256 و امضای دیجیتال HMAC-SHA256</li>
+      <li>اعتبارسنجی داده‌ها قبل از واردات</li>
+      <li>تراکنش اتمی — در صورت خطا، تمام تغییرات برگردانده می‌شود</li>
+      <li>مهاجرت خودکار بین نسخه‌های مختلف</li>
+    </ul>
+
+    <h2 id="migration">مهاجرت نسخه‌ها</h2>
+    <p>سیستم از نسخه‌های مختلف پشتیبانی می‌کند. فرآیند مهاجرت:</p>
+    <ol style="color: var(--muted); line-height: 2.2;">
+      <li>تشخیص خودکار نسخه فایل ورودی</li>
+      <li>بررسی سازگاری با نسخه فعلی</li>
+      <li>مهاجرت خودکار داده‌ها (افزودن فیلدهای جدید)</li>
+      <li>پشتیبان خودکار قبل از مهاجرت</li>
+      <li>بررسی یکپارچگی پس از مهاجرت</li>
+    </ol>
+
+    <h2 id="backup">پشتیبان‌گیری</h2>
+    <table>
+      <tr><th>قابلیت</th><th>توضیح</th></tr>
+      <tr><td>پشتیبان خودکار</td><td>هر روز یک بار در شروع برنامه</td></tr>
+      <tr><td>پشتیبان دستی</td><td>از بخش تنظیمات</td></tr>
+      <tr><td>بررسی یکپارچگی</td><td>PRAGMA integrity_check + foreign_key_check</td></tr>
+      <tr><td>نسخه‌سنجی</td><td>مقایسه نسخه فایل با نسخه فعلی برنامه</td></tr>
+      <tr><td>پاکسازی خودکار</td><td>حذف پشتیبان‌های قدیمی (نگهداری ۳۰ نسخه)</td></tr>
+      <tr><td>رمزنگاری</td><td>AES-256-GCM برای فایل‌های رمزگذاری‌شده</td></tr>
+      <tr><td>امضای دیجیتال</td><td>HMAC-SHA256 برای تأیید اصالت</td></tr>
+    </table>
+
+    <h2 id="structure">ساختار پوشه‌ها</h2>
+    <pre>
+src/
+├── main/                          # فرآیند اصلی Electron
+│   ├── database/
+│   │   ├── connection.ts           # اتصال و ایجاد جداول
+│   │   ├── repositories/           # لایه دسترسی به داده (۱۸ فایل)
+│   │   ├── backup.ts               # پشتیبان‌گیری و بازیابی
+│   │   ├── smartExport.ts          # خروجی/واردات هوشمند
+│   │   ├── migration.ts            # مهاجرت نسخه‌ها
+│   │   └── seed.ts                 # داده‌های نمونه
+│   ├── ipc/
+│   │   └── handlers.ts             # هندلرهای IPC
+│   └── utils/
+├── preload/
+│   └── index.ts                    # پل ارتباطی UI با بک‌اند
+├── renderer/src/
+│   ├── App.tsx                     # ریشه برنامه
+│   ├── components/
+│   │   ├── ui/                     # کامپوننت‌های پایه
+│   │   ├── layout/                 # کامپوننت‌های لایوت
+│   │   ├── print/                  # کامپوننت‌های چاپ
+│   │   └── business/               # کامپوننت‌های تجاری
+│   ├── views/                      # صفحات
+│   │   ├── accounting/             # ۱۰ زبانه حسابداری
+│   │   └── settings/               # تنظیمات
+│   ├── store/                      # Zustand stores
+│   ├── hooks/                      # هوک‌های سفارشی
+│   ├── utils/                      # ابزارها
+│   └── i18n/                       # ترجمه‌ها
+└── types/                          # تایپ‌های مشترک</pre>
+
+    <h2 id="conventions">قراردادها</h2>
+    <table>
+      <tr><th>موضوع</th><th>قرارداد</th></tr>
+      <tr><td>کامنت‌گذاری</td><td>JSDoc روی تمام توابع، بدون ایموجی، حرفه‌ای و استاندارد</td></tr>
+      <tr><td>تست‌ها</td><td>۱۴ تست واحد: ۱۲ برای خروجی هوشمند + ۲ برای پشتیبان + ۸ برای مهاجرت</td></tr>
+      <tr><td>تغییرات</td><td>Conventional Commits: <code>&lt;type&gt;[scope]: &lt;description&gt;</code></td></tr>
+      <tr><td>ایموجی</td><td>ممنوع در کامنت‌ها و کد</td></tr>
+      <tr><td>فرمت ریسپانسیو</td><td>RTL، پشتیبانی از تم تاریک/روشن</td></tr>
+    </table>
+
+    <h2 id="testing">تست‌ها</h2>
+    <p>تست‌ها در سه بخش اجرا می‌شوند:</p>
+    <table>
+      <tr><th>فایل</th><th>تعداد</th><th>موضوع</th></tr>
+      <tr><td><code>backup.test.ts</code></td><td>۱۱</td><td>ایجاد، بازیابی، یکپارچگی، نسخه</td></tr>
+      <tr><td><code>smartExport.test.ts</code></td><td>۱۲</td><td>خروجی/واردات، وابستگی‌ها، امنیت</td></tr>
+      <tr><td><code>migration.test.ts</code></td><td>۸</td><td>مهاجرت، سازگاری نسخه‌ها</td></tr>
+      <tr><td><code>scripts/verify.js</code></td><td>۲۶</td><td>بررسی خودکار ریاضیات و اتصالات</td></tr>
+    </table>
+    <p>برای اجرا: <code>backup:runTests</code>، <code>smartExport:runTests</code>، <code>migration:runTests</code> از طریق IPC</p>
+
+    <h2 id="components">ساختار کامپوننت‌ها</h2>
+    <table>
+      <tr><th>پوشه</th><th>کامپوننت‌ها</th></tr>
+      <tr><td><code>ui/</code></td><td>Dialog, FormattedPriceInput, Pagination, HelpPopup, PinPad, Icons, SortableTableHeader</td></tr>
+      <tr><td><code>layout/</code></td><td>Sidebar, TitleBar, Notification</td></tr>
+      <tr><td><code>print/</code></td><td>PrintDialog, PrintPreviewDialog, ReceiptPrinter, SmartExportDialog</td></tr>
+      <tr><td><code>business/</code></td><td>BarcodeInput, CartTable, GlobalSearch, PaymentPanel, LooseItemsGrid, PopularItems, ShamsiDateInput, SuspendedSlots, WebcamScanner</td></tr>
+    </table>
+
+    <h2 id="store">مدیریت وضعیت (Zustand)</h2>
+    <table>
+      <tr><th>Store</th><th>توضیح</th></tr>
+      <tr><td><code>authStore</code></td><td>احراز هویت کاربر فعلی</td></tr>
+      <tr><td><code>cartStore</code></td><td>سبد خرید با افزودن/حذف/ویرایش</td></tr>
+      <tr><td><code>settingsStore</code></td><td>تنظیمات تم، زبان، اندازه فونت</td></tr>
+      <tr><td><code>shortcutsStore</code></td><td>میانبرهای صفحه‌کلید</td></tr>
+      <tr><td><code>suspendStore</code></td><td>فاکتورهای معلق</td></tr>
+      <tr><td><code>printPreviewStore</code></td><td>وضعیت پیش‌نمایش چاپ</td></tr>
+    </table>
+
+    <div style="text-align: center; margin-top: 48px; padding: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px;">
+      <p>حسابداری دانیال — نسخه ۱.۰</p>
+      <p>آخرین به‌روزرسانی: ژوئن ۲۰۲۶</p>
+    </div>
+  </main>
+</body>
+</html>
