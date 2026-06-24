@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { User } from '../../../types'
 import { fa } from '../i18n'
 import UISettings from './settings/UISettings'
@@ -44,6 +44,9 @@ export default function AdminPanel({ view = 'admin', initialTab, highlightId, on
   }, [])
 
   useHighlight(highlightId, onHighlightDone)
+
+  const handleExport = useCallback(() => setSmartExportMode('export'), [])
+  const handleImport = useCallback(() => setSmartExportMode('import'), [])
 
   const bgColor = isDark ? '#0f172a' : '#f8fafc'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
@@ -95,7 +98,7 @@ export default function AdminPanel({ view = 'admin', initialTab, highlightId, on
       <div className="w-full">
         {tab === 'users' && <UsersTab />}
         {tab === 'login' && <LoginSettingsTab />}
-        {tab === 'settings' && <SettingsTab onExport={() => setSmartExportMode('export')} onImport={() => setSmartExportMode('import')} />}
+        {tab === 'settings' && <SettingsTab onExport={handleExport} onImport={handleImport} />}
         {tab === 'ui' && <UISettings />}
         {tab === 'shortcuts' && <ShortcutsSettings />}
         {tab === 'customization' && <CustomizationSettings />}
@@ -662,7 +665,6 @@ function SettingsTab({ onExport, onImport }: { onExport: () => void; onImport: (
   const [storeName, setStoreName] = useState('')
   const [storeAddress, setStoreAddress] = useState('')
   const [storePhone, setStorePhone] = useState('')
-  const [receiptFooter, setReceiptFooter] = useState('')
   const [saved, setSaved] = useState(false)
   const isDark = document.documentElement.classList.contains('dark')
 
@@ -674,7 +676,6 @@ function SettingsTab({ onExport, onImport }: { onExport: () => void; onImport: (
         setStoreName(r.data.storeName ?? '')
         setStoreAddress(r.data.storeAddress ?? '')
         setStorePhone(r.data.storePhone ?? '')
-        setReceiptFooter(r.data.receiptFooter ?? '')
       }
     })
   }, [])
@@ -686,7 +687,6 @@ function SettingsTab({ onExport, onImport }: { onExport: () => void; onImport: (
       window.api.settings.set('storeName', storeName),
       window.api.settings.set('storeAddress', storeAddress),
       window.api.settings.set('storePhone', storePhone),
-      window.api.settings.set('receiptFooter', receiptFooter),
     ])
     setShopName(storeName, storePhone)
     setSaved(true); setTimeout(() => setSaved(false), 2000)
@@ -726,7 +726,6 @@ function SettingsTab({ onExport, onImport }: { onExport: () => void; onImport: (
               <Input label={fa.admin.storeName} value={storeName} onChange={setStoreName} placeholder="نام فروشگاه" />
               <Input label={fa.admin.storePhone} value={storePhone} onChange={setStorePhone} placeholder="021..." />
               <div className="col-span-2"><Input label={fa.admin.storeAddress} value={storeAddress} onChange={setStoreAddress} placeholder="آدرس فروشگاه" /></div>
-              <div className="col-span-2"><Input label={fa.admin.receiptFooter} value={receiptFooter} onChange={setReceiptFooter} placeholder="متن پایانی فاکتور" /></div>
             </div>
           </Card>
 
