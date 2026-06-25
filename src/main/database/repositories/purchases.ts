@@ -1,3 +1,20 @@
+/**
+ * Purchases repository — manages purchase orders from suppliers.
+ *
+ * Purchase creation performs atomically:
+ *   1. Inserts purchase record with invoice, supplier, amounts
+ *   2. Inserts purchase items and updates product stock
+ *   3. Updates supplier balance (debt increases by unpaid amount)
+ *   4. Posts double-entry journal:
+ *      - Fully paid: Dr Cash/Bank, Cr Inventory + Tax - Discount
+ *      - Credit:     Dr Payable (paid portion), Cr Cash; Cr Payable (unpaid portion)
+ *   5. Returns the complete purchase with items
+ *
+ * Balance convention: supplier balance > 0 = store owes supplier (debt).
+ * Fully-paid purchases: no payable entries, cash credited directly to inventory.
+ * Partial payments: payable debited for paid amount, cash credited; remaining payable credited.
+ */
+
 import { getDatabase } from '../connection'
 import type { Purchase, PurchaseInput, PurchaseItem } from './suppliers'
 import { updateSupplierBalance, addSupplierLedgerEntry } from './suppliers'

@@ -1,3 +1,18 @@
+/**
+ * Sales repository — manages sales creation, retrieval, and related operations.
+ *
+ * Sale creation performs the following atomically:
+ *   1. Inserts sale record with invoice number and payment details
+ *   2. Inserts sale items with per-line profit calculation
+ *   3. Decrements product stock for each item sold
+ *   4. Updates customer balance and ledger if credit sale
+ *   5. Posts double-entry journal via postSaleJournal()
+ *   6. Returns the complete sale with items
+ *
+ * Rounding: total_amount is rounded to nearest configurable value (default 500 tomans).
+ * Profit: netProfit = (unitPrice - purchasePrice) * quantity per line item.
+ */
+
 import { getDatabase } from '../connection'
 import type { Sale, SaleInput } from '../../../types'
 import { decrementStock } from './products'

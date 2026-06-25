@@ -1,3 +1,16 @@
+/**
+ * Products repository — manages product CRUD, stock operations, and image storage.
+ *
+ * Stock management:
+ *   - incrementStock: increases stock by given quantity (used in purchases and returns)
+ *   - decrementStock: decreases stock with safety guard (prevents negative stock)
+ *   - Stock is stored as REAL to support weight-based products (kg)
+ *
+ * Images: stored as base64 data URIs in the imageBase64 column.
+ * Products can be soft-deleted (isActive=0) to preserve accounting history.
+ * Auto-barcode: PRD-XXXXXX format, auto-generated when barcode field is empty.
+ */
+
 import { getDatabase } from '../connection'
 import type { Product, ProductInput } from '../../../types'
 
