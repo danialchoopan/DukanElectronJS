@@ -1,11 +1,18 @@
+/** CartTable — displays shopping cart items with editable quantity and price.
+ *  Uses InlineEditCell for double-click editing with confirm button.
+ *  Numbers are formatted with comma separators (e.g. 10,000,000).
+ */
+
 import { useCartStore } from '../../store/cartStore'
 import type { CartItem } from '../../../../types'
 import { fa } from '../../i18n'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { getProductImageUrl } from '../../utils/productImage'
+import { InlineEditCell } from '../ui/FormattedPriceInput'
 
 interface Props { items: CartItem[] }
 
+/** Resolves product image from filename to base64 data URI. */
 function CartItemImage({ imageBase64 }: { imageBase64: string }) {
   const [src, setSrc] = useState(imageBase64 || '')
   useEffect(() => {
@@ -15,50 +22,6 @@ function CartItemImage({ imageBase64 }: { imageBase64: string }) {
   }, [imageBase64])
   if (!src) return null
   return <img src={src} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
-}
-
-function EditableCell({ value, onSave, type = 'number' }: { value: number; onSave: (v: number) => void; type?: 'number' }) {
-  const [editing, setEditing] = useState(false)
-  const [temp, setTemp] = useState(String(value))
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (editing) {
-      setTemp(String(value))
-      setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select() }, 10)
-    }
-  }, [editing, value])
-
-  const commit = () => {
-    const num = parseFloat(temp)
-    if (!isNaN(num) && num > 0) onSave(num)
-    setEditing(false)
-  }
-
-  if (editing) {
-    return (
-      <input
-        ref={inputRef}
-        type={type}
-        value={temp}
-        onChange={(e) => setTemp(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false) }}
-        className="w-20 text-center text-sm font-bold rounded-lg px-2 py-1 outline-none"
-        style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)', border: '2px solid #3b82f6' }}
-      />
-    )
-  }
-
-  return (
-    <span
-      onDoubleClick={() => setEditing(true)}
-      className="cursor-pointer px-2 py-1 rounded-lg hover:bg-blue-500/10 transition-all select-none"
-      title="دوبار کلیک برای ویرایش"
-    >
-      {value.toLocaleString('fa-IR')}
-    </span>
-  )
 }
 
 export default function CartTable({ items }: Props) {
@@ -92,12 +55,12 @@ export default function CartTable({ items }: Props) {
               <td className="px-3 py-2 text-center">
                 <div className="flex items-center justify-center gap-1">
                   <button onClick={() => updateQuantity(item.productId, item.quantity - 1)} className="btn-primary" style={{ padding: '4px 10px', fontSize: '10px', borderRadius: '6px' }}>-</button>
-                  <EditableCell value={item.quantity} onSave={(v) => updateQuantity(item.productId, Math.round(v))} />
+                  <InlineEditCell value={item.quantity} onSave={(v: number) => updateQuantity(item.productId, Math.round(v))} />
                   <button onClick={() => updateQuantity(item.productId, item.quantity + 1)} className="btn-primary" style={{ padding: '4px 10px', fontSize: '10px', borderRadius: '6px' }}>+</button>
                 </div>
               </td>
               <td className="px-3 py-2 text-left">
-                <EditableCell value={item.unitPrice} onSave={(v) => updateUnitPrice(item.productId, v)} />
+                <InlineEditCell value={item.unitPrice} onSave={(v: number) => updateUnitPrice(item.productId, v)} />
               </td>
               <td className="px-3 py-2 text-left font-bold" style={{ color: 'var(--text-primary)' }}>{(item.unitPrice * item.quantity).toLocaleString('fa-IR')}</td>
               <td className="px-3 py-2"><button onClick={() => removeItem(item.productId)} className="btn-danger" style={{ padding: '4px 8px', fontSize: '10px', borderRadius: '6px' }}>X</button></td>
