@@ -1,5 +1,7 @@
 /** SettingsTab — shop info, tax, smart export/import, and backup settings.
  *  Extracted from AdminPanel to prevent focus loss during parent re-renders.
+ *  Helper components (Card, Label, Input) are defined outside to prevent
+ *  React from recreating them on each render, which would unmount inputs.
  */
 
 import { useState, useEffect } from 'react'
@@ -8,6 +10,23 @@ import { setShopName } from '../../utils/a4Print'
 import BackupSection from './BackupSection'
 
 const primary = '#006194'
+
+const cBg = '#1e293b'
+const cBorder = '#334155'
+const tPri = '#f1f5f9'
+const tSec = '#94a3b8'
+const inStyle = { background: '#0f172a', border: `1px solid ${cBorder}`, color: tPri }
+
+const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
+  <div className={`rounded-xl p-4 border ${className}`} style={{ backgroundColor: cBg, borderColor: cBorder }}>{children}</div>
+)
+const Label = ({ children }: { children: React.ReactNode }) => (
+  <label className="text-xs font-bold block mb-1.5" style={{ color: tSec }}>{children}</label>
+)
+const Input = ({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) => (
+  <div className="mb-3"><Label>{label}</Label><input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+    className="w-full px-3 py-2 rounded-lg text-sm font-bold transition-all outline-none" style={inStyle} /></div>
+)
 
 interface Props {
   onExport: () => void
@@ -46,24 +65,6 @@ export default function SettingsTab({ onExport, onImport }: Props) {
     setShopName(storeName, storePhone)
     setSaved(true); setTimeout(() => setSaved(false), 2000)
   }
-
-  const cBg = isDark ? '#1e293b' : '#ffffff'
-  const cBorder = isDark ? '#334155' : '#e2e8f0'
-  const tPri = isDark ? '#f1f5f9' : '#0f172a'
-  const tSec = isDark ? '#94a3b8' : '#64748b'
-  const inBg = isDark ? '#0f172a' : '#f8fafc'
-  const inStyle = { background: inBg, border: `1px solid ${cBorder}`, color: tPri }
-
-  const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-    <div className={`rounded-xl p-4 border ${className}`} style={{ backgroundColor: cBg, borderColor: cBorder }}>{children}</div>
-  )
-  const Label = ({ children }: { children: React.ReactNode }) => (
-    <label className="text-xs font-bold block mb-1.5" style={{ color: tSec }}>{children}</label>
-  )
-  const Input = ({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) => (
-    <div className="mb-3"><Label>{label}</Label><input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-      className="w-full px-3 py-2 rounded-lg text-sm font-bold transition-all outline-none" style={inStyle} /></div>
-  )
 
   return (
     <div className="w-full max-w-5xl mx-auto">
@@ -113,7 +114,7 @@ export default function SettingsTab({ onExport, onImport }: Props) {
                 <div className="flex gap-1">
                   {[0, 5, 9, 10, 15].map(v => (
                     <button key={v} onClick={() => setTaxRate(v)} className="flex-1 py-1 rounded-lg text-[10px] font-bold"
-                      style={{ background: taxRate === v ? primary : inBg, color: taxRate === v ? '#fff' : tSec }}>{v}%</button>
+                      style={{ background: taxRate === v ? primary : (isDark ? '#0f172a' : '#f8fafc'), color: taxRate === v ? '#fff' : tSec }}>{v}%</button>
                   ))}
                 </div>
               </div>
