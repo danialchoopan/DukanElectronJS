@@ -19,6 +19,7 @@ export default function SalesHistory() {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
   const [filterMethod, setFilterMethod] = useState<string>('all')
   const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [filterSaleType, setFilterSaleType] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [returnedIds, setReturnedIds] = useState<Set<string>>(new Set())
   const [page, setPage] = useState(0)
@@ -117,6 +118,7 @@ export default function SalesHistory() {
 
   const filteredSales = sales.filter((s) => {
     if (filterMethod !== 'all' && s.paymentMethod !== filterMethod) return false
+    if (filterSaleType !== 'all' && s.saleType !== filterSaleType) return false
     const hasReturns = s.items?.some((item: any) => returnedIds.has(`${s.id}-${item.productId}`))
     if (filterStatus === 'returned' && !hasReturns) return false
     if (filterStatus === 'normal' && hasReturns) return false
@@ -165,8 +167,8 @@ export default function SalesHistory() {
   }
 
   const handleExcelSales = () => {
-    const headers = ['فاکتور', 'تاریخ', 'صندوکدار', 'مشتری', 'تعداد اقلام', 'نوع پرداخت', 'مبلغ']
-    const csvRows = filteredSales.map(s => [s.invoiceNumber, formatJalaliDateTime(s.createdAt), s.userName, s.customerName || '-', s.items?.length || 0, s.paymentMethod === 'cash' ? 'نقدی' : s.paymentMethod === 'card' ? 'کارتی' : 'بدهی', s.total_amount])
+    const headers = ['فاکتور', 'تاریخ', 'صندوکدار', 'مشتری', 'تعداد اقلام', 'نوع پرداخت', 'نوع فروش', 'مبلغ']
+    const csvRows = filteredSales.map(s => [s.invoiceNumber, formatJalaliDateTime(s.createdAt), s.userName, s.customerName || '-', s.items?.length || 0, s.paymentMethod === 'cash' ? 'نقدی' : s.paymentMethod === 'card' ? 'کارتی' : 'بدهی', s.saleType === 'online' ? 'آنلاین' : 'حضوری', s.total_amount])
     downloadExcel('sales-history.csv', headers, csvRows)
   }
 
@@ -253,6 +255,16 @@ export default function SalesHistory() {
           </button>
         ))}
       </div>
+      <div className="flex gap-2 mb-3">
+        <span className="text-[10px] font-bold self-center" style={{ color: textSecondary }}>نوع فروش:</span>
+        {['all', 'in-person', 'online'].map((t) => (
+          <button key={t} onClick={() => setFilterSaleType(t)}
+            className="px-3 py-1.5 rounded-full text-[10px] font-bold transition-all"
+            style={{ background: filterSaleType === t ? '#22c55e' : btnBg, color: filterSaleType === t ? '#fff' : textSecondary }}>
+            {t === 'all' ? 'همه' : t === 'in-person' ? 'حضوری' : 'آنلاین'}
+          </button>
+        ))}
+      </div>
 
       <div className="grid grid-cols-3 gap-3 mb-4">
         {statsCards.map((kpi, i) => (
@@ -292,6 +304,7 @@ export default function SalesHistory() {
               ))}
               <th className="text-center px-4 py-2.5 text-xs font-bold" style={{ color: textSecondary }}>اقلام</th>
               <th className="text-center px-4 py-2.5 text-xs font-bold" style={{ color: textSecondary }}>{fa.payment.method}</th>
+              <th className="text-center px-4 py-2.5 text-xs font-bold" style={{ color: textSecondary }}>نوع فروش</th>
               <th className="text-center px-4 py-2.5 text-xs font-bold" style={{ color: textSecondary }}>وضعیت</th>
             </tr>
           </thead>
@@ -319,6 +332,12 @@ export default function SalesHistory() {
                       backgroundColor: s.paymentMethod === 'cash' ? (isDark ? 'rgba(34,197,94,0.15)' : '#dcfce7') : s.paymentMethod === 'card' ? (isDark ? 'rgba(59,130,246,0.15)' : '#dbeafe') : (isDark ? 'rgba(168,85,247,0.15)' : '#f3e8ff'),
                       color: s.paymentMethod === 'cash' ? '#22c55e' : s.paymentMethod === 'card' ? '#3b82f6' : '#a855f7',
                     }}>{s.paymentMethod === 'cash' ? fa.payment.cash : s.paymentMethod === 'card' ? fa.payment.card : fa.payment.ledger}</span>
+                  </td>
+                  <td className="px-4 py-2.5 text-center">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{
+                      backgroundColor: s.saleType === 'online' ? (isDark ? 'rgba(59,130,246,0.15)' : '#dbeafe') : (isDark ? 'rgba(34,197,94,0.15)' : '#dcfce7'),
+                      color: s.saleType === 'online' ? '#3b82f6' : '#22c55e',
+                    }}>{s.saleType === 'online' ? 'آنلاین' : 'حضوری'}</span>
                   </td>
                   <td className="px-4 py-2.5 font-extrabold text-right" style={{ color: isFullyReturned ? '#ef4444' : textPrimary, textDecoration: isFullyReturned ? 'line-through' : 'none' }}>{s.total_amount.toLocaleString('fa-IR')}</td>
                   <td className="px-4 py-2.5 text-center">
@@ -387,6 +406,10 @@ export default function SalesHistory() {
                 <div className="text-xs mb-1" style={{ color: textSecondary }}>مشتری</div>
                 <div className="text-sm font-bold" style={{ color: textPrimary }}>{selectedSale.customerName || 'ناشناس'}</div>
               </div>
+              <div className="rounded-xl p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : '#f8fafc' }}>
+                <div className="text-xs mb-1" style={{ color: textSecondary }}>نوع فروش</div>
+                <div className="text-sm font-bold" style={{ color: selectedSale.saleType === 'online' ? '#3b82f6' : '#22c55e' }}>{selectedSale.saleType === 'online' ? 'آنلاین' : 'حضوری'}</div>
+              </div>
             </div>
 
             {(selectedSale.description || (selectedSale as any).invoiceDescription) && (
@@ -454,7 +477,7 @@ export default function SalesHistory() {
                 const customerInfo = selectedSale.customerName ? `<div class="header-info"><span>مشتری: ${selectedSale.customerName}</span></div>` : ''
                 html += customerInfo
                 html += `<div class="header-info"><span>شماره فاکتور: ${selectedSale.invoiceNumber}</span><span>تاریخ: ${formatJalaliDateTime(selectedSale.createdAt)}</span></div>`
-                html += `<div class="header-info"><span>صندوکدار: ${selectedSale.userName}</span><span>نوع پرداخت: ${selectedSale.paymentMethod === 'cash' ? 'نقدی' : selectedSale.paymentMethod === 'card' ? 'کارتی' : 'بدهی'}</span></div>`
+                html += `<div class="header-info"><span>صندوکدار: ${selectedSale.userName}</span><span>نوع پرداخت: ${selectedSale.paymentMethod === 'cash' ? 'نقدی' : selectedSale.paymentMethod === 'card' ? 'کارتی' : 'بدهی'}</span><span>نوع فروش: ${selectedSale.saleType === 'online' ? 'آنلاین' : 'حضوری'}</span></div>`
                 html += '<table><thead><tr><th>کالا</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>'
                 selectedSale.items?.forEach((item: any) => { html += `<tr><td>${item.productTitle}</td><td>${item.quantity}</td><td>${item.unitPrice.toLocaleString('fa-IR')}</td><td>${item.subtotal.toLocaleString('fa-IR')}</td></tr>` })
                 html += '</tbody></table>'

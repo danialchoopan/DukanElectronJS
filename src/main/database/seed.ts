@@ -142,7 +142,7 @@ export function seedDatabase(): void {
 
   const existingSaleCount = db.prepare('SELECT COUNT(*) as c FROM sales').get() as { c: number }
   if (existingSaleCount.c === 0) {
-    const insertSale = db.prepare('INSERT INTO sales (invoiceNumber, userId, customerId, subtotal, total_amount, totalNetProfit, paymentMethod, customerPaid, changeAmount, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    const insertSale = db.prepare('INSERT INTO sales (invoiceNumber, userId, customerId, subtotal, total_amount, totalNetProfit, paymentMethod, customerPaid, changeAmount, createdAt, saleType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
     const insertSaleItem = db.prepare('INSERT INTO sale_items (saleId, productId, productTitle, quantity, unitPrice, purchasePrice, subtotal, netProfit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
 
     const userIds = db.prepare('SELECT id FROM users').all() as { id: number }[]
@@ -181,8 +181,9 @@ export function seedDatabase(): void {
           }
           const netProfit = subtotal - totalCogs
           const invoiceNum = `INV-${saleDate.replace(/[-: ]/g, '').slice(0, 14)}-${s}`
+          const saleType = Math.random() > 0.3 ? 'in-person' : 'online'
 
-          const r = insertSale.run(invoiceNum, userId, customerId, subtotal, subtotal, netProfit, paymentMethod, paymentMethod === 'ledger' ? 0 : subtotal, 0, saleDate)
+          const r = insertSale.run(invoiceNum, userId, customerId, subtotal, subtotal, netProfit, paymentMethod, paymentMethod === 'ledger' ? 0 : subtotal, 0, saleDate, saleType)
           const saleId = r.lastInsertRowid as number
           saleIds.push(saleId)
 
