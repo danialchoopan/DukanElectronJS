@@ -6,6 +6,7 @@ import ShortcutsSettings from './settings/ShortcutsSettings'
 import CustomizationSettings from './settings/CustomizationSettings'
 import { useHighlight } from '../hooks/useHighlight'
 import SmartExportDialog from '../components/print/SmartExportDialog'
+import SettingsTab from './settings/SettingsTab'
 import { setShopName } from '../utils/a4Print'
 import Dialog from '../components/ui/Dialog'
 
@@ -302,6 +303,8 @@ function BackupSection() {
   const [testResults, setTestResults] = useState<{ name: string; passed: boolean; error?: string }[] | null>(null)
   const [runningTests, setRunningTests] = useState(false)
   const [selectedBackups, setSelectedBackups] = useState<Set<string>>(new Set())
+  const [autoBackup, setAutoBackup] = useState('true')
+  const [backupInterval, setBackupInterval] = useState('daily')
   const isDark = document.documentElement.classList.contains('dark')
 
   const primary = '#006194'
@@ -320,7 +323,11 @@ function BackupSection() {
     if (statsRes.success && statsRes.data) setStats(statsRes.data)
   }
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => {
+    loadData()
+    window.api.settings.get('autoBackupEnabled').then(r => { if (r.success && r.data) setAutoBackup(r.data) })
+    window.api.settings.get('autoBackupInterval').then(r => { if (r.success && r.data) setBackupInterval(r.data) })
+  }, [])
 
   const handleExport = async () => {
     setLoading(true)
@@ -423,6 +430,32 @@ function BackupSection() {
 
   return (
     <div className="space-y-3">
+      {/* Auto-backup settings */}
+      <div className="flex flex-col gap-3 p-3 rounded-xl" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}` }}>
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-sm font-bold" style={{ color: textPrimary }}>پشتیبان‌گیری خودکار</span>
+            <p className="text-[10px] mt-0.5" style={{ color: textSecondary }}>در شروع برنامه به‌طور خودکار پشتیبان گرفته می‌شود</p>
+          </div>
+          <button onClick={async () => { const v = autoBackup === 'true' ? 'false' : 'true'; setAutoBackup(v); await window.api.settings.set('autoBackupEnabled', v) }}
+            className="relative w-11 h-6 rounded-full transition-all"
+            style={{ backgroundColor: autoBackup === 'true' ? '#22c55e' : isDark ? '#475569' : '#d1d5db' }}>
+            <div className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all" style={{ left: autoBackup === 'true' ? '22px' : '2px' }} />
+          </button>
+        </div>
+        {autoBackup === 'true' && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold" style={{ color: textSecondary }}>فاصله زمانی</span>
+            <select value={backupInterval} onChange={async (e) => { setBackupInterval(e.target.value); await window.api.settings.set('autoBackupInterval', e.target.value) }}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold outline-none" style={{ backgroundColor: isDark ? '#0f172a' : '#fff', border: `1px solid ${cardBorder}`, color: textPrimary }}>
+              <option value="daily">هر روز</option>
+              <option value="weekly">هر هفته</option>
+              <option value="monthly">هر ماه</option>
+            </select>
+          </div>
+        )}
+      </div>
+
       <div className="flex gap-2 flex-wrap">
         <button onClick={handleCreateBackup} disabled={loading} className="btn btn-primary flex-1 py-2 text-sm">
           + پشتیبان جدید

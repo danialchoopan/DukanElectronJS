@@ -142,6 +142,8 @@ export default function App() {
     else setNavParams(null)
   }, [])
 
+  const clearNavParams = useCallback(() => setNavParams(null), [])
+
   if (isFirstRun === null) return <div className="h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)' }}>Loading...</div>
   if (isFirstRun) return <SetupWizard onComplete={() => setIsFirstRun(false)} />
   if (!user) return <LockScreen />
@@ -155,12 +157,12 @@ export default function App() {
         {currentView === 'sales' && <SalesHistory />}
         {currentView === 'addproduct' && <AddProduct />}
         {currentView === 'categories' && <Categories />}
-        {currentView === 'inventory' && <Inventory initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
-        {currentView === 'accounting' && <Accounting initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
-        {currentView === 'customers' && <CustomerManagement highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
+        {currentView === 'inventory' && <Inventory initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}
+        {currentView === 'accounting' && <Accounting initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}
+        {currentView === 'customers' && <CustomerManagement highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}
         {currentView === 'suppliers' && <Suppliers />}
-        {currentView === 'settings' && <AdminPanel view="settings" initialTab="settings" highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
-        {currentView === 'admin' && user.role === 'admin' && <AdminPanel view="admin" initialTab={navParams?.tab || 'users'} highlightId={navParams?.highlightId} onHighlightDone={() => setNavParams(null)} />}
+        {currentView === 'settings' && <AdminPanel view="settings" initialTab="settings" highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}
+        {currentView === 'admin' && user.role === 'admin' && <AdminPanel view="admin" initialTab={navParams?.tab || 'users'} highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}
         {currentView === 'help' && <Help />}
       </div>
       <GlobalSearch open={showGlobalSearch} onClose={() => setShowGlobalSearch(false)} onNavigate={(view, tab, highlightId) => { handleNavigate(view, tab, highlightId); setShowGlobalSearch(false) }} />

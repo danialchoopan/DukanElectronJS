@@ -80,7 +80,8 @@ app.whenReady().then(async () => {
     getDatabase()
     seedDatabase()
     registerAllHandlers()
-    await autoBackup()
+    const autoBackupSetting = settingsRepo.getSetting('autoBackupEnabled')
+    if (autoBackupSetting !== 'false') await autoBackup()
     createWindow()
     registerNavigationShortcuts()
   } catch (err) {
