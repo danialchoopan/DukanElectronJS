@@ -58,8 +58,9 @@ checks.push(['smartExport has signatures', smartExport.includes('computeSignatur
 const conn = readFile('src/main/database/connection.ts');
 checks.push(['DB has suppliers table', conn.includes('CREATE TABLE IF NOT EXISTS suppliers')]);
 checks.push(['DB has purchases table', conn.includes('CREATE TABLE IF NOT EXISTS purchases')]);
-checks.push(['DB has sales.description column', conn.includes("ALTER TABLE sales ADD COLUMN description")]);
-checks.push(['DB has sales.manualCustomerName column', conn.includes("ALTER TABLE sales ADD COLUMN manualCustomerName")]);
+checks.push(['DB has sales.description column', conn.includes("description TEXT DEFAULT ''")]);
+checks.push(['DB has sales.saleType column', conn.includes("saleType TEXT DEFAULT 'in-person'")]);
+checks.push(['DB has price_history table', conn.includes('CREATE TABLE IF NOT EXISTS price_history')]);
 checks.push(['DB has supplier accounts', conn.includes("'2110'")]);
 
 // 11. No confirm() in renderer (Electron rule)
