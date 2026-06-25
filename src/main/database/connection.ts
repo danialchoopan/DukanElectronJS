@@ -72,6 +72,13 @@ function initializeDatabase(db: Database.Database): void {
       name TEXT NOT NULL,
       phone TEXT NOT NULL DEFAULT '',
       balance REAL NOT NULL DEFAULT 0,
+      address TEXT DEFAULT '',
+      notes TEXT DEFAULT '',
+      customerType TEXT DEFAULT 'real',
+      description TEXT DEFAULT '',
+      imageBase64 TEXT DEFAULT '',
+      totalSpent REAL DEFAULT 0,
+      totalPurchases INTEGER DEFAULT 0,
       isActive INTEGER NOT NULL DEFAULT 1,
       createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
     );
@@ -82,6 +89,9 @@ function initializeDatabase(db: Database.Database): void {
     CREATE TABLE IF NOT EXISTS categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
+      slug TEXT DEFAULT '',
+      level INTEGER NOT NULL DEFAULT 0,
+      is_active INTEGER NOT NULL DEFAULT 1,
       parent_id INTEGER DEFAULT NULL,
       createdAt TEXT DEFAULT (datetime('now', 'localtime')),
       FOREIGN KEY (parent_id) REFERENCES categories(id)
@@ -100,6 +110,10 @@ function initializeDatabase(db: Database.Database): void {
       paymentMethod TEXT NOT NULL DEFAULT 'cash' CHECK(paymentMethod IN ('cash', 'card', 'ledger')),
       customerPaid REAL NOT NULL DEFAULT 0,
       changeAmount REAL NOT NULL DEFAULT 0,
+      description TEXT DEFAULT '',
+      invoiceDescription TEXT DEFAULT '',
+      manualCustomerName TEXT DEFAULT '',
+      saleType TEXT DEFAULT 'in-person',
       createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
       FOREIGN KEY (userId) REFERENCES users(id),
       FOREIGN KEY (customerId) REFERENCES customers(id)
@@ -132,6 +146,7 @@ function initializeDatabase(db: Database.Database): void {
       type TEXT NOT NULL CHECK(type IN ('charge', 'payment', 'sale')),
       amount REAL NOT NULL,
       description TEXT NOT NULL DEFAULT '',
+      images TEXT DEFAULT '[]',
       createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
       FOREIGN KEY (customerId) REFERENCES customers(id),
       FOREIGN KEY (saleId) REFERENCES sales(id)
@@ -145,6 +160,8 @@ function initializeDatabase(db: Database.Database): void {
       description TEXT NOT NULL,
       amount REAL NOT NULL,
       date TEXT NOT NULL,
+      imageBase64 TEXT DEFAULT '',
+      images TEXT DEFAULT '[]',
       createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
     );
 
@@ -265,129 +282,79 @@ function initializeDatabase(db: Database.Database): void {
     );
     CREATE INDEX IF NOT EXISTS idx_journal_lines_entry ON journal_entry_lines(entryId);
     CREATE INDEX IF NOT EXISTS idx_journal_lines_account ON journal_entry_lines(accountId);
+
+    CREATE TABLE IF NOT EXISTS price_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      productId INTEGER NOT NULL,
+      priceType TEXT NOT NULL CHECK(priceType IN ('sale', 'purchase')),
+      oldPrice REAL NOT NULL DEFAULT 0,
+      newPrice REAL NOT NULL,
+      changedBy TEXT DEFAULT 'system',
+      changedAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (productId) REFERENCES products(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_price_history_productId ON price_history(productId);
+
+    CREATE TABLE IF NOT EXISTS suppliers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      phone TEXT DEFAULT '',
+      email TEXT DEFAULT '',
+      address TEXT DEFAULT '',
+      company TEXT DEFAULT '',
+      taxId TEXT DEFAULT '',
+      balance REAL NOT NULL DEFAULT 0,
+      description TEXT DEFAULT '',
+      isActive INTEGER NOT NULL DEFAULT 1,
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_suppliers_name ON suppliers(name);
+    CREATE INDEX IF NOT EXISTS idx_suppliers_phone ON suppliers(phone);
+
+    CREATE TABLE IF NOT EXISTS supplier_ledger (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      supplierId INTEGER NOT NULL,
+      purchaseId INTEGER,
+      type TEXT NOT NULL CHECK(type IN ('purchase', 'payment', 'return', 'debt', 'adjustment')),
+      amount REAL NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (supplierId) REFERENCES suppliers(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_supplier_ledger_supplierId ON supplier_ledger(supplierId);
+
+    CREATE TABLE IF NOT EXISTS purchases (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      invoiceNumber TEXT UNIQUE NOT NULL,
+      supplierId INTEGER NOT NULL,
+      subtotal REAL NOT NULL DEFAULT 0,
+      taxAmount REAL NOT NULL DEFAULT 0,
+      discountAmount REAL NOT NULL DEFAULT 0,
+      totalAmount REAL NOT NULL DEFAULT 0,
+      paidAmount REAL NOT NULL DEFAULT 0,
+      paymentMethod TEXT NOT NULL DEFAULT 'credit' CHECK(paymentMethod IN ('cash', 'credit', 'partial')),
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'received', 'invoiced', 'paid')),
+      notes TEXT DEFAULT '',
+      purchaseDate TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (supplierId) REFERENCES suppliers(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_purchases_supplierId ON purchases(supplierId);
+    CREATE INDEX IF NOT EXISTS idx_purchases_date ON purchases(purchaseDate);
+
+    CREATE TABLE IF NOT EXISTS purchase_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      purchaseId INTEGER NOT NULL,
+      productId INTEGER NOT NULL,
+      productTitle TEXT NOT NULL,
+      quantity REAL NOT NULL,
+      unitCost REAL NOT NULL,
+      subtotal REAL NOT NULL,
+      FOREIGN KEY (purchaseId) REFERENCES purchases(id) ON DELETE CASCADE,
+      FOREIGN KEY (productId) REFERENCES products(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_purchase_items_purchaseId ON purchase_items(purchaseId);
   `)
-
-  try { db.prepare('ALTER TABLE categories ADD COLUMN slug TEXT DEFAULT ""').run() } catch(e) {}
-  try { db.prepare('ALTER TABLE categories ADD COLUMN level INTEGER NOT NULL DEFAULT 0').run() } catch(e) {}
-  try { db.prepare('ALTER TABLE categories ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1').run() } catch(e) {}
-
-  // Populate slug and level for existing categories
-  try {
-    const cats = db.prepare('SELECT id, name, parent_id FROM categories').all() as { id: number; name: string; parent_id: number | null }[]
-    for (const cat of cats) {
-      const slug = cat.name.replace(/\s+/g, '-').toLowerCase()
-      const level = cat.parent_id ? 1 : 0
-      db.prepare('UPDATE categories SET slug = ?, level = ? WHERE id = ?').run(slug, level, cat.id)
-    }
-  } catch(e) {}
-
-  try {
-    db.prepare('ALTER TABLE expenses ADD COLUMN imageBase64 TEXT DEFAULT ""').run()
-  } catch (e) {
-    // Column already exists
-  }
-
-  try {
-    db.prepare('ALTER TABLE expenses ADD COLUMN images TEXT DEFAULT "[]"').run()
-  } catch (e) {
-    // Column already exists
-  }
-
-try { db.prepare('ALTER TABLE customers ADD COLUMN address TEXT DEFAULT ""').run() } catch(e) {}
-try { db.prepare('ALTER TABLE customers ADD COLUMN notes TEXT DEFAULT ""').run() } catch(e) {}
-try { db.prepare('ALTER TABLE customers ADD COLUMN customerType TEXT DEFAULT "real"').run() } catch(e) {}
-try { db.prepare('ALTER TABLE customers ADD COLUMN description TEXT DEFAULT ""').run() } catch(e) {}
-try { db.prepare('ALTER TABLE customers ADD COLUMN imageBase64 TEXT DEFAULT ""').run() } catch(e) {}
-try { db.prepare('ALTER TABLE customers ADD COLUMN totalSpent REAL DEFAULT 0').run() } catch(e) {}
-try { db.prepare('ALTER TABLE customers ADD COLUMN totalPurchases INTEGER DEFAULT 0').run() } catch(e) {}
-try { db.prepare('ALTER TABLE customer_ledger ADD COLUMN images TEXT DEFAULT "[]"').run() } catch(e) {}
-try { db.prepare('ALTER TABLE sales ADD COLUMN description TEXT DEFAULT ""').run() } catch(e) {}
-try { db.prepare('ALTER TABLE sales ADD COLUMN invoiceDescription TEXT DEFAULT ""').run() } catch(e) {}
-try { db.prepare('ALTER TABLE sales ADD COLUMN manualCustomerName TEXT DEFAULT ""').run() } catch(e) {}
-try { db.prepare('ALTER TABLE sales ADD COLUMN saleType TEXT DEFAULT "in-person"').run() } catch(e) {}
-
-  // Price history table — tracks every price change for products
-  try {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS price_history (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        productId INTEGER NOT NULL,
-        priceType TEXT NOT NULL CHECK(priceType IN ('sale', 'purchase')),
-        oldPrice REAL NOT NULL DEFAULT 0,
-        newPrice REAL NOT NULL,
-        changedBy TEXT DEFAULT 'system',
-        changedAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-        FOREIGN KEY (productId) REFERENCES products(id)
-      );
-      CREATE INDEX IF NOT EXISTS idx_price_history_productId ON price_history(productId);
-    `)
-  } catch(e) {}
-
-  // Supplier tables
-  try {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS suppliers (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        phone TEXT DEFAULT '',
-        email TEXT DEFAULT '',
-        address TEXT DEFAULT '',
-        company TEXT DEFAULT '',
-        taxId TEXT DEFAULT '',
-        balance REAL NOT NULL DEFAULT 0,
-        description TEXT DEFAULT '',
-        isActive INTEGER NOT NULL DEFAULT 1,
-        createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
-      );
-      CREATE INDEX IF NOT EXISTS idx_suppliers_name ON suppliers(name);
-      CREATE INDEX IF NOT EXISTS idx_suppliers_phone ON suppliers(phone);
-
-      CREATE TABLE IF NOT EXISTS supplier_ledger (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        supplierId INTEGER NOT NULL,
-        purchaseId INTEGER,
-        type TEXT NOT NULL CHECK(type IN ('purchase', 'payment', 'return', 'debt', 'adjustment')),
-        amount REAL NOT NULL,
-        description TEXT NOT NULL DEFAULT '',
-        createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-        FOREIGN KEY (supplierId) REFERENCES suppliers(id),
-        FOREIGN KEY (purchaseId) REFERENCES purchases(id)
-      );
-      CREATE INDEX IF NOT EXISTS idx_supplier_ledger_supplierId ON supplier_ledger(supplierId);
-
-      CREATE TABLE IF NOT EXISTS purchases (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        invoiceNumber TEXT UNIQUE NOT NULL,
-        supplierId INTEGER NOT NULL,
-        subtotal REAL NOT NULL DEFAULT 0,
-        taxAmount REAL NOT NULL DEFAULT 0,
-        discountAmount REAL NOT NULL DEFAULT 0,
-        totalAmount REAL NOT NULL DEFAULT 0,
-        paidAmount REAL NOT NULL DEFAULT 0,
-        paymentMethod TEXT NOT NULL DEFAULT 'credit' CHECK(paymentMethod IN ('cash', 'credit', 'partial')),
-        status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'received', 'invoiced', 'paid')),
-        notes TEXT DEFAULT '',
-        purchaseDate TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-        createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-        FOREIGN KEY (supplierId) REFERENCES suppliers(id)
-      );
-      CREATE INDEX IF NOT EXISTS idx_purchases_supplierId ON purchases(supplierId);
-      CREATE INDEX IF NOT EXISTS idx_purchases_date ON purchases(purchaseDate);
-
-      CREATE TABLE IF NOT EXISTS purchase_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        purchaseId INTEGER NOT NULL,
-        productId INTEGER NOT NULL,
-        productTitle TEXT NOT NULL,
-        quantity REAL NOT NULL,
-        unitCost REAL NOT NULL,
-        subtotal REAL NOT NULL,
-        FOREIGN KEY (purchaseId) REFERENCES purchases(id) ON DELETE CASCADE,
-        FOREIGN KEY (productId) REFERENCES products(id)
-      );
-      CREATE INDEX IF NOT EXISTS idx_purchase_items_purchaseId ON purchase_items(purchaseId);
-    `)
-  } catch(e) {}
 
   const defaults: Record<string, string> = {
     storeName: 'فروشگاه من',
