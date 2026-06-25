@@ -304,6 +304,24 @@ try { db.prepare('ALTER TABLE customer_ledger ADD COLUMN images TEXT DEFAULT "[]
 try { db.prepare('ALTER TABLE sales ADD COLUMN description TEXT DEFAULT ""').run() } catch(e) {}
 try { db.prepare('ALTER TABLE sales ADD COLUMN invoiceDescription TEXT DEFAULT ""').run() } catch(e) {}
 try { db.prepare('ALTER TABLE sales ADD COLUMN manualCustomerName TEXT DEFAULT ""').run() } catch(e) {}
+try { db.prepare('ALTER TABLE sales ADD COLUMN saleType TEXT DEFAULT "in-person"').run() } catch(e) {}
+
+  // Price history table — tracks every price change for products
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS price_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        productId INTEGER NOT NULL,
+        priceType TEXT NOT NULL CHECK(priceType IN ('sale', 'purchase')),
+        oldPrice REAL NOT NULL DEFAULT 0,
+        newPrice REAL NOT NULL,
+        changedBy TEXT DEFAULT 'system',
+        changedAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (productId) REFERENCES products(id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_price_history_productId ON price_history(productId);
+    `)
+  } catch(e) {}
 
   // Supplier tables
   try {

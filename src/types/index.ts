@@ -77,6 +77,7 @@ export interface Sale {
   description?: string
   invoiceDescription?: string
   manualCustomerName?: string
+  saleType?: 'in-person' | 'online'
   createdAt: string
 }
 
@@ -95,6 +96,7 @@ export interface SaleInput {
   description?: string
   invoiceDescription?: string
   manualCustomerName?: string
+  saleType?: 'in-person' | 'online'
 }
 
 export interface Customer {

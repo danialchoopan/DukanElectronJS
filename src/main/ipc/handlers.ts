@@ -19,6 +19,7 @@ import * as reportsRepo from '../database/repositories/reports'
 import * as seedRepo from '../database/repositories/seed'
 import * as suppliersRepo from '../database/repositories/suppliers'
 import * as purchasesRepo from '../database/repositories/purchases'
+import * as priceHistoryRepo from '../database/repositories/priceHistory'
 import * as backupService from '../database/backup'
 import * as smartExportService from '../database/smartExport'
 import * as migrationService from '../database/migration'
@@ -527,6 +528,11 @@ export function registerAllHandlers(): void {
   ipcMain.handle('purchases:create', (_e, a: { input: any }) => ({ success: true, data: purchasesRepo.createPurchase(a.input) }))
   handle('purchases:stats', () => purchasesRepo.getPurchaseStats())
   ipcMain.handle('purchases:return', (_e, a: { purchaseId: number; items: any[] }) => ({ success: true, data: purchasesRepo.returnPurchase(a.purchaseId, a.items) }))
+
+  // ─── Price History ──────────────────────────────────────
+  ipcMain.handle('priceHistory:get', (_e, a: { productId?: number; priceType?: string; startDate?: string; endDate?: string }) => ({ success: true, data: priceHistoryRepo.getPriceHistory(a.productId, a.priceType, a.startDate, a.endDate) }))
+  ipcMain.handle('priceHistory:latest', () => ({ success: true, data: priceHistoryRepo.getLatestPrices() }))
+  ipcMain.handle('priceHistory:byProduct', (_e, a: { productId: number }) => ({ success: true, data: priceHistoryRepo.getPriceHistoryByProduct(a.productId) }))
 
   // ─── Smart Export/Import ──────────────────────────────────
   handle('smartExport:modules', () => smartExportService.getExportModuleList())

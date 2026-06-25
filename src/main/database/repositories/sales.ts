@@ -39,12 +39,12 @@ export function createSale(input: SaleInput): Sale {
 
   const createSaleTx = db.transaction(() => {
     const saleResult = db.prepare(`
-      INSERT INTO sales (invoiceNumber, userId, customerId, subtotal, total_amount, totalNetProfit, paymentMethod, customerPaid, changeAmount, description, invoiceDescription, manualCustomerName)
-      VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)
+      INSERT INTO sales (invoiceNumber, userId, customerId, subtotal, total_amount, totalNetProfit, paymentMethod, customerPaid, changeAmount, description, invoiceDescription, manualCustomerName, saleType)
+      VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       invoiceNumber, input.userId, input.customerId ?? null,
       rawSubtotal, total_amount, input.paymentMethod, input.customerPaid, changeAmount,
-      input.description || '', input.invoiceDescription || '', input.manualCustomerName || ''
+      input.description || '', input.invoiceDescription || '', input.manualCustomerName || '', input.saleType || 'in-person'
     )
     const saleId = saleResult.lastInsertRowid as number
 
@@ -108,6 +108,7 @@ export function getSaleById(id: number): Sale | undefined {
     description: (saleRow.description as string) ?? undefined,
     invoiceDescription: (saleRow.invoiceDescription as string) ?? undefined,
     manualCustomerName: (saleRow.manualCustomerName as string) ?? undefined,
+    saleType: (saleRow.saleType as 'in-person' | 'online') ?? 'in-person',
     createdAt: saleRow.createdAt as string,
   }
 }
@@ -136,6 +137,7 @@ export function getSalesByDateRange(startDate: string, endDate: string): Sale[] 
       description: (saleRow.description as string) ?? undefined,
       invoiceDescription: (saleRow.invoiceDescription as string) ?? undefined,
       manualCustomerName: (saleRow.manualCustomerName as string) ?? undefined,
+      saleType: (saleRow.saleType as 'in-person' | 'online') ?? 'in-person',
       createdAt: saleRow.createdAt as string,
     }
   })

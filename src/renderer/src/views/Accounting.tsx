@@ -11,9 +11,10 @@ import ARAging from './accounting/ARAging'
 import ExpenseManagement from './accounting/ExpenseManagement'
 import FiscalPeriods from './accounting/FiscalPeriods'
 import CashFlowStatement from './accounting/CashFlowStatement'
+import PriceHistory from './accounting/PriceHistory'
 import { useHighlight } from '../hooks/useHighlight'
 
-type AccountingTab = 'dashboard' | 'accounts' | 'journal' | 'trialBalance' | 'incomeStatement' | 'balanceSheet' | 'arAging' | 'expenses' | 'periods' | 'cashFlow'
+type AccountingTab = 'dashboard' | 'accounts' | 'journal' | 'trialBalance' | 'incomeStatement' | 'balanceSheet' | 'arAging' | 'expenses' | 'periods' | 'cashFlow' | 'priceHistory'
 
 interface Props {
   initialTab?: string
@@ -67,6 +68,9 @@ export default function Accounting({ initialTab, highlightId, onHighlightDone }:
     { key: 'cashFlow', label: fa.accounting.tabs.cashFlow, group: 4,
       icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>),
     },
+    { key: 'priceHistory', label: 'تاریخچه قیمت', group: 4,
+      icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>),
+    },
   ]
 
   const groups = [0, 1, 2, 3, 4]
@@ -117,6 +121,7 @@ export default function Accounting({ initialTab, highlightId, onHighlightDone }:
         {tab === 'expenses' && <ExpenseManagement />}
         {tab === 'periods' && <FiscalPeriods />}
         {tab === 'cashFlow' && <CashFlowStatement />}
+        {tab === 'priceHistory' && <PriceHistory />}
       </div>
     </div>
   )

@@ -78,17 +78,18 @@ export default function SalesTerminal() {
     showNotif(`${product.title} — ${product.sale_price.toLocaleString('fa-IR')} ${fa.common.toman}`)
   }, [addItem, showNotif, lastError, clearError])
 
-  const [pendingPayment, setPendingPayment] = useState<{ method: 'cash' | 'card' | 'ledger'; customerPaid?: number } | null>(null)
+  const [pendingPayment, setPendingPayment] = useState<{ method: 'cash' | 'card' | 'ledger'; customerPaid?: number; saleType: 'in-person' | 'online' } | null>(null)
+  const [saleType, setSaleType] = useState<'in-person' | 'online'>('in-person')
 
   const handlePaymentComplete = useCallback(async (method: 'cash' | 'card' | 'ledger', customerPaid?: number) => {
     if (items.length === 0) { showNotif(fa.pos.noItems); return }
     const total = getSubtotal()
     const paidAmt = fullyPaid ? total : (customerPaid || 0)
-    setPendingPayment({ method, customerPaid: paidAmt })
+    setPendingPayment({ method, customerPaid: paidAmt, saleType })
     setInvoiceCustomerName(selectedCustomer?.name || '')
     setInvoiceDesc('')
     setInvoiceNote('')
-  }, [items, fullyPaid, getSubtotal, showNotif, selectedCustomer])
+  }, [items, fullyPaid, getSubtotal, showNotif, selectedCustomer, saleType])
 
   const confirmSale = useCallback(async () => {
     if (!pendingPayment || items.length === 0) return
@@ -116,6 +117,7 @@ export default function SalesTerminal() {
       description: invoiceDesc,
       invoiceDescription: invoiceNote,
       manualCustomerName: customerName,
+      saleType: pendingPayment.saleType,
     })
     if (result.success && result.data) {
       const saleData = { ...result.data, customerName }
@@ -187,6 +189,14 @@ export default function SalesTerminal() {
         </>}>
         <DialogField label="نام مشتری">
           <DialogInput value={invoiceCustomerName} onChange={setInvoiceCustomerName} placeholder={selectedCustomer?.name || 'اختیاری'} autoFocus />
+        </DialogField>
+        <DialogField label="نوع فروش">
+          <div className="flex gap-2">
+            <button onClick={() => setSaleType('in-person')} className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+              style={{ background: saleType === 'in-person' ? 'linear-gradient(135deg, #006194, #007bb9)' : 'var(--bg-tertiary)', color: saleType === 'in-person' ? '#fff' : 'var(--text-secondary)', border: `1px solid ${saleType === 'in-person' ? '#006194' : 'var(--border-color)'}` }}>حضوری</button>
+            <button onClick={() => setSaleType('online')} className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+              style={{ background: saleType === 'online' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'var(--bg-tertiary)', color: saleType === 'online' ? '#fff' : 'var(--text-secondary)', border: `1px solid ${saleType === 'online' ? '#22c55e' : 'var(--border-color)'}` }}>آنلاین</button>
+          </div>
         </DialogField>
         <DialogField label="توضیحات فاکتور">
           <DialogInput value={invoiceDesc} onChange={setInvoiceDesc} placeholder="مثلاً: شماره سفارش، نام پروژه..." />

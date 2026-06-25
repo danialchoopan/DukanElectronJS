@@ -302,6 +302,12 @@ const api = {
     return: (purchaseId: number, items: any[]): Promise<IPCResponse<any>> => ipcRenderer.invoke('purchases:return', { purchaseId, items }),
   },
 
+  priceHistory: {
+    get: (params: { productId?: number; priceType?: string; startDate?: string; endDate?: string }): Promise<IPCResponse<any>> => ipcRenderer.invoke('priceHistory:get', params),
+    latest: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('priceHistory:latest'),
+    byProduct: (productId: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('priceHistory:byProduct', { productId }),
+  },
+
   onNavigate: (callback: (page: string) => void): (() => void) => {
     const handler = (_event: Electron.IpcRendererEvent, page: string): void => callback(page)
     ipcRenderer.on('navigate', handler)

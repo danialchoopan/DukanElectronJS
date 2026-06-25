@@ -13,6 +13,7 @@
 
 import { getDatabase } from '../connection'
 import type { Product, ProductInput } from '../../../types'
+import { logPriceChange } from './priceHistory'
 
 export function getAllProducts(): Product[] {
   const db = getDatabase()
@@ -109,6 +110,15 @@ export function updateProduct(id: number, input: Partial<ProductInput>): Product
     merged.isLoose ? 1 : 0,
     id
   )
+
+  // Log price changes for history tracking
+  if (merged.sale_price !== existing.sale_price) {
+    logPriceChange(id, 'sale', existing.sale_price, merged.sale_price, 'admin')
+  }
+  if (merged.purchase_price !== existing.purchase_price) {
+    logPriceChange(id, 'purchase', existing.purchase_price, merged.purchase_price, 'admin')
+  }
+
   return getProductById(id)
 }
 
