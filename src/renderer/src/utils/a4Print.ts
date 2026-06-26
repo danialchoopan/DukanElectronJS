@@ -9,6 +9,8 @@
  * - setShopName/setTaxRate/setPrintCustomization(): Populate module caches
  */
 
+import { formatDateTimeNow } from './jalali'
+
 let cachedShopName = ''
 let cachedShopPhone = ''
 let cachedTaxRate = 0
@@ -36,8 +38,7 @@ export function getPrintCustomization(): Record<string, string> {
 }
 
 function getJalaliNow(): string {
-  const now = new Date()
-  return now.toLocaleDateString('fa-IR') + ' — ' + now.toLocaleTimeString('fa-IR')
+  return formatDateTimeNow()
 }
 
 export async function printA4Report(html: string, title: string, options?: {

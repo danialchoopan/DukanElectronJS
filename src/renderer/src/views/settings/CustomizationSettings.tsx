@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { printA4Report, setPrintCustomization } from '../../utils/a4Print'
+import { formatDateNow } from '../../utils/jalali'
 
 interface PrintSettings {
   printInvoiceTitle: string
@@ -409,7 +410,7 @@ export default function CustomizationSettings() {
                     </div>
                   </div>
                 )}
-                <div className="text-[6px] text-gray-400 mt-2 border-t border-gray-200 pt-1">{settings.printFooter || `تاریخ چاپ: ${new Date().toLocaleDateString('fa-IR')}`}</div>
+                <div className="text-[6px] text-gray-400 mt-2 border-t border-gray-200 pt-1">{settings.printFooter || `تاریخ چاپ: ${formatDateNow()}`}</div>
               </div>
             </div>
           </Card>

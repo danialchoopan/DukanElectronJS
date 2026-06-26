@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { printA4Report } from '../../utils/a4Print'
+import { formatDateNow } from '../../utils/jalali'
 import { usePrintPreviewStore } from '../../store/printPreviewStore'
 
 interface TemplateInfo { key: string; name: string; color: string; border: string; align: string; shopName?: string }
@@ -86,7 +87,7 @@ export default function PrintPreviewDialog() {
         <div style="text-align:center;font-size:12pt;font-weight:700;color:${color};margin-bottom:4px">${pending.title}</div>
         ${pending.html}
         ${signatureHtml}
-        <div style="text-align:center;margin-top:16px;font-size:8pt;color:#666;border-top:1px solid #ccc;padding-top:8px">تاریخ چاپ: ${new Date().toLocaleDateString('fa-IR')}</div>
+        <div style="text-align:center;margin-top:16px;font-size:8pt;color:#666;border-top:1px solid #ccc;padding-top:8px">تاریخ چاپ: ${formatDateNow()}</div>
       </div>`
   }
 

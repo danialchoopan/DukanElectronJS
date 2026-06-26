@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useSettingsStore } from '../store/settingsStore'
 import FormattedPriceInput from '../components/ui/FormattedPriceInput'
 import Dialog, { DialogField, DialogInput, DialogTextarea, DialogButton } from '../components/ui/Dialog'
+import { formatISOToJalali } from '../utils/jalali'
 
 type Tab = 'suppliers' | 'purchases'
 
@@ -275,7 +276,7 @@ export default function Suppliers() {
                         <tbody>
                           {ledger.map((e: any) => (
                             <tr key={e.id} style={{ borderTop: `1px solid ${cBorder}` }}>
-                              <td className="px-3 py-2 text-xs" style={{ color: tSec }}>{new Date(e.createdAt).toLocaleDateString('fa-IR')}</td>
+                              <td className="px-3 py-2 text-xs" style={{ color: tSec }}>{formatISOToJalali(e.createdAt)}</td>
                               <td className="px-3 py-2">
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{
                                   backgroundColor: e.type === 'purchase' ? primary + '15' : e.type === 'payment' ? SUC + '15' : e.type === 'return' ? WRN + '15' : ERR + '15',
@@ -342,7 +343,7 @@ export default function Suppliers() {
                     <tr key={p.id} className="cursor-pointer hover:bg-blue-500/5 transition-all" style={{ borderTop: `1px solid ${cBorder}` }}>
                       <td className="px-4 py-2 font-mono text-xs font-bold" style={{ color: primary }}>{p.invoiceNumber}</td>
                       <td className="px-4 py-2 text-xs truncate" style={{ color: tPri }}>{p.supplierName}</td>
-                      <td className="px-4 py-2 text-xs" style={{ color: tSec }}>{new Date(p.purchaseDate).toLocaleDateString('fa-IR')}</td>
+                      <td className="px-4 py-2 text-xs" style={{ color: tSec }}>{formatISOToJalali(p.purchaseDate)}</td>
                       <td className="px-4 py-2 text-xs font-mono font-bold" style={{ color: tPri }}>{p.totalAmount.toLocaleString('fa-IR')}</td>
                       <td className="px-4 py-2 text-xs font-mono font-bold" style={{ color: SUC }}>{p.paidAmount.toLocaleString('fa-IR')}</td>
                       <td className="px-4 py-2 text-xs font-mono font-bold" style={{ color: p.totalAmount - p.paidAmount > 0 ? ERR : SUC }}>{(p.totalAmount - p.paidAmount).toLocaleString('fa-IR')}</td>

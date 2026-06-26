@@ -63,3 +63,31 @@ export function getTodayGregorian(): string {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
+
+export function formatDateNow(): string {
+  const now = new Date()
+  const [jy, jm, jd] = gregorianToJalali(now.getFullYear(), now.getMonth() + 1, now.getDate())
+  return `${jd} ${jMonths[jm - 1]} ${jy}`
+}
+
+export function formatDateTimeNow(): string {
+  const now = new Date()
+  const [jy, jm, jd] = gregorianToJalali(now.getFullYear(), now.getMonth() + 1, now.getDate())
+  const h = String(now.getHours()).padStart(2, '0')
+  const m = String(now.getMinutes()).padStart(2, '0')
+  return `${jd} ${jMonths[jm - 1]} ${jy} — ${h}:${m}`
+}
+
+export function formatISOToJalali(isoStr: string): string {
+  if (!isoStr) return ''
+  const d = new Date(isoStr)
+  const [jy, jm, jd] = gregorianToJalali(d.getFullYear(), d.getMonth() + 1, d.getDate())
+  return `${jd} ${jMonths[jm - 1]} ${jy}`
+}
+
+export function formatISOToJalaliShort(isoStr: string): string {
+  if (!isoStr) return ''
+  const d = new Date(isoStr)
+  const [jy, jm, jd] = gregorianToJalali(d.getFullYear(), d.getMonth() + 1, d.getDate())
+  return `${jd}/${jm}/${jy}`
+}

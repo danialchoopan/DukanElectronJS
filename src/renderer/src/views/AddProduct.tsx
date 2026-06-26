@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { fa } from '../i18n'
 import { useSettingsStore } from '../store/settingsStore'
 import { printA4Report, downloadExcel } from '../utils/a4Print'
+import { formatDateNow } from '../utils/jalali'
 import WebcamScanner from '../components/business/WebcamScanner'
 import FormattedPriceInput from '../components/ui/FormattedPriceInput'
 import type { Product } from '../../../types'
@@ -136,7 +137,7 @@ export default function AddProduct() {
       data = products.slice(range.start - 1, range.end)
     }
     let html = '<h1>لیست کالاها</h1>'
-    html += `<div class="header-info"><span>تاریخ: ${new Date().toLocaleDateString('fa-IR')}</span><span>تعداد: ${data.length}</span></div>`
+    html += `<div class="header-info"><span>تاریخ: ${formatDateNow()}</span><span>تعداد: ${data.length}</span></div>`
     html += '<table><thead><tr><th>بارکد</th><th>نام</th><th>دسته</th><th>موجودی</th><th>قیمت خرید</th><th>قیمت فروش</th></tr></thead><tbody>'
     data.forEach((p) => {
       html += `<tr><td>${p.barcode}</td><td>${p.title}</td><td>${p.category || '-'}</td><td>${p.stock}</td><td>${p.purchase_price.toLocaleString('fa-IR')}</td><td>${p.sale_price.toLocaleString('fa-IR')}</td></tr>`

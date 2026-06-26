@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import ShamsiDateInput from '../../components/business/ShamsiDateInput'
 import { printA4Report, downloadExcel } from '../../utils/a4Print'
+import { formatDateNow } from '../../utils/jalali'
 import HelpPopup from '../../components/ui/HelpPopup'
 import { useSortable } from '../../hooks/useSortable'
 
@@ -79,7 +80,7 @@ export default function BalanceSheet() {
           </button>
           <button onClick={async () => {
             let html = '<h1>ترازنامه</h1>'
-            html += `<div class="header-info"><span>تاریخ: ${new Date().toLocaleDateString('fa-IR')}</span></div>`
+            html += `<div class="header-info"><span>تاریخ: ${formatDateNow()}</span></div>`
             html += '<table><thead><tr><th>بخش</th><th>مبلغ</th></tr></thead><tbody>'
             html += `<tr><td>${fa.accounting.balanceSheet.totalAssets}</td><td>${data.totalAssets.toLocaleString('fa-IR')}</td></tr>`
             html += `<tr><td>${fa.accounting.balanceSheet.totalLiabilities}</td><td>${data.totalLiabilities.toLocaleString('fa-IR')}</td></tr>`

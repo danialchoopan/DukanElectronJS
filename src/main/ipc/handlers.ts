@@ -16,7 +16,7 @@ import * as accountsRepo from '../database/repositories/accounts'
 import * as journalRepo from '../database/repositories/journal'
 import * as periodsRepo from '../database/repositories/periods'
 import * as reportsRepo from '../database/repositories/reports'
-import * as seedRepo from '../database/repositories/seed'
+// import * as seedRepo from '../database/repositories/seed' // SEED DISABLED
 import * as suppliersRepo from '../database/repositories/suppliers'
 import * as purchasesRepo from '../database/repositories/purchases'
 import * as priceHistoryRepo from '../database/repositories/priceHistory'
@@ -506,7 +506,7 @@ export function registerAllHandlers(): void {
     return true
   })
 
-  handle('accounting:seedDemo', () => seedRepo.seedDemoData())
+  // handle('accounting:seedDemo', () => seedRepo.seedDemoData()) // SEED DISABLED
   handle('suppliers:getAll', () => suppliersRepo.getAllSuppliers())
   ipcMain.handle('suppliers:getById', (_e, a: { id: number }) => ({ success: true, data: suppliersRepo.getSupplierById(a.id) }))
   ipcMain.handle('suppliers:search', (_e, a: { query: string }) => ({ success: true, data: suppliersRepo.searchSuppliers(a.query) }))

@@ -72,7 +72,10 @@
       <tr><td>مشتریان</td><td>مدیریت مشتریان با دفتر کل و پیگیری بدهی</td><td><span class="badge badge-green">فعال</span></td></tr>
       <tr><td>تأمین‌کنندگان</td><td>مدیریت تأمین‌کنندگان، خرید، پرداخت، حسابداری</td><td><span class="badge badge-green">فعال</span></td></tr>
       <tr><td>خروجی/واردات هوشمند</td><td>انتخاب بخش‌ها، رمزگذاری، مهاجرت نسخه</td><td><span class="badge badge-green">فعال</span></td></tr>
-      <tr><td>پشتیبان‌گیری</td><td>پشتیبان خودکار، بازیابی، بررسی یکپارچگی</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>پشتیبان‌گیری</td><td>پشتیبان خودکار، بازیابی، بررسی یکپارچگی، حذف با تأیید</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>تقویم شمسی</td><td>تمام تاریخ‌ها با Jalali/Shamsi نمایش داده می‌شوند</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>نوع فروش</td><td>حضوری/آنلاین با فیلتر و گزارش</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>تاریخچه قیمت</td><td>ثبت خودکار تغییرات قیمت خرید و فروش</td><td><span class="badge badge-green">فعال</span></td></tr>
     </table>
 
     <h2 id="architecture">معماری سیستم</h2>
@@ -127,6 +130,8 @@
       <tr><td><code>returns</code></td><td>مرجوعی‌ها</td><td>id, saleId, productId</td></tr>
       <tr><td><code>audit_log</code></td><td>لاگ عملیات</td><td>id, action, entityType</td></tr>
       <tr><td><code>settings</code></td><td>تنظیمات کلید-مقدار</td><td>key (PK)</td></tr>
+      <tr><td><code>cash_register</code></td><td>صندوق نقدی</td><td>id, userId</td></tr>
+      <tr><td><code>price_history</code></td><td>تاریخچه تغییرات قیمت</td><td>id, productId, priceType</td></tr>
     </table>
 
     <h2 id="accounting-sync">همگام‌سازی خودکار با حسابداری</h2>
@@ -265,7 +270,7 @@ src/
       <tr><td><code>backup.test.ts</code></td><td>۱۱</td><td>ایجاد، بازیابی، یکپارچگی، نسخه</td></tr>
       <tr><td><code>smartExport.test.ts</code></td><td>۱۲</td><td>خروجی/واردات، وابستگی‌ها، امنیت</td></tr>
       <tr><td><code>migration.test.ts</code></td><td>۸</td><td>مهاجرت، سازگاری نسخه‌ها</td></tr>
-      <tr><td><code>scripts/verify.js</code></td><td>۲۶</td><td>بررسی خودکار ریاضیات و اتصالات</td></tr>
+      <tr><td><code>scripts/verify.js</code></td><td>۲۷</td><td>بررسی خودکار ریاضیات و اتصالات</td></tr>
     </table>
     <p>برای اجرا: <code>backup:runTests</code>، <code>smartExport:runTests</code>، <code>migration:runTests</code> از طریق IPC</p>
 

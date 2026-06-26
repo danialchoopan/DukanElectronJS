@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import type { Product } from '../../../types'
 import { fa } from '../i18n'
 import { generateReceiptHTML, printContent } from '../utils/receipt'
-import { gregorianToJalali } from '../utils/jalali'
+import { gregorianToJalali, formatDateNow } from '../utils/jalali'
 import Pagination from '../components/ui/Pagination'
 import ShamsiDateInput from '../components/business/ShamsiDateInput'
 import HelpPopup from '../components/ui/HelpPopup'
@@ -198,7 +198,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
       slowData = slowData.slice(range.start - 1, range.end)
     }
     let html = '<h1>گزارش موجودی انبار</h1>'
-    html += `<div class="header-info"><span>تاریخ: ${new Date().toLocaleDateString('fa-IR')}</span><span>فروشگاه</span></div>`
+    html += `<div class="header-info"><span>تاریخ: ${formatDateNow()}</span><span>فروشگاه</span></div>`
     html += '<table><thead><tr><th>دسته</th><th>تعداد</th><th>موجودی</th><th>ارزش خرید</th><th>ارزش فروش</th><th>سود</th><th>حاشیه</th></tr></thead><tbody>'
     catData.forEach((cat: any) => {
       const profit = (cat.retailValue || 0) - (cat.totalValue || 0)
@@ -228,7 +228,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
     let data = filteredProducts
     if (range !== 'all') data = filteredProducts.slice(range.start - 1, range.end)
     let html = '<h1>لیست موجودی انبار</h1>'
-    html += `<div class="header-info"><span>تاریخ: ${new Date().toLocaleDateString('fa-IR')}</span><span>تعداد: ${data.length} کالا</span></div>`
+    html += `<div class="header-info"><span>تاریخ: ${formatDateNow()}</span><span>تعداد: ${data.length} کالا</span></div>`
     html += '<table><thead><tr><th>بارکد</th><th>نام</th><th>دسته</th><th>موجودی</th><th>قیمت خرید</th><th>قیمت فروش</th><th>ارزش</th></tr></thead><tbody>'
     data.forEach(p => {
       html += `<tr><td>${p.barcode || '-'}</td><td>${p.title}</td><td>${p.category || '-'}</td><td>${p.stock}</td><td>${p.purchase_price.toLocaleString('fa-IR')}</td><td>${p.sale_price.toLocaleString('fa-IR')}</td><td>${(p.stock * p.purchase_price).toLocaleString('fa-IR')}</td></tr>`

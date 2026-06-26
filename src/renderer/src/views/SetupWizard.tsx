@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { t, setLanguage } from '../i18n'
 import { useSettingsStore } from '../store/settingsStore'
+import { formatISOToJalali } from '../utils/jalali'
 
 interface BackupPreview {
   dbPath: string
@@ -478,7 +479,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                           {lang === 'fa' ? 'نسخه:' : 'Version:'} {backupPreview.meta.appVersion || '?'}
                         </div>
                         <div style={{ color: subtitleColor }}>
-                          {lang === 'fa' ? 'تاریخ:' : 'Date:'} {new Date(backupPreview.meta.timestamp).toLocaleDateString(lang === 'fa' ? 'fa-IR' : 'en-US')}
+                          {lang === 'fa' ? 'تاریخ:' : 'Date:'} {lang === 'fa' ? formatISOToJalali(backupPreview.meta.timestamp) : new Date(backupPreview.meta.timestamp).toLocaleDateString('en-US')}
                         </div>
                       </>
                     )}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import ShamsiDateInput from '../../components/business/ShamsiDateInput'
 import { printA4Report, downloadExcel } from '../../utils/a4Print'
+import { formatDateNow } from '../../utils/jalali'
 import HelpPopup from '../../components/ui/HelpPopup'
 import { useSortable } from '../../hooks/useSortable'
 
@@ -84,7 +85,7 @@ export default function IncomeStatement() {
           </button>
           <button onClick={async () => {
             let html = '<h1>صورت سود و زیان</h1>'
-            html += `<div class="header-info"><span>تاریخ: ${new Date().toLocaleDateString('fa-IR')}</span></div>`
+            html += `<div class="header-info"><span>تاریخ: ${formatDateNow()}</span></div>`
             html += '<table><thead><tr><th>بخش</th><th>مبلغ</th></tr></thead><tbody>'
             html += `<tr><td>${fa.accounting.profitLoss.revenue}</td><td>${data.totalRevenue.toLocaleString('fa-IR')}</td></tr>`
             html += `<tr><td>${fa.accounting.profitLoss.cogs}</td><td>${data.totalCogs.toLocaleString('fa-IR')}</td></tr>`
