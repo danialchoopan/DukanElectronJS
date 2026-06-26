@@ -19,6 +19,7 @@ export default function BackupSection() {
   const [selectedBackups, setSelectedBackups] = useState<Set<string>>(new Set())
   const [autoBackup, setAutoBackup] = useState('true')
   const [backupInterval, setBackupInterval] = useState('daily')
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const cBorder = isDark ? '#334155' : '#e2e8f0'
   const tPri = isDark ? '#f1f5f9' : '#0f172a'
@@ -41,6 +42,17 @@ export default function BackupSection() {
     setLoading(false)
     if (r.success) { alert('پشتیبان جدید ایجاد شد'); loadData() }
     else alert(`خطا: ${r.error}`)
+  }
+
+  const handleDeleteSelected = async () => {
+    let deleted = 0
+    for (const name of selectedBackups) {
+      const r = await window.api.backup.delete(name)
+      if (r.success) deleted++
+    }
+    setSelectedBackups(new Set())
+    setConfirmDelete(false)
+    if (deleted > 0) loadData()
   }
 
   const handleIntegrity = async () => {
@@ -83,15 +95,33 @@ export default function BackupSection() {
       </div>
       {integrityResult && <div className="text-xs p-2 rounded-lg" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cBorder}`, color: tPri }}>{integrityResult}</div>}
       {backups.length > 0 && (
-        <div className="max-h-40 overflow-y-auto rounded-xl border" style={{ border: `1px solid ${cBorder}` }}>
-          {backups.map((b) => (
-            <div key={b.name} className="flex items-center gap-2 px-3 py-2 text-xs" style={{ borderBottom: `1px solid ${cBorder}` }}>
-              <input type="checkbox" checked={selectedBackups.has(b.name)} onChange={() => { const next = new Set(selectedBackups); if (next.has(b.name)) next.delete(b.name); else next.add(b.name); setSelectedBackups(next) }} />
-              <span className="flex-1 font-bold truncate" style={{ color: tPri }}>{b.name}</span>
-              <span style={{ color: tSec }}>{(b.size / 1048576).toFixed(1)} MB</span>
-            </div>
-          ))}
+        <div>
+          <div className="max-h-40 overflow-y-auto rounded-xl border" style={{ border: `1px solid ${cBorder}` }}>
+            {backups.map((b) => (
+              <div key={b.name} className="flex items-center gap-2 px-3 py-2 text-xs" style={{ borderBottom: `1px solid ${cBorder}` }}>
+                <input type="checkbox" checked={selectedBackups.has(b.name)} onChange={() => { const next = new Set(selectedBackups); if (next.has(b.name)) next.delete(b.name); else next.add(b.name); setSelectedBackups(next) }} />
+                <span className="flex-1 font-bold truncate" style={{ color: tPri }}>{b.name}</span>
+                <span style={{ color: tSec }}>{(b.size / 1048576).toFixed(1)} MB</span>
+              </div>
+            ))}
+          </div>
+          {selectedBackups.size > 0 && (
+            <button onClick={() => setConfirmDelete(true)} className="mt-2 px-4 py-2 rounded-xl text-xs font-bold text-white w-full" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>
+              حذف {selectedBackups.size} پشتیبان انتخاب شده
+            </button>
+          )}
         </div>
+      )}
+      {confirmDelete && (
+        <Dialog open={true} onClose={() => setConfirmDelete(false)} title="تأیید حذف پشتیبان‌ها" maxWidth="max-w-sm"
+          icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>}
+          footer={<>
+            <DialogButton variant="ghost" onClick={() => setConfirmDelete(false)}>لغو</DialogButton>
+            <DialogButton variant="danger" onClick={handleDeleteSelected}>حذف</DialogButton>
+          </>}>
+          <p className="text-sm text-center" style={{ color: tPri }}>آیا از حذف {selectedBackups.size} پشتیبان اطمینان دارید؟</p>
+          <p className="text-xs text-center mt-1" style={{ color: tSec }}>این عمل قابل بازگشت نیست</p>
+        </Dialog>
       )}
       {restorePreview && (
         <Dialog open={true} onClose={() => setRestorePreview(null)} title="بازیابی پشتیبان" maxWidth="max-w-sm"
