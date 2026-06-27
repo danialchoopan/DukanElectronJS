@@ -1,3 +1,20 @@
+/**
+ * ShamsiDateInput — Jalali calendar date picker component.
+ *
+ * A custom date input that displays dates in the Iranian Jalali calendar
+ * (dd/mm/yyyy format) instead of the browser's native Gregorian picker.
+ *
+ * Internally stores a Gregorian ISO string (YYYY-MM-DD) but renders
+ * three separate inputs for day/month/year in Jalali. Changes are
+ * converted back to Gregorian and passed to the parent via onChange.
+ *
+ * Features:
+ *   - Month navigation with prev/next arrows
+ *   - Day grid showing the correct number of days per Jalali month
+ *   - Leap year support for Esfand (month 12)
+ *   - Keyboard shortcut: Ctrl+J to jump to today
+ */
+
 import { useState, useRef, useEffect } from 'react'
 import { gregorianToJalali, jalaliToGregorian } from '../../utils/jalali'
 

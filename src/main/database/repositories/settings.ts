@@ -1,3 +1,14 @@
+/**
+ * Settings repository — key-value store for app configuration.
+ *
+ * All settings are stored as text in the `settings` table.
+ * Use getSetting/setSetting for individual values.
+ * Use getAll to retrieve all settings as a single object.
+ *
+ * Common keys: taxRate, taxEnabled, storeName, storePhone, storeAddress,
+ * autoBackupEnabled, autoBackupInterval, theme, language, etc.
+ */
+
 import { getDatabase } from '../connection'
 
 export function getSetting(key: string): string | undefined {

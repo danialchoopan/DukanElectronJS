@@ -1,3 +1,24 @@
+/**
+ * Jalali (Shamsi/Persian) calendar utilities.
+ *
+ * All date functions in the app use this module for:
+ *   - Converting Gregorian dates to Jalali for display
+ *   - Formatting date strings in Jalali (dd MMMM yyyy or dd/mm/yyyy)
+ *   - Parsing date inputs from the ShamsiDateInput component
+ *
+ * The jalaali-js library handles the Gregorian↔Jalali conversion math.
+ * Iranian month names are used for the long format (formatJalali, formatJalaliDateTime).
+ *
+ * Key exports:
+ *   - gregorianToJalali / jalaliToGregorian: raw conversion
+ *   - formatJalali: "۱۵ خرداد ۱۴۰۵"
+ *   - formatJalaliShort: "15/03/1405"
+ *   - formatJalaliDateTime: "۱۵ خرداد ۱۴۰۵ — 14:30"
+ *   - formatDateNow / formatDateTimeNow: current date/time in Jalali
+ *   - getTodayJalali / getTodayGregorian: today's date string
+ *   - formatISOToJalali / formatISOToJalaliShort: ISO string → Jalali
+ */
+
 import jalaali from 'jalaali-js'
 
 export function gregorianToJalali(gY: number, gM: number, gD: number): [number, number, number] {

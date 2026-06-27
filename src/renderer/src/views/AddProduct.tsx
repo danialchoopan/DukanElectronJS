@@ -1,3 +1,25 @@
+/**
+ * AddProduct — product management screen for creating, editing, and listing products.
+ *
+ * Features:
+ *   - Barcode scanning (manual + webcam) for quick product lookup
+ *   - Create/edit dialog with: title, category, subcategory (with inline create),
+ *     purchase/sale price, stock, minStock, loose item toggle, sellable toggle,
+ *     description, product image upload
+ *   - Automatic barcode generation (PRD-XXXXXX format)
+ *   - Zero sale price warning: auto-unchecks isSellable
+ *   - Paginated, sortable, filterable product list
+ *   - Print labels with QR codes and barcodes for selected products
+ *   - Excel export of product list
+ *   - Inline stock and price editing in the list view
+ *   - Product detail popup with image, stock info, and QR code
+ *
+ * Category system:
+ *   - Parent categories loaded from the categories table
+ *   - Subcategories filtered by selected parent
+ *   - Inline subcategory creation via API call
+ */
+
 import { useState, useEffect } from 'react'
 import { fa } from '../i18n'
 import { useSettingsStore } from '../store/settingsStore'

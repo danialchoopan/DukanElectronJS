@@ -1,3 +1,16 @@
+/**
+ * Returns repository — handles product return processing.
+ *
+ * When a return is created:
+ *   1. Inserts return record with status 'completed'
+ *   2. Restores product stock (additive increment)
+ *   3. Reduces the parent sale's total_amount and totalNetProfit
+ *   4. Posts reverse double-entry journal entry via postReturnJournal()
+ *
+ * Note: individual sale_items quantities are NOT updated on return.
+ * Journal entries offset the original sale's revenue and COGS entries.
+ */
+
 import { getDatabase } from '../connection'
 import { postReturnJournal } from './journal'
 

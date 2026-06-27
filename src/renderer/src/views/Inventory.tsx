@@ -1,3 +1,25 @@
+/**
+ * Inventory — inventory management, reporting, and adjustment screen.
+ *
+ * Three tabs:
+ *   1. Products: paginated list with search, category/stock filters, inline editing,
+ *      restock panel (additive), QR label printing, barcode printing
+ *   2. Report: category valuation charts, slow-moving items, A4 print, Excel export
+ *   3. Audit: audit log with date range and action type filters
+ *
+ * Inventory Adjustment feature:
+ *   - Search and select a product
+ *   - Set an absolute stock value (corrects actual count)
+ *   - Choose adjustment type: manual, reconciliation, damage, count, other
+ *   - Add reason and optional back-date for document reconciliation
+ *   - View adjustment history with before/after/delta columns
+ *
+ * Stock editing paths:
+ *   - Restock panel: additive only (stock += qty), via IPC updateStock()
+ *   - Inline edit: sets absolute value, no audit trail
+ *   - Adjustment dialog: sets absolute value with full audit trail
+ */
+
 import { useState, useEffect } from 'react'
 import type { Product } from '../../../types'
 import { fa } from '../i18n'

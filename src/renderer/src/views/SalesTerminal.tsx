@@ -1,3 +1,25 @@
+/**
+ * SalesTerminal (POS) — the main point-of-sale screen.
+ *
+ * This view handles the complete sales workflow:
+ *   1. Product scanning (barcode + webcam)
+ *   2. Cart management (add/remove/edit quantities)
+ *   3. Payment processing (cash, card, ledger/credit)
+ *   4. Sale confirmation with customer info, sale type, date, inventory toggle
+ *   5. Receipt printing (thermal + A4)
+ *
+ * Key features:
+ *   - Pre-flight stock check before finalizing sale
+ *   - Suspended invoices (3 slots for holding/restoring)
+ *   - Sale types: in-person (حضوری) and online (آنلاین)
+ *   - Backdated invoices with optional no-inventory-impact mode
+ *   - Customer search and selection
+ *   - Keyboard shortcuts for fast POS operation
+ *
+ * The cart state is managed by cartStore (Zustand).
+ * Sale data flows through the IPC layer to sales.createSale().
+ */
+
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useCartStore } from '../store/cartStore'
 import { useAuthStore } from '../store/authStore'
