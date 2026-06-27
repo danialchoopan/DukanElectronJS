@@ -199,6 +199,10 @@ export function getBackupStats(): { totalBackups: number; latestBackup: string |
   return { totalBackups: files.length, latestBackup: latest, totalSize }
 }
 
+/**
+ * Get list of all tables with row counts for the selective export picker.
+ * Opens DB in readonly mode to avoid locking.
+ */
 export function getSelectableTables(): { name: string; rowCount: number }[] {
   const Database = require('better-sqlite3')
   const db = new Database(DB_PATH, { readonly: true })
@@ -212,6 +216,11 @@ export function getSelectableTables(): { name: string; rowCount: number }[] {
   return result
 }
 
+/**
+ * Export all CREATE TABLE statements as a JSON payload.
+ * Useful for structure-only backup — no data, just schema.
+ * Includes version metadata for compatibility checking on import.
+ */
 export function exportStructure(): string {
   const Database = require('better-sqlite3')
   const db = new Database(DB_PATH, { readonly: true })
@@ -227,6 +236,11 @@ export function exportStructure(): string {
   }, null, 2)
 }
 
+/**
+ * Export all tables as a structured JSON payload.
+ * Each table becomes a key with an array of row objects.
+ * Includes version, app name, export date, and format metadata.
+ */
 export function exportAsJson(): string {
   const Database = require('better-sqlite3')
   const db = new Database(DB_PATH, { readonly: true })
@@ -246,6 +260,10 @@ export function exportAsJson(): string {
   }, null, 2)
 }
 
+/**
+ * Export only selected tables as JSON.
+ * Skips tables that don't exist (no error thrown).
+ */
 export function exportSelectiveJson(tableNames: string[]): string {
   const Database = require('better-sqlite3')
   const db = new Database(DB_PATH, { readonly: true })
@@ -264,6 +282,10 @@ export function exportSelectiveJson(tableNames: string[]): string {
   }, null, 2)
 }
 
+/**
+ * Export CREATE TABLE statements for selected tables only.
+ * Filters the full schema to include only requested tables.
+ */
 export function exportSelectiveStructure(tableNames: string[]): string {
   const Database = require('better-sqlite3')
   const db = new Database(DB_PATH, { readonly: true })
