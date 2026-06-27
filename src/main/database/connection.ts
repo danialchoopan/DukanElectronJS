@@ -52,6 +52,7 @@ function initializeDatabase(db: Database.Database): void {
       description TEXT DEFAULT '',
       imageBase64 TEXT DEFAULT '',
       category TEXT NOT NULL DEFAULT '',
+      subcategory TEXT DEFAULT '',
       unit TEXT NOT NULL DEFAULT 'number' CHECK(unit IN ('number', 'weight')),
       purchase_price REAL NOT NULL DEFAULT 0,
       sale_price REAL NOT NULL DEFAULT 0,
@@ -59,6 +60,7 @@ function initializeDatabase(db: Database.Database): void {
       minStock REAL NOT NULL DEFAULT 0,
       isLoose INTEGER NOT NULL DEFAULT 0,
       isActive INTEGER NOT NULL DEFAULT 1,
+      isSellable INTEGER NOT NULL DEFAULT 1,
       createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
       updatedAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
     );
@@ -114,6 +116,8 @@ function initializeDatabase(db: Database.Database): void {
       invoiceDescription TEXT DEFAULT '',
       manualCustomerName TEXT DEFAULT '',
       saleType TEXT DEFAULT 'in-person',
+      saleDate TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      affectsInventory INTEGER NOT NULL DEFAULT 1,
       createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
       FOREIGN KEY (userId) REFERENCES users(id),
       FOREIGN KEY (customerId) REFERENCES customers(id)
@@ -294,6 +298,20 @@ function initializeDatabase(db: Database.Database): void {
       FOREIGN KEY (productId) REFERENCES products(id)
     );
     CREATE INDEX IF NOT EXISTS idx_price_history_productId ON price_history(productId);
+
+    CREATE TABLE IF NOT EXISTS inventory_adjustments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      productId INTEGER NOT NULL,
+      previousStock REAL NOT NULL,
+      newStock REAL NOT NULL,
+      adjustmentQty REAL NOT NULL,
+      reason TEXT DEFAULT '',
+      adjustmentType TEXT NOT NULL DEFAULT 'manual' CHECK(adjustmentType IN ('manual', 'reconciliation', 'damage', 'count', 'other')),
+      createdBy TEXT DEFAULT 'admin',
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (productId) REFERENCES products(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_productId ON inventory_adjustments(productId);
 
     CREATE TABLE IF NOT EXISTS suppliers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

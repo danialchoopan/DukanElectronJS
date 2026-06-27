@@ -16,6 +16,7 @@ import * as accountsRepo from '../database/repositories/accounts'
 import * as journalRepo from '../database/repositories/journal'
 import * as periodsRepo from '../database/repositories/periods'
 import * as reportsRepo from '../database/repositories/reports'
+import * as inventoryAdjRepo from '../database/repositories/inventoryAdjustments'
 // import * as seedRepo from '../database/repositories/seed' // SEED DISABLED
 import * as suppliersRepo from '../database/repositories/suppliers'
 import * as purchasesRepo from '../database/repositories/purchases'
@@ -122,6 +123,7 @@ export function registerAllHandlers(): void {
   })
   handle('products:lowStock', () => products.getLowStockProducts())
   handle('products:loose', () => products.getLooseProducts())
+  handle('products:getSellable', () => products.getSellableProducts())
   ipcMain.handle('products:saveImage', (_event, arg: { base64: string; productId: number }) => {
     try {
       const imagesDir = join(app.getPath('userData'), 'product-images')
@@ -424,6 +426,18 @@ export function registerAllHandlers(): void {
   })
   handleArg<{ id: number }, boolean>('categories:toggleActive', (a) => categoriesRepo.toggleCategoryActive(a.id))
   handleArg<{ id: number }, any>('categories:descendants', (a) => ({ ids: categoriesRepo.getCategoryDescendantIds(a.id) }))
+  handleArg<{ parentId: number }, any[]>('categories:getSubcategories', (a) => categoriesRepo.getSubcategories(a.parentId))
+
+  // ─── Inventory Adjustments ─────────────────────────────
+  ipcMain.handle('inventory:create', (_event, a: { productId: number; newStock: number; reason: string; adjustmentType: string; createdBy?: string; createdAt?: string }) => {
+    try {
+      const result = inventoryAdjRepo.createAdjustment(a)
+      auditRepo.createAuditEntry(null, 'create', 'inventory_adjustment', result.id, JSON.stringify({ productId: a.productId, newStock: a.newStock, reason: a.reason }))
+      return { success: true, data: result }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
+  handleArg<{ productId?: number; adjustmentType?: string; dateFrom?: string; dateTo?: string; limit?: number }, any[]>('inventory:getAll', (a) => inventoryAdjRepo.getAdjustments(a))
+  handleArg<{ id: number }, any>('inventory:getById', (a) => inventoryAdjRepo.getAdjustmentById(a.id))
 
   // ─── Audit Log ─────────────────────────────────────
   handleArg<{ entityType?: string; limit?: number; startDate?: string; endDate?: string }, any>('audit:getAll', (a) => auditRepo.getAuditLog(a.entityType, a.limit || 100, a.startDate, a.endDate))

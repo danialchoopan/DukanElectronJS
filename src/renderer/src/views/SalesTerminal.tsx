@@ -15,7 +15,7 @@ import ReceiptPrinter from '../components/print/ReceiptPrinter'
 import Notification from '../components/layout/Notification'
 import { CameraIcon } from '../components/ui/Icons'
 import PopularItems from '../components/business/PopularItems'
-import { formatJalaliDateTime } from '../utils/jalali'
+import { formatJalaliDateTime, getTodayGregorian } from '../utils/jalali'
 import type { Sale, Customer, Product } from "../../../types"
 import Dialog, { DialogField, DialogInput, DialogTextarea, DialogButton } from '../components/ui/Dialog'
 
@@ -80,6 +80,8 @@ export default function SalesTerminal() {
 
   const [pendingPayment, setPendingPayment] = useState<{ method: 'cash' | 'card' | 'ledger'; customerPaid?: number; saleType: 'in-person' | 'online' } | null>(null)
   const [saleType, setSaleType] = useState<'in-person' | 'online'>('in-person')
+  const [saleDate, setSaleDate] = useState('')
+  const [affectsInventory, setAffectsInventory] = useState(true)
 
   const handlePaymentComplete = useCallback(async (method: 'cash' | 'card' | 'ledger', customerPaid?: number) => {
     if (items.length === 0) { showNotif(fa.pos.noItems); return }
@@ -118,6 +120,8 @@ export default function SalesTerminal() {
       invoiceDescription: invoiceNote,
       manualCustomerName: customerName,
       saleType: pendingPayment.saleType,
+      saleDate: saleDate || undefined,
+      affectsInventory,
     })
     if (result.success && result.data) {
       const saleData = { ...result.data, customerName }
@@ -127,6 +131,8 @@ export default function SalesTerminal() {
       setSelectedCustomer(null)
       setFullyPaid(true)
       setPendingPayment(null)
+      setSaleDate('')
+      setAffectsInventory(true)
       barcodeRef.current?.focus()
     } else { showNotif(`${result.error}`) }
     setPendingPayment(null)
@@ -197,6 +203,17 @@ export default function SalesTerminal() {
             <button onClick={() => setSaleType('online')} className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
               style={{ background: saleType === 'online' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'var(--bg-tertiary)', color: saleType === 'online' ? '#fff' : 'var(--text-secondary)', border: `1px solid ${saleType === 'online' ? '#22c55e' : 'var(--border-color)'}` }}>آنلاین</button>
           </div>
+        </DialogField>
+        <DialogField label="تاریخ فاکتور">
+          <input type="date" value={saleDate || getTodayGregorian()} onChange={(e) => setSaleDate(e.target.value)}
+            className="input-field text-sm" style={{ direction: 'ltr', textAlign: 'center', backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '8px 12px', width: '100%' }} />
+        </DialogField>
+        <DialogField label="تأثیر بر موجودی">
+          <div className="flex items-center gap-2">
+            <input type="checkbox" checked={affectsInventory} onChange={(e) => setAffectsInventory(e.target.checked)} className="w-4 h-4 rounded" style={{ accentColor: '#22c55e' }} />
+            <label className="text-xs font-bold" style={{ color: 'var(--text-secondary)' }}>کاهش موجودی انبار</label>
+          </div>
+          {!affectsInventory && <p className="text-[10px] mt-1" style={{ color: '#f59e0b' }}>فقط برای مستندسازی ثبت می‌شود — موجودی تغییر نمی‌کند</p>}
         </DialogField>
         <DialogField label="توضیحات فاکتور">
           <DialogInput value={invoiceDesc} onChange={setInvoiceDesc} placeholder="مثلاً: شماره سفارش، نام پروژه..." />

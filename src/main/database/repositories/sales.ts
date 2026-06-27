@@ -23,7 +23,9 @@ import { postSaleJournal } from './journal'
 
 export function createSale(input: SaleInput): Sale {
   const db = getDatabase()
-  const invoiceNumber = generateInvoiceNumber()
+  const saleDate = input.saleDate || new Date().toISOString().slice(0, 19).replace('T', ' ')
+  const affectsInventory = input.affectsInventory !== false ? 1 : 0
+  const invoiceNumber = generateInvoiceNumber(saleDate)
   const roundTo = getAutoRounding()
 
   let rawSubtotal = 0
@@ -39,12 +41,13 @@ export function createSale(input: SaleInput): Sale {
 
   const createSaleTx = db.transaction(() => {
     const saleResult = db.prepare(`
-      INSERT INTO sales (invoiceNumber, userId, customerId, subtotal, total_amount, totalNetProfit, paymentMethod, customerPaid, changeAmount, description, invoiceDescription, manualCustomerName, saleType)
-      VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO sales (invoiceNumber, userId, customerId, subtotal, total_amount, totalNetProfit, paymentMethod, customerPaid, changeAmount, description, invoiceDescription, manualCustomerName, saleType, saleDate, affectsInventory)
+      VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       invoiceNumber, input.userId, input.customerId ?? null,
       rawSubtotal, total_amount, input.paymentMethod, input.customerPaid, changeAmount,
-      input.description || '', input.invoiceDescription || '', input.manualCustomerName || '', input.saleType || 'in-person'
+      input.description || '', input.invoiceDescription || '', input.manualCustomerName || '', input.saleType || 'in-person',
+      saleDate, affectsInventory
     )
     const saleId = saleResult.lastInsertRowid as number
 
@@ -60,7 +63,9 @@ export function createSale(input: SaleInput): Sale {
       invoiceNetProfit += lineProfit
 
       itemStmt.run(saleId, item.productId, item.productTitle, item.quantity, item.unitPrice, item.purchasePrice, lineSubtotal, lineProfit)
-      decrementStock(item.productId, item.quantity)
+      if (affectsInventory) {
+        decrementStock(item.productId, item.quantity)
+      }
     }
 
     db.prepare('UPDATE sales SET totalNetProfit = ? WHERE id = ?').run(invoiceNetProfit, saleId)
@@ -75,7 +80,7 @@ export function createSale(input: SaleInput): Sale {
 
   const saleId = createSaleTx()
 
-  postSaleJournal(saleId, new Date().toISOString().slice(0, 10), {
+  postSaleJournal(saleId, saleDate.slice(0, 10), {
     items: input.items.map(i => ({ purchasePrice: i.purchasePrice, quantity: i.quantity })),
     total_amount, paymentMethod: input.paymentMethod
   })
@@ -109,6 +114,8 @@ export function getSaleById(id: number): Sale | undefined {
     invoiceDescription: (saleRow.invoiceDescription as string) ?? undefined,
     manualCustomerName: (saleRow.manualCustomerName as string) ?? undefined,
     saleType: (saleRow.saleType as 'in-person' | 'online') ?? 'in-person',
+    saleDate: (saleRow.saleDate as string) ?? (saleRow.createdAt as string),
+    affectsInventory: (saleRow.affectsInventory ?? 1) === 1,
     createdAt: saleRow.createdAt as string,
   }
 }
@@ -116,7 +123,7 @@ export function getSaleById(id: number): Sale | undefined {
 export function getSalesByDateRange(startDate: string, endDate: string): Sale[] {
   const db = getDatabase()
   const sales = db.prepare(
-    'SELECT s.*, u.name as userName, c.name as customerName FROM sales s LEFT JOIN users u ON s.userId = u.id LEFT JOIN customers c ON s.customerId = c.id WHERE date(s.createdAt) BETWEEN ? AND ? ORDER BY s.createdAt DESC'
+    "SELECT s.*, u.name as userName, c.name as customerName FROM sales s LEFT JOIN users u ON s.userId = u.id LEFT JOIN customers c ON s.customerId = c.id WHERE date(s.saleDate) BETWEEN ? AND ? ORDER BY s.saleDate DESC"
   ).all(startDate, endDate) as Record<string, unknown>[]
 
   return sales.map(saleRow => {
@@ -138,6 +145,8 @@ export function getSalesByDateRange(startDate: string, endDate: string): Sale[] 
       invoiceDescription: (saleRow.invoiceDescription as string) ?? undefined,
       manualCustomerName: (saleRow.manualCustomerName as string) ?? undefined,
       saleType: (saleRow.saleType as 'in-person' | 'online') ?? 'in-person',
+      saleDate: (saleRow.saleDate as string) ?? (saleRow.createdAt as string),
+      affectsInventory: (saleRow.affectsInventory ?? 1) === 1,
       createdAt: saleRow.createdAt as string,
     }
   })
@@ -154,7 +163,7 @@ export function getDailySalesSummary(date: string): {
       COALESCE(SUM(CASE WHEN paymentMethod = 'cash' THEN total_amount ELSE 0 END), 0) as cashTotal,
       COALESCE(SUM(CASE WHEN paymentMethod = 'card' THEN total_amount ELSE 0 END), 0) as cardTotal,
       COALESCE(SUM(CASE WHEN paymentMethod = 'ledger' THEN total_amount ELSE 0 END), 0) as ledgerTotal
-    FROM sales WHERE date(createdAt) = ?
+    FROM sales WHERE date(saleDate) = ?
   `).get(date) as Record<string, number>
   return { totalSales: row.totalSales, transactionCount: row.transactionCount, cashTotal: row.cashTotal, cardTotal: row.cardTotal, ledgerTotal: row.ledgerTotal }
 }
@@ -196,13 +205,13 @@ export function getTopProducts(startDate?: string, endDate?: string, limit = 10)
   return db.prepare(query).all(...params) as any[]
 }
 
-function generateInvoiceNumber(): string {
+function generateInvoiceNumber(dateStr?: string): string {
   const db = getDatabase()
-  const now = new Date()
-  const today = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-  const row = db.prepare("SELECT COUNT(*) as count FROM sales WHERE invoiceNumber LIKE ?").get(`INV-${today}-%`) as { count: number }
+  const d = dateStr ? new Date(dateStr) : new Date()
+  const datePart = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`
+  const row = db.prepare("SELECT COUNT(*) as count FROM sales WHERE invoiceNumber LIKE ?").get(`INV-${datePart}-%`) as { count: number }
   const seq = String(row.count + 1).padStart(4, '0')
-  return `INV-${today}-${seq}`
+  return `INV-${datePart}-${seq}`
 }
 
 function mapSaleItem(row: Record<string, unknown>): any {

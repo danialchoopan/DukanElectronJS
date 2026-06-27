@@ -28,9 +28,12 @@ export default function AddProduct() {
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(10)
   const [form, setForm] = useState({
-    barcode: '', title: '', category: '', unit: 'number' as 'number' | 'weight',
-    purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '',
+    barcode: '', title: '', category: '', subcategory: '', unit: 'number' as 'number' | 'weight',
+    purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, description: '', imageBase64: '',
   })
+  const [subcategories, setSubcategories] = useState<{ id: number; name: string }[]>([])
+  const [newSubcategory, setNewSubcategory] = useState('')
+  const [showNewSubcatInput, setShowNewSubcatInput] = useState(false)
   const [detailProduct, setDetailProduct] = useState<any>(null)
   const [detailImageUrl, setDetailImageUrl] = useState('')
   const [detailEditMode, setDetailEditMode] = useState(false)
@@ -57,6 +60,39 @@ export default function AddProduct() {
     }
   }
 
+  const loadSubcategories = async (parentId: number) => {
+    const r = await window.api.categories.getSubcategories(parentId)
+    if (r.success && r.data) {
+      setSubcategories(r.data)
+    } else {
+      setSubcategories([])
+    }
+  }
+
+  const handleCategoryChange = (catName: string) => {
+    setForm(f => ({ ...f, category: catName, subcategory: '' }))
+    const parentCat = categories.find(c => c.name === catName)
+    if (parentCat) {
+      loadSubcategories(parentCat.id)
+    } else {
+      setSubcategories([])
+    }
+  }
+
+  const handleCreateSubcategory = async () => {
+    if (!newSubcategory.trim() || !form.category) return
+    const parentCat = categories.find(c => c.name === form.category)
+    if (!parentCat) return
+    const r = await window.api.categories.create({ name: newSubcategory.trim(), parentId: parentCat.id })
+    if (r.success && r.data) {
+      setSubcategories(prev => [...prev, { id: r.data.id, name: r.data.name }])
+      setForm(f => ({ ...f, subcategory: r.data.name }))
+      setNewSubcategory('')
+      setShowNewSubcatInput(false)
+      showNotif(`زیردسته "${r.data.name}" ایجاد شد`)
+    }
+  }
+
   useEffect(() => { loadProducts(); loadCategories() }, [searchQuery])
 
   const handleBarcodeScanned = async (code: string) => {
@@ -64,16 +100,16 @@ export default function AddProduct() {
     if (existing.success && existing.data) {
       setEditProduct(existing.data)
       setForm({
-        barcode: existing.data.barcode, title: existing.data.title, category: existing.data.category,
+        barcode: existing.data.barcode, title: existing.data.title, category: existing.data.category, subcategory: existing.data.subcategory || '',
         unit: existing.data.unit, purchase_price: existing.data.purchase_price, sale_price: existing.data.sale_price,
-        stock: existing.data.stock, minStock: existing.data.minStock, isLoose: existing.data.isLoose,
+        stock: existing.data.stock, minStock: existing.data.minStock, isLoose: existing.data.isLoose, isSellable: existing.data.isSellable,
         description: existing.data.description || '', imageBase64: existing.data.imageBase64 || '',
       })
       setShowForm(true)
       showNotif(`${existing.data.title} — ${fa.admin.edit}`)
     } else {
       setEditProduct(null)
-      setForm({ barcode: code, title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '' })
+      setForm({ barcode: code, title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, description: '', imageBase64: '' })
       setShowForm(true)
       showNotif(`${fa.admin.addProduct} — ${code}`)
     }
@@ -87,7 +123,7 @@ export default function AddProduct() {
       if (r.success) {
         showNotif(`${form.title} — ${fa.admin.saved}`)
         setShowForm(false); setEditProduct(null)
-        setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '' })
+        setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, description: '', imageBase64: '' })
         await loadProducts(); await loadCategories()
         window.dispatchEvent(new Event('products:refresh'))
       } else {
@@ -98,7 +134,7 @@ export default function AddProduct() {
       if (r.success) {
         showNotif(`${form.title} — ${fa.admin.create}`)
         setShowForm(false); setEditProduct(null)
-        setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '' })
+        setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, description: '', imageBase64: '' })
         await loadProducts(); await loadCategories()
         window.dispatchEvent(new Event('products:refresh'))
       } else {
@@ -120,7 +156,7 @@ export default function AddProduct() {
     if (r.success) {
       showNotif(`${editProduct.title} — ${fa.admin.deleted}`)
       setShowForm(false); setEditProduct(null)
-      setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '' })
+      setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, description: '', imageBase64: '' })
       await loadProducts()
       window.dispatchEvent(new Event('products:refresh'))
     }
@@ -197,7 +233,7 @@ export default function AddProduct() {
           </div>
         </div>
         <button
-          onClick={() => { setEditProduct(null); setForm({ barcode: '', title: '', category: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, description: '', imageBase64: '' }); setShowForm(true) }}
+          onClick={() => { setEditProduct(null); setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, description: '', imageBase64: '' }); setShowForm(true) }}
           className="btn btn-primary text-sm"
         >
           + {fa.admin.addProduct}
@@ -245,14 +281,37 @@ export default function AddProduct() {
             </div>
             <div>
               <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.category} *</label>
-              <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+              <select value={form.category} onChange={(e) => handleCategoryChange(e.target.value)}
                 className="input-field text-sm" style={{ ...inputStyle, borderColor: !form.category ? '#ef4444' : cardBorder }}>
                 <option value="">-- انتخاب دسته‌بندی --</option>
                 {categories.map((c) => (
-                  <option key={c.id} value={c.name}>{c.parentId ? `↳ ${c.name}` : c.name}</option>
+                  <option key={c.id} value={c.name}>{c.name}</option>
                 ))}
               </select>
               {!form.category && <p className="text-[10px] mt-1" style={{ color: '#ef4444' }}>انتخاب دسته‌بندی الزامی است</p>}
+            </div>
+            <div>
+              <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>زیردسته</label>
+              <div className="flex gap-1">
+                <select value={showNewSubcatInput ? '__new__' : form.subcategory}
+                  onChange={(e) => {
+                    if (e.target.value === '__new__') { setShowNewSubcatInput(true); setForm(f => ({ ...f, subcategory: '' })) }
+                    else { setShowNewSubcatInput(false); setForm(f => ({ ...f, subcategory: e.target.value })) }
+                  }}
+                  className="input-field text-sm flex-1" style={{ ...inputStyle, opacity: !form.category ? 0.5 : 1 }} disabled={!form.category}>
+                  <option value="">-- زیردسته --</option>
+                  {subcategories.map(sc => <option key={sc.id} value={sc.name}>{sc.name}</option>)}
+                  <option value="__new__">+ افزودن زیردسته جدید</option>
+                </select>
+              </div>
+              {showNewSubcatInput && (
+                <div className="flex gap-1 mt-1">
+                  <input value={newSubcategory} onChange={(e) => setNewSubcategory(e.target.value)} placeholder="نام زیردسته جدید"
+                    className="input-field text-xs flex-1" style={inputStyle} onKeyDown={(e) => e.key === 'Enter' && handleCreateSubcategory()} />
+                  <button onClick={handleCreateSubcategory} className="px-2 py-1 rounded-lg text-[10px] font-bold text-white" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>افزودن</button>
+                  <button onClick={() => { setShowNewSubcatInput(false); setNewSubcategory('') }} className="px-2 py-1 rounded-lg text-[10px] font-bold" style={{ color: textSecondary }}>لغو</button>
+                </div>
+              )}
             </div>
             <div className="flex items-end">
               <div className="flex items-center gap-2">
@@ -266,7 +325,10 @@ export default function AddProduct() {
             </div>
             <div>
               <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.salePrice}</label>
-              <FormattedPriceInput value={form.sale_price} onChange={(v) => setForm((f) => ({ ...f, sale_price: v }))} className="input-field text-sm" style={inputStyle} />
+              <FormattedPriceInput value={form.sale_price} onChange={(v) => {
+                setForm((f) => ({ ...f, sale_price: v, isSellable: v > 0 ? f.isSellable : false }))
+              }} className="input-field text-sm" style={inputStyle} />
+              {form.sale_price === 0 && <p className="text-[10px] mt-1" style={{ color: '#f59e0b' }}>قیمت فروش صفر است — کالا در صفحه فروش نمایش داده نمی‌شود</p>}
             </div>
             <div>
               <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.stock}</label>
@@ -275,6 +337,14 @@ export default function AddProduct() {
             <div>
               <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.minStock}</label>
               <FormattedPriceInput value={form.minStock} onChange={(v) => setForm((f) => ({ ...f, minStock: v }))} className="input-field text-sm" placeholder="0" style={inputStyle} />
+            </div>
+            <div className="col-span-2">
+              <div className="flex items-center gap-2">
+                <input type="checkbox" checked={form.isSellable} onChange={(e) => setForm((f) => ({ ...f, isSellable: e.target.checked }))} className="w-4 h-4 rounded" style={{ accentColor: '#22c55e' }} />
+                <label className="text-sm font-bold" style={{ color: textSecondary }}>فعال برای فروش</label>
+                {!form.isSellable && <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>غیرفعال</span>}
+              </div>
+              {!form.isSellable && <p className="text-[10px] mt-1" style={{ color: '#f59e0b' }}>این کالا در صفحه فروش (POS) نمایش داده نخواهد شد</p>}
             </div>
             <div className="col-span-2">
               <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>توضیحات / یادداشت</label>
@@ -396,7 +466,11 @@ export default function AddProduct() {
 
   function startEdit(p: Product) {
     setEditProduct(p)
-    setForm({ barcode: p.barcode, title: p.title, category: p.category, unit: p.unit, purchase_price: p.purchase_price, sale_price: p.sale_price, stock: p.stock, minStock: p.minStock, isLoose: p.isLoose, description: p.description || '', imageBase64: p.imageBase64 || '' })
+    setForm({ barcode: p.barcode, title: p.title, category: p.category, subcategory: p.subcategory || '', unit: p.unit, purchase_price: p.purchase_price, sale_price: p.sale_price, stock: p.stock, minStock: p.minStock, isLoose: p.isLoose, isSellable: p.isSellable, description: p.description || '', imageBase64: p.imageBase64 || '' })
+    if (p.category) {
+      const parentCat = categories.find(c => c.name === p.category)
+      if (parentCat) loadSubcategories(parentCat.id)
+    }
     setShowForm(true)
   }
 

@@ -39,8 +39,8 @@ export function searchProducts(query: string): Product[] {
   const db = getDatabase()
   const pattern = `%${query}%`
   return (db.prepare(
-    'SELECT * FROM products WHERE isActive = 1 AND (title LIKE ? OR barcode LIKE ? OR category LIKE ?) ORDER BY title LIMIT 50'
-  ).all(pattern, pattern, pattern) as Record<string, unknown>[]).map(formatProduct)
+    'SELECT * FROM products WHERE isActive = 1 AND (title LIKE ? OR barcode LIKE ? OR category LIKE ? OR subcategory LIKE ?) ORDER BY title LIMIT 50'
+  ).all(pattern, pattern, pattern, pattern) as Record<string, unknown>[]).map(formatProduct)
 }
 
 export function getLooseProducts(): Product[] {
@@ -64,23 +64,32 @@ export function getProductCategories(): string[] {
   ).all() as { category: string }[]).map(r => r.category)
 }
 
+export function getSellableProducts(): Product[] {
+  const db = getDatabase()
+  return (db.prepare(
+    'SELECT * FROM products WHERE isActive = 1 AND isSellable = 1 ORDER BY title'
+  ).all() as Record<string, unknown>[]).map(formatProduct)
+}
+
 export function createProduct(input: ProductInput): Product {
   const db = getDatabase()
   const result = db.prepare(`
-    INSERT INTO products (barcode, title, description, imageBase64, category, unit, purchase_price, sale_price, stock, minStock, isLoose)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO products (barcode, title, description, imageBase64, category, subcategory, unit, purchase_price, sale_price, stock, minStock, isLoose, isSellable)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     input.barcode || null,
     input.title,
     input.description || '',
     input.imageBase64 || '',
     input.category || '',
+    input.subcategory || '',
     input.unit || 'number',
     input.purchase_price,
     input.sale_price,
     input.stock,
     input.minStock || 0,
-    input.isLoose ? 1 : 0
+    input.isLoose ? 1 : 0,
+    input.isSellable !== false ? 1 : 0
   )
   return getProductById(result.lastInsertRowid as number)!
 }
@@ -93,8 +102,8 @@ export function updateProduct(id: number, input: Partial<ProductInput>): Product
   const merged = { ...existing, ...input }
   db.prepare(`
     UPDATE products
-    SET barcode = ?, title = ?, description = ?, imageBase64 = ?, category = ?, unit = ?, purchase_price = ?, sale_price = ?,
-        stock = ?, minStock = ?, isLoose = ?, updatedAt = datetime('now', 'localtime')
+    SET barcode = ?, title = ?, description = ?, imageBase64 = ?, category = ?, subcategory = ?, unit = ?, purchase_price = ?, sale_price = ?,
+        stock = ?, minStock = ?, isLoose = ?, isSellable = ?, updatedAt = datetime('now', 'localtime')
     WHERE id = ?
   `).run(
     merged.barcode || null,
@@ -102,12 +111,14 @@ export function updateProduct(id: number, input: Partial<ProductInput>): Product
     merged.description || '',
     merged.imageBase64 || '',
     merged.category || '',
+    merged.subcategory || '',
     merged.unit,
     merged.purchase_price,
     merged.sale_price,
     merged.stock,
     merged.minStock || 0,
     merged.isLoose ? 1 : 0,
+    merged.isSellable !== false ? 1 : 0,
     id
   )
 
@@ -152,6 +163,7 @@ function formatProduct(row: Record<string, unknown>): Product {
     description: (row.description as string) ?? '',
     imageBase64: (row.imageBase64 as string) ?? '',
     category: row.category as string,
+    subcategory: (row.subcategory as string) ?? '',
     unit: row.unit as 'number' | 'weight',
     purchase_price: row.purchase_price as number,
     sale_price: row.sale_price as number,
@@ -159,6 +171,7 @@ function formatProduct(row: Record<string, unknown>): Product {
     minStock: row.minStock as number,
     isLoose: Boolean(row.isLoose),
     isActive: Boolean(row.isActive),
+    isSellable: (row.isSellable ?? 1) === 1,
     createdAt: row.createdAt as string,
     updatedAt: row.updatedAt as string,
   }

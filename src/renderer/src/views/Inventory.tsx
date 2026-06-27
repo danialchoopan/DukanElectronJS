@@ -47,6 +47,14 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
   const [reportData, setReportData] = useState<{ byCategory: any[]; slowMoving: any[] }>({ byCategory: [], slowMoving: [] })
   const [imageUrls, setImageUrls] = useState<Record<number, string>>({})
   const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set())
+  const [showAdjustment, setShowAdjustment] = useState(false)
+  const [adjustmentProduct, setAdjustmentProduct] = useState<Product | null>(null)
+  const [adjustmentSearch, setAdjustmentSearch] = useState('')
+  const [adjustmentNewStock, setAdjustmentNewStock] = useState('')
+  const [adjustmentReason, setAdjustmentReason] = useState('')
+  const [adjustmentType, setAdjustmentType] = useState('manual')
+  const [adjustmentDate, setAdjustmentDate] = useState('')
+  const [adjustmentHistory, setAdjustmentHistory] = useState<any[]>([])
 
   useEffect(() => {
     if (initialTab && ['products', 'report', 'audit'].includes(initialTab)) {
@@ -567,6 +575,11 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
               چاپ QR ({selectedProducts.size})
             </button>
           )}
+          <button onClick={async () => { setShowAdjustment(true); const r = await window.api.inventory.getAll({}); if (r.success && r.data) setAdjustmentHistory(r.data) }}
+            className="text-xs px-3 py-2 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary, border: `1px solid ${cardBorder}` }}>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            تطبیق و اصلاح موجودی
+          </button>
         </div>
 
         <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
@@ -1045,6 +1058,127 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
       <PrintDialog open={showPrintDialog} title="چاپ گزارش انبار" totalCount={reportData.byCategory.length} onClose={() => setShowPrintDialog(false)} onPrint={(range) => { setShowPrintDialog(false); handlePrintA4(range) }} />
       <PrintDialog open={showProductsPrintDialog} title="چاپ لیست موجودی" totalCount={filteredProducts.length} onClose={() => setShowProductsPrintDialog(false)} onPrint={(range) => { setShowProductsPrintDialog(false); handleProductsPrint(range) }} />
 
+      {showAdjustment && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => { setShowAdjustment(false); setAdjustmentProduct(null) }}>
+          <div className="rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[85vh] overflow-y-auto" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }} onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4" style={{ color: textPrimary }}>تطبیق و اصلاح موجودی انبار</h3>
+
+            <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: isDark ? 'rgba(59,130,246,0.1)' : '#eff6ff', border: '1px solid #3b82f6' }}>
+              <h4 className="font-bold text-sm mb-2" style={{ color: '#3b82f6' }}>ثبت اصلاح جدید</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>جستجوی کالا</label>
+                  <input value={adjustmentSearch} onChange={(e) => setAdjustmentSearch(e.target.value)} placeholder="نام یا بارکد کالا..." className="input-field text-sm" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', color: textPrimary, border: `1px solid ${cardBorder}` }} />
+                </div>
+                {!adjustmentProduct && adjustmentSearch.length > 0 && (
+                  <div className="col-span-2">
+                    <AdjustmentProductSearch query={adjustmentSearch} onSelect={(p) => { setAdjustmentProduct(p); setAdjustmentNewStock(String(p.stock)); setAdjustmentSearch('') }} />
+                  </div>
+                )}
+                {adjustmentProduct && (
+                  <>
+                    <div className="col-span-2 rounded-lg p-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-bold text-sm" style={{ color: textPrimary }}>{adjustmentProduct.title}</div>
+                          <div className="text-xs" style={{ color: textSecondary }}>موجودی فعلی: <span className="font-bold">{adjustmentProduct.stock}</span></div>
+                        </div>
+                        <button onClick={() => { setAdjustmentProduct(null); setAdjustmentNewStock(''); setAdjustmentReason('') }} className="text-xs px-2 py-1 rounded-lg" style={{ color: '#ef4444' }}>تغییر کالا</button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>موجودی جدید</label>
+                      <input type="number" value={adjustmentNewStock} onChange={(e) => setAdjustmentNewStock(e.target.value)}
+                        className="input-field text-sm" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', color: textPrimary, border: `1px solid ${cardBorder}` }} />
+                      {adjustmentNewStock && Number(adjustmentNewStock) !== adjustmentProduct.stock && (
+                        <div className="text-xs font-bold mt-1" style={{ color: Number(adjustmentNewStock) > adjustmentProduct.stock ? '#22c55e' : '#ef4444' }}>
+                          تغییر: {adjustmentProduct.stock} → {Number(adjustmentNewStock)} ({Number(adjustmentNewStock) > adjustmentProduct.stock ? '+' : ''}{Number(adjustmentNewStock) - adjustmentProduct.stock})
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>نوع اصلاح</label>
+                      <select value={adjustmentType} onChange={(e) => setAdjustmentType(e.target.value)}
+                        className="input-field text-sm" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', color: textPrimary, border: `1px solid ${cardBorder}` }}>
+                        <option value="manual">اصلاح دستی</option>
+                        <option value="reconciliation">تطبیق با شمارش فیزیکی</option>
+                        <option value="damage">ضایعات / آسیب</option>
+                        <option value="count">شمارش دوره‌ای</option>
+                        <option value="other">سایر</option>
+                      </select>
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>دلیل اصلاح</label>
+                      <input value={adjustmentReason} onChange={(e) => setAdjustmentReason(e.target.value)} placeholder="توضیح دلیل اصلاح..." className="input-field text-sm" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', color: textPrimary, border: `1px solid ${cardBorder}` }} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>تاریخ (اختیاری)</label>
+                      <input type="date" value={adjustmentDate} onChange={(e) => setAdjustmentDate(e.target.value)}
+                        className="input-field text-sm" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', color: textPrimary, border: `1px solid ${cardBorder}`, direction: 'ltr', textAlign: 'center' }} />
+                    </div>
+                    <div className="col-span-2 flex justify-end gap-2 mt-2">
+                      <button onClick={async () => {
+                        if (!adjustmentProduct || !adjustmentNewStock) return
+                        const r = await window.api.inventory.create({
+                          productId: adjustmentProduct.id,
+                          newStock: Number(adjustmentNewStock),
+                          reason: adjustmentReason,
+                          adjustmentType,
+                          createdAt: adjustmentDate ? `${adjustmentDate} 12:00:00` : undefined,
+                        })
+                        if (r.success) {
+                          setAdjustmentProduct(null); setAdjustmentNewStock(''); setAdjustmentReason(''); setAdjustmentDate('')
+                          await loadProducts()
+                          const hr = await window.api.inventory.getAll({})
+                          if (hr.success && hr.data) setAdjustmentHistory(hr.data)
+                        }
+                      }} disabled={!adjustmentProduct || !adjustmentNewStock || Number(adjustmentNewStock) === adjustmentProduct?.stock}
+                        className="px-4 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-40" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)' }}>
+                        ثبت اصلاح
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {adjustmentHistory.length > 0 && (
+              <div>
+                <h4 className="font-bold text-sm mb-2" style={{ color: textPrimary }}>تاریخچه اصلاحات</h4>
+                <div className="rounded-xl border overflow-hidden" style={{ borderColor: cardBorder }}>
+                  <table className="w-full text-xs">
+                    <thead><tr style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+                      <th className="px-3 py-2 text-right" style={{ color: textSecondary }}>تاریخ</th>
+                      <th className="px-3 py-2 text-right" style={{ color: textSecondary }}>کالا</th>
+                      <th className="px-3 py-2 text-center" style={{ color: textSecondary }}>قبل</th>
+                      <th className="px-3 py-2 text-center" style={{ color: textSecondary }}>بعد</th>
+                      <th className="px-3 py-2 text-center" style={{ color: textSecondary }}>تغییر</th>
+                      <th className="px-3 py-2 text-right" style={{ color: textSecondary }}>نوع</th>
+                      <th className="px-3 py-2 text-right" style={{ color: textSecondary }}>دلیل</th>
+                    </tr></thead>
+                    <tbody>
+                      {adjustmentHistory.map((adj: any) => (
+                        <tr key={adj.id} style={{ borderTop: `1px solid ${cardBorder}` }}>
+                          <td className="px-3 py-2" style={{ color: textSecondary }}>{adj.createdAt?.slice(0, 10)}</td>
+                          <td className="px-3 py-2 font-bold" style={{ color: textPrimary }}>{adj.productName}</td>
+                          <td className="px-3 py-2 text-center" style={{ color: textSecondary }}>{adj.previousStock}</td>
+                          <td className="px-3 py-2 text-center font-bold" style={{ color: textPrimary }}>{adj.newStock}</td>
+                          <td className="px-3 py-2 text-center font-bold" style={{ color: adj.adjustmentQty >= 0 ? '#22c55e' : '#ef4444' }}>
+                            {adj.adjustmentQty >= 0 ? '+' : ''}{adj.adjustmentQty}
+                          </td>
+                          <td className="px-3 py-2" style={{ color: textSecondary }}>{adj.adjustmentType === 'manual' ? 'دستی' : adj.adjustmentType === 'reconciliation' ? 'تطبیق' : adj.adjustmentType === 'damage' ? 'ضایعات' : adj.adjustmentType === 'count' ? 'شمارش' : 'سایر'}</td>
+                          <td className="px-3 py-2" style={{ color: textSecondary }}>{adj.reason || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {viewProduct && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setViewProduct(null)}>
           <div className="rounded-2xl p-6 max-w-lg w-full mx-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }} onClick={e => e.stopPropagation()}>
@@ -1070,6 +1204,29 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function AdjustmentProductSearch({ query, onSelect }: { query: string; onSelect: (p: Product) => void }) {
+  const [results, setResults] = useState<Product[]>([])
+  useEffect(() => {
+    if (!query) return
+    const t = setTimeout(async () => {
+      const r = await window.api.products.search(query)
+      if (r.success && r.data) setResults(r.data.slice(0, 10))
+    }, 300)
+    return () => clearTimeout(t)
+  }, [query])
+  if (results.length === 0) return null
+  return (
+    <div className="rounded-xl border overflow-hidden" style={{ borderColor: '#3b82f6' }}>
+      {results.map(p => (
+        <button key={p.id} onClick={() => onSelect(p)} className="w-full text-right px-3 py-2 text-xs flex items-center justify-between hover:bg-blue-500/10 transition-all" style={{ borderBottom: '1px solid rgba(59,130,246,0.2)' }}>
+          <span className="font-bold" style={{ color: '#3b82f6' }}>{p.title}</span>
+          <span style={{ color: '#94a3b8' }}>موجودی: {p.stock} — {p.category}</span>
+        </button>
+      ))}
     </div>
   )
 }

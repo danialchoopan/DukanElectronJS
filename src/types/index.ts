@@ -3,6 +3,7 @@ export interface Product {
   barcode: string
   title: string
   category: string
+  subcategory: string
   unit: 'number' | 'weight'
   purchase_price: number
   sale_price: number
@@ -10,6 +11,7 @@ export interface Product {
   minStock: number
   isLoose: boolean
   isActive: boolean
+  isSellable: boolean
   description: string
   imageBase64: string
   createdAt: string
@@ -20,12 +22,14 @@ export interface ProductInput {
   barcode?: string
   title: string
   category?: string
+  subcategory?: string
   unit?: 'number' | 'weight'
   purchase_price: number
   sale_price: number
   stock: number
   minStock?: number
   isLoose?: boolean
+  isSellable?: boolean
   description?: string
   imageBase64?: string
 }
@@ -78,6 +82,8 @@ export interface Sale {
   invoiceDescription?: string
   manualCustomerName?: string
   saleType?: 'in-person' | 'online'
+  saleDate: string
+  affectsInventory: boolean
   createdAt: string
 }
 
@@ -97,6 +103,8 @@ export interface SaleInput {
   invoiceDescription?: string
   manualCustomerName?: string
   saleType?: 'in-person' | 'online'
+  saleDate?: string
+  affectsInventory?: boolean
 }
 
 export interface Customer {

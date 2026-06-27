@@ -52,6 +52,8 @@ const api = {
       ipcRenderer.invoke('products:loose'),
     getCategories: (): Promise<IPCResponse<string[]>> =>
       ipcRenderer.invoke('products:categories'),
+    getSellable: (): Promise<IPCResponse<Product[]>> =>
+      ipcRenderer.invoke('products:getSellable'),
     getReportData: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('products:reportData'),
     saveImage: (data: { base64: string; productId: number }): Promise<IPCResponse<string>> =>
       ipcRenderer.invoke('products:saveImage', data),
@@ -173,6 +175,8 @@ const api = {
       ipcRenderer.invoke('categories:toggleActive', { id }),
     getDescendants: (id: number): Promise<IPCResponse<any>> =>
       ipcRenderer.invoke('categories:descendants', { id }),
+    getSubcategories: (parentId: number): Promise<IPCResponse<any[]>> =>
+      ipcRenderer.invoke('categories:getSubcategories', { parentId }),
   },
 
   audit: {
@@ -191,6 +195,15 @@ const api = {
       ipcRenderer.invoke('returns:list', { limit }),
     getStats: (): Promise<IPCResponse<any>> =>
       ipcRenderer.invoke('returns:stats'),
+  },
+
+  inventory: {
+    create: (data: { productId: number; newStock: number; reason: string; adjustmentType: string; createdBy?: string; createdAt?: string }): Promise<IPCResponse<any>> =>
+      ipcRenderer.invoke('inventory:create', data),
+    getAll: (filters?: { productId?: number; adjustmentType?: string; dateFrom?: string; dateTo?: string; limit?: number }): Promise<IPCResponse<any[]>> =>
+      ipcRenderer.invoke('inventory:getAll', filters || {}),
+    getById: (id: number): Promise<IPCResponse<any>> =>
+      ipcRenderer.invoke('inventory:getById', { id }),
   },
 
   accounts: {
