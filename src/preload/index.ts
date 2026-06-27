@@ -259,6 +259,11 @@ const api = {
     tableStats: (path: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:tableStats', { path }),
     runTests: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:runTests'),
     delete: (name: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:delete', { name }),
+    saveAs: (): Promise<IPCResponse<string>> => ipcRenderer.invoke('backup:saveAs'),
+  },
+
+  database: {
+    reset: (): Promise<IPCResponse<boolean>> => ipcRenderer.invoke('database:reset'),
   },
 
   dialog: {

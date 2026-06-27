@@ -62,6 +62,11 @@ checks.push(['DB has sales.description column', conn.includes("description TEXT 
 checks.push(['DB has sales.saleType column', conn.includes("saleType TEXT DEFAULT 'in-person'")]);
 checks.push(['DB has price_history table', conn.includes('CREATE TABLE IF NOT EXISTS price_history')]);
 checks.push(['DB has supplier accounts', conn.includes("'2110'")]);
+checks.push(['DB has inventory_adjustments table', conn.includes('CREATE TABLE IF NOT EXISTS inventory_adjustments')]);
+checks.push(['DB has products.subcategory column', conn.includes("subcategory TEXT DEFAULT ''")]);
+checks.push(['DB has products.isSellable column', conn.includes('isSellable INTEGER NOT NULL DEFAULT 1')]);
+checks.push(['DB has sales.saleDate column', conn.includes('saleDate TEXT NOT NULL')]);
+checks.push(['DB has sales.affectsInventory column', conn.includes('affectsInventory INTEGER NOT NULL DEFAULT 1')]);
 
 // 11. No confirm() in renderer (Electron rule)
 let confirmCount = 0;

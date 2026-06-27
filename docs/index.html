@@ -51,7 +51,8 @@
     <div class="section-title">امکانات</div>
     <a href="#smart-export">خروجی/واردات هوشمند</a>
     <a href="#migration">مهاجرت نسخه‌ها</a>
-    <a href="#backup">پشتیبان‌گیری</a>
+    <a href="#backup">پشتیبان‌گیری و حذف دیتابیس</a>
+    <a href="#dbpath">مسیر پایگاه داده</a>
     <div class="section-title">توسعه</div>
     <a href="#structure">ساختار پوشه‌ها</a>
     <a href="#conventions">قراردادها</a>
@@ -76,6 +77,11 @@
       <tr><td>تقویم شمسی</td><td>تمام تاریخ‌ها با Jalali/Shamsi نمایش داده می‌شوند</td><td><span class="badge badge-green">فعال</span></td></tr>
       <tr><td>نوع فروش</td><td>حضوری/آنلاین با فیلتر و گزارش</td><td><span class="badge badge-green">فعال</span></td></tr>
       <tr><td>تاریخچه قیمت</td><td>ثبت خودکار تغییرات قیمت خرید و فروش</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>زیردسته محصولات</td><td>زیردسته با فیلتر و ایجاد آنلاین</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>وضعیت فروش</td><td>کالاهای با قیمت صفر خودکار غیرفعال می‌شوند</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>فاکتور تاریخ‌گذشته</td><td>ثبت فاکتور با تاریخ دلخواه بدون تأثیر موجودی</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>اصلاح موجودی</td><td>ثبت اصلاحات با دلیل، تاریخ و تاریخچه</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>حذف دیتابیس</td><td>شروع از صفر با پشتیبان‌گیری خودکار قبل از حذف</td><td><span class="badge badge-green">فعال</span></td></tr>
     </table>
 
     <h2 id="architecture">معماری سیستم</h2>
@@ -132,6 +138,7 @@
       <tr><td><code>settings</code></td><td>تنظیمات کلید-مقدار</td><td>key (PK)</td></tr>
       <tr><td><code>cash_register</code></td><td>صندوق نقدی</td><td>id, userId</td></tr>
       <tr><td><code>price_history</code></td><td>تاریخچه تغییرات قیمت</td><td>id, productId, priceType</td></tr>
+      <tr><td><code>inventory_adjustments</code></td><td>تاریخچه اصلاحات موجودی</td><td>id, productId, adjustmentType</td></tr>
     </table>
 
     <h2 id="accounting-sync">همگام‌سازی خودکار با حسابداری</h2>
@@ -209,17 +216,29 @@
       <li>بررسی یکپارچگی پس از مهاجرت</li>
     </ol>
 
-    <h2 id="backup">پشتیبان‌گیری</h2>
+    <h2 id="backup">پشتیبان‌گیری و مدیریت دیتابیس</h2>
     <table>
       <tr><th>قابلیت</th><th>توضیح</th></tr>
-      <tr><td>پشتیبان خودکار</td><td>هر روز یک بار در شروع برنامه</td></tr>
+      <tr><td>پشتیبان خودکار</td><td>هر روز/هفته/ماه در شروع برنامه</td></tr>
       <tr><td>پشتیبان دستی</td><td>از بخش تنظیمات</td></tr>
+      <tr><td>ذخیره در مسیر دلخواه</td><td>ذخیره پشتیبان در هر مکانی با انتخاب کاربر</td></tr>
+      <tr><td>بازیابی با پیش‌نمایش</td><td>بررسی نسخه و سازگاری قبل از بازیابی</td></tr>
+      <tr><td>حذف انتخابی</td><td>حذف پشتیبان‌های انتخاب شده با تأیید</td></tr>
+      <tr><td>حذف کامل دیتابیس</td><td>شروع از صفر — ابتدا پشتیبان ذخیره، سپس تأیید نهایی</td></tr>
       <tr><td>بررسی یکپارچگی</td><td>PRAGMA integrity_check + foreign_key_check</td></tr>
-      <tr><td>نسخه‌سنجی</td><td>مقایسه نسخه فایل با نسخه فعلی برنامه</td></tr>
-      <tr><td>پاکسازی خودکار</td><td>حذف پشتیبان‌های قدیمی (نگهداری ۳۰ نسخه)</td></tr>
       <tr><td>رمزنگاری</td><td>AES-256-GCM برای فایل‌های رمزگذاری‌شده</td></tr>
       <tr><td>امضای دیجیتال</td><td>HMAC-SHA256 برای تأیید اصالت</td></tr>
     </table>
+
+    <h2 id="dbpath">مسیر پایگاه داده</h2>
+    <table>
+      <tr><th>سیستم‌عامل</th><th>مسیر</th></tr>
+      <tr><td>Windows</td><td><code>%APPDATA%\hesabdari-danial\pos.db</code></td></tr>
+      <tr><td>macOS</td><td><code>~/Library/Application Support/hesabdari-danial/pos.db</code></td></tr>
+      <tr><td>Linux</td><td><code>~/.config/hesabdari-danial/pos.db</code></td></tr>
+    </table>
+    <p style="color: var(--muted); font-size: 13px;">پشتیبان‌ها در پوشه <code>backups/</code> کنار فایل اصلی ذخیره می‌شوند.</p>
+    <p style="color: var(--muted); font-size: 13px;">برای نصب مجدد: از دکمه «حذف کامل دیتابیس» در تنظیمات > پشتیبان‌گیری استفاده کنید، یا فایل <code>pos.db</code> و پوشه <code>backups/</code> را دستی حذف کنید.</p>
 
     <h2 id="structure">ساختار پوشه‌ها</h2>
     <pre>

@@ -20,6 +20,9 @@ export default function BackupSection() {
   const [autoBackup, setAutoBackup] = useState('true')
   const [backupInterval, setBackupInterval] = useState('daily')
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showResetStep1, setShowResetStep1] = useState(false)
+  const [showResetStep2, setShowResetStep2] = useState(false)
+  const [backupSaved, setBackupSaved] = useState(false)
 
   const cBorder = isDark ? '#334155' : '#e2e8f0'
   const tPri = isDark ? '#f1f5f9' : '#0f172a'
@@ -133,6 +136,80 @@ export default function BackupSection() {
           <p className="text-sm text-center" style={{ color: tPri }}>آیا از بازیابی اطمینان دارید؟</p>
         </Dialog>
       )}
+
+      {/* ─── Step 1: Save backup before delete ─── */}
+      {showResetStep1 && (
+        <Dialog open={true} onClose={() => { setShowResetStep1(false); setBackupSaved(false) }}
+          title="پشتیبان‌گیری قبل از حذف"
+          maxWidth="max-w-sm"
+          icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>}
+          footer={<>
+            <DialogButton variant="ghost" onClick={() => { setShowResetStep1(false); setBackupSaved(false) }}>لغو</DialogButton>
+            {backupSaved ? (
+              <DialogButton variant="danger" onClick={() => { setShowResetStep1(false); setBackupSaved(false); setShowResetStep2(true) }}>
+                ادامه حذف
+              </DialogButton>
+            ) : (
+              <DialogButton variant="primary" onClick={async () => {
+                const r = await window.api.backup.saveAs()
+                if (r.success) { setBackupSaved(true) }
+              }}>ذخیره پشتیبان</DialogButton>
+            )}
+          </>}>
+          {!backupSaved ? (
+            <div className="text-center">
+              <p className="text-sm mb-2" style={{ color: tPri }}>قبل از حذف دیتابیس، یک نسخه پشتیبان ذخیره کنید.</p>
+              <p className="text-xs" style={{ color: tSec }}>فایل پشتیبان در مکان دلخواه شما ذخیره خواهد شد.</p>
+            </div>
+          ) : (
+            <div className="text-center">
+              <div className="text-2xl mb-2">✓</div>
+              <p className="text-sm font-bold" style={{ color: '#22c55e' }}>پشتیبان با موفقیت ذخیره شد</p>
+              <p className="text-xs mt-1" style={{ color: tSec }}>اکنون می‌توانید حذف دیتابیس را ادامه دهید.</p>
+            </div>
+          )}
+        </Dialog>
+      )}
+
+      {/* ─── Step 2: Final confirmation for delete ─── */}
+      {showResetStep2 && (
+        <Dialog open={true} onClose={() => setShowResetStep2(false)}
+          title="⚠ حذف کامل دیتابیس"
+          maxWidth="max-w-sm"
+          icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>}
+          footer={<>
+            <DialogButton variant="ghost" onClick={() => setShowResetStep2(false)}>لغو</DialogButton>
+            <DialogButton variant="danger" onClick={async () => {
+              const r = await window.api.database.reset()
+              if (r.success) { window.location.reload() }
+              else { alert(`خطا: ${r.error}`); setShowResetStep2(false) }
+            }}>بله، حذف شود</DialogButton>
+          </>}>
+          <div className="text-center">
+            <div className="rounded-xl p-3 mb-3" style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}>
+              <p className="text-xs font-bold" style={{ color: '#ef4444' }}>تمام اطلاعات حذف خواهد شد:</p>
+              <ul className="text-xs mt-1 space-y-0.5" style={{ color: tSec }}>
+                <li>• تمام فاکتورها و فروش‌ها</li>
+                <li>• تمام کالاها و موجودی</li>
+                <li>• تمام مشتریان و تأمین‌کنندگان</li>
+                <li>• تمام اسناد حسابداری</li>
+                <li>• تمام تنظیمات</li>
+              </ul>
+            </div>
+            <p className="text-xs" style={{ color: tSec }}>برنامه پس از حذف مجدداً راه‌اندازی می‌شود و دیتابیس خالی جدید ایجاد می‌گردد.</p>
+          </div>
+        </Dialog>
+      )}
+
+      {/* ─── Delete Database Button ─── */}
+      <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${cBorder}` }}>
+        <button onClick={() => setShowResetStep1(true)}
+          className="w-full px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2"
+          style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}>
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          حذف کامل دیتابیس و شروع از صفر
+        </button>
+      </div>
     </div>
   )
 }

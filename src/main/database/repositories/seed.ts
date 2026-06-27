@@ -52,13 +52,13 @@ export function seedDemoData(): boolean {
 
   const seedTx = db.transaction(() => {
     const insertProduct = db.prepare(
-      'INSERT INTO products (barcode, title, category, unit, purchase_price, sale_price, stock, minStock, isActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)'
+      'INSERT INTO products (barcode, title, category, subcategory, unit, purchase_price, sale_price, stock, minStock, isActive, isSellable) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)'
     )
     const productIds: number[] = []
     for (let i = 0; i < products.length; i++) {
       const p = products[i]
       const barcode = `PRD-${String(i + 1).padStart(6, '0')}`
-      const r = insertProduct.run(barcode, p.title, p.category, p.unit, p.purchase_price, p.sale_price, p.stock, p.minStock)
+      const r = insertProduct.run(barcode, p.title, p.category, '', p.unit, p.purchase_price, p.sale_price, p.stock, p.minStock)
       productIds.push(r.lastInsertRowid as number)
     }
 

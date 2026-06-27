@@ -27,7 +27,7 @@ import * as migrationService from '../database/migration'
 import { runBackupTests } from '../database/backup.test'
 import { runSmartExportTests } from '../database/smartExport.test'
 import { runMigrationTests } from '../database/migration.test'
-import { isFirstRun, getDatabase } from '../database/connection'
+import { isFirstRun, getDatabase, closeDatabase } from '../database/connection'
 import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync } from 'fs'
 import { join } from 'path'
 import { randomBytes } from 'crypto'
@@ -357,6 +357,19 @@ export function registerAllHandlers(): void {
   })
 
   ipcMain.handle('backup:create', () => { try { return { success: true, data: backupService.createBackup() } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
+  ipcMain.handle('backup:saveAs', async () => {
+    try {
+      const win = BrowserWindow.getFocusedWindow()
+      const result = await dialog.showSaveDialog(win!, {
+        title: 'ذخیره نسخه پشتیبان',
+        defaultPath: `hesabdari-backup-${new Date().toISOString().slice(0, 10)}.db`,
+        filters: [{ name: 'SQLite Database', extensions: ['db'] }],
+      })
+      if (result.canceled || !result.filePath) return { success: false, error: 'cancelled' }
+      copyFileSync(join(app.getPath('userData'), 'pos.db'), result.filePath)
+      return { success: true, data: result.filePath }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
   ipcMain.handle('backup:delete', (_event, arg: { name: string }) => {
     try {
       const { unlinkSync, existsSync } = require('fs')
@@ -384,6 +397,20 @@ export function registerAllHandlers(): void {
     return runBackupTests()
   })
 
+  // ─── Database Reset ────────────────────────────────
+  ipcMain.handle('database:reset', async () => {
+    try {
+      closeDatabase()
+      const fs = require('fs')
+      const dbPath = join(app.getPath('userData'), 'pos.db')
+      for (const suffix of ['', '-wal', '-shm']) {
+        const p = dbPath + suffix
+        if (fs.existsSync(p)) fs.unlinkSync(p)
+      }
+      return { success: true }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
+
   handle('smartExport:runTests', () => {
     return runSmartExportTests()
   })
@@ -393,6 +420,20 @@ export function registerAllHandlers(): void {
   })
 
   // ─── Dialog ────────────────────────────────────────
+  ipcMain.handle('dialog:saveBackup', async () => {
+    const win = BrowserWindow.getFocusedWindow()
+    const result = await dialog.showSaveDialog(win!, {
+      title: 'ذخیره پشتیبان در',
+      defaultPath: `hesabdari-backup-${new Date().toISOString().slice(0, 10)}.db`,
+      filters: [{ name: 'SQLite Database', extensions: ['db'] }],
+    })
+    if (result.canceled || !result.filePath) return { success: false, error: 'cancelled' }
+    try {
+      copyFileSync(join(app.getPath('userData'), 'pos.db'), result.filePath)
+      return { success: true, data: result.filePath }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
+
   ipcMain.handle('dialog:openBackup', async () => {
     const win = BrowserWindow.getFocusedWindow()
     const result = await dialog.showOpenDialog(win!, {
