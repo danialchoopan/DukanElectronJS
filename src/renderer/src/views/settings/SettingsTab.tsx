@@ -11,21 +11,15 @@ import BackupSection from './BackupSection'
 
 const primary = '#006194'
 
-const cBg = '#1e293b'
-const cBorder = '#334155'
-const tPri = '#f1f5f9'
-const tSec = '#94a3b8'
-const inStyle = { background: '#0f172a', border: `1px solid ${cBorder}`, color: tPri }
-
-const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-  <div className={`rounded-xl p-4 border ${className}`} style={{ backgroundColor: cBg, borderColor: cBorder }}>{children}</div>
+const Card = ({ children, className = '', isDark }: { children: React.ReactNode; className?: string; isDark: boolean }) => (
+  <div className={`rounded-xl p-4 border ${className}`} style={{ backgroundColor: isDark ? '#1e293b' : '#ffffff', borderColor: isDark ? '#334155' : '#e2e8f0' }}>{children}</div>
 )
-const Label = ({ children }: { children: React.ReactNode }) => (
-  <label className="text-xs font-bold block mb-1.5" style={{ color: tSec }}>{children}</label>
+const Label = ({ children, isDark }: { children: React.ReactNode; isDark: boolean }) => (
+  <label className="text-xs font-bold block mb-1.5" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>{children}</label>
 )
-const Input = ({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) => (
-  <div className="mb-3"><Label>{label}</Label><input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-    className="w-full px-3 py-2 rounded-lg text-sm font-bold transition-all outline-none" style={inStyle} /></div>
+const Input = ({ label, value, onChange, placeholder, isDark }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; isDark: boolean }) => (
+  <div className="mb-3"><Label isDark={isDark}>{label}</Label><input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+    className="w-full px-3 py-2 rounded-lg text-sm font-bold transition-all outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: isDark ? '#f1f5f9' : '#0f172a' }} /></div>
 )
 
 interface Props {
@@ -41,6 +35,9 @@ export default function SettingsTab({ onExport, onImport }: Props) {
   const [storePhone, setStorePhone] = useState('')
   const [saved, setSaved] = useState(false)
   const isDark = document.documentElement.classList.contains('dark')
+
+  const tPri = isDark ? '#f1f5f9' : '#0f172a'
+  const tSec = isDark ? '#94a3b8' : '#64748b'
 
   useEffect(() => {
     window.api.settings.getAll().then((r) => {
@@ -71,7 +68,7 @@ export default function SettingsTab({ onExport, onImport }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Inputs (3 cols) */}
         <div className="lg:col-span-3 space-y-3">
-          <Card>
+          <Card isDark={isDark}>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: isDark ? 'rgba(0,97,148,0.2)' : 'rgba(0,97,148,0.08)' }}>
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke={primary} strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -79,9 +76,9 @@ export default function SettingsTab({ onExport, onImport }: Props) {
               <h3 className="font-extrabold text-sm" style={{ color: tPri }}>اطلاعات فروشگاه</h3>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <Input label={fa.admin.storeName} value={storeName} onChange={setStoreName} placeholder="نام فروشگاه" />
-              <Input label={fa.admin.storePhone} value={storePhone} onChange={setStorePhone} placeholder="021..." />
-              <div className="col-span-2"><Input label={fa.admin.storeAddress} value={storeAddress} onChange={setStoreAddress} placeholder="آدرس فروشگاه" /></div>
+              <Input label={fa.admin.storeName} value={storeName} onChange={setStoreName} placeholder="نام فروشگاه" isDark={isDark} />
+              <Input label={fa.admin.storePhone} value={storePhone} onChange={setStorePhone} placeholder="021..." isDark={isDark} />
+              <div className="col-span-2"><Input label={fa.admin.storeAddress} value={storeAddress} onChange={setStoreAddress} placeholder="آدرس فروشگاه" isDark={isDark} /></div>
             </div>
           </Card>
 
@@ -93,7 +90,7 @@ export default function SettingsTab({ onExport, onImport }: Props) {
 
         {/* Left: Tax + Backup + Export (2 cols) */}
         <div className="lg:col-span-2 space-y-3">
-          <Card>
+          <Card isDark={isDark}>
             <div className="flex items-center justify-between mb-3">
               <div>
                 <div className="text-sm font-bold" style={{ color: tPri }}>مالیات بر ارزش افزوده</div>
@@ -121,7 +118,7 @@ export default function SettingsTab({ onExport, onImport }: Props) {
             )}
           </Card>
 
-          <Card>
+          <Card isDark={isDark}>
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: '#22c55e15' }}>
                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -135,7 +132,7 @@ export default function SettingsTab({ onExport, onImport }: Props) {
             </div>
           </Card>
 
-          <Card>
+          <Card isDark={isDark}>
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: isDark ? 'rgba(0,97,148,0.2)' : 'rgba(0,97,148,0.08)' }}>
                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke={primary} strokeWidth="2"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
