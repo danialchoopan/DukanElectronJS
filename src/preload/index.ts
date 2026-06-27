@@ -260,6 +260,9 @@ const api = {
     runTests: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:runTests'),
     delete: (name: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('backup:delete', { name }),
     saveAs: (): Promise<IPCResponse<string>> => ipcRenderer.invoke('backup:saveAs'),
+    getSelectableTables: (): Promise<IPCResponse<{ name: string; rowCount: number }[]>> => ipcRenderer.invoke('backup:getSelectableTables'),
+    createWithOptions: (options: { format: string; scope: string; tables?: string[]; filePath?: string; label?: string }): Promise<IPCResponse<string>> =>
+      ipcRenderer.invoke('backup:createWithOptions', options),
   },
 
   database: {

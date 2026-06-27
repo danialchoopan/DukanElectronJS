@@ -397,6 +397,36 @@ export function registerAllHandlers(): void {
     return runBackupTests()
   })
 
+  // ─── Enhanced Backup ─────────────────────────────────
+  handle('backup:getSelectableTables', () => backupService.getSelectableTables())
+  ipcMain.handle('backup:createWithOptions', (_event, a: { format: string; scope: string; tables?: string[]; filePath?: string; label?: string }) => {
+    try {
+      if (a.format === 'json') {
+        let json: string
+        if (a.scope === 'structure') {
+          json = backupService.exportStructure()
+        } else if (a.scope === 'selective' && a.tables) {
+          json = backupService.exportSelectiveJson(a.tables)
+        } else {
+          json = backupService.exportAsJson()
+        }
+        if (a.filePath) {
+          writeFileSync(a.filePath, json, 'utf-8')
+          return { success: true, data: a.filePath }
+        }
+        const outPath = join(app.getPath('userData'), `backup-${Date.now()}.json`)
+        writeFileSync(outPath, json, 'utf-8')
+        return { success: true, data: outPath }
+      } else {
+        if (a.filePath) {
+          copyFileSync(join(app.getPath('userData'), 'pos.db'), a.filePath)
+          return { success: true, data: a.filePath }
+        }
+        return { success: true, data: backupService.createBackup(a.label) }
+      }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
+
   // ─── Database Reset ────────────────────────────────
   ipcMain.handle('database:reset', async () => {
     try {

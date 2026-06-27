@@ -13,12 +13,47 @@ export function getDatabase(): Database.Database {
     db.pragma('foreign_keys = ON')
     db.pragma('busy_timeout = 5000')
     initializeDatabase(db)
+    migrateSchema(db)
   }
   return db
 }
 
 export function hashPin(pin: string): string {
   return createHash('sha256').update(pin).digest('hex')
+}
+
+/**
+ * Auto-migration: detects missing columns/tables on startup and adds them safely.
+ * Uses PRAGMA table_info() to check existing columns, then ALTER TABLE ADD COLUMN
+ * for any missing ones. Idempotent — runs on every startup but is a no-op after first migration.
+ */
+function migrateSchema(database: Database.Database): void {
+  const expectedColumns: Record<string, { name: string; type: string; defaultValue: string }[]> = {
+    products: [
+      { name: 'subcategory', type: 'TEXT', defaultValue: "''" },
+      { name: 'isSellable', type: 'INTEGER', defaultValue: '1' },
+    ],
+    sales: [
+      { name: 'saleDate', type: 'TEXT', defaultValue: "datetime('now', 'localtime')" },
+      { name: 'affectsInventory', type: 'INTEGER', defaultValue: '1' },
+    ],
+  }
+
+  let migrationCount = 0
+  for (const [tableName, columns] of Object.entries(expectedColumns)) {
+    const existing = database.prepare(`PRAGMA table_info(${tableName})`).all() as { name: string }[]
+    const existingNames = new Set(existing.map(c => c.name))
+    for (const col of columns) {
+      if (!existingNames.has(col.name)) {
+        database.exec(`ALTER TABLE ${tableName} ADD COLUMN ${col.name} ${col.type} DEFAULT ${col.defaultValue}`)
+        migrationCount++
+        console.log(`[Migration] Added ${tableName}.${col.name}`)
+      }
+    }
+  }
+  if (migrationCount > 0) {
+    console.log(`[Migration] ${migrationCount} columns added`)
+  }
 }
 
 export function closeDatabase(): void {

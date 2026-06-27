@@ -198,3 +198,84 @@ export function getBackupStats(): { totalBackups: number; latestBackup: string |
   const latest = files.sort().pop() || null
   return { totalBackups: files.length, latestBackup: latest, totalSize }
 }
+
+export function getSelectableTables(): { name: string; rowCount: number }[] {
+  const Database = require('better-sqlite3')
+  const db = new Database(DB_PATH, { readonly: true })
+  const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all() as { name: string }[]
+  const result: { name: string; rowCount: number }[] = []
+  for (const t of tables) {
+    const row = db.prepare(`SELECT COUNT(*) as c FROM "${t.name}"`).get() as { c: number }
+    result.push({ name: t.name, rowCount: row.c })
+  }
+  db.close()
+  return result
+}
+
+export function exportStructure(): string {
+  const Database = require('better-sqlite3')
+  const db = new Database(DB_PATH, { readonly: true })
+  const creates = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND sql IS NOT NULL AND name NOT LIKE 'sqlite_%'").all() as { sql: string }[]
+  db.close()
+  const appVersion = require('../../../package.json').version
+  return JSON.stringify({
+    version: appVersion,
+    appName: 'hesabdari-danial',
+    format: 'structure',
+    exportDate: new Date().toISOString(),
+    statements: creates.map(c => c.sql + ';'),
+  }, null, 2)
+}
+
+export function exportAsJson(): string {
+  const Database = require('better-sqlite3')
+  const db = new Database(DB_PATH, { readonly: true })
+  const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all() as { name: string }[]
+  const data: Record<string, any[]> = {}
+  for (const t of tables) {
+    data[t.name] = db.prepare(`SELECT * FROM "${t.name}"`).all()
+  }
+  db.close()
+  const appVersion = require('../../../package.json').version
+  return JSON.stringify({
+    version: appVersion,
+    appName: 'hesabdari-danial',
+    format: 'json',
+    exportDate: new Date().toISOString(),
+    tables: data,
+  }, null, 2)
+}
+
+export function exportSelectiveJson(tableNames: string[]): string {
+  const Database = require('better-sqlite3')
+  const db = new Database(DB_PATH, { readonly: true })
+  const data: Record<string, any[]> = {}
+  for (const name of tableNames) {
+    try { data[name] = db.prepare(`SELECT * FROM "${name}"`).all() } catch { /* skip */ }
+  }
+  db.close()
+  const appVersion = require('../../../package.json').version
+  return JSON.stringify({
+    version: appVersion,
+    appName: 'hesabdari-danial',
+    format: 'json',
+    exportDate: new Date().toISOString(),
+    tables: data,
+  }, null, 2)
+}
+
+export function exportSelectiveStructure(tableNames: string[]): string {
+  const Database = require('better-sqlite3')
+  const db = new Database(DB_PATH, { readonly: true })
+  const allCreates = db.prepare("SELECT name, sql FROM sqlite_master WHERE type='table' AND sql IS NOT NULL AND name NOT LIKE 'sqlite_%'").all() as { name: string; sql: string }[]
+  db.close()
+  const filtered = allCreates.filter(c => tableNames.includes(c.name))
+  const appVersion = require('../../../package.json').version
+  return JSON.stringify({
+    version: appVersion,
+    appName: 'hesabdari-danial',
+    format: 'structure',
+    exportDate: new Date().toISOString(),
+    statements: filtered.map(c => c.sql + ';'),
+  }, null, 2)
+}

@@ -308,3 +308,11 @@ export interface ARAgingReport {
   rows: ARAgingRow[]
   totals: { current: number; days31to60: number; days61to90: number; over90: number; total: number }
 }
+
+export interface BackupOptions {
+  format: 'sqlite' | 'json'
+  scope: 'all' | 'structure' | 'selective'
+  tables?: string[]
+  filePath?: string
+  label?: string
+}
