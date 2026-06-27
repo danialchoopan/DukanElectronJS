@@ -118,7 +118,10 @@ export default function UISettings() {
         {/* Camera Scanner */}
         <Card title="اسکنر دوربین">
           <div className="flex items-center justify-between">
-            <p className="text-sm" style={{ color: tSec }}>نمایش دکمه دوربین در صفحه فروش</p>
+            <div>
+              <p className="text-sm" style={{ color: tSec }}>فعال‌سازی اسکن بارکد و QR با دوربین</p>
+              <p className="text-[10px] mt-0.5" style={{ color: isDark ? '#64748b' : '#94a3b8' }}>صفحه فروش + صفحه افزودن کالا</p>
+            </div>
             <button onClick={() => setShowCameraScanner(!showCameraScanner)}
               className="relative w-11 h-6 rounded-full transition-all duration-200"
               style={{ backgroundColor: showCameraScanner ? primary : isDark ? '#475569' : '#d1d5db' }}>

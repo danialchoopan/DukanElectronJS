@@ -39,6 +39,7 @@ const PAGE_SIZES = [5, 10, 20, 50]
 
 export default function AddProduct() {
   const theme = useSettingsStore((s) => s.theme)
+  const showCameraScanner = useSettingsStore((s) => s.showCameraScanner)
   const isDark = theme === 'dark'
   const [showWebcam, setShowWebcam] = useState(false)
   const [notification, setNotification] = useState('')
@@ -277,14 +278,16 @@ export default function AddProduct() {
             className="input-field text-sm pr-10"
           />
         </div>
-        <button
-          onClick={() => setShowWebcam(true)}
-          className="text-sm px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all duration-200"
-          style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, color: textSecondary, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          اسکن بارکد
-        </button>
+        {showCameraScanner && (
+          <button
+            onClick={() => setShowWebcam(true)}
+            className="text-sm px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all duration-200"
+            style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, color: textSecondary, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)' }}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            اسکن بارکد
+          </button>
+        )}
       </div>
 
       {/* Product Form */}
