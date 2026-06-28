@@ -1,3 +1,19 @@
+/**
+ * Dialog — reusable modal dialog component with consistent styling.
+ *
+ * Used throughout the app for: confirmations, forms, previews, settings.
+ * Supports: title, subtitle, icon, footer buttons, custom content.
+ *
+ * Variants via DialogButton:
+ *   - primary: blue gradient (main action)
+ *   - success: green gradient (confirm/apply)
+ *   - danger: red gradient (delete/dangerous actions)
+ *   - ghost: transparent (cancel/close)
+ *
+ * Handles click-outside-to-close and Escape key.
+ * Adapts to dark/light theme via CSS variables.
+ */
+
 import { useEffect } from 'react'
 import { useSettingsStore } from '../../store/settingsStore'
 

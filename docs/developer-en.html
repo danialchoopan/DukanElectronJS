@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Developer Guide — HesabDari Danial</title>
+  <style>
+    :root { --primary: #006194; --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f1f5f9; --muted: #94a3b8; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); line-height: 1.8; }
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 20px; margin: 32px 0 12px; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 8px; }
+    h3 { font-size: 16px; margin: 20px 0 8px; }
+    p { line-height: 1.8; margin-bottom: 12px; color: var(--muted); font-size: 14px; }
+    code { background: var(--card); padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #22c55e; font-family: 'Consolas', monospace; }
+    pre { background: var(--card); padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid var(--border); font-size: 13px; line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { padding: 10px 12px; text-align: left; border: 1px solid var(--border); font-size: 13px; }
+    th { background: var(--card); font-weight: 600; }
+    .note { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 13px; }
+    .warning { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 13px; }
+    .lang-switch { position: fixed; top: 16px; right: 16px; display: flex; gap: 8px; z-index: 100; }
+    .lang-switch a { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; background: var(--card); border: 1px solid var(--border); color: var(--muted); text-decoration: none; }
+    .lang-switch a.active { background: var(--primary); color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="lang-switch">
+    <a href="developer-fa.html">فارسی</a>
+    <a href="developer-en.html" class="active">English</a>
+  </div>
+
+  <div class="container">
+    <h1>Developer Guide</h1>
+    <p>HesabDari Danial — Technical documentation for contributors</p>
+
+    <h2>1. Project Structure</h2>
+<pre>
+src/
+├── main/                          # Electron main process (Node.js)
+│   ├── database/
+│   │   ├── connection.ts           # DB connection + CREATE TABLE + migrateSchema()
+│   │   ├── repositories/           # Data access layer (19 files)
+│   │   ├── backup.ts               # Backup/restore/export (SQLite/JSON)
+│   │   ├── smartExport.ts          # Selective data export with encryption
+│   │   ├── migration.ts            # Version detection and data migration
+│   │   └── seed.ts                 # Demo data seeder (disabled in production)
+│   ├── ipc/
+│   │   └── handlers.ts             # All IPC channel handlers (~720 lines)
+│   ├── utils/
+│   │   └── math.ts                 # Rounding, line calculations
+│   └── index.ts                    # App entry point
+├── renderer/                       # React UI
+│   └── src/
+│       ├── components/
+│       │   ├── ui/                 # Base components (Dialog, FormattedPriceInput, etc.)
+│       │   ├── layout/             # Layout components (Sidebar, Header, Notification)
+│       │   ├── print/              # Print components (PrintDialog, ReceiptPrinter)
+│       │   └── business/           # Domain components (Scanner, Cart, Payment, DateInput)
+│       ├── views/                  # Page components
+│       │   ├── accounting/         # 10 accounting tabs
+│       │   └── settings/           # Settings (Backup, UI, Customization)
+│       ├── store/                  # Zustand state stores
+│       ├── hooks/                  # Custom React hooks
+│       ├── utils/                  # Utilities (jalali, qrCode, a4Print, etc.)
+│       ├── i18n/                   # Translations (FA/EN)
+│       └── App.tsx                 # Root component + view router
+├── preload/
+│   └── index.ts                    # IPC bridge (window.api)
+└── types/
+    └── index.ts                    # Shared TypeScript types
+</pre>
+
+    <h2>2. Data Architecture</h2>
+
+    <h3>2.1 Database</h3>
+    <p>SQLite via <code>better-sqlite3</code> in WAL mode. All tables defined in <code>connection.ts</code> with <code>CREATE TABLE IF NOT EXISTS</code>.</p>
+    <div class="note">
+      <strong>Key rule:</strong> All columns must be in <code>CREATE TABLE</code>. Only use <code>ALTER TABLE</code> inside <code>migrateSchema()</code> for auto-migration of old databases.
+    </div>
+
+    <h3>2.2 Repository Pattern</h3>
+    <p>Each table has a dedicated repository file. Functions use <code>getDatabase()</code> directly:</p>
+<pre>
+// Example: products.ts
+export function getAllProducts(): Product[] {
+  const db = getDatabase()
+  return db.prepare('SELECT * FROM products WHERE isActive = 1').all().map(formatProduct)
+}
+</pre>
+
+    <h3>2.3 IPC Pattern</h3>
+    <p>All UI↔DB communication goes through <code>ipcMain.handle()</code> in handlers.ts. UI calls via <code>window.api</code> (preload):</p>
+<pre>
+// main process (handlers.ts)
+ipcMain.handle('products:getAll', () => products.getAllProducts())
+
+// renderer (component)
+const r = await window.api.products.getAll()
+if (r.success && r.data) setProducts(r.data)
+</pre>
+
+    <h3>2.4 Double-Entry Accounting</h3>
+    <p>Every financial transaction automatically posts to the general journal:</p>
+    <table>
+      <tr><th>Event</th><th>Debit</th><th>Credit</th></tr>
+      <tr><td>Cash sale</td><td>Cash (1100)</td><td>Sales Revenue (4100)</td></tr>
+      <tr><td>Credit sale</td><td>AR (1400)</td><td>Sales Revenue (4100)</td></tr>
+      <tr><td>Purchase</td><td>Inventory (1300)</td><td>AP (2110)</td></tr>
+      <tr><td>Expense</td><td>Expense (6100-6700)</td><td>Cash (1100)</td></tr>
+    </table>
+
+    <h2>3. Auto-Migration</h2>
+    <p>The <code>migrateSchema()</code> function runs on every app startup:</p>
+<pre>
+// 1. PRAGMA table_info() — read existing columns
+// 2. Compare against expected columns list
+// 3. ALTER TABLE ADD COLUMN for any missing ones
+// 4. Idempotent — no-op after first migration
+</pre>
+    <div class="warning">
+      <strong>When adding a new column:</strong> Add it to both <code>CREATE TABLE</code> in connection.ts AND <code>expectedColumns</code> in <code>migrateSchema()</code>.
+    </div>
+
+    <h2>4. Backup System</h2>
+    <h3>Export Formats</h3>
+    <table>
+      <tr><th>Format</th><th>Description</th><th>Best For</th></tr>
+      <tr><td><code>SQLite (.db)</code></td><td>Direct database file copy</td><td>Fast restore, device transfer</td></tr>
+      <tr><td><code>JSON (.json)</code></td><td>Structured text with metadata</td><td>Reading, editing, migration</td></tr>
+    </table>
+
+    <h3>Backend Functions</h3>
+    <table>
+      <tr><th>Function</th><th>Description</th></tr>
+      <tr><td><code>createBackup()</code></td><td>Copy SQLite + write .meta.json</td></tr>
+      <tr><td><code>exportAsJson()</code></td><td>Export all tables as JSON</td></tr>
+      <tr><td><code>exportStructure()</code></td><td>CREATE TABLE statements only</td></tr>
+      <tr><td><code>exportSelectiveJson()</code></td><td>Export selected tables</td></tr>
+      <tr><td><code>getSelectableTables()</code></td><td>List tables with row counts</td></tr>
+      <tr><td><code>restoreBackup()</code></td><td>Restore with auto pre-backup</td></tr>
+      <tr><td><code>migrateSchema()</code></td><td>Auto-migrate missing columns</td></tr>
+    </table>
+
+    <h2>5. Coding Conventions</h2>
+    <table>
+      <tr><th>Topic</th><th>Convention</th></tr>
+      <tr><td>Documentation</td><td>JSDoc on all files and exported functions</td></tr>
+      <tr><td>Naming</td><td>PascalCase components, camelCase functions/variables</td></tr>
+      <tr><td>Types</td><td>TypeScript strict — all functions and params typed</td></tr>
+      <tr><td>Tests</td><td>scripts/verify.js — 32 automated checks</td></tr>
+      <tr><td>Emoji</td><td>Prohibited in comments and code</td></tr>
+      <tr><td>Dates</td><td>All display dates use Jalali — use jalali.ts utilities</td></tr>
+      <tr><td>Currency</td><td>Comma-separated thousands: <code>10,000,000</code></td></tr>
+      <tr><td>Dialogs</td><td>No <code>confirm()</code> in renderer — use Dialog component</td></tr>
+    </table>
+
+    <h2>6. Testing & Validation</h2>
+<pre>
+# Type check
+npx tsc --noEmit
+
+# Build
+npx vite build
+
+# Automated validation (32 checks)
+node scripts/verify.js
+</pre>
+    <p>Checks cover: DB schema, accounting math, ledger deletion, backup/restore, smart export, and minimal <code>confirm()</code> usage.</p>
+
+    <h2>7. Adding a New Feature</h2>
+    <ol style="color: var(--muted); line-height: 2.2;">
+      <li>Add new columns to <code>CREATE TABLE</code> in connection.ts</li>
+      <li>Add columns to <code>migrateSchema()</code> for auto-migration</li>
+      <li>Update types in <code>types/index.ts</code></li>
+      <li>Update the relevant repository (formatProduct, create, update)</li>
+      <li>Add IPC handler in <code>handlers.ts</code></li>
+      <li>Add preload method in <code>preload/index.ts</code></li>
+      <li>Build or update the UI component</li>
+      <li>Verify: <code>npx tsc --noEmit</code> + <code>node scripts/verify.js</code></li>
+    </ol>
+
+    <h2>8. Database Paths</h2>
+    <table>
+      <tr><th>OS</th><th>Path</th></tr>
+      <tr><td>Windows</td><td><code>%APPDATA%\hesabdari-danial\pos.db</code></td></tr>
+      <tr><td>macOS</td><td><code>~/Library/Application Support/hesabdari-danial/pos.db</code></td></tr>
+      <tr><td>Linux</td><td><code>~/.config/hesabdari-danial/pos.db</code></td></tr>
+    </table>
+
+    <div style="text-align: center; margin-top: 48px; padding: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px;">
+      <p>HesabDari Danial — Developer Guide</p>
+      <p>Last updated: June 2026</p>
+    </div>
+  </div>
+</body>
+</html>

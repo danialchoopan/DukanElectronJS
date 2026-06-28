@@ -1,3 +1,21 @@
+/**
+ * Suppliers — supplier management with purchase tracking and accounting sync.
+ *
+ * Features:
+ *   - Supplier list with search, sort, balance display
+ *   - Create/edit supplier dialog
+ *   - Supplier detail: ledger entries, purchase history, balance
+ *   - Purchase creation: select products, quantities, unit costs
+ *   - Purchase payment: partial or full, with accounting journal entry
+ *   - Purchase returns: restore stock, adjust supplier balance
+ *   - Delete guard: prevents deletion if supplier has outstanding balance
+ *
+ * Accounting integration:
+ *   - Purchase: debits inventory, credits supplier payable
+ *   - Payment: debits supplier payable, credits cash/bank
+ *   - Return: reverses purchase entry
+ */
+
 import { useState, useEffect, useCallback } from 'react'
 import { useSettingsStore } from '../store/settingsStore'
 import FormattedPriceInput from '../components/ui/FormattedPriceInput'

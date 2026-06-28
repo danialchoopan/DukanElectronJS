@@ -1,3 +1,17 @@
+/**
+ * PaymentPanel — payment selection and customer search for the POS.
+ *
+ * Displays:
+ *   - Customer search with autocomplete dropdown
+ *   - Payment method buttons: Cash, Card, Ledger (credit)
+ *   - Quick-pay vs custom amount toggle
+ *   - Change calculation for cash payments
+ *   - Selected customer display with balance info
+ *
+ * When "ledger" is selected, the customer must be chosen first.
+ * The panel communicates payment choices to the parent via callbacks.
+ */
+
 import { useState, useEffect } from 'react'
 import { useCartStore } from '../../store/cartStore'
 import type { Customer } from '../../../../types'

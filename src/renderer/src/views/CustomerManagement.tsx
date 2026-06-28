@@ -1,3 +1,22 @@
+/**
+ * CustomerManagement — customer CRM with ledger and accounting sync.
+ *
+ * Features:
+ *   - Customer list with search, sort, filter by type (real/legal)
+ *   - Create/edit customer dialog with type, address, notes, image
+ *   - Customer detail popup with full purchase history
+ *   - Ledger view: charge, payment, sale entries with dates and amounts
+ *   - Balance tracking: debt/credit display with running total
+ *   - Delete customer with ledger balance guard
+ *   - Accounting sync: charges/payments post to journal entries
+ *   - Customer stats: total spent, purchase count, last purchase date
+ *
+ * The ledger system connects to the accounting module:
+ *   - Charges increase customer balance (debit customer ledger)
+ *   - Payments decrease customer balance (credit customer ledger)
+ *   - Sales on credit create ledger entries automatically
+ */
+
 import { useState, useEffect, useCallback } from 'react'
 import type { Customer, CustomerLedgerEntry, Sale } from '../../../types'
 import { fa } from '../i18n'

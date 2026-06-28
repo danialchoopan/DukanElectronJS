@@ -1,3 +1,11 @@
+/**
+ * Auth Store — manages current user session.
+ *
+ * Stores the logged-in user (id, name, role) after successful PIN authentication.
+ * Persists to sessionStorage so the user stays logged in during a session.
+ * Provides logout() to clear the session.
+ */
+
 import { create } from 'zustand'
 import type { User } from '../../../types'
 

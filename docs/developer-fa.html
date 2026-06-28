@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مستندات توسعه‌دهندگان — حسابداری دانیال</title>
+  <style>
+    :root { --primary: #006194; --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f1f5f9; --muted: #94a3b8; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); direction: rtl; line-height: 1.8; }
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 20px; margin: 32px 0 12px; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 8px; }
+    h3 { font-size: 16px; margin: 20px 0 8px; color: var(--text); }
+    p { line-height: 1.8; margin-bottom: 12px; color: var(--muted); font-size: 14px; }
+    code { background: var(--card); padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #22c55e; font-family: 'Consolas', monospace; direction: ltr; display: inline-block; }
+    pre { background: var(--card); padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid var(--border); font-size: 13px; line-height: 1.6; direction: ltr; text-align: left; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { padding: 10px 12px; text-align: right; border: 1px solid var(--border); font-size: 13px; }
+    th { background: var(--card); font-weight: 600; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .badge-green { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .badge-blue { background: rgba(59,130,246,0.15); color: #3b82f6; }
+    .badge-yellow { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .badge-red { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .note { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 13px; }
+    .warning { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 13px; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .file-tree { font-family: monospace; font-size: 13px; line-height: 1.6; direction: ltr; text-align: left; }
+    .lang-switch { position: fixed; top: 16px; left: 16px; display: flex; gap: 8px; z-index: 100; }
+    .lang-switch a { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; background: var(--card); border: 1px solid var(--border); color: var(--muted); }
+    .lang-switch a.active { background: var(--primary); color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="lang-switch">
+    <a href="developer-fa.html" class="active">فارسی</a>
+    <a href="developer-en.html">English</a>
+  </div>
+
+  <div class="container">
+    <h1>راهنمای توسعه‌دهندگان</h1>
+    <p>حسابداری دانیال — مستندات فنی برای توسعه‌دهندگان</p>
+
+    <h2>۱. ساختار پروژه</h2>
+    <div class="file-tree">
+<pre>
+src/
+├── main/                          # فرآیند اصلی Electron (Node.js)
+│   ├── database/
+│   │   ├── connection.ts           # اتصال دیتابیس + CREATE TABLE + migrateSchema()
+│   │   ├── repositories/           # لایه دسترسی به داده (19 فایل)
+│   │   │   ├── auth.ts             # احراز هویت کاربران
+│   │   │   ├── products.ts         # CRUD کالاها + مدیریت موجودی
+│   │   │   ├── sales.ts            # ایجاد فروش (اتمیک) + تحلیل
+│   │   │   ├── customers.ts        # CRUD مشتریان + دفتر کل
+│   │   │   ├── suppliers.ts        # CRUD تأمین‌کنندگان + خرید
+│   │   │   ├── purchases.ts        # ثبت خرید + انبار + حسابداری
+│   │   │   ├── returns.ts          # مرجوعی + بازگردانی موجودی
+│   │   │   ├── expenses.ts         # هزینه‌ها + ثبت حسابداری
+│   │   │   ├── journal.ts          # حسابداری دوطرفه + تراز + سود/زیان
+│   │   │   ├── accounts.ts         # دفتر حسابها (درختی)
+│   │   │   ├── reports.ts          # صورت سود/زیان + ترازنامه
+│   │   │   ├── categories.ts       # دسته‌بندی سلسله‌مراتبی
+│   │   │   ├── settings.ts         # تنظیمات کلید-مقدار
+│   │   │   ├── inventoryAdjustments.ts  # اصلاح موجودی
+│   │   │   ├── priceHistory.ts     # تاریخچه قیمت
+│   │   │   ├── seed.ts             # داده‌های نمونه (غیرفعال)
+│   │   │   ├── audit.ts            # لاگ عملیات
+│   │   │   ├── periods.ts          # دوره‌های مالی
+│   │   │   ├── suspend.ts          # فاکتورهای معلق
+│   │   │   ├── customers.ts        # مشتریان + دفتر کل
+│   │   │   └── printSettings.ts    # تنظیمات چاپ
+│   │   ├── backup.ts               # پشتیبان‌گیری + بازیابی + خروجی JSON
+│   │   ├── smartExport.ts          # صادرات/واردات هوشمند
+│   │   ├── migration.ts            # مهاجرت نسخه‌ها
+│   │   └── seed.ts                 # داده‌های نمونه اصلی
+│   ├── ipc/
+│   │   └── handlers.ts             # تمام هندلرهای IPC
+│   ├── utils/
+│   │   └── math.ts                 # توابع ریاضی (گرد کردن، محاسبه سود)
+│   └── index.ts                    # نقطه ورود برنامه
+├── renderer/                       # رابط کاربری (React)
+│   └── src/
+│       ├── components/
+│       │   ├── ui/                 # کامپوننت‌های پایه (Dialog, Button, etc.)
+│       │   ├── layout/             # کامپوننت‌های لایوت (Sidebar, Header)
+│       │   ├── print/              # کامپوننت‌های چاپ (PrintDialog, Receipt)
+│       │   └── business/           # کامپوننت‌های تجاری (Scanner, Cart, Payment)
+│       ├── views/                  # صفحات اصلی
+│       │   ├── accounting/         # زبانه‌های حسابداری (10 صفحه)
+│       │   └── settings/           # تنظیمات (Backup, UI, Customization)
+│       ├── store/                  # Zustand stores
+│       ├── hooks/                  # هوک‌های سفارشی
+│       ├── utils/                  # ابزارها (jalali, qrCode, a4Print, etc.)
+│       ├── i18n/                   # ترجمه‌ها (FA/EN)
+│       └── App.tsx                 # ریشه برنامه + روتینگ
+├── preload/
+│   └── index.ts                    # پل ارتباطی UI با بک‌اند (window.api)
+└── types/
+    └── index.ts                    # تایپ‌های TypeScript مشترک
+</pre>
+    </div>
+
+    <h2>۲. معماری داده‌ها</h2>
+
+    <h3>۲.۱ پایگاه داده</h3>
+    <p>SQLite با <code>better-sqlite3</code> در حالت WAL. تمام جداول در <code>connection.ts</code> تعریف شده‌اند.</p>
+    <div class="note">
+      <strong>نکته مهم:</strong> تمام ستون‌ها باید در <code>CREATE TABLE</code> باشند. از <code>ALTER TABLE</code> فقط در <code>migrateSchema()</code> برای مهاجرت خودکار استفاده می‌شود.
+    </div>
+
+    <h3>۲.۲ الگوی Repository</h3>
+    <p>هر جدول یک فایل repository جداگانه دارد. توابع CRUD به صورت مستقیم از <code>getDatabase()</code> استفاده می‌کنند:</p>
+<pre>
+// مثال: products.ts
+export function getAllProducts(): Product[] {
+  const db = getDatabase()
+  return db.prepare('SELECT * FROM products WHERE isActive = 1').all().map(formatProduct)
+}
+</pre>
+
+    <h3>۲.۳ الگوی IPC</h3>
+    <p>تمام ارتباط UI با دیتابیس از طریق <code>ipcMain.handle()</code> در <code>handlers.ts</code> انجام می‌شود. UI از طریق <code>window.api</code> (preload) فراخوانی می‌کند:</p>
+<pre>
+// main process (handlers.ts)
+ipcMain.handle('products:getAll', () => products.getAllProducts())
+
+// renderer (component)
+const r = await window.api.products.getAll()
+if (r.success && r.data) setProducts(r.data)
+</pre>
+
+    <h3>۲.۴ حسابداری دوطرفه</h3>
+    <p>هر تراکنش مالی خودکار در دفتر کل ثبت می‌شود:</p>
+    <table>
+      <tr><th>رویداد</th><th>بدهکار</th><th>بستانکار</th></tr>
+      <tr><td>فروش نقدی</td><td>صندوق (۱۱۰۰)</td><td>فروش کالا (۴۱۰۰)</td></tr>
+      <tr><td>فروش اعتباری</td><td>حساب دریافتنی (۱۴۰۰)</td><td>فروش کالا (۴۱۰۰)</td></tr>
+      <tr><td>خرید</td><td>موجودی (۱۳۰۰)</td><td>حساب پرداختنی (۲۱۱۰)</td></tr>
+      <tr><td>هزینه</td><td>حساب هزینه (۶۱۰۰-۶۷۰۰)</td><td>صندوق (۱۱۰۰)</td></tr>
+    </table>
+
+    <h2>۳. مهاجرت خودکار</h2>
+    <p>تابع <code>migrateSchema()</code> در <code>connection.ts</code> هنگام شروع برنامه اجرا می‌شود:</p>
+<pre>
+// 1. PRAGMA table_info() — ستون‌های موجود را می‌خواند
+// 2. مقایسه با لیست ستون‌های مورد انتظار
+// 3. ALTER TABLE ADD COLUMN برای ستون‌های جدید
+// 4. ایدامپوتنت — پس از اولین اجرا no-op می‌شود
+</pre>
+    <div class="warning">
+      <strong>هنگام اضافه کردن ستون جدید:</strong> ستون را به لیست <code>expectedColumns</code> در <code>migrateSchema()</code> اضافه کنید و همچنین در <code>CREATE TABLE</code> قرار دهید.
+    </div>
+
+    <h2>۴. سیستم پشتیبان‌گیری</h2>
+    <h3>فرمت‌های خروجی</h3>
+    <table>
+      <tr><th>فرمت</th><th>توضیح</th><th>مناسب برای</th></tr>
+      <tr><td><code>SQLite (.db)</code></td><td>کپی مستقیم فایل دیتابیس</td><td>بازیابی سریع، جابجایی</td></tr>
+      <tr><td><code>JSON (.json)</code></td><td>خروجی متنی با متادیتا</td><td>مطالعه، ویرایش، مهاجرت</td></tr>
+    </table>
+
+    <h3>توابع backend</h3>
+    <table>
+      <tr><th>تابع</th><th>توضیح</th></tr>
+      <tr><td><code>createBackup()</code></td><td>کپی SQLite + نوشتن .meta.json</td></tr>
+      <tr><td><code>exportAsJson()</code></td><td>خروجی تمام جداول به JSON</td></tr>
+      <tr><td><code>exportStructure()</code></td><td>فقط CREATE TABLE statements</td></tr>
+      <tr><td><code>exportSelectiveJson()</code></td><td>خروجی جداول انتخابی</td></tr>
+      <tr><td><code>getSelectableTables()</code></td><td>لیست جداول + تعداد ردیف</td></tr>
+      <tr><td><code>restoreBackup()</code></td><td>بازیابی با ایجاد پشتیبان خودکار</td></tr>
+      <tr><td><code>migrateSchema()</code></td><td>مهاجرت خودکار ستون‌های جدید</td></tr>
+    </table>
+
+    <h2>۵. قراردادهای کدنویسی</h2>
+    <table>
+      <tr><th>موضوع</th><th>قرارداد</th></tr>
+      <tr><td>کامنت‌گذاری</td><td>JSDoc روی تمام فایل‌ها و توابع صادراتی</td></tr>
+      <tr><td>نام‌گذاری</td><td>PascalCase برای کامپوننت‌ها، camelCase برای توابع/متغیرها</td></tr>
+      <tr><td>تایپ‌ها</td><td>TypeScript strict — تمام توابع و پارامترها تایپ‌دار</td></tr>
+      <tr><td>تست‌ها</td><td>scripts/verify.js — ۳۲ بررسی خودکار</td></tr>
+      <tr><td>ایموجی</td><td>ممنوع در کامنت‌ها و کد</td></tr>
+      <tr><td>تاریخ</td><td>همه تاریخ‌ها با Jalali — از jalali.ts استفاده کنید</td></tr>
+      <tr><td>قیمت</td><td>جداکننده هزارگان: <code>10,000,000</code></td></tr>
+      <tr><td>confirm()</td><td>ممنوع در renderer — از Dialog استفاده کنید</td></tr>
+    </table>
+
+    <h2>۶. تست و اعتبارسنجی</h2>
+<pre>
+# تایپ چک
+npx tsc --noEmit
+
+# بیلد
+npx vite build
+
+# اعتبارسنجی خودکار (۳۲ بررسی)
+node scripts/verify.js
+</pre>
+    <p>بررسی‌ها شامل: ساختار دیتابیس، توابع حسابداری، حذف ledger، پشتیبان‌گیری، صادرات هوشمند، و حداقل استفاده از <code>confirm()</code> هستند.</p>
+
+    <h2>۷. راهنمای اضافه کردن قابلیت جدید</h2>
+    <ol style="color: var(--muted); line-height: 2.2;">
+      <li>ستون‌های جدید را در <code>CREATE TABLE</code> اضافه کنید (connection.ts)</li>
+      <li>ستون را در <code>migrateSchema()</code> برای مهاجرت خودکار اضافه کنید</li>
+      <li>تایپ را در <code>types/index.ts</code> به‌روز کنید</li>
+      <li>تابع repository مربوطه را به‌روز کنید (formatProduct, create, update)</li>
+      <li>هندلر IPC را در <code>handlers.ts</code> اضافه کنید</li>
+      <li>متد preload را در <code>preload/index.ts</code> اضافه کنید</li>
+      <li>کامپوننت UI را بسازید یا به‌روز کنید</li>
+      <li>تست: <code>npx tsc --noEmit</code> + <code>node scripts/verify.js</code></li>
+    </ol>
+
+    <h2>۸. مسیر پایگاه داده</h2>
+    <table>
+      <tr><th>سیستم‌عامل</th><th>مسیر</th></tr>
+      <tr><td>Windows</td><td><code>%APPDATA%\hesabdari-danial\pos.db</code></td></tr>
+      <tr><td>macOS</td><td><code>~/Library/Application Support/hesabdari-danial/pos.db</code></td></tr>
+      <tr><td>Linux</td><td><code>~/.config/hesabdari-danial/pos.db</code></td></tr>
+    </table>
+
+    <div style="text-align: center; margin-top: 48px; padding: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px;">
+      <p>حسابداری دانیال — راهنمای توسعه‌دهندگان</p>
+      <p>آخرین به‌روزرسانی: ژوئن ۲۰۲۶</p>
+    </div>
+  </div>
+</body>
+</html>

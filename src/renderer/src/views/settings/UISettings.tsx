@@ -1,3 +1,18 @@
+/**
+ * UISettings — appearance and accessibility settings panel.
+ *
+ * Controls:
+ *   - Theme: dark/light mode toggle
+ *   - Language: Farsi/English switch
+ *   - Navigation theme: sidebar color variants
+ *   - Font size: slider with custom override
+ *   - High contrast: accessibility mode for visually impaired
+ *   - Camera scanner toggle: enables barcode/QR scanning in POS and AddProduct
+ *
+ * All settings are persisted to the database via the settings store.
+ * Theme changes are applied immediately by toggling the 'dark' class on <html>.
+ */
+
 import { t, setLanguage } from '../../i18n'
 import { useSettingsStore, type NavTheme, getNavColors } from '../../store/settingsStore'
 

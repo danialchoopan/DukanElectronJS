@@ -1,3 +1,19 @@
+/**
+ * App — root component and router for the entire application.
+ *
+ * Handles:
+ *   - Auth gate: shows Login screen until user authenticates
+ *   - View routing: maps view names to page components (POS, Inventory, Dashboard, etc.)
+ *   - Navigation via keyboard shortcuts (global event listener)
+ *   - Theme application: applies dark/light class to <html> element
+ *   - Settings synchronization: loads shop name, tax rate, print settings on startup
+ *   - Setup wizard: first-run detection via system:isFirstRun IPC
+ *   - Highlight support: deep-link to specific items (products, customers) via URL-like params
+ *
+ * View routing is event-based: components dispatch 'navigate' events with view names,
+ * and App.tsx handles them by updating currentView state.
+ */
+
 import { useState, useEffect, useCallback } from 'react'
 import { useAuthStore } from './store/authStore'
 import { useSettingsStore } from './store/settingsStore'

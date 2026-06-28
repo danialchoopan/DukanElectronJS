@@ -1,3 +1,19 @@
+/**
+ * Dashboard — main overview screen showing business KPIs and charts.
+ *
+ * Displays:
+ *   - Today's sales summary (total, transaction count, cash/card/ledger split)
+ *   - Quick action buttons (new sale, inventory, etc.)
+ *   - Sales trend chart (daily totals over selected period)
+ *   - Top products by revenue
+ *   - Low stock alerts
+ *   - Customer debt summary
+ *   - Recent transactions list
+ *
+ * All data is fetched from IPC handlers on mount and when the refresh key changes.
+ * Dates use Jalali calendar for display.
+ */
+
 import { useState, useEffect } from 'react'
 import { fa } from '../i18n'
 import { formatJalaliDateTime, gregorianToJalali } from '../utils/jalali'

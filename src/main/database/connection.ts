@@ -1,3 +1,24 @@
+/**
+ * Database connection — SQLite singleton with auto-initialization and schema migration.
+ *
+ * This module manages the entire database lifecycle:
+ *   1. Opens pos.db as a singleton via better-sqlite3
+ *   2. Sets WAL mode, foreign keys, busy timeout
+ *   3. Runs initializeDatabase() — CREATE TABLE IF NOT EXISTS for all 20+ tables
+ *   4. Runs migrateSchema() — ALTER TABLE ADD COLUMN for any missing columns
+ *   5. Seeds chart of accounts if empty
+ *
+ * All columns are defined inline in CREATE TABLE (no separate ALTER TABLE DDL).
+ * migrateSchema() handles upgrading old databases by detecting and adding
+ * new columns with safe defaults. This is idempotent — no-op after first run.
+ *
+ * Key exports:
+ *   - getDatabase(): returns the singleton DB instance
+ *   - closeDatabase(): closes the connection (called on app quit)
+ *   - isFirstRun(): checks if setup wizard has been completed
+ *   - hashPin(): SHA-256 hash for user PIN codes
+ */
+
 import Database from 'better-sqlite3'
 import { join } from 'path'
 import { app } from 'electron'

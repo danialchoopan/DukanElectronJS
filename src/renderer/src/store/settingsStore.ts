@@ -1,3 +1,18 @@
+/**
+ * Settings Store — manages theme, language, UI preferences, and scanner toggle.
+ *
+ * Persists all settings to the database via IPC (settings:set/get).
+ * Restores settings from DB on app startup.
+ *
+ * Settings managed:
+ *   - theme: 'dark' | 'light'
+ *   - language: 'fa' | 'en'
+ *   - navTheme: sidebar appearance
+ *   - fontSize / fontSizeCustom: text size control
+ *   - highContrast: accessibility mode
+ *   - showCameraScanner: enables barcode/QR camera in POS and AddProduct
+ */
+
 import { create } from 'zustand'
 
 export type Theme = 'dark' | 'light'

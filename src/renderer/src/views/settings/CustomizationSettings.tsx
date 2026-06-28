@@ -1,3 +1,18 @@
+/**
+ * CustomizationSettings — print customization panel for invoices and reports.
+ *
+ * Controls print appearance:
+ *   - Shop name, phone, address (displayed on invoices)
+ *   - Tax rate and toggle
+ *   - Invoice title, report title, footer text
+ *   - Print template selection (default, formal, minimal, etc.)
+ *   - Signature display toggle
+ *   - Live preview showing exactly how the printed output will look
+ *
+ * Settings are stored in the printSettings table and applied at print time
+ * via the a4Print module's cached values.
+ */
+
 import { useState, useEffect, useRef } from 'react'
 import { printA4Report, setPrintCustomization } from '../../utils/a4Print'
 import { formatDateNow } from '../../utils/jalali'

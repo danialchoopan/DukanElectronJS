@@ -1,3 +1,32 @@
+/**
+ * IPC Handlers — bridges Electron main process with renderer (UI).
+ *
+ * All IPC channels are registered here via ipcMain.handle(). Each handler
+ * wraps a repository function call with try/catch, returning IPCResponse<T>.
+ *
+ * Channel groups:
+ *   - auth:          User authentication (login, CRUD, PIN management)
+ *   - products:      Product CRUD, stock operations, bulk import, image storage
+ *   - sales:         Sale creation (atomic), date-range queries, analytics
+ *   - customers:     Customer CRUD, ledger operations, charge/pay
+ *   - suppliers:     Supplier CRUD, purchase management, payments
+ *   - expenses:      Expense CRUD with journal posting
+ *   - returns:       Product returns with stock restoration
+ *   - accounts:      Chart of accounts CRUD, tree structure
+ *   - journal:       Double-entry journal entries, trial balance, ledger
+ *   - reports:       P&L, balance sheet, AR aging, cash flow
+ *   - categories:    Hierarchical category management (parent/child)
+ *   - backup:        Backup creation, restore, integrity, export (SQLite/JSON)
+ *   - smartExport:   Selective data export with encryption and signatures
+ *   - migration:     Version detection, compatibility checks, data migration
+ *   - inventory:     Stock adjustments with audit trail
+ *   - settings:      Key-value settings store
+ *   - dialog:        Native OS file dialogs (save/open)
+ *
+ * Two helper wrappers: handle(channel, fn) and handleArg<T>(channel, fn)
+ * provide standardized error handling and type-safe IPCResponse returns.
+ */
+
 import { ipcMain, dialog, BrowserWindow } from 'electron'
 import type { ProductInput, SaleInput, CustomerInput, ExpenseInput } from '../../types'
 import * as products from '../database/repositories/products'

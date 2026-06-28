@@ -1,3 +1,36 @@
+/**
+ * Preload bridge — exposes a safe, typed API from main process to renderer.
+ *
+ * This file runs in the preload context (before the renderer). It uses
+ * contextBridge.exposeInMainWorld to create window.api with namespaces:
+ *
+ *   window.api.auth          — User login, CRUD, PIN management
+ *   window.api.products      — Product CRUD, stock, barcode, images
+ *   window.api.sales         — Sale creation and analytics
+ *   window.api.customers     — Customer CRUD and ledger
+ *   window.api.suppliers     — Supplier CRUD and purchases
+ *   window.api.expenses      — Expense management
+ *   window.api.returns       — Product returns
+ *   window.api.accounts      — Chart of accounts
+ *   window.api.journal       — Double-entry journal
+ *   window.api.reports       — Financial reports
+ *   window.api.categories    — Category hierarchy
+ *   window.api.settings      — Key-value settings
+ *   window.api.backup        — Backup/restore/export/import
+ *   window.api.smartExport   — Selective data export
+ *   window.api.smartImport   — Selective data import
+ *   window.api.migration     — Version detection and data migration
+ *   window.api.inventory     — Stock adjustments
+ *   window.api.system        — First-run detection
+ *   window.api.suspend       — Invoice suspension (hold/resume)
+ *   window.api.dialog        — Native OS file dialogs
+ *   window.api.audit         — Audit log queries
+ *   window.api.printSettings — Print customization
+ *
+ * All methods return Promise<IPCResponse<T>> for consistent error handling.
+ * The BroAppAPI type is exported for use in renderer type-checking.
+ */
+
 import { contextBridge, ipcRenderer } from 'electron'
 import type {
   ProductInput, SaleInput, CustomerInput, ExpenseInput,
