@@ -12,9 +12,10 @@ import ExpenseManagement from './accounting/ExpenseManagement'
 import FiscalPeriods from './accounting/FiscalPeriods'
 import CashFlowStatement from './accounting/CashFlowStatement'
 import PriceHistory from './accounting/PriceHistory'
+import AccountingAnalytics from './accounting/AccountingAnalytics'
 import { useHighlight } from '../hooks/useHighlight'
 
-type AccountingTab = 'dashboard' | 'accounts' | 'journal' | 'trialBalance' | 'incomeStatement' | 'balanceSheet' | 'arAging' | 'expenses' | 'periods' | 'cashFlow' | 'priceHistory'
+type AccountingTab = 'dashboard' | 'analytics' | 'accounts' | 'journal' | 'trialBalance' | 'incomeStatement' | 'balanceSheet' | 'arAging' | 'expenses' | 'periods' | 'cashFlow' | 'priceHistory'
 
 interface Props {
   initialTab?: string
@@ -40,6 +41,9 @@ export default function Accounting({ initialTab, highlightId, onHighlightDone }:
   const tabs: { key: AccountingTab; label: string; icon: JSX.Element; group: number }[] = [
     { key: 'dashboard', label: fa.accounting.tabs.dashboard, group: 0,
       icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>),
+    },
+    { key: 'analytics', label: 'تحلیل و نمودار', group: 0,
+      icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M21.21 15.89A10 10 0 118 2.83" /><path d="M22 12A10 10 0 0012 2v10z" /></svg>),
     },
     { key: 'accounts', label: fa.accounting.tabs.chartOfAccounts, group: 1,
       icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><circle cx="12" cy="5" r="3" /><line x1="12" y1="8" x2="12" y2="14" /><circle cx="6" cy="19" r="3" /><circle cx="18" cy="19" r="3" /><line x1="12" y1="14" x2="6" y2="16" /><line x1="12" y1="14" x2="18" y2="16" /></svg>),
@@ -112,6 +116,7 @@ export default function Accounting({ initialTab, highlightId, onHighlightDone }:
 
       <div>
         {tab === 'dashboard' && <AccountingDashboard />}
+        {tab === 'analytics' && <AccountingAnalytics />}
         {tab === 'accounts' && <ChartOfAccounts />}
         {tab === 'journal' && <JournalEntries />}
         {tab === 'trialBalance' && <TrialBalance />}

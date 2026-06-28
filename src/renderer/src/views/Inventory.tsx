@@ -35,6 +35,7 @@ import { useHighlight } from '../hooks/useHighlight'
 import { getProductImageUrl } from '../utils/productImage'
 import { generateQRSvg } from '../utils/qrCode'
 import { InlineEditCell } from '../components/ui/FormattedPriceInput'
+import InventoryAnalytics from './InventoryAnalytics'
 
 const primary = '#006194'
 
@@ -59,7 +60,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
   const [pageSize, setPageSize] = useState(10)
   const [catPage, setCatPage] = useState(0)
   const [slowPage, setSlowPage] = useState(0)
-  const [tab, setTab] = useState<'products' | 'report' | 'audit'>((initialTab as any) || 'products')
+  const [tab, setTab] = useState<'products' | 'report' | 'analytics' | 'audit'>((initialTab as any) || 'products')
   const [auditLog, setAuditLog] = useState<any[]>([])
   const [auditFilter, setAuditFilter] = useState<AuditFilter>('all')
   const [auditStartDate, setAuditStartDate] = useState('')
@@ -419,6 +420,15 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
       icon: (
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
+        </svg>
+      ),
+    },
+    {
+      key: 'analytics' as const,
+      label: 'تحلیل و نمودار',
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21.21 15.89A10 10 0 118 2.83" /><path d="M22 12A10 10 0 0012 2v10z" />
         </svg>
       ),
     },
@@ -939,6 +949,10 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
             )}
           </div>
         </div>
+      )}
+
+      {tab === 'analytics' && (
+        <InventoryAnalytics />
       )}
 
       {tab === 'audit' && (
