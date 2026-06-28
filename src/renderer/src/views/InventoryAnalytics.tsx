@@ -1,38 +1,65 @@
 /**
  * InventoryAnalytics — rich data visualization tab for inventory insights.
  *
- * Charts included:
- *   - Stock distribution donut: products grouped by stock level (healthy/low/out)
- *   - Category value bar chart: inventory value per category
- *   - Top 10 products by value: horizontal bar chart
- *   - Stock level histogram: distribution of stock quantities across products
- *   - Price comparison: purchase vs sale price per category
+ * Features:
+ *   - Stock status donut chart
+ *   - Category value bar chart (with toggle: bar/donut)
+ *   - Top 10 products horizontal bar chart
+ *   - Stock level histogram
+ *   - Price comparison (purchase vs sale) per category
+ *   - Text size control (small/medium/large)
+ *   - Color theme selector (default/ocean/forest/warm)
+ *   - Export chart as PNG (via SVG-to-canvas)
  *
- * All charts are pure SVG — no external charting library needed.
  * Shows "no data" empty state when inventory is empty.
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import type { Product } from '../../../types'
 import { useSettingsStore } from '../store/settingsStore'
 
-const COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316']
+const COLOR_THEMES = {
+  default: ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316'],
+  ocean: ['#0077b6', '#00b4d8', '#90e0ef', '#48cae4', '#023e8a', '#0096c7', '#ade8f4', '#caf0f8', '#03045e', '#005f73'],
+  forest: ['#2d6a4f', '#40916c', '#52b788', '#74c69d', '#95d5b2', '#b7e4c7', '#d8f3dc', '#1b4332', '#081c15', '#344e41'],
+  warm: ['#e63946', '#f4a261', '#e9c46a', '#2a9d8f', '#264653', '#e76f51', '#fca311', '#1d3557', '#457b9d', '#a8dadc'],
+}
 
-interface Props { refreshKey?: number }
-
-export default function InventoryAnalytics({ refreshKey }: Props) {
+export default function InventoryAnalytics() {
   const theme = useSettingsStore(s => s.theme)
   const isDark = theme === 'dark'
   const [products, setProducts] = useState<Product[]>([])
+  const [textSize, setTextSize] = useState<'sm' | 'md' | 'lg'>('md')
+  const [colorTheme, setColorTheme] = useState<keyof typeof COLOR_THEMES>('default')
+  const [catChartType, setCatChartType] = useState<'bar' | 'donut'>('bar')
+
+  const COLORS = COLOR_THEMES[colorTheme]
+  const chartRef = useRef<HTMLDivElement>(null)
 
   const tPri = isDark ? '#f1f5f9' : '#0f172a'
   const tSec = isDark ? '#94a3b8' : '#64748b'
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
 
+  const fs = textSize === 'sm' ? { label: '8', value: '7', kpi: '14', title: '11' } : textSize === 'lg' ? { label: '12', value: '10', kpi: '22', title: '16' } : { label: '10', value: '8', kpi: '18', title: '13' }
+
   useEffect(() => {
     window.api.products.getAll().then(r => { if (r.success && r.data) setProducts(r.data) })
-  }, [refreshKey])
+  }, [])
+
+  const handleExport = useCallback(() => {
+    if (!chartRef.current) return
+    const svgEl = chartRef.current.querySelector('svg')
+    if (!svgEl) return
+    const svgData = new XMLSerializer().serializeToString(svgEl)
+    const canvas = document.createElement('canvas')
+    canvas.width = 800; canvas.height = 600
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const img = new Image()
+    img.onload = () => { ctx.fillStyle = isDark ? '#0f172a' : '#ffffff'; ctx.fillRect(0, 0, 800, 600); ctx.drawImage(img, 0, 0, 800, 600); const a = document.createElement('a'); a.download = 'inventory-analytics.png'; a.href = canvas.toDataURL('image/png'); a.click() }
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
+  }, [isDark])
 
   if (products.length === 0) {
     return (
@@ -44,29 +71,21 @@ export default function InventoryAnalytics({ refreshKey }: Props) {
     )
   }
 
-  // ─── Computed data ────────────────────────────────────
   const healthy = products.filter(p => p.stock > p.minStock * 2).length
   const low = products.filter(p => p.stock > 0 && p.stock <= p.minStock * 2).length
   const out = products.filter(p => p.stock === 0).length
   const total = products.length
 
-  // Category aggregation
   const catMap = new Map<string, { count: number; value: number; purchaseValue: number }>()
   products.forEach(p => {
     const cat = p.category || 'سایر'
     const existing = catMap.get(cat) || { count: 0, value: 0, purchaseValue: 0 }
-    existing.count++
-    existing.value += p.stock * p.sale_price
-    existing.purchaseValue += p.stock * p.purchase_price
+    existing.count++; existing.value += p.stock * p.sale_price; existing.purchaseValue += p.stock * p.purchase_price
     catMap.set(cat, existing)
   })
-  const categories = Array.from(catMap.entries()).map(([name, data]) => ({ name, ...data }))
-    .sort((a, b) => b.value - a.value)
-
-  // Top 10 by inventory value
+  const categories = Array.from(catMap.entries()).map(([name, data]) => ({ name, ...data })).sort((a, b) => b.value - a.value)
   const topProducts = [...products].sort((a, b) => (b.stock * b.sale_price) - (a.stock * a.sale_price)).slice(0, 10)
 
-  // Stock level histogram
   const stockRanges = [
     { label: '0', min: 0, max: 0, count: 0 },
     { label: '1-10', min: 1, max: 10, count: 0 },
@@ -75,194 +94,145 @@ export default function InventoryAnalytics({ refreshKey }: Props) {
     { label: '51-100', min: 51, max: 100, count: 0 },
     { label: '100+', min: 101, max: Infinity, count: 0 },
   ]
-  products.forEach(p => {
-    const range = stockRanges.find(r => p.stock >= r.min && p.stock <= r.max)
-    if (range) range.count++
-  })
+  products.forEach(p => { const range = stockRanges.find(r => p.stock >= r.min && p.stock <= r.max); if (range) range.count++ })
   const maxHistogramCount = Math.max(...stockRanges.map(r => r.count), 1)
 
-  // ─── Donut: Stock Status ──────────────────────────────
   const donutData = [
     { label: 'سالم', value: healthy, color: '#22c55e' },
     { label: 'کم‌موجودی', value: low, color: '#f59e0b' },
     { label: 'تمام شده', value: out, color: '#ef4444' },
   ].filter(d => d.value > 0)
 
-  const renderDonut = () => {
-    const r = 40, cx = 50, cy = 50, circumference = 2 * Math.PI * r
-    let offset = 0
-    return (
-      <svg viewBox="0 0 100 100" className="w-40 h-40 mx-auto">
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke={isDark ? '#334155' : '#e2e8f0'} strokeWidth="8" />
-        {donutData.map((d, i) => {
-          const pct = d.value / total
-          const dash = circumference * pct
-          const gap = circumference - dash
-          const el = <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={d.color} strokeWidth="8"
-            strokeDasharray={`${dash} ${gap}`} strokeDashoffset={-offset} strokeLinecap="round"
-            style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%', transition: 'all 0.5s' }} />
-          offset += dash
-          return el
-        })}
-        <text x={cx} y={cy - 2} textAnchor="middle" fill={tPri} fontSize="10" fontWeight="bold">{total}</text>
-        <text x={cx} y={cy + 6} textAnchor="middle" fill={tSec} fontSize="4">کالا</text>
-      </svg>
-    )
-  }
-
-  // ─── Bar Chart: Category Value ────────────────────────
+  const totalValue = products.reduce((s, p) => s + p.stock * p.sale_price, 0)
+  const totalCost = products.reduce((s, p) => s + p.stock * p.purchase_price, 0)
   const maxValue = Math.max(...categories.map(c => c.value), 1)
-  const renderCategoryBars = () => {
-    const barH = 20, gap = 4, h = categories.length * (barH + gap)
-    return (
-      <svg viewBox={`0 0 300 ${h}`} className="w-full" style={{ maxHeight: 300 }}>
-        {categories.slice(0, 10).map((cat, i) => {
-          const y = i * (barH + gap)
-          const w = (cat.value / maxValue) * 200
-          return (
-            <g key={cat.name}>
-              <text x="0" y={y + 14} fill={tSec} fontSize="7" textAnchor="start">{cat.name}</text>
-              <rect x="70" y={y} width={w} height={barH} rx="3" fill={COLORS[i % COLORS.length]} opacity="0.85" />
-              <text x={75 + w} y={y + 14} fill={tPri} fontSize="7" fontWeight="bold">{(cat.value / 1000000).toFixed(1)}M</text>
-            </g>
-          )
-        })}
-      </svg>
-    )
-  }
 
-  // ─── Horizontal Bar: Top Products ─────────────────────
-  const maxProdVal = Math.max(...topProducts.map(p => p.stock * p.sale_price), 1)
-  const renderTopProducts = () => (
-    <div className="space-y-1.5">
-      {topProducts.map((p, i) => {
-        const val = p.stock * p.sale_price
-        const pct = (val / maxProdVal) * 100
-        return (
-          <div key={p.id} className="flex items-center gap-2">
-            <span className="text-[10px] w-16 truncate font-bold" style={{ color: tPri }}>{p.title}</span>
-            <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#1e293b' : '#f1f5f9' }}>
-              <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: COLORS[i % COLORS.length], transition: 'width 0.5s' }} />
-            </div>
-            <span className="text-[10px] font-mono font-bold w-14 text-left" style={{ color: tPri }}>{(val / 1000).toFixed(0)}K</span>
-          </div>
-        )
-      })}
+  // ─── Controls bar ─────────────────────────────────────
+  const Controls = () => (
+    <div className="flex flex-wrap items-center gap-2 mb-4 p-3 rounded-xl" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+      <div className="flex items-center gap-1.5">
+        <span className="text-[10px] font-bold" style={{ color: tSec }}>متن:</span>
+        {(['sm', 'md', 'lg'] as const).map(s => (
+          <button key={s} onClick={() => setTextSize(s)} className="px-2 py-0.5 rounded text-[10px] font-bold" style={{ backgroundColor: textSize === s ? '#006194' : 'transparent', color: textSize === s ? '#fff' : tSec }}>{s === 'sm' ? 'کوچک' : s === 'md' ? 'متوسط' : 'بزرگ'}</button>
+        ))}
+      </div>
+      <div className="w-px h-4" style={{ backgroundColor: cardBorder }} />
+      <div className="flex items-center gap-1.5">
+        <span className="text-[10px] font-bold" style={{ color: tSec }}>رنگ:</span>
+        {(Object.keys(COLOR_THEMES) as (keyof typeof COLOR_THEMES)[]).map(k => (
+          <button key={k} onClick={() => setColorTheme(k)} className="w-4 h-4 rounded-full border-2" style={{ borderColor: colorTheme === k ? '#fff' : 'transparent', backgroundColor: COLOR_THEMES[k][0] }} />
+        ))}
+      </div>
+      <div className="flex-1" />
+      <button onClick={handleExport} className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: tSec }}>
+        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        خروجی PNG
+      </button>
     </div>
   )
 
-  // ─── Histogram: Stock Distribution ────────────────────
-  const renderHistogram = () => {
-    const barW = 30, gap = 8, svgW = stockRanges.length * (barW + gap)
+  // ─── Donut ────────────────────────────────────────────
+  const Donut = ({ data, size = 160 }: { data: { label: string; value: number; color: string }[]; size?: number }) => {
+    const r = 40, cx = 50, cy = 50, circ = 2 * Math.PI * r
+    let offset = 0
     return (
-      <svg viewBox={`0 0 ${svgW} 120`} className="w-full" style={{ maxHeight: 120 }}>
-        {stockRanges.map((r, i) => {
-          const x = i * (barW + gap)
-          const h = (r.count / maxHistogramCount) * 80
-          return (
-            <g key={r.label}>
-              <rect x={x} y={100 - h} width={barW} height={h} rx="3" fill={COLORS[i % COLORS.length]} opacity="0.8" />
-              <text x={x + barW / 2} y={100 - h - 4} textAnchor="middle" fill={tPri} fontSize="7" fontWeight="bold">{r.count}</text>
-              <text x={x + barW / 2} y={114} textAnchor="middle" fill={tSec} fontSize="6">{r.label}</text>
-            </g>
-          )
-        })}
+      <svg viewBox="0 0 100 100" width={size} height={size} className="mx-auto">
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={isDark ? '#334155' : '#e2e8f0'} strokeWidth="8" />
+        {data.map((d, i) => { const pct = d.value / total; const dash = circ * pct; const gap = circ - dash; const el = <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={d.color} strokeWidth="8" strokeDasharray={`${dash} ${gap}`} strokeDashoffset={-offset} strokeLinecap="round" style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }} />; offset += dash; return el })}
+        <text x={cx} y={cy - 2} textAnchor="middle" fill={tPri} fontSize={fs.value} fontWeight="bold">{total}</text>
+        <text x={cx} y={cy + 5} textAnchor="middle" fill={tSec} fontSize="3.5">کالا</text>
       </svg>
     )
   }
 
-  // ─── Price Comparison: Purchase vs Sale ───────────────
-  const renderPriceComparison = () => {
-    const maxPrice = Math.max(...categories.map(c => Math.max(c.value, c.purchaseValue)), 1)
-    const barH = 18, gap = 6, h = categories.length * (barH + gap + barH)
-    return (
-      <svg viewBox={`0 0 300 ${h}`} className="w-full" style={{ maxHeight: 400 }}>
-        {categories.slice(0, 8).map((cat, i) => {
-          const y = i * (barH + gap + barH + 10)
-          const saleW = (cat.value / maxPrice) * 180
-          const purchaseW = (cat.purchaseValue / maxPrice) * 180
-          return (
-            <g key={cat.name}>
-              <text x="0" y={y + 6} fill={tSec} fontSize="6" textAnchor="start">{cat.name}</text>
-              <rect x="50" y={y} width={saleW} height={barH} rx="2" fill="#22c55e" opacity="0.8" />
-              <text x={55 + saleW} y={y + 13} fill={tPri} fontSize="6">فروش: {(cat.value / 1000000).toFixed(1)}M</text>
-              <rect x="50" y={y + barH + 2} width={purchaseW} height={barH} rx="2" fill="#3b82f6" opacity="0.8" />
-              <text x={55 + purchaseW} y={y + barH + 15} fill={tPri} fontSize="6">خرید: {(cat.purchaseValue / 1000000).toFixed(1)}M</text>
-            </g>
-          )
-        })}
-      </svg>
-    )
-  }
-
-  // ─── KPI Cards ────────────────────────────────────────
-  const totalValue = products.reduce((s, p) => s + p.stock * p.sale_price, 0)
-  const totalCost = products.reduce((s, p) => s + p.stock * p.purchase_price, 0)
-  const potentialProfit = totalValue - totalCost
+  // ─── Card wrapper ─────────────────────────────────────
+  const Card = ({ title, children, span }: { title: string; children: React.ReactNode; span?: boolean }) => (
+    <div className={`rounded-xl p-4 ${span ? 'lg:col-span-2' : ''}`} style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+      <h3 className="font-bold mb-3" style={{ color: tPri, fontSize: `${parseInt(fs.title) + 1}px` }}>{title}</h3>
+      {children}
+    </div>
+  )
 
   return (
     <div className="space-y-4">
+      <Controls />
+
       {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { label: 'کل کالاها', value: total, color: '#3b82f6' },
           { label: 'ارزش فروش', value: `${(totalValue / 1000000).toFixed(1)}M`, color: '#22c55e' },
           { label: 'ارزش خرید', value: `${(totalCost / 1000000).toFixed(1)}M`, color: '#f59e0b' },
-          { label: 'سود بالقوه', value: `${(potentialProfit / 1000000).toFixed(1)}M`, color: '#a855f7' },
+          { label: 'سود بالقوه', value: `${((totalValue - totalCost) / 1000000).toFixed(1)}M`, color: '#a855f7' },
         ].map((kpi, i) => (
           <div key={i} className="rounded-xl p-3" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-            <div className="text-[10px] font-bold" style={{ color: tSec }}>{kpi.label}</div>
-            <div className="text-lg font-bold mt-1" style={{ color: kpi.color }}>{kpi.value}</div>
+            <div className="font-bold" style={{ color: tSec, fontSize: `${fs.label}px` }}>{kpi.label}</div>
+            <div className="font-bold mt-1" style={{ color: kpi.color, fontSize: `${fs.kpi}px` }}>{kpi.value}</div>
           </div>
         ))}
       </div>
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Stock Status Donut */}
-        <div className="rounded-xl p-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-          <h3 className="text-sm font-bold mb-3" style={{ color: tPri }}>وضعیت موجودی</h3>
-          {renderDonut()}
-          <div className="flex justify-center gap-4 mt-3">
-            {donutData.map(d => (
-              <div key={d.label} className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                <span className="text-[10px]" style={{ color: tSec }}>{d.label}: {d.value}</span>
+        {/* Stock Status */}
+        <Card title="وضعیت موجودی">
+          <div ref={chartRef} className="flex flex-col items-center">
+            <Donut data={donutData} />
+            <div className="flex justify-center gap-4 mt-3">
+              {donutData.map(d => (
+                <div key={d.label} className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                  <span style={{ color: tSec, fontSize: `${fs.label}px` }}>{d.label}: {d.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+
+        {/* Stock Histogram */}
+        <Card title="توزيع موجودی">
+          <svg viewBox="0 0 220 100" className="w-full" style={{ maxHeight: 120 }}>
+            {stockRanges.map((r, i) => { const x = i * 35; const h = (r.count / maxHistogramCount) * 70; return (<g key={r.label}><rect x={x} y={90 - h} width={28} height={h} rx="3" fill={COLORS[i % COLORS.length]} opacity="0.8" /><text x={x + 14} y={90 - h - 3} textAnchor="middle" fill={tPri} fontSize={fs.value} fontWeight="bold">{r.count}</text><text x={x + 14} y={100} textAnchor="middle" fill={tSec} fontSize="5">{r.label}</text></g>) })}
+          </svg>
+        </Card>
+
+        {/* Category Chart with toggle */}
+        <Card title="ارزش موجودی به تفکیک دسته">
+          <div className="flex gap-1 mb-2">
+            <button onClick={() => setCatChartType('bar')} className="px-2 py-0.5 rounded text-[10px] font-bold" style={{ backgroundColor: catChartType === 'bar' ? '#006194' : 'transparent', color: catChartType === 'bar' ? '#fff' : tSec }}>میله‌ای</button>
+            <button onClick={() => setCatChartType('donut')} className="px-2 py-0.5 rounded text-[10px] font-bold" style={{ backgroundColor: catChartType === 'donut' ? '#006194' : 'transparent', color: catChartType === 'donut' ? '#fff' : tSec }}>دایره‌ای</button>
+          </div>
+          {catChartType === 'bar' ? (
+            <svg viewBox="0 0 300 180" className="w-full" style={{ maxHeight: 200 }}>
+              {categories.slice(0, 8).map((cat, i) => { const y = i * 22; const w = (cat.value / maxValue) * 180; return (<g key={cat.name}><text x="0" y={y + 12} fill={tSec} fontSize={fs.value}>{cat.name}</text><rect x="65" y={y} width={w} height={18} rx="3" fill={COLORS[i % COLORS.length]} opacity="0.85" /><text x={70 + w} y={y + 13} fill={tPri} fontSize={fs.value} fontWeight="bold">{(cat.value / 1000000).toFixed(1)}M</text></g>) })}
+            </svg>
+          ) : (
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Donut data={categories.slice(0, 8).map((c, i) => ({ label: c.name, value: c.value, color: COLORS[i % COLORS.length] }))} size={140} />
+              <div className="space-y-1">
+                {categories.slice(0, 8).map((c, i) => (<div key={c.name} className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} /><span className="text-[10px]" style={{ color: tPri }}>{c.name}</span></div>))}
               </div>
-            ))}
+            </div>
+          )}
+        </Card>
+
+        {/* Top Products */}
+        <Card title="۱۰ کالای برتر (ارزش فروش)">
+          <div className="space-y-1.5">
+            {topProducts.map((p, i) => { const val = p.stock * p.sale_price; const maxP = topProducts[0]?.stock * topProducts[0]?.sale_price || 1; return (<div key={p.id} className="flex items-center gap-2"><span className="truncate font-bold" style={{ color: tPri, fontSize: `${fs.label}px`, width: '5rem' }}>{p.title}</span><div className="flex-1 h-3 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#1e293b' : '#f1f5f9' }}><div className="h-full rounded-full" style={{ width: `${(val / maxP) * 100}%`, backgroundColor: COLORS[i % COLORS.length] }} /></div><span className="font-mono font-bold" style={{ color: tPri, fontSize: `${fs.label}px`, width: '4rem', textAlign: 'left' }}>{(val / 1000).toFixed(0)}K</span></div>) })}
           </div>
-        </div>
-
-        {/* Stock Distribution Histogram */}
-        <div className="rounded-xl p-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-          <h3 className="text-sm font-bold mb-3" style={{ color: tPri }}>توزيع موجودی</h3>
-          {renderHistogram()}
-          <div className="text-center mt-2">
-            <span className="text-[10px]" style={{ color: tSec }}>تعداد کالا بر اساس بازه موجودی</span>
-          </div>
-        </div>
-
-        {/* Category Value Bars */}
-        <div className="rounded-xl p-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-          <h3 className="text-sm font-bold mb-3" style={{ color: tPri }}>ارزش موجودی به تفکیک دسته</h3>
-          {renderCategoryBars()}
-        </div>
-
-        {/* Top Products by Value */}
-        <div className="rounded-xl p-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-          <h3 className="text-sm font-bold mb-3" style={{ color: tPri }}>۱۰ کالای برتر (ارزش فروش)</h3>
-          {renderTopProducts()}
-        </div>
+        </Card>
 
         {/* Price Comparison */}
-        <div className="rounded-xl p-4 lg:col-span-2" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-          <h3 className="text-sm font-bold mb-3" style={{ color: tPri }}>مقایسه قیمت خرید و فروش</h3>
+        <Card title="مقایسه قیمت خرید و فروش" span>
           <div className="flex items-center gap-4 mb-2">
-            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded" style={{ backgroundColor: '#22c55e' }} /><span className="text-[10px]" style={{ color: tSec }}>قیمت فروش</span></div>
-            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded" style={{ backgroundColor: '#3b82f6' }} /><span className="text-[10px]" style={{ color: tSec }}>قیمت خرید</span></div>
+            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded" style={{ backgroundColor: '#22c55e' }} /><span className="text-[10px]" style={{ color: tSec }}>فروش</span></div>
+            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded" style={{ backgroundColor: '#3b82f6' }} /><span className="text-[10px]" style={{ color: tSec }}>خرید</span></div>
           </div>
-          {renderPriceComparison()}
-        </div>
+          <svg viewBox="0 0 300 240" className="w-full" style={{ maxHeight: 260 }}>
+            {categories.slice(0, 7).map((cat, i) => { const y = i * 34; const saleW = (cat.value / maxValue) * 180; const purchaseW = (cat.purchaseValue / maxValue) * 180; return (<g key={cat.name}><text x="0" y={y + 6} fill={tSec} fontSize={fs.value}>{cat.name}</text><rect x="55" y={y} width={saleW} height={12} rx="2" fill="#22c55e" opacity="0.8" /><text x={60 + saleW} y={y + 10} fill={tPri} fontSize={fs.value}>{(cat.value / 1000000).toFixed(1)}M</text><rect x="55" y={y + 14} width={purchaseW} height={12} rx="2" fill="#3b82f6" opacity="0.8" /><text x={60 + purchaseW} y={y + 24} fill={tPri} fontSize={fs.value}>{(cat.purchaseValue / 1000000).toFixed(1)}M</text></g>) })}
+          </svg>
+        </Card>
       </div>
     </div>
   )
