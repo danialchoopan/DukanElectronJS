@@ -199,6 +199,7 @@ npm run test:migration
 | `docs/doc-accounting.html` | سیستم حسابداری دوطرفه |
 | `docs/doc-backup.html` | پشتیبان‌گیری و مهاجرت خودکار |
 | `docs/doc-ui.html` | کامپوننت‌ها، هوک‌ها و ابزارها |
+| `docs/doc-features.html` | راهنمای کامل قابلیت‌ها (کاربر + فنی) |
 
 ## مجوز
 

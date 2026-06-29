@@ -34,10 +34,13 @@ interface JournalEntry { id: number; entryDate: string; description: string }
 export default function AccountingAnalytics() {
   const theme = useSettingsStore(s => s.theme)
   const isDark = theme === 'dark'
-  const [pl, setPl] = useState<PLData | null>(null)
-  const [bs, setBs] = useState<BSData | null>(null)
-  const [cashFlow, setCashFlow] = useState<CashFlow | null>(null)
-  const [allJournal, setAllJournal] = useState<JournalEntry[]>([])
+
+  // ─── State ─────────────────────────────────────────────
+  // Data from reports API and journal entries for chart rendering
+  const [pl, setPl] = useState<PLData | null>(null)       // Profit & Loss report
+  const [bs, setBs] = useState<BSData | null>(null)       // Balance Sheet report
+  const [cashFlow, setCashFlow] = useState<CashFlow | null>(null) // Cash flow statement
+  const [allJournal, setAllJournal] = useState<JournalEntry[]>([]) // All journal entries for volume chart
   const [textSize, setTextSize] = useState<'sm' | 'md' | 'lg'>('md')
   const [colorTheme, setColorTheme] = useState<keyof typeof COLOR_THEMES>('default')
   const [expenseChartType, setExpenseChartType] = useState<'bar' | 'donut'>('donut')
@@ -52,13 +55,15 @@ export default function AccountingAnalytics() {
 
   const fs = textSize === 'sm' ? { label: '8', value: '7', kpi: '14', title: '11' } : textSize === 'lg' ? { label: '12', value: '10', kpi: '22', title: '16' } : { label: '10', value: '8', kpi: '18', title: '13' }
 
+  // ─── Data loading ─────────────────────────────────────
+  // Fetch P&L, balance sheet, cash flow, and journal entries in parallel
   useEffect(() => {
     const load = async () => {
       const [plRes, bsRes, cfRes, allJeRes] = await Promise.all([
         window.api.reports.getProfitLoss(),
         window.api.reports.getBalanceSheet(),
         window.api.reports.getCashFlow(),
-        window.api.journal.getEntries({ limit: 500 }),
+        window.api.journal.getEntries({ limit: 500 }),  // Note: returns { entries: [...], total }
       ])
       if (plRes.success && plRes.data) setPl(plRes.data)
       if (bsRes.success && bsRes.data) setBs(bsRes.data)
@@ -144,6 +149,8 @@ export default function AccountingAnalytics() {
   }
 
   // ─── Chart data ──────────────────────────────────────
+  // ─── Computed chart data ──────────────────────────────
+  // P&L bar items: revenue, COGS, opEx, net profit with colors
   const plItems = [
     { label: 'درآمد', value: pl?.totalRevenue || 0, color: '#22c55e' },
     { label: 'بهای تمام شده', value: pl?.totalCogs || 0, color: '#ef4444' },
@@ -159,7 +166,8 @@ export default function AccountingAnalytics() {
   ]
   const maxBS = Math.max(...bsItems.map(i => Math.abs(i.value)), 1)
 
-  // Journal volume per month
+  // ─── Journal volume: count entries per month ───────────
+  // Group journal entries by month (YYYY-MM) for the monthly bar chart
   const monthMap = new Map<string, number>()
   allJournal.forEach(je => { const m = je.entryDate?.slice(0, 7) || 'نامشخص'; monthMap.set(m, (monthMap.get(m) || 0) + 1) })
   const months = Array.from(monthMap.entries()).sort((a, b) => a[0].localeCompare(b[0])).slice(-12)

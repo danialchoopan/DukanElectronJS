@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Features Guide — HesabDari Danial</title>
+  <style>
+    :root{--primary:#006194;--bg:#0f172a;--card:#1e293b;--border:#334155;--text:#f1f5f9;--muted:#94a3b8}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);line-height:1.9}.container{max-width:960px;margin:0 auto;padding:40px 24px}h1{font-size:28px;margin-bottom:8px}h2{font-size:20px;margin:32px 0 12px;color:var(--primary);border-bottom:2px solid var(--primary);padding-bottom:8px}h3{font-size:16px;margin:20px 0 8px}p{line-height:1.9;margin-bottom:12px;color:var(--muted);font-size:14px}code{background:var(--card);padding:2px 6px;border-radius:4px;font-size:12px;color:#22c55e}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{padding:10px 12px;text-align:left;border:1px solid var(--border);font-size:13px}th{background:var(--card);font-weight:600}ul,ol{color:var(--muted);font-size:14px;margin:8px 0 8px 20px;line-height:2}li{margin-bottom:4px}.nav{margin-bottom:24px;padding:12px;background:var(--card);border-radius:8px}.nav a{color:var(--primary);text-decoration:none;font-size:13px;margin-right:12px}.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}.badge-green{background:rgba(34,197,94,.15);color:#22c55e}.badge-blue{background:rgba(59,130,246,.15);color:#3b82f6}.badge-yellow{background:rgba(245,158,11,.15);color:#f59e0b}.note{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="nav">
+      <a href="developer-en.html">Developer Guide</a>
+      <a href="doc-schema.html">Database Schema</a>
+      <a href="doc-api.html">API Reference</a>
+      <a href="doc-accounting.html">Accounting</a>
+      <a href="doc-backup.html">Backup & Migration</a>
+      <a href="doc-ui.html">UI Components</a>
+      <a href="doc-features.html">Features Guide</a>
+    </nav>
+
+    <h1>Features Guide</h1>
+    <p>Complete reference for all features in HesabDari Danial — what each feature does, where to find it, and how it works.</p>
+
+    <h2>1. Point of Sale (POS) — <code>فروش</code></h2>
+    <table>
+      <tr><th>Feature</th><th>Description</th><th>Location</th></tr>
+      <tr><td>Barcode Input</td><td>Type or scan barcode to add product to cart. Auto-search dropdown shows matching products.</td><td>Top of POS screen</td></tr>
+      <tr><td>Camera Scanner</td><td>Webcam barcode/QR scanning. Enabled in Settings > UI > Camera Scanner toggle.</td><td>Camera button next to barcode input</td></tr>
+      <tr><td>Cart Management</td><td>Add, remove, edit quantities inline. Supports weight-based products (kg).</td><td>Center panel</td></tr>
+      <tr><td>Sale Types</td><td>In-Person (حضوری) or Online (آنلاین) — displayed on invoice and reports.</td><td>Payment confirmation dialog</td></tr>
+      <tr><td>Payment Methods</td><td>Cash, Card, or Ledger (credit). Ledger requires customer selection.</td><td>Payment panel (right side)</td></tr>
+      <tr><td>Backdated Invoices</td><td>Custom date for invoice + option to skip inventory impact. For documentation without stock change.</td><td>Payment confirmation dialog > Date picker</td></tr>
+      <tr><td>Suspended Invoices</td><td>3 hold/resume slots. Save current cart and restore later.</td><td>Suspended slots (top of POS)</td></tr>
+      <tr><td>Loose Items</td><td>Quick-add grid for weight-based products (fruits, vegetables).</td><td>Loose items panel</td></tr>
+      <tr><td>Popular Items</td><td>Quick-add grid for top-selling products.</td><td>Popular items panel</td></tr>
+      <tr><td>Receipt Printing</td><td>Thermal receipt + A4 invoice printing after sale.</td><td>Sale complete dialog</td></tr>
+    </table>
+
+    <h2>2. Product Management — <code>افزودن کالا</code></h2>
+    <table>
+      <tr><th>Feature</th><th>Description</th></tr>
+      <tr><td>Auto Barcode</td><td>PRD-XXXXXX format auto-generated when barcode field is empty.</td></tr>
+      <tr><td>Category + Subcategory</td><td>Select parent category, then filter subcategories. Create new subcategories inline.</td></tr>
+      <tr><td>Sellable Toggle</td><td>"Active for Sale" checkbox. When OFF, product hidden from POS. Auto-unchecked when sale price = 0.</td></tr>
+      <tr><td>Product Image</td><td>Upload image file, stored as base64 or saved to disk.</td></tr>
+      <tr><td>Barcode Scanning</td><td>Scan physical product barcode to fill barcode field in create/edit form.</td></tr>
+      <tr><td>QR Label Printing</td><td>Generate scannable QR codes (Reed-Solomon ECC) for products. Print labels with product info.</td></tr>
+      <tr><td>Barcode Label Printing</td><td>Generate Code128 barcodes for products.</td></tr>
+      <tr><td>Excel Export</td><td>Export product list as CSV with BOM for Farsi compatibility.</td></tr>
+      <tr><td>Inline Editing</td><td>Click stock or purchase price cells to edit directly in the list view.</td></tr>
+    </table>
+
+    <h2>3. Inventory Management — <code>انبارداری</code></h2>
+    <h3>Products Tab</h3>
+    <ul>
+      <li>Searchable, sortable, filterable product list with pagination</li>
+      <li>Stock filters: All, In Stock, Low Stock, Out of Stock</li>
+      <li>Category filter dropdown</li>
+      <li>Restock panel: additive stock increase with reason</li>
+      <li>Low stock warning tiles at top</li>
+    </ul>
+    <h3>Report Tab</h3>
+    <ul>
+      <li>KPI cards: total products, purchase value, retail value, gross profit</li>
+      <li>Category donut chart (inventory value distribution)</li>
+      <li>Category bar chart (inventory value per category)</li>
+      <li>Category valuation table with inline progress bars</li>
+      <li>Slow-moving items (not sold in 30+ days)</li>
+      <li>A4 print and Excel export</li>
+    </ul>
+    <h3>Analytics Tab — <code>تحلیل و نمودار</code></h3>
+    <ul>
+      <li><strong>Stock Status Donut:</strong> Healthy / Low / Out-of-stock products with counts</li>
+      <li><strong>Stock Distribution Histogram:</strong> Products grouped by stock quantity ranges (0, 1-10, 11-30, etc.)</li>
+      <li><strong>Category Value Chart:</strong> Bar or donut (toggleable) showing inventory value per category</li>
+      <li><strong>Top 10 Products:</strong> Horizontal bars ranked by inventory value</li>
+      <li><strong>Price Comparison:</strong> Side-by-side purchase vs sale price per category</li>
+      <li><strong>KPI Cards:</strong> Total items, sale value, cost value, potential profit (all in Iranian format: هزار/میلیون/میلیارد)</li>
+    </ul>
+    <h3>Adjustment Dialog</h3>
+    <ul>
+      <li>Search and select a product</li>
+      <li>Set absolute stock quantity (corrects actual count)</li>
+      <li>Choose adjustment type: manual, reconciliation, damage, count, other</li>
+      <li>Add reason and optional back-date</li>
+      <li>View adjustment history with before/after/delta</li>
+    </ul>
+    <h3>Audit Tab</h3>
+    <ul>
+      <li>Audit log of all system operations</li>
+      <li>Filter by action type (create, update, delete, restock, return)</li>
+      <li>Date range filtering</li>
+    </ul>
+
+    <h2>4. Accounting — <code>حسابداری</code></h2>
+    <h3>Dashboard Tab</h3>
+    <ul>
+      <li>Quick overview: total revenue, COGS, opEx, net profit</li>
+      <li>Operating expenses donut chart</li>
+      <li>P&L bar chart</li>
+      <li>Manual journal entry form</li>
+      <li>Recent journal entries list</li>
+    </ul>
+    <h3>Analytics Tab — <code>تحلیل و نمودار</code></h3>
+    <ul>
+      <li><strong>P&L Bar Chart:</strong> Revenue, COGS, Operating Expenses, Net Profit — 4 vertical bars</li>
+      <li><strong>Expense Breakdown:</strong> Donut or bar chart (toggleable) of operating expenses by account</li>
+      <li><strong>Revenue Breakdown:</strong> Progress bars for each revenue account</li>
+      <li><strong>Balance Distribution:</strong> Assets vs Liabilities vs Equity with progress bars</li>
+      <li><strong>Cash Flow Summary:</strong> Inflow / Outflow / Net as 3 summary cards</li>
+      <li><strong>Journal Volume:</strong> Monthly entry count bar chart</li>
+      <li><strong>KPI Cards:</strong> Revenue, expenses, net profit, journal entry count (Iranian format)</li>
+    </ul>
+    <h3>Other Tabs</h3>
+    <table>
+      <tr><th>Tab</th><th>Description</th></tr>
+      <tr><td>Chart of Accounts</td><td>Hierarchical account tree with CRUD. 17 default accounts seeded.</td></tr>
+      <tr><td>Journal Entries</td><td>Double-entry journal with search, date filter, debit/credit validation.</td></tr>
+      <tr><td>Trial Balance</td><td>Account balances summary (debit vs credit).</td></tr>
+      <tr><td>Income Statement</td><td>Revenue - COGS - Expenses = Net Profit.</td></tr>
+      <tr><td>Balance Sheet</td><td>Assets = Liabilities + Equity as of a date.</td></tr>
+      <tr><td>Cash Flow</td><td>Inflow vs Outflow comparison.</td></tr>
+      <tr><td>AR Aging</td><td>Customer balance aging (current, 31-60, 61-90, 90+ days).</td></tr>
+      <tr><td>Expenses</td><td>Expense CRUD with journal posting.</td></tr>
+      <tr><td>Price History</td><td>Track purchase/sale price changes over time with date filtering.</td></tr>
+      <tr><td>Fiscal Periods</td><td>Manage accounting periods (open/close).</td></tr>
+    </table>
+
+    <h2>5. Customers — <code>مشتریان</code></h2>
+    <ul>
+      <li><strong>CRUD:</strong> Create/edit customers with type (real/legal), address, notes, image</li>
+      <li><strong>Ledger:</strong> View all transactions (charges, payments, sales) with running balance</li>
+      <li><strong>Charge/Pay:</strong> Add debt or record payments with accounting journal sync</li>
+      <li><strong>Purchase History:</strong> Complete list of all purchases by customer</li>
+      <li><strong>Delete Guard:</strong> Cannot delete customer with outstanding balance</li>
+      <li><strong>Stats:</strong> Total spent, purchase count, last purchase date</li>
+    </ul>
+
+    <h2>6. Suppliers — <code>تأمین‌کنندگان</code></h2>
+    <ul>
+      <li><strong>CRUD:</strong> Create/edit suppliers with company info</li>
+      <li><strong>Purchases:</strong> Record purchases with items, quantities, unit costs</li>
+      <li><strong>Payments:</strong> Partial or full payment to suppliers with journal entry</li>
+      <li><strong>Purchase Returns:</strong> Return items, restore stock, adjust supplier balance</li>
+      <li><strong>Ledger:</strong> View all supplier transactions with balance</li>
+      <li><strong>Accounting Sync:</strong> Purchases debit inventory, credit supplier payable</li>
+    </ul>
+
+    <h2>7. Backup & Export/Import — <code>پشتیبان‌گیری</code></h2>
+    <h3>Auto Backup</h3>
+    <ul>
+      <li>Toggle on/off in Settings > Backup</li>
+      <li>Interval: daily, weekly, or monthly</li>
+      <li>Runs on app startup if enabled</li>
+    </ul>
+    <h3>Export (3-Step Dialog)</h3>
+    <ol>
+      <li><strong>Location:</strong> Local backups/ folder or custom path via system save dialog</li>
+      <li><strong>Format:</strong> SQLite (.db) — fast binary copy, or JSON (.json) — human-readable with metadata</li>
+      <li><strong>Scope:</strong> All data, Structure only (CREATE TABLE), or Selective (checkbox table picker with row counts)</li>
+    </ol>
+    <h3>Import</h3>
+    <ol>
+      <li>Select file via system dialog</li>
+      <li>Preview: version, timestamp, table count, row count</li>
+      <li>Auto-creates pre-restore backup before importing</li>
+    </ol>
+    <h3>Database Reset</h3>
+    <ol>
+      <li>Step 1: Save backup to custom location (mandatory before delete)</li>
+      <li>Step 2: Final confirmation with warning of all data to be deleted</li>
+      <li>App reloads with fresh empty database</li>
+    </ol>
+
+    <h2>8. Settings — <code>تنظیمات</code></h2>
+    <table>
+      <tr><th>Section</th><th>Settings</th></tr>
+      <tr><td>Shop Info</td><td>Store name, phone, address (displayed on invoices)</td></tr>
+      <tr><td>Tax</td><td>VAT toggle + rate slider (0-30%)</td></tr>
+      <tr><td>Theme</td><td>Dark/Light mode toggle</td></tr>
+      <tr><td>Language</td><td>Farsi/English switch</td></tr>
+      <tr><td>Font Size</td><td>Slider with custom override</td></tr>
+      <tr><td>High Contrast</td><td>Accessibility mode</td></tr>
+      <tr><td>Camera Scanner</td><td>Enable/disable barcode/QR camera in POS and AddProduct</td></tr>
+      <tr><td>Keyboard Shortcuts</td><td>Customizable navigation shortcuts (F1-F12, Ctrl+Shift+C, etc.)</td></tr>
+      <tr><td>Print Customization</td><td>Invoice title, report title, footer, template selection, live preview</td></tr>
+    </table>
+
+    <h2>9. Global Search — <code>جستجوی سراسری</code></h2>
+    <ul>
+      <li>Full-text search across products, customers, suppliers</li>
+      <li>Search by name, barcode, category, phone number</li>
+      <li>Click result to navigate directly to the item (product detail, customer ledger, etc.)</li>
+      <li>Keyboard shortcut: Ctrl+K or the search button in sidebar</li>
+    </ul>
+
+    <h2>10. Setup Wizard — <code>ویزارد راه‌اندازی</code></h2>
+    <ul>
+      <li>Appears on first run only</li>
+      <li><strong>Step 1:</strong> Language, theme, store name/address/phone</li>
+      <li><strong>Step 2:</strong> Admin account (name + 4-digit PIN)</li>
+      <li><strong>Step 3:</strong> Business type selection (13 types) with auto-configured defaults</li>
+      <li><strong>Restore option:</strong> Import from previous backup during setup</li>
+    </ul>
+
+    <h2>11. Date Handling</h2>
+    <ul>
+      <li>All display dates use <strong>Jalali (Shamsi) calendar</strong> via <code>jalali.ts</code></li>
+      <li>Date inputs use <code>ShamsiDateInput</code> component (Jalali day/month/year picker)</li>
+      <li>Backdated invoices use HTML date input (Gregorian) which is converted to Jalali for display</li>
+      <li>Report dates: filterable by Jalali date range</li>
+    </ul>
+
+    <h2>12. Price Formatting</h2>
+    <ul>
+      <li>Iranian number format: <code>formatPriceFA()</code> → "۱۰ میلیون", "۲.۵ میلیارد", "۱۵۰ هزار"</li>
+      <li>Comma separators: <code>formatPriceComma()</code> → "10,000,000"</li>
+      <li>Inline editing: <code>FormattedPriceInput</code> component with live comma formatting</li>
+      <li>Chart labels: all use Iranian format (هزار/میلیون/میلیارد)</li>
+    </ul>
+
+    <h2>13. Charts & Visualization</h2>
+    <ul>
+      <li><strong>Pure SVG:</strong> All charts built with inline SVG — no charting library dependency</li>
+      <li><strong>4 Color Themes:</strong> Default, Ocean, Forest, Warm — switchable at runtime</li>
+      <li><strong>Text Size:</strong> Small / Medium / Large controls all chart labels</li>
+      <li><strong>Chart Type Toggle:</strong> Bar ↔ Donut for category/expense charts</li>
+      <li><strong>PNG Export:</strong> Download chart as image via SVG-to-canvas conversion</li>
+      <li><strong>No Data State:</strong> Clean empty state with icon and message when data is absent</li>
+    </ul>
+
+    <h2>14. QR & Barcode System</h2>
+    <ul>
+      <li><strong>QR Generation:</strong> Proper ISO 18004 QR codes with Reed-Solomon error correction</li>
+      <li><strong>Barcode Input:</strong> Text input with autocomplete + camera scanning</li>
+      <li><strong>Camera Scanner:</strong> <code>html5-qrcode</code> library — supports both QR codes and traditional barcodes (EAN-13, UPC-A, Code128)</li>
+      <li><strong>Label Printing:</strong> Generate QR/barcode labels for products</li>
+    </ul>
+
+    <div style="text-align:center;margin-top:48px;padding:24px;border-top:1px solid var(--border);color:var(--muted);font-size:12px">
+      <p><a href="developer-en.html" style="color:var(--primary)">Developer Guide</a> | <a href="developer-fa.html" style="color:var(--primary)">راهنمای توسعه‌دهندگان</a> | <a href="index.html" style="color:var(--primary)">مستندات فنی</a></p>
+    </div>
+  </div>
+</body>
+</html>

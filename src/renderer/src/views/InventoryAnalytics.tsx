@@ -44,10 +44,14 @@ export default function InventoryAnalytics() {
 
   const fs = textSize === 'sm' ? { label: '8', value: '7', kpi: '14', title: '11' } : textSize === 'lg' ? { label: '12', value: '10', kpi: '22', title: '16' } : { label: '10', value: '8', kpi: '18', title: '13' }
 
+  // ─── Data loading ─────────────────────────────────────
+  // Fetch all active products from the database on mount
   useEffect(() => {
     window.api.products.getAll().then(r => { if (r.success && r.data) setProducts(r.data) })
   }, [])
 
+  // ─── PNG export ────────────────────────────────────────
+  // Convert the first SVG in chartRef to a PNG via canvas, then trigger download
   const handleExport = useCallback(() => {
     if (!chartRef.current) return
     const svgEl = chartRef.current.querySelector('svg')
@@ -72,6 +76,8 @@ export default function InventoryAnalytics() {
     )
   }
 
+  // ─── Computed data from products ──────────────────────
+  // Classify products by stock level: healthy (>2x min), low (0 < stock ≤ 2x min), out (= 0)
   const healthy = products.filter(p => p.stock > p.minStock * 2).length
   const low = products.filter(p => p.stock > 0 && p.stock <= p.minStock * 2).length
   const out = products.filter(p => p.stock === 0).length
