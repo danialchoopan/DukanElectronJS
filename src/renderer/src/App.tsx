@@ -29,6 +29,9 @@ import SalesHistory from './views/SalesHistory'
 import AddProduct from './views/AddProduct'
 import Accounting from './views/Accounting'
 import Reports from './views/Reports'
+import CrossSellRulesView from './views/CrossSellRules'
+import InstallmentsView from './views/InstallmentsView'
+import ProformasView from './views/ProformasView'
 import Inventory from './views/Inventory'
 import Categories from './views/Categories'
 import Help from './views/Help'
@@ -38,7 +41,7 @@ import Sidebar from './components/layout/Sidebar'
 import GlobalSearch from './components/business/GlobalSearch'
 import PrintPreviewDialog from './components/print/PrintPreviewDialog'
 
-type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports'
+type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas'
 
 const NAV_MAP: Record<string, View> = {
   'nav-pos': 'pos', 'nav-inventory': 'inventory', 'nav-dashboard': 'dashboard',
@@ -177,6 +180,9 @@ export default function App() {
         {currentView === 'inventory' && <Inventory initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}
         {currentView === 'accounting' && <Accounting initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}
         {currentView === 'reports' && <Reports />}
+        {currentView === 'crossSell' && <CrossSellRulesView />}
+        {currentView === 'installments' && <InstallmentsView />}
+        {currentView === 'proformas' && <ProformasView />}
         {currentView === 'customers' && <CustomerManagement highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}
         {currentView === 'suppliers' && <Suppliers />}
         {currentView === 'settings' && <AdminPanel view="settings" initialTab="settings" highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}

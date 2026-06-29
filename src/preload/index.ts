@@ -384,6 +384,36 @@ const api = {
     byProduct: (productId: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('priceHistory:byProduct', { productId }),
   },
 
+  crossSell: {
+    getAll: (): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('crossSell:getAll'),
+    getById: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('crossSell:getById', { id }),
+    create: (data: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('crossSell:create', data),
+    update: (id: number, data: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('crossSell:update', { id, data }),
+    delete: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('crossSell:delete', { id }),
+    addItem: (data: { ruleId: number; productId: number; quantity?: number; discountPercent?: number }): Promise<IPCResponse<any>> => ipcRenderer.invoke('crossSell:addItem', data),
+    removeItem: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('crossSell:removeItem', { id }),
+    evaluate: (data: { cartProductIds: number[]; cartTotal: number; cartCategories: string[] }): Promise<IPCResponse<any>> => ipcRenderer.invoke('crossSell:evaluate', data),
+  },
+
+  installments: {
+    getAll: (): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('installments:getAll'),
+    getById: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('installments:getById', { id }),
+    create: (data: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('installments:create', data),
+    pay: (data: { installmentPaymentId: number; amount: number; notes?: string }): Promise<IPCResponse<any>> => ipcRenderer.invoke('installments:pay', data),
+    updateOverdue: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('installments:updateOverdue'),
+    getOverdue: (): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('installments:getOverdue'),
+  },
+
+  proformas: {
+    getAll: (status?: string): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('proformas:getAll', { status }),
+    getById: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('proformas:getById', { id }),
+    create: (data: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('proformas:create', data),
+    updateStatus: (id: number, status: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('proformas:updateStatus', { id, status }),
+    convertToSale: (proformaId: number, userId: number, paymentMethod?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('proformas:convertToSale', { proformaId, userId, paymentMethod }),
+    expire: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('proformas:expire'),
+    delete: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('proformas:delete', { id }),
+  },
+
   onNavigate: (callback: (page: string) => void): (() => void) => {
     const handler = (_event: Electron.IpcRendererEvent, page: string): void => callback(page)
     ipcRenderer.on('navigate', handler)

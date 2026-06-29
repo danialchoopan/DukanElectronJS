@@ -378,6 +378,105 @@ function initializeDatabase(db: Database.Database): void {
     );
     CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_productId ON inventory_adjustments(productId);
 
+    -- Cross-sell / mandatory product rules
+    CREATE TABLE IF NOT EXISTS cross_sell_rules (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      triggerType TEXT NOT NULL DEFAULT 'product' CHECK(triggerType IN ('product', 'category', 'price', 'quantity')),
+      triggerValue TEXT NOT NULL DEFAULT '',
+      triggerCondition TEXT DEFAULT '>=',
+      triggerThreshold REAL DEFAULT 0,
+      ruleType TEXT NOT NULL DEFAULT 'mandatory' CHECK(ruleType IN ('mandatory', 'optional', 'recommended')),
+      priority INTEGER NOT NULL DEFAULT 0,
+      isActive INTEGER NOT NULL DEFAULT 1,
+      createdBy TEXT DEFAULT 'admin',
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      updatedAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    );
+
+    CREATE TABLE IF NOT EXISTS cross_sell_rule_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ruleId INTEGER NOT NULL,
+      productId INTEGER NOT NULL,
+      quantity INTEGER NOT NULL DEFAULT 1,
+      discountPercent REAL DEFAULT 0,
+      FOREIGN KEY (ruleId) REFERENCES cross_sell_rules(id) ON DELETE CASCADE,
+      FOREIGN KEY (productId) REFERENCES products(id)
+    );
+
+    -- Installment sales
+    CREATE TABLE IF NOT EXISTS installments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      installmentNumber TEXT UNIQUE NOT NULL,
+      saleId INTEGER,
+      customerId INTEGER,
+      totalAmount REAL NOT NULL DEFAULT 0,
+      downPayment REAL NOT NULL DEFAULT 0,
+      installmentCount INTEGER NOT NULL DEFAULT 2,
+      monthlyAmount REAL NOT NULL DEFAULT 0,
+      penaltyPercent REAL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'completed', 'overdue', 'cancelled')),
+      startDate TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      notes TEXT DEFAULT '',
+      createdBy TEXT DEFAULT 'admin',
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (saleId) REFERENCES sales(id),
+      FOREIGN KEY (customerId) REFERENCES customers(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_installments_customerId ON installments(customerId);
+
+    CREATE TABLE IF NOT EXISTS installment_payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      installmentId INTEGER NOT NULL,
+      installmentNumber INTEGER NOT NULL,
+      amount REAL NOT NULL DEFAULT 0,
+      dueDate TEXT NOT NULL,
+      paidDate TEXT DEFAULT NULL,
+      penaltyAmount REAL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'paid', 'overdue', 'partial')),
+      notes TEXT DEFAULT '',
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (installmentId) REFERENCES installments(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_installment_payments_installmentId ON installment_payments(installmentId);
+    CREATE INDEX IF NOT EXISTS idx_installment_payments_dueDate ON installment_payments(dueDate);
+
+    -- Proforma invoices
+    CREATE TABLE IF NOT EXISTS proformas (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      proformaNumber TEXT UNIQUE NOT NULL,
+      customerId INTEGER,
+      userId INTEGER NOT NULL,
+      subtotal REAL NOT NULL DEFAULT 0,
+      totalAmount REAL NOT NULL DEFAULT 0,
+      taxRate REAL DEFAULT 0,
+      taxAmount REAL DEFAULT 0,
+      discount REAL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'sent', 'converted', 'expired')),
+      validUntil TEXT NOT NULL,
+      saleId INTEGER DEFAULT NULL,
+      notes TEXT DEFAULT '',
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      updatedAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (customerId) REFERENCES customers(id),
+      FOREIGN KEY (userId) REFERENCES users(id),
+      FOREIGN KEY (saleId) REFERENCES sales(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_proformas_status ON proformas(status);
+    CREATE INDEX IF NOT EXISTS idx_proformas_customerId ON proformas(customerId);
+
+    CREATE TABLE IF NOT EXISTS proforma_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      proformaId INTEGER NOT NULL,
+      productId INTEGER NOT NULL,
+      productTitle TEXT NOT NULL,
+      quantity REAL NOT NULL,
+      unitPrice REAL NOT NULL,
+      subtotal REAL NOT NULL,
+      FOREIGN KEY (proformaId) REFERENCES proformas(id) ON DELETE CASCADE,
+      FOREIGN KEY (productId) REFERENCES products(id)
+    );
+
     CREATE TABLE IF NOT EXISTS suppliers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,

@@ -4,7 +4,7 @@ import { useSettingsStore, getNavColors } from '../../store/settingsStore'
 import { t, fa } from '../../i18n'
 import { DashboardIcon, UsersIcon, SettingsIcon, LogoutIcon, MoonIcon, SunIcon, LanguageIcon } from '../ui/Icons'
 
-type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports'
+type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas'
 
 interface Props {
   currentView: View
@@ -28,6 +28,9 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
     { key: 'inventory', label: ui.nav.inventory, icon: <BoxIcon /> },
     { key: 'accounting', label: ui.nav.accounting, icon: <CalculatorIcon /> },
     { key: 'reports', label: 'گزارش‌ها', icon: <ChartIcon /> },
+    { key: 'proformas', label: 'پیش‌فاکتور', icon: <ProformaIcon /> },
+    { key: 'installments', label: 'اقساط', icon: <InstallmentIcon /> },
+    { key: 'crossSell', label: 'فروش مکمل', icon: <RuleIcon /> },
     { key: 'customers', label: ui.nav.customers, icon: <UsersIcon className="w-5 h-5" /> },
     { key: 'suppliers', label: 'تأمین\u200cکنندگان', icon: <TruckIcon /> },
     { key: 'settings', label: 'تنظیمات', icon: <SettingsIcon className="w-5 h-5" /> },
@@ -355,6 +358,32 @@ function ChartIcon() {
       <line x1="18" y1="20" x2="18" y2="10" />
       <line x1="12" y1="20" x2="12" y2="4" />
       <line x1="6" y1="20" x2="6" y2="14" />
+    </svg>
+  )
+}
+
+function ProformaIcon() {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+    </svg>
+  )
+}
+
+function InstallmentIcon() {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="4" width="22" height="16" rx="2" />
+      <line x1="1" y1="10" x2="23" y2="10" />
+    </svg>
+  )
+}
+
+function RuleIcon() {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
   )
 }

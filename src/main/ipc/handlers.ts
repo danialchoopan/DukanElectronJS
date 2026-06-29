@@ -52,6 +52,9 @@ import * as purchasesRepo from '../database/repositories/purchases'
 import * as priceHistoryRepo from '../database/repositories/priceHistory'
 import * as salesReports from '../database/repositories/salesReports'
 import * as customerAnalytics from '../database/repositories/customerAnalytics'
+import * as crossSellRules from '../database/repositories/crossSellRules'
+import * as installmentsRepo from '../database/repositories/installments'
+import * as proformasRepo from '../database/repositories/proformas'
 import * as backupService from '../database/backup'
 import * as smartExportService from '../database/smartExport'
 import * as migrationService from '../database/migration'
@@ -501,6 +504,33 @@ export function registerAllHandlers(): void {
   handleArg<{ limit?: number }, any[]>('reports:bestCustomers', (a) => customerAnalytics.getBestCustomers(a.limit))
   handleArg<{ startDate?: string; endDate?: string }, any[]>('reports:categoryProfitMargin', (a) => customerAnalytics.getCategoryProfitMargin(a.startDate, a.endDate))
   handle('reports:customerPatterns', () => customerAnalytics.getCustomerPatterns())
+
+  // ─── Cross-Sell Rules ───────────────────────────────────
+  handle('crossSell:getAll', () => crossSellRules.getAllRules())
+  handleArg<{ id: number }, any>('crossSell:getById', (a) => crossSellRules.getRuleById(a.id))
+  ipcMain.handle('crossSell:create', (_event, a: any) => { try { return { success: true, data: crossSellRules.createRule(a) } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
+  ipcMain.handle('crossSell:update', (_event, a: { id: number; data: any }) => ({ success: crossSellRules.updateRule(a.id, a.data) }))
+  ipcMain.handle('crossSell:delete', (_event, a: { id: number }) => ({ success: crossSellRules.deleteRule(a.id) }))
+  ipcMain.handle('crossSell:addItem', (_event, a: { ruleId: number; productId: number; quantity?: number; discountPercent?: number }) => { try { return { success: true, data: crossSellRules.addRuleItem(a.ruleId, a.productId, a.quantity, a.discountPercent) } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
+  ipcMain.handle('crossSell:removeItem', (_event, a: { id: number }) => ({ success: crossSellRules.removeRuleItem(a.id) }))
+  ipcMain.handle('crossSell:evaluate', (_event, a: { cartProductIds: number[]; cartTotal: number; cartCategories: string[] }) => ({ success: true, data: crossSellRules.evaluateRules(a.cartProductIds, a.cartTotal, a.cartCategories) }))
+
+  // ─── Installments ──────────────────────────────────────
+  handle('installments:getAll', () => installmentsRepo.getAllInstallments())
+  handleArg<{ id: number }, any>('installments:getById', (a) => installmentsRepo.getInstallmentById(a.id))
+  ipcMain.handle('installments:create', (_event, a: any) => { try { return { success: true, data: installmentsRepo.createInstallment(a) } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
+  ipcMain.handle('installments:pay', (_event, a: { installmentPaymentId: number; amount: number; notes?: string }) => ({ success: installmentsRepo.recordPayment(a.installmentPaymentId, a.amount, a.notes) }))
+  handle('installments:updateOverdue', () => ({ success: true, count: installmentsRepo.updateOverdueInstallments() }))
+  handle('installments:getOverdue', () => installmentsRepo.getOverduePayments())
+
+  // ─── Proformas ─────────────────────────────────────────
+  handleArg<{ status?: string }, any[]>('proformas:getAll', (a) => proformasRepo.getAllProformas(a.status))
+  handleArg<{ id: number }, any>('proformas:getById', (a) => proformasRepo.getProformaById(a.id))
+  ipcMain.handle('proformas:create', (_event, a: any) => { try { return { success: true, data: proformasRepo.createProforma(a) } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
+  ipcMain.handle('proformas:updateStatus', (_event, a: { id: number; status: string }) => ({ success: proformasRepo.updateProformaStatus(a.id, a.status) }))
+  ipcMain.handle('proformas:convertToSale', (_event, a: { proformaId: number; userId: number; paymentMethod?: string }) => proformasRepo.convertToSale(a.proformaId, a.userId, a.paymentMethod))
+  handle('proformas:expire', () => ({ success: true, count: proformasRepo.expireProformas() }))
+  ipcMain.handle('proformas:delete', (_event, a: { id: number }) => ({ success: proformasRepo.deleteProforma(a.id) }))
 
   // ─── Dialog ────────────────────────────────────────
   ipcMain.handle('dialog:saveBackup', async () => {
