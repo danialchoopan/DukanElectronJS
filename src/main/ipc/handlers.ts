@@ -55,6 +55,8 @@ import * as customerAnalytics from '../database/repositories/customerAnalytics'
 import * as crossSellRules from '../database/repositories/crossSellRules'
 import * as installmentsRepo from '../database/repositories/installments'
 import * as proformasRepo from '../database/repositories/proformas'
+import * as serviceTicketsRepo from '../database/repositories/serviceTickets'
+import * as customerCreditRepo from '../database/repositories/customerCredit'
 import * as backupService from '../database/backup'
 import * as smartExportService from '../database/smartExport'
 import * as migrationService from '../database/migration'
@@ -531,6 +533,29 @@ export function registerAllHandlers(): void {
   ipcMain.handle('proformas:convertToSale', (_event, a: { proformaId: number; userId: number; paymentMethod?: string }) => proformasRepo.convertToSale(a.proformaId, a.userId, a.paymentMethod))
   handle('proformas:expire', () => ({ success: true, count: proformasRepo.expireProformas() }))
   ipcMain.handle('proformas:delete', (_event, a: { id: number }) => ({ success: proformasRepo.deleteProforma(a.id) }))
+
+  // ─── Service Tickets ───────────────────────────────────
+  handleArg<{ status?: string }, any[]>('service:getAll', (a) => serviceTicketsRepo.getAllTickets(a.status))
+  handleArg<{ id: number }, any>('service:getById', (a) => serviceTicketsRepo.getTicketById(a.id))
+  ipcMain.handle('service:create', (_event, a: any) => { try { return { success: true, data: serviceTicketsRepo.createTicket(a) } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
+  ipcMain.handle('service:updateStatus', (_event, a: { id: number; status: string; note?: string; changedBy?: string }) => ({ success: serviceTicketsRepo.updateTicketStatus(a.id, a.status, a.note, a.changedBy) }))
+  ipcMain.handle('service:update', (_event, a: { id: number; data: any }) => ({ success: serviceTicketsRepo.updateTicket(a.id, a.data) }))
+  ipcMain.handle('service:addPart', (_event, a: any) => { try { return { success: true, data: serviceTicketsRepo.addPart(a.ticketId, a.partName, a.partNumber, a.quantity, a.unitCost) } } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } } })
+  ipcMain.handle('service:removePart', (_event, a: { id: number }) => ({ success: serviceTicketsRepo.removePart(a.id) }))
+  handle('service:getReport', () => serviceTicketsRepo.getServiceReport())
+
+  // ─── Customer Credit ───────────────────────────────────
+  handle('credit:getAll', () => customerCreditRepo.getAllCredits())
+  handleArg<{ customerId: number }, any>('credit:getByCustomerId', (a) => customerCreditRepo.getCreditByCustomerId(a.customerId))
+  ipcMain.handle('credit:setLimit', (_event, a: { customerId: number; limit: number; performedBy?: string }) => ({ success: customerCreditRepo.setCreditLimit(a.customerId, a.limit, a.performedBy) }))
+  ipcMain.handle('credit:block', (_event, a: { customerId: number; blockType: string; reason: string; performedBy?: string }) => ({ success: customerCreditRepo.blockCustomer(a.customerId, a.blockType, a.reason, a.performedBy) }))
+  ipcMain.handle('credit:unblock', (_event, a: { customerId: number; reason?: string; performedBy?: string }) => ({ success: customerCreditRepo.unblockCustomer(a.customerId, a.reason, a.performedBy) }))
+  ipcMain.handle('credit:requestUnblock', (_event, a: { customerId: number; note: string }) => ({ success: customerCreditRepo.requestUnblock(a.customerId, a.note) }))
+  ipcMain.handle('credit:check', (_event, a: { customerId: number; amount: number }) => customerCreditRepo.checkCredit(a.customerId, a.amount))
+  handleArg<{ customerId: number }, any[]>('credit:getHistory', (a) => customerCreditRepo.getCreditHistory(a.customerId))
+  handle('credit:getBlocked', () => customerCreditRepo.getBlockedCustomers())
+  handle('credit:getUnblockRequests', () => customerCreditRepo.getUnblockRequests())
+  ipcMain.handle('credit:recalculateScore', (_event, a: { customerId: number }) => ({ success: true, score: customerCreditRepo.recalculateScore(a.customerId) }))
 
   // ─── Dialog ────────────────────────────────────────
   ipcMain.handle('dialog:saveBackup', async () => {

@@ -62,6 +62,9 @@ function migrateSchema(database: Database.Database): void {
       { name: 'saleDate', type: 'TEXT', defaultValue: "datetime('now', 'localtime')" },
       { name: 'affectsInventory', type: 'INTEGER', defaultValue: '1' },
     ],
+    customers: [
+      { name: 'is_blocked', type: 'INTEGER', defaultValue: '0' },
+    ],
   }
 
   let migrationCount = 0
@@ -476,6 +479,91 @@ function initializeDatabase(db: Database.Database): void {
       FOREIGN KEY (proformaId) REFERENCES proformas(id) ON DELETE CASCADE,
       FOREIGN KEY (productId) REFERENCES products(id)
     );
+
+    -- Warranty & Repair Service Management
+    CREATE TABLE IF NOT EXISTS service_tickets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ticketNumber TEXT UNIQUE NOT NULL,
+      customerId INTEGER,
+      productId INTEGER,
+      serialNumber TEXT DEFAULT '',
+      warrantyClaim INTEGER NOT NULL DEFAULT 0,
+      warrantyStartDate TEXT DEFAULT '',
+      warrantyEndDate TEXT DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'received' CHECK(status IN ('received','diagnosing','awaiting_parts','in_repair','completed','returned','cancelled')),
+      priority TEXT DEFAULT 'normal' CHECK(priority IN ('low','normal','high','urgent')),
+      problemDescription TEXT DEFAULT '',
+      diagnosis TEXT DEFAULT '',
+      estimatedCompletion TEXT DEFAULT '',
+      technician TEXT DEFAULT '',
+      partsCost REAL DEFAULT 0,
+      laborCost REAL DEFAULT 0,
+      shippingCost REAL DEFAULT 0,
+      totalCost REAL DEFAULT 0,
+      customerNotified INTEGER DEFAULT 0,
+      userId INTEGER DEFAULT NULL,
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      updatedAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (customerId) REFERENCES customers(id),
+      FOREIGN KEY (productId) REFERENCES products(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_service_tickets_customerId ON service_tickets(customerId);
+    CREATE INDEX IF NOT EXISTS idx_service_tickets_status ON service_tickets(status);
+
+    CREATE TABLE IF NOT EXISTS service_parts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ticketId INTEGER NOT NULL,
+      partName TEXT NOT NULL,
+      partNumber TEXT DEFAULT '',
+      quantity INTEGER NOT NULL DEFAULT 1,
+      unitCost REAL NOT NULL DEFAULT 0,
+      FOREIGN KEY (ticketId) REFERENCES service_tickets(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS service_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ticketId INTEGER NOT NULL,
+      fromStatus TEXT DEFAULT '',
+      toStatus TEXT NOT NULL,
+      note TEXT DEFAULT '',
+      changedBy TEXT DEFAULT 'admin',
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (ticketId) REFERENCES service_tickets(id) ON DELETE CASCADE
+    );
+
+    -- Customer Credit Management
+    CREATE TABLE IF NOT EXISTS customer_credit (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customerId INTEGER UNIQUE NOT NULL,
+      creditLimit REAL NOT NULL DEFAULT 0,
+      currentDebt REAL NOT NULL DEFAULT 0,
+      creditScore INTEGER NOT NULL DEFAULT 100,
+      isBlocked INTEGER NOT NULL DEFAULT 0,
+      blockReason TEXT DEFAULT '',
+      blockType TEXT DEFAULT '' CHECK(blockType IN ('','credit','fraud','inactive','other')),
+      blockedAt TEXT DEFAULT NULL,
+      blockedBy TEXT DEFAULT NULL,
+      unblockRequested INTEGER NOT NULL DEFAULT 0,
+      unblockNote TEXT DEFAULT '',
+      lastPaymentDate TEXT DEFAULT NULL,
+      paymentDelayDays INTEGER DEFAULT 0,
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      updatedAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (customerId) REFERENCES customers(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS credit_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customerId INTEGER NOT NULL,
+      action TEXT NOT NULL CHECK(action IN ('block','unblock','limit_change','payment','score_change')),
+      oldValue TEXT DEFAULT '',
+      newValue TEXT DEFAULT '',
+      reason TEXT DEFAULT '',
+      performedBy TEXT DEFAULT 'admin',
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (customerId) REFERENCES customers(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_credit_history_customerId ON credit_history(customerId);
 
     CREATE TABLE IF NOT EXISTS suppliers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -4,7 +4,7 @@ import { useSettingsStore, getNavColors } from '../../store/settingsStore'
 import { t, fa } from '../../i18n'
 import { DashboardIcon, UsersIcon, SettingsIcon, LogoutIcon, MoonIcon, SunIcon, LanguageIcon } from '../ui/Icons'
 
-type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas'
+type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas' | 'service' | 'credit'
 
 interface Props {
   currentView: View
@@ -31,6 +31,8 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
     { key: 'proformas', label: 'پیش‌فاکتور', icon: <ProformaIcon /> },
     { key: 'installments', label: 'اقساط', icon: <InstallmentIcon /> },
     { key: 'crossSell', label: 'فروش مکمل', icon: <RuleIcon /> },
+    { key: 'service', label: 'تعمیرات', icon: <WrenchIcon /> },
+    { key: 'credit', label: 'اعتبار مشتری', icon: <CreditIcon /> },
     { key: 'customers', label: ui.nav.customers, icon: <UsersIcon className="w-5 h-5" /> },
     { key: 'suppliers', label: 'تأمین\u200cکنندگان', icon: <TruckIcon /> },
     { key: 'settings', label: 'تنظیمات', icon: <SettingsIcon className="w-5 h-5" /> },
@@ -384,6 +386,23 @@ function RuleIcon() {
   return (
     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  )
+}
+
+function WrenchIcon() {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+    </svg>
+  )
+}
+
+function CreditIcon() {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="4" width="22" height="16" rx="2" />
+      <line x1="1" y1="10" x2="23" y2="10" />
     </svg>
   )
 }

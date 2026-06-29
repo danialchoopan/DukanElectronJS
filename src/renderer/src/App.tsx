@@ -32,6 +32,8 @@ import Reports from './views/Reports'
 import CrossSellRulesView from './views/CrossSellRules'
 import InstallmentsView from './views/InstallmentsView'
 import ProformasView from './views/ProformasView'
+import ServiceTicketsView from './views/ServiceTicketsView'
+import CustomerCreditView from './views/CustomerCreditView'
 import Inventory from './views/Inventory'
 import Categories from './views/Categories'
 import Help from './views/Help'
@@ -41,7 +43,7 @@ import Sidebar from './components/layout/Sidebar'
 import GlobalSearch from './components/business/GlobalSearch'
 import PrintPreviewDialog from './components/print/PrintPreviewDialog'
 
-type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas'
+type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas' | 'service' | 'credit'
 
 const NAV_MAP: Record<string, View> = {
   'nav-pos': 'pos', 'nav-inventory': 'inventory', 'nav-dashboard': 'dashboard',
@@ -183,6 +185,8 @@ export default function App() {
         {currentView === 'crossSell' && <CrossSellRulesView />}
         {currentView === 'installments' && <InstallmentsView />}
         {currentView === 'proformas' && <ProformasView />}
+        {currentView === 'service' && <ServiceTicketsView />}
+        {currentView === 'credit' && <CustomerCreditView />}
         {currentView === 'customers' && <CustomerManagement highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}
         {currentView === 'suppliers' && <Suppliers />}
         {currentView === 'settings' && <AdminPanel view="settings" initialTab="settings" highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}

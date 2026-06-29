@@ -414,6 +414,31 @@ const api = {
     delete: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('proformas:delete', { id }),
   },
 
+  service: {
+    getAll: (status?: string): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('service:getAll', { status }),
+    getById: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('service:getById', { id }),
+    create: (data: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('service:create', data),
+    updateStatus: (id: number, status: string, note?: string, changedBy?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('service:updateStatus', { id, status, note, changedBy }),
+    update: (id: number, data: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('service:update', { id, data }),
+    addPart: (data: { ticketId: number; partName: string; partNumber: string; quantity: number; unitCost: number }): Promise<IPCResponse<any>> => ipcRenderer.invoke('service:addPart', data),
+    removePart: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('service:removePart', { id }),
+    getReport: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('service:getReport'),
+  },
+
+  credit: {
+    getAll: (): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('credit:getAll'),
+    getByCustomerId: (customerId: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('credit:getByCustomerId', { customerId }),
+    setLimit: (customerId: number, limit: number, performedBy?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('credit:setLimit', { customerId, limit, performedBy }),
+    block: (customerId: number, blockType: string, reason: string, performedBy?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('credit:block', { customerId, blockType, reason, performedBy }),
+    unblock: (customerId: number, reason?: string, performedBy?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('credit:unblock', { customerId, reason, performedBy }),
+    requestUnblock: (customerId: number, note: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('credit:requestUnblock', { customerId, note }),
+    check: (customerId: number, amount: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('credit:check', { customerId, amount }),
+    getHistory: (customerId: number): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('credit:getHistory', { customerId }),
+    getBlocked: (): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('credit:getBlocked'),
+    getUnblockRequests: (): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('credit:getUnblockRequests'),
+    recalculateScore: (customerId: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('credit:recalculateScore', { customerId }),
+  },
+
   onNavigate: (callback: (page: string) => void): (() => void) => {
     const handler = (_event: Electron.IpcRendererEvent, page: string): void => callback(page)
     ipcRenderer.on('navigate', handler)
