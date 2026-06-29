@@ -4,7 +4,7 @@ import { useSettingsStore, getNavColors } from '../../store/settingsStore'
 import { t, fa } from '../../i18n'
 import { DashboardIcon, UsersIcon, SettingsIcon, LogoutIcon, MoonIcon, SunIcon, LanguageIcon } from '../ui/Icons'
 
-type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories'
+type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports'
 
 interface Props {
   currentView: View
@@ -27,6 +27,7 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
     { key: 'categories', label: fa.nav.categories, icon: <TagIcon /> },
     { key: 'inventory', label: ui.nav.inventory, icon: <BoxIcon /> },
     { key: 'accounting', label: ui.nav.accounting, icon: <CalculatorIcon /> },
+    { key: 'reports', label: 'گزارش‌ها', icon: <ChartIcon /> },
     { key: 'customers', label: ui.nav.customers, icon: <UsersIcon className="w-5 h-5" /> },
     { key: 'suppliers', label: 'تأمین\u200cکنندگان', icon: <TruckIcon /> },
     { key: 'settings', label: 'تنظیمات', icon: <SettingsIcon className="w-5 h-5" /> },
@@ -344,6 +345,16 @@ function CalculatorIcon() {
       <line x1="12" y1="14" x2="12" y2="14.01" />
       <line x1="8" y1="18" x2="8" y2="18.01" />
       <line x1="12" y1="18" x2="12" y2="18.01" />
+    </svg>
+  )
+}
+
+function ChartIcon() {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10" />
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="14" />
     </svg>
   )
 }

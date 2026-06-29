@@ -269,6 +269,14 @@ const api = {
     getBalanceSheet: (asOfDate?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('reports:balanceSheet', { asOfDate }),
     getARAging: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('reports:arAging'),
     getCashFlow: (startDate?: string, endDate?: string): Promise<IPCResponse<any>> => ipcRenderer.invoke('reports:cashFlow', { startDate, endDate }),
+    getBestSelling: (startDate?: string, endDate?: string, category?: string, limit?: number): Promise<IPCResponse<any[]>> =>
+      ipcRenderer.invoke('reports:bestSelling', { startDate, endDate, category, limit }),
+    getSalesByHour: (startDate?: string, endDate?: string): Promise<IPCResponse<any[]>> =>
+      ipcRenderer.invoke('reports:salesByHour', { startDate, endDate }),
+    getSalesByDayOfWeek: (startDate?: string, endDate?: string): Promise<IPCResponse<any[]>> =>
+      ipcRenderer.invoke('reports:salesByDayOfWeek', { startDate, endDate }),
+    getPeriodComparison: (currentStart: string, currentEnd: string, previousStart: string, previousEnd: string): Promise<IPCResponse<any>> =>
+      ipcRenderer.invoke('reports:periodComparison', { currentStart, currentEnd, previousStart, previousEnd }),
   },
   periods: {
     getAll: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('periods:getAll'),

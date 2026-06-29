@@ -28,6 +28,7 @@ import CustomerManagement from './views/CustomerManagement'
 import SalesHistory from './views/SalesHistory'
 import AddProduct from './views/AddProduct'
 import Accounting from './views/Accounting'
+import Reports from './views/Reports'
 import Inventory from './views/Inventory'
 import Categories from './views/Categories'
 import Help from './views/Help'
@@ -37,7 +38,7 @@ import Sidebar from './components/layout/Sidebar'
 import GlobalSearch from './components/business/GlobalSearch'
 import PrintPreviewDialog from './components/print/PrintPreviewDialog'
 
-type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories'
+type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports'
 
 const NAV_MAP: Record<string, View> = {
   'nav-pos': 'pos', 'nav-inventory': 'inventory', 'nav-dashboard': 'dashboard',
@@ -175,6 +176,7 @@ export default function App() {
         {currentView === 'categories' && <Categories />}
         {currentView === 'inventory' && <Inventory initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}
         {currentView === 'accounting' && <Accounting initialTab={navParams?.tab} highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}
+        {currentView === 'reports' && <Reports />}
         {currentView === 'customers' && <CustomerManagement highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}
         {currentView === 'suppliers' && <Suppliers />}
         {currentView === 'settings' && <AdminPanel view="settings" initialTab="settings" highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}

@@ -50,6 +50,7 @@ import * as seedRepo from '../database/repositories/seed'
 import * as suppliersRepo from '../database/repositories/suppliers'
 import * as purchasesRepo from '../database/repositories/purchases'
 import * as priceHistoryRepo from '../database/repositories/priceHistory'
+import * as salesReports from '../database/repositories/salesReports'
 import * as backupService from '../database/backup'
 import * as smartExportService from '../database/smartExport'
 import * as migrationService from '../database/migration'
@@ -488,6 +489,12 @@ export function registerAllHandlers(): void {
   handle('migration:runTests', () => {
     return runMigrationTests()
   })
+
+  // ─── Sales Reports ──────────────────────────────────────
+  handleArg<{ startDate?: string; endDate?: string; category?: string; limit?: number }, any[]>('reports:bestSelling', (a) => salesReports.getBestSellingProducts(a.startDate, a.endDate, a.category, a.limit))
+  handleArg<{ startDate?: string; endDate?: string }, any[]>('reports:salesByHour', (a) => salesReports.getSalesByHour(a.startDate, a.endDate))
+  handleArg<{ startDate?: string; endDate?: string }, any[]>('reports:salesByDayOfWeek', (a) => salesReports.getSalesByDayOfWeek(a.startDate, a.endDate))
+  handleArg<{ currentStart: string; currentEnd: string; previousStart: string; previousEnd: string }, any>('reports:periodComparison', (a) => salesReports.getPeriodComparison(a.currentStart, a.currentEnd, a.previousStart, a.previousEnd))
 
   // ─── Dialog ────────────────────────────────────────
   ipcMain.handle('dialog:saveBackup', async () => {
