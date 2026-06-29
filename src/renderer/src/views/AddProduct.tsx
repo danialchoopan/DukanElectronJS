@@ -52,7 +52,7 @@ export default function AddProduct() {
   const [pageSize, setPageSize] = useState(10)
   const [form, setForm] = useState({
     barcode: '', title: '', category: '', subcategory: '', unit: 'number' as 'number' | 'weight',
-    purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, description: '', imageBase64: '',
+    purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '',
   })
   const [subcategories, setSubcategories] = useState<{ id: number; name: string }[]>([])
   const [newSubcategory, setNewSubcategory] = useState('')
@@ -126,13 +126,14 @@ export default function AddProduct() {
         barcode: existing.data.barcode, title: existing.data.title, category: existing.data.category, subcategory: existing.data.subcategory || '',
         unit: existing.data.unit, purchase_price: existing.data.purchase_price, sale_price: existing.data.sale_price,
         stock: existing.data.stock, minStock: existing.data.minStock, isLoose: existing.data.isLoose, isSellable: existing.data.isSellable,
+        hasExpiry: existing.data.hasExpiry, expiryDate: existing.data.expiryDate || '', expiryAlertDays: existing.data.expiryAlertDays || 30,
         description: existing.data.description || '', imageBase64: existing.data.imageBase64 || '',
       })
       setShowForm(true)
       showNotif(`${existing.data.title} — ${fa.admin.edit}`)
     } else {
       setEditProduct(null)
-      setForm({ barcode: code, title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, description: '', imageBase64: '' })
+      setForm({ barcode: code, title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '' })
       setShowForm(true)
       showNotif(`${fa.admin.addProduct} — ${code}`)
     }
@@ -146,7 +147,7 @@ export default function AddProduct() {
       if (r.success) {
         showNotif(`${form.title} — ${fa.admin.saved}`)
         setShowForm(false); setEditProduct(null)
-        setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, description: '', imageBase64: '' })
+        setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '' })
         await loadProducts(); await loadCategories()
         window.dispatchEvent(new Event('products:refresh'))
       } else {
@@ -157,7 +158,7 @@ export default function AddProduct() {
       if (r.success) {
         showNotif(`${form.title} — ${fa.admin.create}`)
         setShowForm(false); setEditProduct(null)
-        setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, description: '', imageBase64: '' })
+        setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '' })
         await loadProducts(); await loadCategories()
         window.dispatchEvent(new Event('products:refresh'))
       } else {
@@ -179,7 +180,7 @@ export default function AddProduct() {
     if (r.success) {
       showNotif(`${editProduct.title} — ${fa.admin.deleted}`)
       setShowForm(false); setEditProduct(null)
-      setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, description: '', imageBase64: '' })
+      setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '' })
       await loadProducts()
       window.dispatchEvent(new Event('products:refresh'))
     }
@@ -256,7 +257,7 @@ export default function AddProduct() {
           </div>
         </div>
         <button
-          onClick={() => { setEditProduct(null); setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, description: '', imageBase64: '' }); setShowForm(true) }}
+          onClick={() => { setEditProduct(null); setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '' }); setShowForm(true) }}
           className="btn btn-primary text-sm"
         >
           + {fa.admin.addProduct}
@@ -370,6 +371,26 @@ export default function AddProduct() {
                 {!form.isSellable && <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>غیرفعال</span>}
               </div>
               {!form.isSellable && <p className="text-[10px] mt-1" style={{ color: '#f59e0b' }}>این کالا در صفحه فروش (POS) نمایش داده نخواهد شد</p>}
+            </div>
+            <div className="col-span-2">
+              <div className="flex items-center gap-2">
+                <input type="checkbox" checked={form.hasExpiry || false} onChange={(e) => setForm((f) => ({ ...f, hasExpiry: e.target.checked }))} className="w-4 h-4 rounded" style={{ accentColor: '#ef4444' }} />
+                <label className="text-sm font-bold" style={{ color: textSecondary }}>دارای تاریخ انقضا</label>
+              </div>
+              {form.hasExpiry && (
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <div>
+                    <label className="text-[10px] font-bold block mb-1" style={{ color: textSecondary }}>تاریخ انقضا</label>
+                    <input type="date" value={form.expiryDate || ''} onChange={(e) => setForm((f) => ({ ...f, expiryDate: e.target.value }))}
+                      className="input-field text-xs w-full" style={{ ...inputStyle, direction: 'ltr', textAlign: 'center' }} />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold block mb-1" style={{ color: textSecondary }}>روزهای هشدار</label>
+                    <input type="number" value={form.expiryAlertDays || 30} onChange={(e) => setForm((f) => ({ ...f, expiryAlertDays: parseInt(e.target.value) || 30 }))}
+                      className="input-field text-xs w-full" style={inputStyle} min={1} max={365} />
+                  </div>
+                </div>
+              )}
             </div>
             <div className="col-span-2">
               <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>توضیحات / یادداشت</label>
@@ -491,7 +512,7 @@ export default function AddProduct() {
 
   function startEdit(p: Product) {
     setEditProduct(p)
-    setForm({ barcode: p.barcode, title: p.title, category: p.category, subcategory: p.subcategory || '', unit: p.unit, purchase_price: p.purchase_price, sale_price: p.sale_price, stock: p.stock, minStock: p.minStock, isLoose: p.isLoose, isSellable: p.isSellable, description: p.description || '', imageBase64: p.imageBase64 || '' })
+    setForm({ barcode: p.barcode, title: p.title, category: p.category, subcategory: p.subcategory || '', unit: p.unit, purchase_price: p.purchase_price, sale_price: p.sale_price, stock: p.stock, minStock: p.minStock, isLoose: p.isLoose, isSellable: p.isSellable, hasExpiry: p.hasExpiry, expiryDate: p.expiryDate || '', expiryAlertDays: p.expiryAlertDays || 30, description: p.description || '', imageBase64: p.imageBase64 || '' })
     if (p.category) {
       const parentCat = categories.find(c => c.name === p.category)
       if (parentCat) loadSubcategories(parentCat.id)

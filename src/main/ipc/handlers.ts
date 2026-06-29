@@ -241,6 +241,17 @@ export function registerAllHandlers(): void {
     } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
   })
 
+  // ─── Expiry Alerts ─────────────────────────────────────
+  handleArg<{ withinDays?: number }, any[]>('products:expiring', (a) => products.getExpiringProducts(a.withinDays ?? 30))
+  ipcMain.handle('products:markAlerted', (_event, a: { id: number }) => {
+    products.markAlerted(a.id)
+    return { success: true }
+  })
+  handle('products:resetAlerts', () => { products.resetAlerts(); return { success: true } })
+
+  // ─── Product Profit Report ──────────────────────────────
+  handleArg<{ startDate?: string; endDate?: string }, any[]>('products:profitReport', (a) => products.getProductProfitReport(a.startDate, a.endDate))
+
   // ─── Sales ──────────────────────────────────────────────
   ipcMain.handle('sales:create', (_event, a: SaleInput) => {
     try {

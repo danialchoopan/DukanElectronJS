@@ -53,6 +53,10 @@ function migrateSchema(database: Database.Database): void {
     products: [
       { name: 'subcategory', type: 'TEXT', defaultValue: "''" },
       { name: 'isSellable', type: 'INTEGER', defaultValue: '1' },
+      { name: 'expiry_date', type: 'TEXT', defaultValue: "''" },
+      { name: 'expiry_alert_days', type: 'INTEGER', defaultValue: '30' },
+      { name: 'last_alerted', type: 'INTEGER', defaultValue: '0' },
+      { name: 'has_expiry', type: 'INTEGER', defaultValue: '0' },
     ],
     sales: [
       { name: 'saleDate', type: 'TEXT', defaultValue: "datetime('now', 'localtime')" },
@@ -117,6 +121,10 @@ function initializeDatabase(db: Database.Database): void {
       isLoose INTEGER NOT NULL DEFAULT 0,
       isActive INTEGER NOT NULL DEFAULT 1,
       isSellable INTEGER NOT NULL DEFAULT 1,
+      has_expiry INTEGER NOT NULL DEFAULT 0,
+      expiry_date TEXT DEFAULT '',
+      expiry_alert_days INTEGER NOT NULL DEFAULT 30,
+      last_alerted INTEGER NOT NULL DEFAULT 0,
       createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
       updatedAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
     );
@@ -124,6 +132,7 @@ function initializeDatabase(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode);
     CREATE INDEX IF NOT EXISTS idx_products_title ON products(title);
     CREATE INDEX IF NOT EXISTS idx_products_isLoose ON products(isLoose);
+    CREATE INDEX IF NOT EXISTS idx_products_expiry ON products(has_expiry, expiry_date);
 
     CREATE TABLE IF NOT EXISTS customers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

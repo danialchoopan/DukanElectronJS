@@ -12,6 +12,10 @@ export interface Product {
   isLoose: boolean
   isActive: boolean
   isSellable: boolean
+  hasExpiry: boolean
+  expiryDate: string
+  expiryAlertDays: number
+  lastAlerted: boolean
   description: string
   imageBase64: string
   createdAt: string
@@ -30,6 +34,9 @@ export interface ProductInput {
   minStock?: number
   isLoose?: boolean
   isSellable?: boolean
+  hasExpiry?: boolean
+  expiryDate?: string
+  expiryAlertDays?: number
   description?: string
   imageBase64?: string
 }

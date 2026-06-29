@@ -87,6 +87,14 @@ const api = {
       ipcRenderer.invoke('products:categories'),
     getSellable: (): Promise<IPCResponse<Product[]>> =>
       ipcRenderer.invoke('products:getSellable'),
+    getExpiring: (withinDays?: number): Promise<IPCResponse<any[]>> =>
+      ipcRenderer.invoke('products:expiring', { withinDays: withinDays ?? 30 }),
+    markAlerted: (id: number): Promise<IPCResponse<boolean>> =>
+      ipcRenderer.invoke('products:markAlerted', { id }),
+    resetAlerts: (): Promise<IPCResponse<boolean>> =>
+      ipcRenderer.invoke('products:resetAlerts'),
+    getProfitReport: (startDate?: string, endDate?: string): Promise<IPCResponse<any[]>> =>
+      ipcRenderer.invoke('products:profitReport', { startDate, endDate }),
     getReportData: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('products:reportData'),
     saveImage: (data: { base64: string; productId: number }): Promise<IPCResponse<string>> =>
       ipcRenderer.invoke('products:saveImage', data),

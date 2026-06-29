@@ -36,6 +36,8 @@ import { getProductImageUrl } from '../utils/productImage'
 import { generateQRSvg } from '../utils/qrCode'
 import { InlineEditCell } from '../components/ui/FormattedPriceInput'
 import InventoryAnalytics from './InventoryAnalytics'
+import ExpiryAlerts, { ExpiryBadge } from './ExpiryAlerts'
+import ProfitReport from './ProfitReport'
 
 const primary = '#006194'
 
@@ -60,7 +62,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
   const [pageSize, setPageSize] = useState(10)
   const [catPage, setCatPage] = useState(0)
   const [slowPage, setSlowPage] = useState(0)
-  const [tab, setTab] = useState<'products' | 'report' | 'analytics' | 'audit'>((initialTab as any) || 'products')
+  const [tab, setTab] = useState<'products' | 'report' | 'analytics' | 'expiry' | 'profit' | 'audit'>((initialTab as any) || 'products')
   const [auditLog, setAuditLog] = useState<any[]>([])
   const [auditFilter, setAuditFilter] = useState<AuditFilter>('all')
   const [auditStartDate, setAuditStartDate] = useState('')
@@ -433,6 +435,24 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
       ),
     },
     {
+      key: 'expiry' as const,
+      label: 'انقضا',
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+        </svg>
+      ),
+    },
+    {
+      key: 'profit' as const,
+      label: 'سود و زیان',
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+        </svg>
+      ),
+    },
+    {
       key: 'audit' as const,
       label: 'تاریخچه',
       icon: (
@@ -487,20 +507,17 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
           <button key={t.key} onClick={() => setTab(t.key)} data-highlight-id={`tab-${t.key}`}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${tab === t.key ? 'shadow-lg' : ''} ${highlightId === `tab-${t.key}` ? 'highlight-tab' : ''}`}
             style={
-              tab === t.key 
+              tab === t.key
                 ? {
                     background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
                     color: '#ffffff',
                     boxShadow: '0 4px 12px rgba(59,130,246,0.3)',
                   }
-                : {
-                    backgroundColor: isDark ? '#1e293b' : '#f8fafc',
-                    color: textSecondary,
-                    border: `1px solid ${cardBorder}`,
-                  }
+                : {}
             }>
             {t.icon}
             {t.label}
+            {t.key === 'expiry' && <ExpiryBadge />}
           </button>
         ))}
       </div>
@@ -953,6 +970,14 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
 
       {tab === 'analytics' && (
         <InventoryAnalytics />
+      )}
+
+      {tab === 'expiry' && (
+        <ExpiryAlerts />
+      )}
+
+      {tab === 'profit' && (
+        <ProfitReport />
       )}
 
       {tab === 'audit' && (
