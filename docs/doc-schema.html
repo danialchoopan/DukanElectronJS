@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database Schema — HesabDari Danial</title>
+  <style>
+    :root { --primary: #006194; --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f1f5f9; --muted: #94a3b8; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); line-height: 1.8; }
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 20px; margin: 32px 0 12px; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 8px; }
+    h3 { font-size: 16px; margin: 20px 0 8px; }
+    p { line-height: 1.8; margin-bottom: 12px; color: var(--muted); font-size: 14px; }
+    code { background: var(--card); padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #22c55e; }
+    pre { background: var(--card); padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid var(--border); font-size: 12px; line-height: 1.5; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { padding: 8px 10px; text-align: left; border: 1px solid var(--border); font-size: 12px; }
+    th { background: var(--card); font-weight: 600; }
+    .nav { margin-bottom: 24px; padding: 12px; background: var(--card); border-radius: 8px; }
+    .nav a { color: var(--primary); text-decoration: none; font-size: 13px; margin-right: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="nav">
+      <a href="developer-en.html">Developer Guide</a>
+      <a href="doc-schema.html">Database Schema</a>
+      <a href="doc-api.html">API Reference</a>
+      <a href="doc-accounting.html">Accounting</a>
+      <a href="doc-backup.html">Backup & Migration</a>
+      <a href="doc-ui.html">UI Components</a>
+    </nav>
+
+    <h1>Database Schema</h1>
+    <p>All tables use SQLite with <code>CREATE TABLE IF NOT EXISTS</code>. New columns are added via <code>migrateSchema()</code> using <code>ALTER TABLE ADD COLUMN</code>.</p>
+
+    <h2>Core Tables</h2>
+
+    <h3>users</h3>
+    <pre>
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  pin_code TEXT NOT NULL,        -- SHA-256 hash
+  role TEXT DEFAULT 'cashier' CHECK(role IN ('admin','cashier')),
+  isActive INTEGER DEFAULT 1,
+  createdAt TEXT DEFAULT (datetime('now','localtime'))
+)</pre>
+
+    <h3>products</h3>
+    <pre>
+CREATE TABLE products (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  barcode TEXT UNIQUE,
+  title TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  imageBase64 TEXT DEFAULT '',
+  category TEXT NOT NULL DEFAULT '',     -- matches categories.name
+  subcategory TEXT DEFAULT '',           -- matches subcategory names
+  unit TEXT DEFAULT 'number' CHECK(unit IN ('number','weight')),
+  purchase_price REAL DEFAULT 0,
+  sale_price REAL DEFAULT 0,
+  stock REAL DEFAULT 0,
+  minStock REAL DEFAULT 0,
+  isLoose INTEGER DEFAULT 0,
+  isActive INTEGER DEFAULT 1,
+  isSellable INTEGER DEFAULT 1,          -- 0 = hidden from POS
+  createdAt TEXT DEFAULT (datetime('now','localtime')),
+  updatedAt TEXT DEFAULT (datetime('now','localtime'))
+)</pre>
+    <p>Key: <code>isSellable=0</code> hides products from the POS cart. <code>subcategory</code> is a free-text field filtered by parent category.</p>
+
+    <h3>categories</h3>
+    <pre>
+CREATE TABLE categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  slug TEXT DEFAULT '',
+  level INTEGER DEFAULT 0,               -- 0=parent, 1=child
+  is_active INTEGER DEFAULT 1,
+  parent_id INTEGER DEFAULT NULL,        -- self-referencing FK
+  FOREIGN KEY (parent_id) REFERENCES categories(id)
+)</pre>
+    <p>2-level hierarchy only. Products reference categories by <code>name</code> string, not FK.</p>
+
+    <h3>customers</h3>
+    <pre>
+CREATE TABLE customers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  phone TEXT DEFAULT '',
+  balance REAL DEFAULT 0,                -- negative = owes us
+  address TEXT DEFAULT '',
+  notes TEXT DEFAULT '',
+  customerType TEXT DEFAULT 'real',      -- 'real' or 'legal'
+  description TEXT DEFAULT '',
+  imageBase64 TEXT DEFAULT '',
+  totalSpent REAL DEFAULT 0,
+  totalPurchases INTEGER DEFAULT 0,
+  isActive INTEGER DEFAULT 1
+)</pre>
+
+    <h3>suppliers</h3>
+    <pre>
+CREATE TABLE suppliers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  phone TEXT DEFAULT '',
+  email TEXT DEFAULT '',
+  address TEXT DEFAULT '',
+  company TEXT DEFAULT '',
+  taxId TEXT DEFAULT '',
+  balance REAL DEFAULT 0,                -- positive = we owe them
+  description TEXT DEFAULT '',
+  isActive INTEGER DEFAULT 1
+)</pre>
+
+    <h2>Sales & Returns</h2>
+
+    <h3>sales</h3>
+    <pre>
+CREATE TABLE sales (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  invoiceNumber TEXT UNIQUE NOT NULL,    -- INV-YYYYMMDD-NNNN
+  userId INTEGER NOT NULL,
+  customerId INTEGER,
+  subtotal REAL DEFAULT 0,
+  total_amount REAL DEFAULT 0,           -- rounded total
+  totalNetProfit REAL DEFAULT 0,
+  paymentMethod TEXT DEFAULT 'cash' CHECK(...),
+  customerPaid REAL DEFAULT 0,
+  changeAmount REAL DEFAULT 0,
+  description TEXT DEFAULT '',
+  invoiceDescription TEXT DEFAULT '',
+  manualCustomerName TEXT DEFAULT '',
+  saleType TEXT DEFAULT 'in-person',     -- 'in-person' or 'online'
+  saleDate TEXT DEFAULT datetime('now'), -- user-settable for backdated
+  affectsInventory INTEGER DEFAULT 1,    -- 0 = no stock change
+  FOREIGN KEY (userId) REFERENCES users(id),
+  FOREIGN KEY (customerId) REFERENCES customers(id)
+)</pre>
+
+    <h3>sale_items</h3>
+    <pre>
+CREATE TABLE sale_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  saleId INTEGER NOT NULL,
+  productId INTEGER NOT NULL,
+  productTitle TEXT NOT NULL,
+  quantity REAL NOT NULL,
+  unitPrice REAL NOT NULL,
+  purchasePrice REAL DEFAULT 0,
+  subtotal REAL NOT NULL,
+  netProfit REAL DEFAULT 0,
+  FOREIGN KEY (saleId) REFERENCES sales(id) ON DELETE CASCADE,
+  FOREIGN KEY (productId) REFERENCES products(id)
+)</pre>
+
+    <h3>returns</h3>
+    <pre>
+CREATE TABLE returns (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  saleId INTEGER NOT NULL,
+  userId INTEGER NOT NULL,
+  productId INTEGER NOT NULL,
+  quantity REAL NOT NULL,
+  reason TEXT DEFAULT '',
+  refundAmount REAL NOT NULL,
+  status TEXT DEFAULT 'completed',
+  createdAt TEXT DEFAULT (datetime('now','localtime'))
+)</pre>
+
+    <h2>Purchases & Inventory</h2>
+
+    <h3>purchases</h3>
+    <pre>
+CREATE TABLE purchases (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  invoiceNumber TEXT UNIQUE NOT NULL,
+  supplierId INTEGER NOT NULL,
+  userId INTEGER NOT NULL,
+  subtotal REAL DEFAULT 0,
+  total_amount REAL DEFAULT 0,
+  totalTax REAL DEFAULT 0,
+  totalDiscount REAL DEFAULT 0,
+  paymentMethod TEXT DEFAULT 'cash',
+  supplierPaid REAL DEFAULT 0,
+  changeAmount REAL DEFAULT 0,
+  status TEXT DEFAULT 'pending',
+  purchaseDate TEXT DEFAULT datetime('now'),
+  description TEXT DEFAULT '',
+  createdAt TEXT DEFAULT (datetime('now','localtime'))
+)</pre>
+
+    <h3>purchase_items</h3>
+    <pre>
+CREATE TABLE purchase_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  purchaseId INTEGER NOT NULL,
+  productId INTEGER NOT NULL,
+  productTitle TEXT NOT NULL,
+  quantity REAL NOT NULL,
+  unitPrice REAL NOT NULL,
+  subtotal REAL NOT NULL,
+  FOREIGN KEY (purchaseId) REFERENCES purchases(id) ON DELETE CASCADE
+)</pre>
+
+    <h3>inventory_adjustments</h3>
+    <pre>
+CREATE TABLE inventory_adjustments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  productId INTEGER NOT NULL,
+  previousStock REAL NOT NULL,
+  newStock REAL NOT NULL,
+  adjustmentQty REAL NOT NULL,
+  reason TEXT DEFAULT '',
+  adjustmentType TEXT DEFAULT 'manual'
+    CHECK(adjustmentType IN ('manual','reconciliation','damage','count','other')),
+  createdBy TEXT DEFAULT 'admin',
+  createdAt TEXT DEFAULT (datetime('now','localtime'))
+)</pre>
+
+    <h2>Accounting</h2>
+
+    <h3>accounts</h3>
+    <pre>
+CREATE TABLE accounts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  code TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  type TEXT CHECK(type IN ('asset','liability','equity','income','expense')),
+  parentId INTEGER DEFAULT NULL,
+  isActive INTEGER DEFAULT 1,
+  description TEXT DEFAULT '',
+  FOREIGN KEY (parentId) REFERENCES accounts(id)
+)</pre>
+
+    <h3>journal_entries + journal_entry_lines</h3>
+    <pre>
+CREATE TABLE journal_entries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  entryDate TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  referenceType TEXT DEFAULT NULL,      -- 'sale','purchase','expense','return','manual'
+  referenceId INTEGER DEFAULT NULL,
+  isPosted INTEGER DEFAULT 1,
+  createdBy INTEGER DEFAULT NULL
+);
+
+CREATE TABLE journal_entry_lines (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  entryId INTEGER NOT NULL,
+  accountId INTEGER NOT NULL,
+  debit REAL DEFAULT 0,
+  credit REAL DEFAULT 0,
+  description TEXT DEFAULT '',
+  FOREIGN KEY (entryId) REFERENCES journal_entries(id) ON DELETE CASCADE,
+  FOREIGN KEY (accountId) REFERENCES accounts(id)
+)</pre>
+
+    <h2>Other Tables</h2>
+
+    <table>
+      <tr><th>Table</th><th>Purpose</th><th>Key Columns</th></tr>
+      <tr><td>customer_ledger</td><td>Customer balance transactions</td><td>customerId, saleId, type, amount</td></tr>
+      <tr><td>supplier_ledger</td><td>Supplier balance transactions</td><td>supplierId, purchaseId, type, amount</td></tr>
+      <tr><td>price_history</td><td>Price change log</td><td>productId, priceType, oldPrice, newPrice</td></tr>
+      <tr><td>expenses</td><td>Expense records</td><td>category, amount, date, imageBase64</td></tr>
+      <tr><td>fiscal_periods</td><td>Accounting periods</td><td>name, startDate, endDate, isClosed</td></tr>
+      <tr><td>settings</td><td>Key-value config</td><td>key (PK), value</td></tr>
+      <tr><td>audit_log</td><td>Activity log</td><td>action, entityType, entityId, details</td></tr>
+      <tr><td>cash_register</td><td>Daily cash register</td><td>date, openingBalance, closingBalance</td></tr>
+      <tr><td>suspended_invoices</td><td>Hold/resume POS invoices</td><td>userId, slotIndex, items</td></tr>
+    </table>
+
+    <h2>Migration Strategy</h2>
+    <p><code>migrateSchema()</code> in connection.ts runs on every startup:</p>
+    <ol>
+      <li><code>PRAGMA table_info(tableName)</code> — get existing columns</li>
+      <li>Compare against <code>expectedColumns</code> map</li>
+      <li><code>ALTER TABLE ADD COLUMN</code> for missing ones with safe defaults</li>
+      <li>Idempotent — no-op after first migration</li>
+    </ol>
+
+    <h3>Adding a New Column</h3>
+    <pre>
+// 1. Add to CREATE TABLE in connection.ts
+// 2. Add to migrateSchema() expectedColumns:
+products: [
+  { name: 'newColumn', type: 'TEXT', defaultValue: "''" },
+],
+// 3. Update formatProduct() in the repository
+// 4. Update TypeScript type in types/index.ts</pre>
+
+    <div style="text-align: center; margin-top: 48px; padding: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px;">
+      <p><a href="developer-en.html" style="color: var(--primary)">Developer Guide</a> | <a href="developer-fa.html" style="color: var(--primary)">راهنمای توسعه‌دهندگان</a></p>
+    </div>
+  </div>
+</body>
+</html>

@@ -62,7 +62,7 @@ export default function AccountingAnalytics() {
       if (plRes.success && plRes.data) setPl(plRes.data)
       if (bsRes.success && bsRes.data) setBs(bsRes.data)
       if (cfRes.success && cfRes.data) setCashFlow(cfRes.data)
-      if (allJeRes.success && allJeRes.data) setAllJournal(allJeRes.data)
+      if (allJeRes.success && allJeRes.data) setAllJournal(allJeRes.data.entries || [])
     }
     load()
   }, [])

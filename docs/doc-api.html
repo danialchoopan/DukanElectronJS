@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Reference — HesabDari Danial</title>
+  <style>
+    :root { --primary: #006194; --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f1f5f9; --muted: #94a3b8; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); line-height: 1.8; }
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 20px; margin: 32px 0 12px; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 8px; }
+    h3 { font-size: 16px; margin: 20px 0 8px; }
+    p { line-height: 1.8; margin-bottom: 12px; color: var(--muted); font-size: 14px; }
+    code { background: var(--card); padding: 2px 6px; border-radius: 4px; font-size: 12px; color: #22c55e; }
+    pre { background: var(--card); padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid var(--border); font-size: 12px; line-height: 1.5; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { padding: 8px 10px; text-align: left; border: 1px solid var(--border); font-size: 12px; }
+    th { background: var(--card); font-weight: 600; }
+    .nav { margin-bottom: 24px; padding: 12px; background: var(--card); border-radius: 8px; }
+    .nav a { color: var(--primary); text-decoration: none; font-size: 13px; margin-right: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="nav">
+      <a href="developer-en.html">Developer Guide</a>
+      <a href="doc-schema.html">Database Schema</a>
+      <a href="doc-api.html">API Reference</a>
+      <a href="doc-accounting.html">Accounting</a>
+      <a href="doc-backup.html">Backup & Migration</a>
+      <a href="doc-ui.html">UI Components</a>
+    </nav>
+
+    <h1>API Reference (IPC + Preload)</h1>
+    <p>All communication between renderer (UI) and main process (Node.js) goes through IPC. The preload script exposes <code>window.api</code> with typed namespaces.</p>
+
+    <h2>Pattern</h2>
+<pre>
+// handlers.ts (main process)
+ipcMain.handle('products:getAll', () => products.getAllProducts())
+
+// preload/index.ts
+products: { getAll: () => ipcRenderer.invoke('products:getAll') }
+
+// component (renderer)
+const r = await window.api.products.getAll()
+if (r.success && r.data) setProducts(r.data)
+</pre>
+    <p>All methods return <code>Promise&lt;IPCResponse&lt;T&gt;&gt;</code> where <code>IPCResponse = { success: boolean; data?: T; error?: string }</code>.</p>
+
+    <h2>Products API</h2>
+    <table>
+      <tr><th>Method</th><th>Params</th><th>Returns</th><th>Description</th></tr>
+      <tr><td><code>products.getAll()</code></td><td>—</td><td><code>Product[]</code></td><td>All active products sorted by title</td></tr>
+      <tr><td><code>products.getById(id)</code></td><td>number</td><td><code>Product</code></td><td>Single product by ID</td></tr>
+      <tr><td><code>products.getByBarcode(barcode)</code></td><td>string</td><td><code>Product</code></td><td>Lookup by barcode</td></tr>
+      <tr><td><code>products.search(query)</code></td><td>string</td><td><code>Product[]</code></td><td>LIKE search on title, barcode, category, subcategory</td></tr>
+      <tr><td><code>products.create(data)</code></td><td><code>ProductInput</code></td><td><code>Product</code></td><td>Create product (auto-barcode if blank)</td></tr>
+      <tr><td><code>products.update(id, data)</code></td><td>id, Partial</td><td><code>Product</code></td><td>Update product fields, logs price changes</td></tr>
+      <tr><td><code>products.delete(id)</code></td><td>number</td><td>boolean</td><td>Soft delete (isActive=0)</td></tr>
+      <tr><td><code>products.updateStock(id, qty)</code></td><td>id, change</td><td>boolean</td><td>Additive stock change</td></tr>
+      <tr><td><code>products.getLowStock()</code></td><td>—</td><td><code>Product[]</code></td><td>Products where stock &lt;= minStock</td></tr>
+      <tr><td><code>products.getSellable()</code></td><td>—</td><td><code>Product[]</code></td><td>Products with isSellable=1 (for POS)</td></tr>
+      <tr><td><code>products.bulkImport(products)</code></td><td>array</td><td>results</td><td>Upsert by barcode</td></tr>
+    </table>
+
+    <h2>Sales API</h2>
+    <table>
+      <tr><th>Method</th><th>Params</th><th>Returns</th><th>Description</th></tr>
+      <tr><td><code>sales.create(data)</code></td><td><code>SaleInput</code></td><td><code>Sale</code></td><td>Atomic: insert sale + items + stock + journal + ledger</td></tr>
+      <tr><td><code>sales.getById(id)</code></td><td>number</td><td><code>Sale</code></td><td>Sale with items and user/customer names</td></tr>
+      <tr><td><code>sales.getByDateRange(start, end)</code></td><td>dates</td><td><code>Sale[]</code></td><td>Sales in date range (by saleDate)</td></tr>
+      <tr><td><code>sales.getDailySummary(date)</code></td><td>string</td><td>summary</td><td>Total, cash, card, ledger for a day</td></tr>
+    </table>
+    <p><code>SaleInput</code> includes: <code>saleDate?</code> for backdated invoices, <code>affectsInventory?</code> to skip stock changes.</p>
+
+    <h2>Customer / Supplier API</h2>
+    <table>
+      <tr><th>Method</th><th>Description</th></tr>
+      <tr><td><code>customers.getAll()</code></td><td>All active customers with stats</td></tr>
+      <tr><td><code>customers.create(data)</code></td><td>Create customer (name, phone, type)</td></tr>
+      <tr><td><code>customers.charge(id, amount, desc)</code></td><td>Add debt/credit + ledger entry</td></tr>
+      <tr><td><code>customers.pay(id, amount, desc)</code></td><td>Record payment + ledger entry</td></tr>
+      <tr><td><code>suppliers.getAll()</code></td><td>All active suppliers</td></tr>
+      <tr><td><code>purchases.create(data)</code></td><td>Atomic: insert purchase + stock + supplier balance + journal</td></tr>
+      <tr><td><code>suppliers.pay(id, amount)</code></td><td>Record payment to supplier</td></tr>
+    </table>
+
+    <h2>Accounting API</h2>
+    <table>
+      <tr><th>Method</th><th>Description</th></tr>
+      <tr><td><code>accounts.getAll()</code></td><td>Full chart of accounts</td></tr>
+      <tr><td><code>accounts.getTree()</code></td><td>Hierarchical account tree</td></tr>
+      <tr><td><code>journal.getEntries(filters)</code></td><td>Paginated journal entries (returns <code>{ entries, total }</code>)</td></tr>
+      <tr><td><code>journal.create(data)</code></td><td>Manual journal entry with debit/credit validation</td></tr>
+      <tr><td><code>reports.getProfitLoss()</code></td><td>Revenue, COGS, OpEx, Net Profit breakdown</td></tr>
+      <tr><td><code>reports.getBalanceSheet()</code></td><td>Assets, Liabilities, Equity as of date</td></tr>
+      <tr><td><code>reports.getCashFlow()</code></td><td>Inflow, Outflow, Net for period</td></tr>
+    </table>
+
+    <h2>Backup API</h2>
+    <table>
+      <tr><th>Method</th><th>Description</th></tr>
+      <tr><td><code>backup.create()</code></td><td>Quick SQLite backup to backups/ folder</td></tr>
+      <tr><td><code>backup.saveAs()</code></td><td>Save backup to user-chosen path</td></tr>
+      <tr><td><code>backup.createWithOptions(opts)</code></td><td>Enhanced export: format (sqlite/json), scope (all/structure/selective), tables</td></tr>
+      <tr><td><code>backup.restore(path)</code></td><td>Restore from file (auto pre-backup)</td></tr>
+      <tr><td><code>backup.getSelectableTables()</code></td><td>List tables with row counts for selective export</td></tr>
+      <tr><td><code>backup.list()</code></td><td>All backups with meta (name, size, timestamp, hash)</td></tr>
+      <tr><td><code>backup.integrity(path?)</code></td><td>PRAGMA integrity_check + foreign_key_check</td></tr>
+    </table>
+
+    <h2>Inventory Adjustment API</h2>
+    <table>
+      <tr><th>Method</th><th>Description</th></tr>
+      <tr><td><code>inventory.create(data)</code></td><td>Set absolute stock + log adjustment with reason and type</td></tr>
+      <tr><td><code>inventory.getAll(filters?)</code></td><td>Adjustment history with optional date/product filters</td></tr>
+    </table>
+
+    <h2>Settings API</h2>
+    <table>
+      <tr><th>Method</th><th>Description</th></tr>
+      <tr><td><code>settings.get(key)</code></td><td>Get single setting value</td></tr>
+      <tr><td><code>settings.set(key, value)</code></td><td>Set single setting</td></tr>
+      <tr><td><code>settings.getAll()</code></td><td>Get all settings as object</td></tr>
+    </table>
+
+    <div style="text-align: center; margin-top: 48px; padding: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px;">
+      <p><a href="developer-en.html" style="color: var(--primary)">Developer Guide</a> | <a href="developer-fa.html" style="color: var(--primary)">راهنمای توسعه‌دهندگان</a></p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backup & Migration — HesabDari Danial</title>
+  <style>
+    :root{--primary:#006194;--bg:#0f172a;--card:#1e293b;--border:#334155;--text:#f1f5f9;--muted:#94a3b8}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);line-height:1.8}.container{max-width:960px;margin:0 auto;padding:40px 24px}h1{font-size:28px;margin-bottom:8px}h2{font-size:20px;margin:32px 0 12px;color:var(--primary);border-bottom:2px solid var(--primary);padding-bottom:8px}h3{font-size:16px;margin:20px 0 8px}p{line-height:1.8;margin-bottom:12px;color:var(--muted);font-size:14px}code{background:var(--card);padding:2px 6px;border-radius:4px;font-size:12px;color:#22c55e}pre{background:var(--card);padding:16px;border-radius:8px;overflow-x:auto;border:1px solid var(--border);font-size:12px;line-height:1.5}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{padding:8px 10px;text-align:left;border:1px solid var(--border);font-size:12px}th{background:var(--card);font-weight:600}.nav{margin-bottom:24px;padding:12px;background:var(--card);border-radius:8px}.nav a{color:var(--primary);text-decoration:none;font-size:13px;margin-right:12px}.note{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:13px}.warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="nav">
+      <a href="developer-en.html">Developer Guide</a>
+      <a href="doc-schema.html">Database Schema</a>
+      <a href="doc-api.html">API Reference</a>
+      <a href="doc-accounting.html">Accounting</a>
+      <a href="doc-backup.html">Backup & Migration</a>
+      <a href="doc-ui.html">UI Components</a>
+    </nav>
+    <h1>Backup & Migration</h1>
+
+    <h2>1. Backup System</h2>
+    <p>Backups are managed by <code>src/main/database/backup.ts</code>. Two formats are supported:</p>
+    <table>
+      <tr><th>Format</th><th>File</th><th>Best For</th></tr>
+      <tr><td>SQLite</td><td><code>.db</code> + <code>.meta.json</code></td><td>Fast restore, device transfer</td></tr>
+      <tr><td>JSON</td><td><code>.json</code></td><td>Reading, editing, version migration</td></tr>
+    </table>
+
+    <h3>Backup Metadata (.meta.json)</h3>
+<pre>
+{
+  "name": "auto-20260619",
+  "hash": "sha256...",
+  "size": 524288,
+  "timestamp": "2026-06-19T12:00:00Z",
+  "appVersion": "1.0.0",
+  "tables": { "products": 32, "sales": 150 }
+}
+</pre>
+
+    <h3>Export Options (3-step dialog)</h3>
+    <ol>
+      <li><strong>Location:</strong> Local backups/ folder or custom path via save dialog</li>
+      <li><strong>Format:</strong> SQLite (.db) or JSON (.json)</li>
+      <li><strong>Scope:</strong> All data / Structure only (CREATE TABLE) / Selective (checkbox table picker with row counts)</li>
+    </ol>
+
+    <h3>JSON Export Structure</h3>
+<pre>
+{
+  "version": "1.0.0",
+  "appName": "hesabdari-danial",
+  "format": "json" | "structure",
+  "exportDate": "2026-06-19T...",
+  "tables": { "products": [...], "sales": [...] }
+  // OR
+  "statements": ["CREATE TABLE ...", "CREATE TABLE ..."]
+}
+</pre>
+
+    <h3>Restore Flow</h3>
+    <ol>
+      <li>User selects file via system dialog</li>
+      <li>Preview shows: version, timestamp, table count, row count</li>
+      <li>On confirm: auto-creates <code>pre-restore</code> backup</li>
+      <li>Copies backup .db over live database</li>
+      <li>App reloads to apply</li>
+    </ol>
+
+    <h3>Key Functions</h3>
+    <table>
+      <tr><th>Function</th><th>Description</th></tr>
+      <tr><td><code>createBackup(label?)</code></td><td>Copy pos.db + WAL/SHM + write .meta.json</td></tr>
+      <tr><td><code>exportAsJson()</code></td><td>Export all tables as JSON with version metadata</td></tr>
+      <tr><td><code>exportStructure()</code></td><td>Export only CREATE TABLE statements</td></tr>
+      <tr><td><code>exportSelectiveJson(tables)</code></td><td>Export specific tables only</td></tr>
+      <tr><td><code>getSelectableTables()</code></td><td>List tables with row counts</td></tr>
+      <tr><td><code>restoreBackup(path)</code></td><td>Pre-backup + copy over live DB</td></tr>
+      <tr><td><code>checkIntegrity(path?)</code></td><td>PRAGMA integrity + foreign key check</td></tr>
+      <tr><td><code>autoBackup()</code></td><td>Creates one backup per day (skips if today exists)</td></tr>
+      <tr><td><code>cleanupBackups(keep)</code></td><td>Delete oldest beyond keep count</td></tr>
+    </table>
+
+    <h2>2. Auto-Migration</h2>
+    <p><code>migrateSchema()</code> in <code>connection.ts</code> runs after every <code>getDatabase()</code> call.</p>
+
+    <h3>How It Works</h3>
+    <pre>
+// 1. Define expected columns per table
+const expectedColumns = {
+  products: [
+    { name: 'subcategory', type: 'TEXT', defaultValue: "''" },
+    { name: 'isSellable', type: 'INTEGER', defaultValue: '1' },
+  ],
+  sales: [
+    { name: 'saleDate', type: 'TEXT', defaultValue: "datetime('now','localtime')" },
+    { name: 'affectsInventory', type: 'INTEGER', defaultValue: '1' },
+  ],
+}
+
+// 2. For each table, check existing columns
+const existing = db.prepare('PRAGMA table_info(products)').all()
+const existingNames = new Set(existing.map(c => c.name))
+
+// 3. Add missing columns
+if (!existingNames.has('subcategory')) {
+  db.exec("ALTER TABLE products ADD COLUMN subcategory TEXT DEFAULT ''")
+}
+</pre>
+
+    <h3>When to Add a New Column</h3>
+    <div class="warn">
+      <strong>Required steps:</strong>
+      <ol>
+        <li>Add column to <code>CREATE TABLE</code> in connection.ts</li>
+        <li>Add to <code>migrateSchema()</code> expectedColumns map</li>
+        <li>Update <code>formatProduct()</code> in the repository with <code>row.col ?? default</code></li>
+        <li>Update TypeScript type in <code>types/index.ts</code></li>
+      </ol>
+    </div>
+
+    <h3>Database Paths</h3>
+    <table>
+      <tr><th>OS</th><th>Path</th></tr>
+      <tr><td>Windows</td><td><code>%APPDATA%\hesabdari-danial\pos.db</code></td></tr>
+      <tr><td>macOS</td><td><code>~/Library/Application Support/hesabdari-danial/pos.db</code></td></tr>
+      <tr><td>Linux</td><td><code>~/.config/hesabdari-danial/pos.db</code></td></tr>
+    </table>
+
+    <h2>3. Data-Level Migration (Smart Import)</h2>
+    <p>For importing data from different versions, <code>src/main/database/migration.ts</code> provides:</p>
+    <ul>
+      <li><code>detectFileVersion(data)</code> — heuristic version detection</li>
+      <li><code>checkCompatibility(data)</code> — returns migration steps needed</li>
+      <li><code>migrateData(data)</code> — transforms row-level data between versions</li>
+    </ul>
+    <p>This is separate from schema migration — it transforms the data payload, not the database structure.</p>
+
+    <div style="text-align:center;margin-top:48px;padding:24px;border-top:1px solid var(--border);color:var(--muted);font-size:12px">
+      <p><a href="developer-en.html" style="color:var(--primary)">Developer Guide</a> | <a href="developer-fa.html" style="color:var(--primary)">راهنمای توسعه‌دهندگان</a></p>
+    </div>
+  </div>
+</body>
+</html>

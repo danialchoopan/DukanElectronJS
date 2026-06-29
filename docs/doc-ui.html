@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UI Components — HesabDari Danial</title>
+  <style>
+    :root{--primary:#006194;--bg:#0f172a;--card:#1e293b;--border:#334155;--text:#f1f5f9;--muted:#94a3b8}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);line-height:1.8}.container{max-width:960px;margin:0 auto;padding:40px 24px}h1{font-size:28px;margin-bottom:8px}h2{font-size:20px;margin:32px 0 12px;color:var(--primary);border-bottom:2px solid var(--primary);padding-bottom:8px}h3{font-size:16px;margin:20px 0 8px}p{line-height:1.8;margin-bottom:12px;color:var(--muted);font-size:14px}code{background:var(--card);padding:2px 6px;border-radius:4px;font-size:12px;color:#22c55e}pre{background:var(--card);padding:16px;border-radius:8px;overflow-x:auto;border:1px solid var(--border);font-size:12px;line-height:1.5}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{padding:8px 10px;text-align:left;border:1px solid var(--border);font-size:12px}th{background:var(--card);font-weight:600}.nav{margin-bottom:24px;padding:12px;background:var(--card);border-radius:8px}.nav a{color:var(--primary);text-decoration:none;font-size:13px;margin-right:12px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="nav">
+      <a href="developer-en.html">Developer Guide</a>
+      <a href="doc-schema.html">Database Schema</a>
+      <a href="doc-api.html">API Reference</a>
+      <a href="doc-accounting.html">Accounting</a>
+      <a href="doc-backup.html">Backup & Migration</a>
+      <a href="doc-ui.html">UI Components</a>
+    </nav>
+    <h1>UI Components</h1>
+
+    <h2>Layout Components</h2>
+    <table>
+      <tr><th>Component</th><th>File</th><th>Purpose</th></tr>
+      <tr><td><code>Sidebar</code></td><td>layout/Sidebar.tsx</td><td>Navigation sidebar with icons and keyboard shortcut hints</td></tr>
+      <tr><td><code>TitleBar</code></td><td>layout/TitleBar.tsx</td><td>Custom window title bar (Electron frameless)</td></tr>
+      <tr><td><code>Notification</code></td><td>layout/Notification.tsx</td><td>Toast notification overlay</td></tr>
+    </table>
+
+    <h2>Base UI Components</h2>
+    <table>
+      <tr><th>Component</th><th>File</th><th>Props</th></tr>
+      <tr><td><code>Dialog</code></td><td>ui/Dialog.tsx</td><td><code>open, onClose, title, subtitle?, icon?, footer?, maxWidth?</code></td></tr>
+      <tr><td><code>DialogButton</code></td><td>ui/Dialog.tsx</td><td><code>variant: primary|success|danger|ghost</code></td></tr>
+      <tr><td><code>FormattedPriceInput</code></td><td>ui/FormattedPriceInput.tsx</td><td>Price input with comma formatting (10,000,000)</td></tr>
+      <tr><td><code>InlineEditCell</code></td><td>ui/FormattedPriceInput.tsx</td><td>Click-to-edit cell with confirm/cancel</td></tr>
+      <tr><td><code>Pagination</code></td><td>ui/Pagination.tsx</td><td>Page navigation with prev/next</td></tr>
+      <tr><td><code>HelpPopup</code></td><td>ui/HelpPopup.tsx</td><td>Contextual help popover</td></tr>
+      <tr><td><code>PinPad</code></td><td>ui/PinPad.tsx</td><td>4-digit PIN entry pad</td></tr>
+      <tr><td><code>Icons</code></td><td>ui/Icons.tsx</td><td>Reusable SVG icon components (CameraIcon, etc.)</td></tr>
+    </table>
+
+    <h2>Business Components</h2>
+    <table>
+      <tr><th>Component</th><th>File</th><th>Purpose</th></tr>
+      <tr><td><code>BarcodeInput</code></td><td>business/BarcodeInput.tsx</td><td>Search/scan input with product autocomplete dropdown</td></tr>
+      <tr><td><code>CartTable</code></td><td>business/CartTable.tsx</td><td>POS cart table with inline quantity editing</td></tr>
+      <tr><td><code>PaymentPanel</code></td><td>business/PaymentPanel.tsx</td><td>Payment method selection + customer search</td></tr>
+      <tr><td><code>LooseItemsGrid</code></td><td>business/LooseItemsGrid.tsx</td><td>Weight-based product quick-add grid</td></tr>
+      <tr><td><code>PopularItems</code></td><td>business/PopularItems.tsx</td><td>Top-selling products quick-add</td></tr>
+      <tr><td><code>SuspendedSlots</code></td><td>business/SuspendedSlots.tsx</td><td>3 hold/resume invoice slots</td></tr>
+      <tr><td><code>WebcamScanner</code></td><td>business/WebcamScanner.tsx</td><td>Camera barcode/QR scanner using html5-qrcode</td></tr>
+      <tr><td><code>ShamsiDateInput</code></td><td>business/ShamsiDateInput.tsx</td><td>Jalali calendar date picker</td></tr>
+      <tr><td><code>GlobalSearch</code></td><td>business/GlobalSearch.tsx</td><td>Full-text search across products/customers</td></tr>
+    </table>
+
+    <h2>Print Components</h2>
+    <table>
+      <tr><th>Component</th><th>File</th><th>Purpose</th></tr>
+      <tr><td><code>PrintDialog</code></td><td>print/PrintDialog.tsx</td><td>Page range selection for A4 printing</td></tr>
+      <tr><td><code>PrintPreviewDialog</code></td><td>print/PrintPreviewDialog.tsx</td><td>Preview before printing with template selection</td></tr>
+      <tr><td><code>ReceiptPrinter</code></td><td>print/ReceiptPrinter.tsx</td><td>Thermal receipt print layout</td></tr>
+      <tr><td><code>SmartExportDialog</code></td><td>print/SmartExportDialog.tsx</td><td>Selective data export with module picker</td></tr>
+    </table>
+
+    <h2>Analytics Components</h2>
+    <table>
+      <tr><th>Component</th><th>File</th><th>Purpose</th></tr>
+      <tr><td><code>InventoryAnalytics</code></td><td>views/InventoryAnalytics.tsx</td><td>Inventory charts: donut, bars, histogram, price comparison</td></tr>
+      <tr><td><code>AccountingAnalytics</code></td><td>views/accounting/AccountingAnalytics.tsx</td><td>Accounting charts: P&L, expenses, balance, cash flow, journal volume</td></tr>
+    </table>
+    <p>Both support: text size control (sm/md/lg), 4 color themes, chart type toggles (bar/donut), PNG export.</p>
+
+    <h2>State Stores (Zustand)</h2>
+    <table>
+      <tr><th>Store</th><th>File</th><th>State</th></tr>
+      <tr><td><code>authStore</code></td><td>store/authStore.ts</td><td>Current user (id, name, role) + logout</td></tr>
+      <tr><td><code>cartStore</code></td><td>store/cartStore.ts</td><td>POS cart items + add/remove/clear/subtotal</td></tr>
+      <tr><td><code>settingsStore</code></td><td>store/settingsStore.ts</td><td>theme, language, fontSize, scanner toggle, etc.</td></tr>
+      <tr><td><code>suspendStore</code></td><td>store/suspendStore.ts</td><td>3 hold/resume invoice slots</td></tr>
+      <tr><td><code>printPreviewStore</code></td><td>store/printPreviewStore.ts</td><td>Print preview state</td></tr>
+    </table>
+
+    <h2>Custom Hooks</h2>
+    <table>
+      <tr><th>Hook</th><th>File</th><th>Purpose</th></tr>
+      <tr><td><code>useSortable</code></td><td>hooks/useSortable.ts</td><td>Column sorting with direction toggle</td></tr>
+      <tr><td><code>useHighlight</code></td><td>hooks/useHighlight.ts</td><td>Deep-link item highlighting</td></tr>
+    </table>
+
+    <h2>Utilities</h2>
+    <table>
+      <tr><th>Utility</th><th>File</th><th>Purpose</th></tr>
+      <tr><td><code>jalali.ts</code></td><td>utils/jalali.ts</td><td>Gregorian↔Jalali conversion, date formatting</td></tr>
+      <tr><td><code>qrCode.ts</code></td><td>utils/qrCode.ts</td><td>QR code SVG generation with Reed-Solomon ECC</td></tr>
+      <tr><td><code>a4Print.ts</code></td><td>utils/a4Print.ts</td><td>A4 report printing + CSV export</td></tr>
+      <tr><td><code>math.ts</code></td><td>utils/math.ts</td><td>Rounding, line subtotal/profit calculations</td></tr>
+      <tr><td><code>productImage.ts</code></td><td>utils/productImage.ts</td><td>Product image URL resolution</td></tr>
+      <tr><td><code>receipt.ts</code></td><td>utils/receipt.ts</td><td>Thermal receipt HTML generation</td></tr>
+      <tr><td><code>showPrint.ts</code></td><td>utils/showPrint.ts</td><td>Print window helper</td></tr>
+    </table>
+
+    <div style="text-align:center;margin-top:48px;padding:24px;border-top:1px solid var(--border);color:var(--muted);font-size:12px">
+      <p><a href="developer-en.html" style="color:var(--primary)">Developer Guide</a> | <a href="developer-fa.html" style="color:var(--primary)">راهنمای توسعه‌دهندگان</a></p>
+    </div>
+  </div>
+</body>
+</html>

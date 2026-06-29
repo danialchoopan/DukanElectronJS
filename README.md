@@ -185,6 +185,21 @@ npm run test:export
 npm run test:migration
 ```
 
+## مستندات
+
+فایل‌های مستندات در پوشه `docs/` قرار دارند:
+
+| فایل | توضیح |
+|------|-------|
+| `docs/index.html` | صفحه اصلی مستندات فنی |
+| `docs/developer-fa.html` | راهنمای توسعه‌دهندگان (فارسی) |
+| `docs/developer-en.html` | Developer Guide (English) |
+| `docs/doc-schema.html` | ساختار جداول دیتابیس |
+| `docs/doc-api.html` | مرجع API و IPC |
+| `docs/doc-accounting.html` | سیستم حسابداری دوطرفه |
+| `docs/doc-backup.html` | پشتیبان‌گیری و مهاجرت خودکار |
+| `docs/doc-ui.html` | کامپوننت‌ها، هوک‌ها و ابزارها |
+
 ## مجوز
 
 MIT License — استفاده آزاد برای همه.
