@@ -17,6 +17,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSettingsStore } from '../../store/settingsStore'
+import { formatPriceFA, formatPriceComma } from '../../utils/jalali'
 
 const COLOR_THEMES = {
   default: ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316'],
@@ -132,8 +133,8 @@ export default function AccountingAnalytics() {
         <svg viewBox="0 0 100 100" width={size} height={size} className="flex-shrink-0">
           <circle cx={cx} cy={cy} r={r} fill="none" stroke={isDark ? '#334155' : '#e2e8f0'} strokeWidth="8" />
           {data.map((d, i) => { const pct = d.amount / t; const dash = circ * pct; const gap = circ - dash; const el = <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={d.color} strokeWidth="8" strokeDasharray={`${dash} ${gap}`} strokeDashoffset={-offset} strokeLinecap="round" style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }} />; offset += dash; return el })}
-          <text x={cx} y={cy - 2} textAnchor="middle" fill={tPri} fontSize="8" fontWeight="bold">{(t / 1000000).toFixed(1)}</text>
-          <text x={cx} y={cy + 5} textAnchor="middle" fill={tSec} fontSize="3.5">M تومان</text>
+          <text x={cx} y={cy - 2} textAnchor="middle" fill={tPri} fontSize="8" fontWeight="bold">{formatPriceFA(t)}</text>
+          <text x={cx} y={cy + 5} textAnchor="middle" fill={tSec} fontSize="3.5">تومان</text>
         </svg>
         <div className="space-y-1">
           {data.map((d, i) => (<div key={i} className="flex items-center gap-2"><div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} /><span style={{ color: tPri, fontSize: `${fs.label}px` }} className="truncate">{d.label}</span><span className="font-mono" style={{ color: tSec, fontSize: `${fs.label}px` }}>{((d.amount / t) * 100).toFixed(0)}%</span></div>))}
@@ -171,9 +172,9 @@ export default function AccountingAnalytics() {
       {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: 'درآمد', value: `${((pl?.totalRevenue || 0) / 1000000).toFixed(1)}M`, color: '#22c55e' },
-          { label: 'هزینه‌ها', value: `${((pl?.totalOperatingExpenses || 0) / 1000000).toFixed(1)}M`, color: '#ef4444' },
-          { label: 'سود خالص', value: `${((pl?.netProfit || 0) / 1000000).toFixed(1)}M`, color: (pl?.netProfit || 0) >= 0 ? '#3b82f6' : '#ef4444' },
+          { label: 'درآمد', value: formatPriceFA(pl?.totalRevenue || 0), color: '#22c55e' },
+          { label: 'هزینه‌ها', value: formatPriceFA(pl?.totalOperatingExpenses || 0), color: '#ef4444' },
+          { label: 'سود خالص', value: formatPriceFA(pl?.netProfit || 0), color: (pl?.netProfit || 0) >= 0 ? '#3b82f6' : '#ef4444' },
           { label: 'اسناد حسابداری', value: allJournal.length.toLocaleString('fa-IR'), color: '#a855f7' },
         ].map((kpi, i) => (
           <div key={i} className="rounded-xl p-3" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
@@ -189,7 +190,7 @@ export default function AccountingAnalytics() {
         <Card title="صورت سود و زیان">
           <div ref={chartRef}>
             <svg viewBox="0 0 300 160" className="w-full" style={{ maxHeight: 180 }}>
-              {plItems.map((item, i) => { const x = i * 75 + 10; const h = (Math.abs(item.value) / maxPL) * 120; return (<g key={item.label}><rect x={x} y={140 - h} width={50} height={h} rx="4" fill={item.color} opacity="0.85" /><text x={x + 25} y={136 - h} textAnchor="middle" fill={tPri} fontSize={fs.value} fontWeight="bold">{(item.value / 1000000).toFixed(1)}M</text><text x={x + 25} y={154} textAnchor="middle" fill={tSec} fontSize="6">{item.label}</text></g>) })}
+              {plItems.map((item, i) => { const x = i * 75 + 10; const h = (Math.abs(item.value) / maxPL) * 120; return (<g key={item.label}><rect x={x} y={140 - h} width={50} height={h} rx="4" fill={item.color} opacity="0.85" /><text x={x + 25} y={136 - h} textAnchor="middle" fill={tPri} fontSize={fs.value} fontWeight="bold">{formatPriceComma(item.value)}</text><text x={x + 25} y={154} textAnchor="middle" fill={tSec} fontSize="6">{item.label}</text></g>) })}
             </svg>
           </div>
         </Card>
@@ -207,7 +208,7 @@ export default function AccountingAnalytics() {
               <div className="space-y-1.5">
                 {pl.operatingExpenses.slice(0, 8).map((e, i) => {
                   const pct = (e.amount / (pl.totalOperatingExpenses || 1)) * 100
-                  return (<div key={i}><div className="flex items-center justify-between mb-0.5"><span style={{ color: tPri, fontSize: `${fs.label}px` }} className="font-bold">{e.accountName}</span><span className="font-mono" style={{ color: COLORS[i % COLORS.length], fontSize: `${fs.label}px` }}>{(e.amount / 1000000).toFixed(1)}M</span></div><div className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#1e293b' : '#f1f5f9' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: COLORS[i % COLORS.length], opacity: 0.8 }} /></div></div>)
+                  return (<div key={i}><div className="flex items-center justify-between mb-0.5"><span style={{ color: tPri, fontSize: `${fs.label}px` }} className="font-bold">{e.accountName}</span><span className="font-mono" style={{ color: COLORS[i % COLORS.length], fontSize: `${fs.label}px` }}>{formatPriceComma(e.amount)}</span></div><div className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#1e293b' : '#f1f5f9' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: COLORS[i % COLORS.length], opacity: 0.8 }} /></div></div>)
                 })}
               </div>
             )
@@ -218,7 +219,7 @@ export default function AccountingAnalytics() {
         <Card title="ترکیب درآمدها">
           {pl && pl.revenue.length > 0 ? (
             <div className="space-y-2">
-              {pl.revenue.map((r, i) => { const pct = (r.amount / (pl.totalRevenue || 1)) * 100; return (<div key={i}><div className="flex items-center justify-between mb-0.5"><span style={{ color: tPri, fontSize: `${fs.label}px` }} className="font-bold">{r.accountName}</span><span className="font-mono" style={{ color: '#22c55e', fontSize: `${fs.label}px` }}>{(r.amount / 1000000).toFixed(1)}M</span></div><div className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#1e293b' : '#f1f5f9' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: '#22c55e', opacity: 0.8 }} /></div></div>) })}
+              {pl.revenue.map((r, i) => { const pct = (r.amount / (pl.totalRevenue || 1)) * 100; return (<div key={i}><div className="flex items-center justify-between mb-0.5"><span style={{ color: tPri, fontSize: `${fs.label}px` }} className="font-bold">{r.accountName}</span><span className="font-mono" style={{ color: '#22c55e', fontSize: `${fs.label}px` }}>{formatPriceComma(r.amount)}</span></div><div className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#1e293b' : '#f1f5f9' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: '#22c55e', opacity: 0.8 }} /></div></div>) })}
             </div>
           ) : <p className="text-xs text-center" style={{ color: tSec }}>درآمدی ثبت نشده</p>}
         </Card>
@@ -226,7 +227,7 @@ export default function AccountingAnalytics() {
         {/* Balance Distribution */}
         <Card title="توزیع ترازنامه">
           <div className="space-y-3">
-            {bsItems.map((item) => { const pct = (Math.abs(item.value) / maxBS) * 100; return (<div key={item.label}><div className="flex items-center justify-between mb-1"><span className="font-bold" style={{ color: tPri, fontSize: `${fs.label}px` }}>{item.label}</span><span className="font-mono font-bold" style={{ color: item.color, fontSize: `${fs.label}px` }}>{(item.value / 1000000).toFixed(1)}M</span></div><div className="h-4 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#1e293b' : '#f1f5f9' }}><div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: item.color, opacity: 0.85 }} /></div></div>) })}
+            {bsItems.map((item) => { const pct = (Math.abs(item.value) / maxBS) * 100; return (<div key={item.label}><div className="flex items-center justify-between mb-1"><span className="font-bold" style={{ color: tPri, fontSize: `${fs.label}px` }}>{item.label}</span><span className="font-mono font-bold" style={{ color: item.color, fontSize: `${fs.label}px` }}>{formatPriceFA(item.value)}</span></div><div className="h-4 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#1e293b' : '#f1f5f9' }}><div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: item.color, opacity: 0.85 }} /></div></div>) })}
             <p className="text-center mt-2" style={{ color: tSec, fontSize: `${fs.label}px` }}>ترازنامه: دارایی = بدهی + سرمایه</p>
           </div>
         </Card>
@@ -238,7 +239,7 @@ export default function AccountingAnalytics() {
               {[{ label: 'ورودی', value: cashFlow.totalInflow, color: '#22c55e' }, { label: 'خروجی', value: cashFlow.totalOutflow, color: '#ef4444' }, { label: 'خالص', value: cashFlow.netCashFlow, color: cashFlow.netCashFlow >= 0 ? '#3b82f6' : '#f59e0b' }].map(item => (
                 <div key={item.label} className="text-center rounded-xl p-3" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cardBorder}` }}>
                   <div className="font-bold" style={{ color: tSec, fontSize: `${fs.label}px` }}>{item.label}</div>
-                  <div className="font-bold font-mono mt-1" style={{ color: item.color, fontSize: `${fs.kpi}px` }}>{(item.value / 1000000).toFixed(1)}M</div>
+                  <div className="font-bold font-mono mt-1" style={{ color: item.color, fontSize: `${fs.kpi}px` }}>{formatPriceFA(item.value)}</div>
                 </div>
               ))}
             </div>

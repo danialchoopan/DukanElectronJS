@@ -112,3 +112,47 @@ export function formatISOToJalaliShort(isoStr: string): string {
   const [jy, jm, jd] = gregorianToJalali(d.getFullYear(), d.getMonth() + 1, d.getDate())
   return `${jd}/${jm}/${jy}`
 }
+
+/**
+ * Format a number with comma separators for readability.
+ * Example: 10000000 → "10,000,000"
+ */
+export function formatNumberComma(n: number): string {
+  return n.toLocaleString('en-US')
+}
+
+/**
+ * Format a price in Iranian style with Farsi labels.
+ * Uses هزار (thousand), میلیون (million), میلیارد (billion).
+ * Example: 10000000 → "۱۰ میلیون", 2500000 → "۲.۵ میلیون", 150000 → "۱۵۰ هزار"
+ */
+export function formatPriceFA(n: number): string {
+  const abs = Math.abs(n)
+  const sign = n < 0 ? '-' : ''
+  if (abs >= 1_000_000_000) {
+    const v = abs / 1_000_000_000
+    return `${sign}${v % 1 === 0 ? v.toFixed(0) : v.toFixed(1)} میلیارد`
+  }
+  if (abs >= 1_000_000) {
+    const v = abs / 1_000_000
+    return `${sign}${v % 1 === 0 ? v.toFixed(0) : v.toFixed(1)} میلیون`
+  }
+  if (abs >= 1_000) {
+    const v = abs / 1_000
+    return `${sign}${v % 1 === 0 ? v.toFixed(0) : v.toFixed(1)} هزار`
+  }
+  return `${sign}${abs.toLocaleString('fa-IR')}`
+}
+
+/**
+ * Format a short price with comma separators + Farsi label.
+ * Example: 10000000 → "۱۰,۰۰۰,۰۰۰"
+ */
+export function formatPriceComma(n: number): string {
+  const abs = Math.abs(n)
+  const sign = n < 0 ? '-' : ''
+  if (abs >= 1_000_000_000) return `${sign}${(abs / 1_000_000_000).toFixed(1).replace('.0', '')} میلیارد`
+  if (abs >= 1_000_000) return `${sign}${(abs / 1_000_000).toFixed(1).replace('.0', '')} میلیون`
+  if (abs >= 1_000) return `${sign}${(abs / 1_000).toFixed(0)} هزار`
+  return `${sign}${abs.toLocaleString('fa-IR')}`
+}

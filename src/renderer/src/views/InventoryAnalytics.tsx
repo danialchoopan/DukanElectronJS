@@ -17,6 +17,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { Product } from '../../../types'
 import { useSettingsStore } from '../store/settingsStore'
+import { formatPriceFA, formatPriceComma } from '../utils/jalali'
 
 const COLOR_THEMES = {
   default: ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316'],
@@ -161,9 +162,9 @@ export default function InventoryAnalytics() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { label: 'کل کالاها', value: total, color: '#3b82f6' },
-          { label: 'ارزش فروش', value: `${(totalValue / 1000000).toFixed(1)}M`, color: '#22c55e' },
-          { label: 'ارزش خرید', value: `${(totalCost / 1000000).toFixed(1)}M`, color: '#f59e0b' },
-          { label: 'سود بالقوه', value: `${((totalValue - totalCost) / 1000000).toFixed(1)}M`, color: '#a855f7' },
+          { label: 'ارزش فروش', value: formatPriceFA(totalValue), color: '#22c55e' },
+          { label: 'ارزش خرید', value: formatPriceFA(totalCost), color: '#f59e0b' },
+          { label: 'سود بالقوه', value: formatPriceFA(totalValue - totalCost), color: '#a855f7' },
         ].map((kpi, i) => (
           <div key={i} className="rounded-xl p-3" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
             <div className="font-bold" style={{ color: tSec, fontSize: `${fs.label}px` }}>{kpi.label}</div>
@@ -204,7 +205,7 @@ export default function InventoryAnalytics() {
           </div>
           {catChartType === 'bar' ? (
             <svg viewBox="0 0 300 180" className="w-full" style={{ maxHeight: 200 }}>
-              {categories.slice(0, 8).map((cat, i) => { const y = i * 22; const w = (cat.value / maxValue) * 180; return (<g key={cat.name}><text x="0" y={y + 12} fill={tSec} fontSize={fs.value}>{cat.name}</text><rect x="65" y={y} width={w} height={18} rx="3" fill={COLORS[i % COLORS.length]} opacity="0.85" /><text x={70 + w} y={y + 13} fill={tPri} fontSize={fs.value} fontWeight="bold">{(cat.value / 1000000).toFixed(1)}M</text></g>) })}
+              {categories.slice(0, 8).map((cat, i) => { const y = i * 22; const w = (cat.value / maxValue) * 180; return (<g key={cat.name}><text x="0" y={y + 12} fill={tSec} fontSize={fs.value}>{cat.name}</text><rect x="65" y={y} width={w} height={18} rx="3" fill={COLORS[i % COLORS.length]} opacity="0.85" /><text x={70 + w} y={y + 13} fill={tPri} fontSize={fs.value} fontWeight="bold">{formatPriceComma(cat.value)}</text></g>) })}
             </svg>
           ) : (
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -219,7 +220,7 @@ export default function InventoryAnalytics() {
         {/* Top Products */}
         <Card title="۱۰ کالای برتر (ارزش فروش)">
           <div className="space-y-1.5">
-            {topProducts.map((p, i) => { const val = p.stock * p.sale_price; const maxP = topProducts[0]?.stock * topProducts[0]?.sale_price || 1; return (<div key={p.id} className="flex items-center gap-2"><span className="truncate font-bold" style={{ color: tPri, fontSize: `${fs.label}px`, width: '5rem' }}>{p.title}</span><div className="flex-1 h-3 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#1e293b' : '#f1f5f9' }}><div className="h-full rounded-full" style={{ width: `${(val / maxP) * 100}%`, backgroundColor: COLORS[i % COLORS.length] }} /></div><span className="font-mono font-bold" style={{ color: tPri, fontSize: `${fs.label}px`, width: '4rem', textAlign: 'left' }}>{(val / 1000).toFixed(0)}K</span></div>) })}
+            {topProducts.map((p, i) => { const val = p.stock * p.sale_price; const maxP = topProducts[0]?.stock * topProducts[0]?.sale_price || 1; return (<div key={p.id} className="flex items-center gap-2"><span className="truncate font-bold" style={{ color: tPri, fontSize: `${fs.label}px`, width: '5rem' }}>{p.title}</span><div className="flex-1 h-3 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#1e293b' : '#f1f5f9' }}><div className="h-full rounded-full" style={{ width: `${(val / maxP) * 100}%`, backgroundColor: COLORS[i % COLORS.length] }} /></div><span className="font-mono font-bold" style={{ color: tPri, fontSize: `${fs.label}px`, width: '4rem', textAlign: 'left' }}>{formatPriceFA(val)}</span></div>) })}
           </div>
         </Card>
 
@@ -230,7 +231,7 @@ export default function InventoryAnalytics() {
             <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded" style={{ backgroundColor: '#3b82f6' }} /><span className="text-[10px]" style={{ color: tSec }}>خرید</span></div>
           </div>
           <svg viewBox="0 0 300 240" className="w-full" style={{ maxHeight: 260 }}>
-            {categories.slice(0, 7).map((cat, i) => { const y = i * 34; const saleW = (cat.value / maxValue) * 180; const purchaseW = (cat.purchaseValue / maxValue) * 180; return (<g key={cat.name}><text x="0" y={y + 6} fill={tSec} fontSize={fs.value}>{cat.name}</text><rect x="55" y={y} width={saleW} height={12} rx="2" fill="#22c55e" opacity="0.8" /><text x={60 + saleW} y={y + 10} fill={tPri} fontSize={fs.value}>{(cat.value / 1000000).toFixed(1)}M</text><rect x="55" y={y + 14} width={purchaseW} height={12} rx="2" fill="#3b82f6" opacity="0.8" /><text x={60 + purchaseW} y={y + 24} fill={tPri} fontSize={fs.value}>{(cat.purchaseValue / 1000000).toFixed(1)}M</text></g>) })}
+            {categories.slice(0, 7).map((cat, i) => { const y = i * 34; const saleW = (cat.value / maxValue) * 180; const purchaseW = (cat.purchaseValue / maxValue) * 180; return (<g key={cat.name}><text x="0" y={y + 6} fill={tSec} fontSize={fs.value}>{cat.name}</text><rect x="55" y={y} width={saleW} height={12} rx="2" fill="#22c55e" opacity="0.8" /><text x={60 + saleW} y={y + 10} fill={tPri} fontSize={fs.value}>{formatPriceComma(cat.value)}</text><rect x="55" y={y + 14} width={purchaseW} height={12} rx="2" fill="#3b82f6" opacity="0.8" /><text x={60 + purchaseW} y={y + 24} fill={tPri} fontSize={fs.value}>{formatPriceComma(cat.purchaseValue)}</text></g>) })}
           </svg>
         </Card>
       </div>
