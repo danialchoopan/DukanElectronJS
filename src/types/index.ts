@@ -45,7 +45,10 @@ export interface User {
   id: number
   name: string
   pin_code: string
-  role: 'admin' | 'cashier'
+  role: 'admin' | 'cashier' | 'manager' | 'accountant' | 'salesperson' | 'warehouse' | 'viewer'
+  permissions: string
+  lastLoginAt: string
+  lastActivityAt: string
   isActive: boolean
   createdAt: string
 }

@@ -4,7 +4,7 @@ import { useSettingsStore, getNavColors } from '../../store/settingsStore'
 import { t, fa } from '../../i18n'
 import { DashboardIcon, UsersIcon, SettingsIcon, LogoutIcon, MoonIcon, SunIcon, LanguageIcon } from '../ui/Icons'
 
-type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas' | 'service' | 'credit'
+type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas' | 'service' | 'credit' | 'calculator'
 
 interface Props {
   currentView: View
@@ -33,6 +33,7 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
     { key: 'crossSell', label: 'فروش مکمل', icon: <RuleIcon /> },
     { key: 'service', label: 'تعمیرات', icon: <WrenchIcon /> },
     { key: 'credit', label: 'اعتبار مشتری', icon: <CreditIcon /> },
+    { key: 'calculator', label: 'ماشین حساب', icon: <CalcIcon /> },
     { key: 'customers', label: ui.nav.customers, icon: <UsersIcon className="w-5 h-5" /> },
     { key: 'suppliers', label: 'تأمین\u200cکنندگان', icon: <TruckIcon /> },
     { key: 'settings', label: 'تنظیمات', icon: <SettingsIcon className="w-5 h-5" /> },
@@ -403,6 +404,23 @@ function CreditIcon() {
     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="1" y="4" width="22" height="16" rx="2" />
       <line x1="1" y1="10" x2="23" y2="10" />
+    </svg>
+  )
+}
+
+function CalcIcon() {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="2" width="16" height="20" rx="2" />
+      <line x1="8" y1="6" x2="16" y2="6" />
+      <line x1="8" y1="10" x2="8" y2="10.01" />
+      <line x1="12" y1="10" x2="12" y2="10.01" />
+      <line x1="16" y1="10" x2="16" y2="10.01" />
+      <line x1="8" y1="14" x2="8" y2="14.01" />
+      <line x1="12" y1="14" x2="12" y2="14.01" />
+      <line x1="8" y1="18" x2="8" y2="18.01" />
+      <line x1="12" y1="18" x2="12" y2="18.01" />
+      <line x1="16" y1="14" x2="16" y2="18" />
     </svg>
   )
 }

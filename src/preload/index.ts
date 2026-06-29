@@ -52,13 +52,13 @@ const api = {
       ipcRenderer.invoke('auth:login', { pinCode }),
     listUsers: (): Promise<IPCResponse<User[]>> =>
       ipcRenderer.invoke('auth:listUsers'),
-    createUser: (data: { name: string; pinCode: string; role: 'admin' | 'cashier' }): Promise<IPCResponse<User>> =>
+    createUser: (data: { name: string; pinCode: string; role: string }): Promise<IPCResponse<User>> =>
       ipcRenderer.invoke('auth:createUser', data),
     deleteUser: (id: number): Promise<VoidResponse> =>
       ipcRenderer.invoke('auth:deleteUser', { id }),
     changePin: (id: number, newPin: string): Promise<VoidResponse> =>
       ipcRenderer.invoke('auth:changePin', { id, newPin }),
-    updateUser: (id: number, data: { name?: string; pinCode?: string; role?: 'admin' | 'cashier' }): Promise<VoidResponse> =>
+    updateUser: (id: number, data: { name?: string; pinCode?: string; role?: string; permissions?: string }): Promise<VoidResponse> =>
       ipcRenderer.invoke('auth:updateUser', { id, ...data }),
   },
 

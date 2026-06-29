@@ -41,9 +41,10 @@ import Suppliers from './views/Suppliers'
 import SetupWizard from './views/SetupWizard'
 import Sidebar from './components/layout/Sidebar'
 import GlobalSearch from './components/business/GlobalSearch'
+import Calculator from './components/business/Calculator'
 import PrintPreviewDialog from './components/print/PrintPreviewDialog'
 
-type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas' | 'service' | 'credit'
+type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas' | 'service' | 'credit' | 'calculator'
 
 const NAV_MAP: Record<string, View> = {
   'nav-pos': 'pos', 'nav-inventory': 'inventory', 'nav-dashboard': 'dashboard',
@@ -63,6 +64,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard')
   const [isFirstRun, setIsFirstRun] = useState<boolean | null>(null)
   const [showGlobalSearch, setShowGlobalSearch] = useState(false)
+  const [showCalc, setShowCalc] = useState(false)
   const [navParams, setNavParams] = useState<{ tab?: string; highlightId?: string } | null>(null)
   const { init: initSettings, language, theme, setTheme } = useSettingsStore()
   const { shortcuts, loadFromStorage } = useShortcutsStore()
@@ -142,6 +144,12 @@ export default function App() {
         setShowGlobalSearch(true)
         return
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
+        e.preventDefault()
+        e.stopPropagation()
+        setShowCalc(prev => !prev)
+        return
+      }
       if (e.key === 'Shift') {
         const now = Date.now()
         const last = (window as any).__lastShiftTime || 0
@@ -187,6 +195,7 @@ export default function App() {
         {currentView === 'proformas' && <ProformasView />}
         {currentView === 'service' && <ServiceTicketsView />}
         {currentView === 'credit' && <CustomerCreditView />}
+        {currentView === 'calculator' && <div className="h-full p-5 overflow-auto" style={{ background: 'var(--bg-primary, #0f172a)' }}><Calculator docked /></div>}
         {currentView === 'customers' && <CustomerManagement highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}
         {currentView === 'suppliers' && <Suppliers />}
         {currentView === 'settings' && <AdminPanel view="settings" initialTab="settings" highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}
@@ -194,6 +203,7 @@ export default function App() {
         {currentView === 'help' && <Help />}
       </div>
       <GlobalSearch open={showGlobalSearch} onClose={() => setShowGlobalSearch(false)} onNavigate={(view, tab, highlightId) => { handleNavigate(view, tab, highlightId); setShowGlobalSearch(false) }} />
+      {showCalc && <Calculator onClose={() => setShowCalc(false)} />}
       <PrintPreviewDialog />
     </div>
   )

@@ -112,10 +112,10 @@ export default function AdminPanel({ view = 'admin', initialTab, highlightId, on
 function UsersTab() {
   const [users, setUsers] = useState<User[]>([])
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ name: '', pinCode: '', role: 'cashier' as 'admin' | 'cashier' })
+  const [form, setForm] = useState({ name: '', pinCode: '', role: 'cashier' })
   const [dialog, setDialog] = useState<string | null>(null)
   const [editUser, setEditUser] = useState<User | null>(null)
-  const [editForm, setEditForm] = useState({ name: '', pinCode: '', role: 'cashier' as 'admin' | 'cashier' })
+  const [editForm, setEditForm] = useState({ name: '', pinCode: '', role: 'cashier' })
   const [newPin, setNewPin] = useState('')
   const [confirmDeleteUser, setConfirmDeleteUser] = useState<User | null>(null)
   const isDark = document.documentElement.classList.contains('dark')
@@ -253,8 +253,13 @@ function UsersTab() {
         <div className="mb-3"><Label>نام</Label><input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" style={inStyle} autoFocus /></div>
         <div><Label>نقش {editUser?.role === 'admin' && <span style={{ color: '#f59e0b', fontSize: '10px' }}>(غیرقابل تغییر)</span>}</Label>
           <select value={editForm.role} onChange={e => { if (editUser?.role !== 'admin') setEditForm(f => ({ ...f, role: e.target.value as any })) }} className="w-full px-3 py-2 rounded-lg text-sm font-bold outline-none" disabled={editUser?.role === 'admin'} style={{ ...inStyle, opacity: editUser?.role === 'admin' ? 0.5 : 1 }}>
+            <option value="admin">مدیر سیستم</option>
+            <option value="manager">مدیر</option>
+            <option value="accountant">حسابدار</option>
+            <option value="salesperson">فروشنده</option>
+            <option value="warehouse">انباردار</option>
             <option value="cashier">صندوک‌دار</option>
-            <option value="admin">مدیر</option>
+            <option value="viewer">مشاهده‌گر</option>
           </select>
         </div>
       </Dialog>

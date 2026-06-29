@@ -65,6 +65,11 @@ function migrateSchema(database: Database.Database): void {
     customers: [
       { name: 'is_blocked', type: 'INTEGER', defaultValue: '0' },
     ],
+    users: [
+      { name: 'permissions', type: 'TEXT', defaultValue: "'{}'" },
+      { name: 'lastLoginAt', type: 'TEXT', defaultValue: "''" },
+      { name: 'lastActivityAt', type: 'TEXT', defaultValue: "''" },
+    ],
   }
 
   let migrationCount = 0
@@ -104,6 +109,9 @@ function initializeDatabase(db: Database.Database): void {
       name TEXT NOT NULL,
       pin_code TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'cashier' CHECK(role IN ('admin', 'cashier')),
+      permissions TEXT DEFAULT '{}',
+      lastLoginAt TEXT DEFAULT '',
+      lastActivityAt TEXT DEFAULT '',
       isActive INTEGER NOT NULL DEFAULT 1,
       createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
     );
