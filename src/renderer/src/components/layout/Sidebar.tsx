@@ -4,7 +4,7 @@ import { useSettingsStore, getNavColors } from '../../store/settingsStore'
 import { t, fa } from '../../i18n'
 import { DashboardIcon, UsersIcon, SettingsIcon, LogoutIcon, MoonIcon, SunIcon, LanguageIcon } from '../ui/Icons'
 
-type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas' | 'service' | 'credit' | 'calculator'
+type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas' | 'service' | 'credit' | 'calculator' | 'auditLog' | 'restorePoints'
 
 interface Props {
   currentView: View
@@ -34,6 +34,8 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
     { key: 'service', label: 'تعمیرات', icon: <WrenchIcon /> },
     { key: 'credit', label: 'اعتبار مشتری', icon: <CreditIcon /> },
     { key: 'calculator', label: 'ماشین حساب', icon: <CalcIcon /> },
+    { key: 'auditLog', label: 'لاگ فعالیت', icon: <AuditLogIcon /> },
+    { key: 'restorePoints', label: 'نقاط بازیابی', icon: <RestoreIcon /> },
     { key: 'customers', label: ui.nav.customers, icon: <UsersIcon className="w-5 h-5" /> },
     { key: 'suppliers', label: 'تأمین\u200cکنندگان', icon: <TruckIcon /> },
     { key: 'settings', label: 'تنظیمات', icon: <SettingsIcon className="w-5 h-5" /> },
@@ -421,6 +423,26 @@ function CalcIcon() {
       <line x1="8" y1="18" x2="8" y2="18.01" />
       <line x1="12" y1="18" x2="12" y2="18.01" />
       <line x1="16" y1="14" x2="16" y2="18" />
+    </svg>
+  )
+}
+
+function AuditLogIcon() {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+    </svg>
+  )
+}
+
+function RestoreIcon() {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
     </svg>
   )
 }

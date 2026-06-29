@@ -70,6 +70,12 @@ function migrateSchema(database: Database.Database): void {
       { name: 'lastLoginAt', type: 'TEXT', defaultValue: "''" },
       { name: 'lastActivityAt', type: 'TEXT', defaultValue: "''" },
     ],
+    audit_log: [
+      { name: 'userName', type: 'TEXT', defaultValue: "''" },
+      { name: 'beforeValue', type: 'TEXT', defaultValue: "''" },
+      { name: 'afterValue', type: 'TEXT', defaultValue: "''" },
+      { name: 'ip', type: 'TEXT', defaultValue: "''" },
+    ],
   }
 
   let migrationCount = 0
@@ -279,16 +285,33 @@ function initializeDatabase(db: Database.Database): void {
     CREATE TABLE IF NOT EXISTS audit_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId INTEGER,
+      userName TEXT DEFAULT '',
       action TEXT NOT NULL,
       entityType TEXT NOT NULL,
       entityId INTEGER,
       details TEXT,
+      beforeValue TEXT,
+      afterValue TEXT,
+      ip TEXT DEFAULT '',
       createdAt TEXT DEFAULT (datetime('now', 'localtime')),
       FOREIGN KEY (userId) REFERENCES users(id)
     );
-
     CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_log(entityType, entityId);
     CREATE INDEX IF NOT EXISTS idx_audit_date ON audit_log(createdAt);
+    CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_log(action);
+
+    CREATE TABLE IF NOT EXISTS restore_points (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      dbPath TEXT NOT NULL,
+      dbHash TEXT DEFAULT '',
+      dbSize INTEGER DEFAULT 0,
+      tablesIncluded TEXT DEFAULT 'all',
+      createdBy TEXT DEFAULT 'admin',
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_restore_points_createdAt ON restore_points(createdAt);
 
     CREATE TABLE IF NOT EXISTS returns (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

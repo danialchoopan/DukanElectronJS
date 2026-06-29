@@ -34,6 +34,8 @@ import InstallmentsView from './views/InstallmentsView'
 import ProformasView from './views/ProformasView'
 import ServiceTicketsView from './views/ServiceTicketsView'
 import CustomerCreditView from './views/CustomerCreditView'
+import AuditLogView from './views/AuditLogView'
+import RestorePointsView from './views/RestorePointsView'
 import Inventory from './views/Inventory'
 import Categories from './views/Categories'
 import Help from './views/Help'
@@ -44,7 +46,7 @@ import GlobalSearch from './components/business/GlobalSearch'
 import Calculator from './components/business/Calculator'
 import PrintPreviewDialog from './components/print/PrintPreviewDialog'
 
-type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas' | 'service' | 'credit' | 'calculator'
+type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas' | 'service' | 'credit' | 'calculator' | 'auditLog' | 'restorePoints'
 
 const NAV_MAP: Record<string, View> = {
   'nav-pos': 'pos', 'nav-inventory': 'inventory', 'nav-dashboard': 'dashboard',
@@ -196,6 +198,8 @@ export default function App() {
         {currentView === 'service' && <ServiceTicketsView />}
         {currentView === 'credit' && <CustomerCreditView />}
         {currentView === 'calculator' && <div className="h-full p-5 overflow-auto" style={{ background: 'var(--bg-primary, #0f172a)' }}><Calculator docked /></div>}
+        {currentView === 'auditLog' && <div className="h-full p-5 overflow-auto" style={{ background: 'var(--bg-primary, #0f172a)' }}><AuditLogView /></div>}
+        {currentView === 'restorePoints' && <div className="h-full p-5 overflow-auto" style={{ background: 'var(--bg-primary, #0f172a)' }}><RestorePointsView /></div>}
         {currentView === 'customers' && <CustomerManagement highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}
         {currentView === 'suppliers' && <Suppliers />}
         {currentView === 'settings' && <AdminPanel view="settings" initialTab="settings" highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}

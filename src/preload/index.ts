@@ -221,12 +221,24 @@ const api = {
   },
 
   audit: {
-    getAll: (entityType?: string, limit?: number, startDate?: string, endDate?: string): Promise<IPCResponse<any[]>> =>
-      ipcRenderer.invoke('audit:getAll', { entityType, limit, startDate, endDate }),
+    getAll: (entityType?: string, limit?: number, startDate?: string, endDate?: string, action?: string, userId?: number): Promise<IPCResponse<any>> =>
+      ipcRenderer.invoke('audit:getAll', { entityType, limit, startDate, endDate, action, userId }),
     getForEntity: (entityType: string, entityId: number): Promise<IPCResponse<any[]>> =>
       ipcRenderer.invoke('audit:getForEntity', { entityType, entityId }),
-    getStats: (): Promise<IPCResponse<any>> =>
-      ipcRenderer.invoke('audit:stats'),
+    getStats: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('audit:stats'),
+    cleanup: (retentionDays?: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('audit:cleanup', { retentionDays }),
+    getRecent: (limit?: number): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('audit:recent', { limit }),
+  },
+
+  restorePoints: {
+    create: (name: string, description?: string, createdBy?: string): Promise<IPCResponse<any>> =>
+      ipcRenderer.invoke('restorePoints:create', { name, description, createdBy }),
+    list: (): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('restorePoints:list'),
+    getById: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('restorePoints:getById', { id }),
+    delete: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('restorePoints:delete', { id }),
+    verify: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('restorePoints:verify', { id }),
+    cleanup: (keepCount?: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('restorePoints:cleanup', { keepCount }),
+    getStats: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('restorePoints:stats'),
   },
 
   returns: {

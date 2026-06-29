@@ -57,6 +57,7 @@ import * as installmentsRepo from '../database/repositories/installments'
 import * as proformasRepo from '../database/repositories/proformas'
 import * as serviceTicketsRepo from '../database/repositories/serviceTickets'
 import * as customerCreditRepo from '../database/repositories/customerCredit'
+import * as restorePointsRepo from '../database/repositories/restorePoints'
 import * as backupService from '../database/backup'
 import * as smartExportService from '../database/smartExport'
 import * as migrationService from '../database/migration'
@@ -557,6 +558,18 @@ export function registerAllHandlers(): void {
   handle('credit:getUnblockRequests', () => customerCreditRepo.getUnblockRequests())
   ipcMain.handle('credit:recalculateScore', (_event, a: { customerId: number }) => ({ success: true, score: customerCreditRepo.recalculateScore(a.customerId) }))
 
+  // ─── Restore Points ────────────────────────────────────
+  ipcMain.handle('restorePoints:create', (_event, a: { name: string; description?: string; createdBy?: string }) => {
+    try { return { success: true, data: restorePointsRepo.createRestorePoint(a.name, a.description, a.createdBy) } }
+    catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
+  handle('restorePoints:list', () => restorePointsRepo.listRestorePoints())
+  handleArg<{ id: number }, any>('restorePoints:getById', (a) => restorePointsRepo.getRestorePointById(a.id))
+  ipcMain.handle('restorePoints:delete', (_event, a: { id: number }) => ({ success: restorePointsRepo.deleteRestorePoint(a.id) }))
+  ipcMain.handle('restorePoints:verify', (_event, a: { id: number }) => restorePointsRepo.verifyRestorePoint(a.id))
+  handleArg<{ keepCount?: number }, any>('restorePoints:cleanup', (a) => restorePointsRepo.cleanupRestorePoints(a.keepCount || 10))
+  handle('restorePoints:stats', () => restorePointsRepo.getRestorePointStats())
+
   // ─── Dialog ────────────────────────────────────────
   ipcMain.handle('dialog:saveBackup', async () => {
     const win = BrowserWindow.getFocusedWindow()
@@ -619,9 +632,11 @@ export function registerAllHandlers(): void {
   handleArg<{ id: number }, any>('inventory:getById', (a) => inventoryAdjRepo.getAdjustmentById(a.id))
 
   // ─── Audit Log ─────────────────────────────────────
-  handleArg<{ entityType?: string; limit?: number; startDate?: string; endDate?: string }, any>('audit:getAll', (a) => auditRepo.getAuditLog(a.entityType, a.limit || 100, a.startDate, a.endDate))
+  handleArg<{ entityType?: string; action?: string; userId?: number; limit?: number; startDate?: string; endDate?: string }, any>('audit:getAll', (a) => auditRepo.getAuditLog({ entityType: a.entityType, action: a.action, userId: a.userId, limit: a.limit || 100, startDate: a.startDate, endDate: a.endDate }))
   handleArg<{ entityType: string; entityId: number }, any>('audit:getForEntity', (a) => auditRepo.getAuditForEntity(a.entityType, a.entityId))
   handle('audit:stats', () => auditRepo.getAuditStats())
+  handleArg<{ retentionDays?: number }, any>('audit:cleanup', (a) => auditRepo.cleanupAuditLogs(a.retentionDays || 365))
+  handleArg<{ limit?: number }, any[]>('audit:recent', (a) => auditRepo.getRecentActivity(a.limit || 20))
 
   // ─── Returns ─────────────────────────────────────
   ipcMain.handle('returns:create', (_event, a: { saleId: number; userId: number; productId: number; quantity: number; reason: string; refundAmount: number }) => {
