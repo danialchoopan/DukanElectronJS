@@ -277,6 +277,12 @@ const api = {
       ipcRenderer.invoke('reports:salesByDayOfWeek', { startDate, endDate }),
     getPeriodComparison: (currentStart: string, currentEnd: string, previousStart: string, previousEnd: string): Promise<IPCResponse<any>> =>
       ipcRenderer.invoke('reports:periodComparison', { currentStart, currentEnd, previousStart, previousEnd }),
+    getBestCustomers: (limit?: number): Promise<IPCResponse<any[]>> =>
+      ipcRenderer.invoke('reports:bestCustomers', { limit }),
+    getCategoryProfitMargin: (startDate?: string, endDate?: string): Promise<IPCResponse<any[]>> =>
+      ipcRenderer.invoke('reports:categoryProfitMargin', { startDate, endDate }),
+    getCustomerPatterns: (): Promise<IPCResponse<any>> =>
+      ipcRenderer.invoke('reports:customerPatterns'),
   },
   periods: {
     getAll: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('periods:getAll'),

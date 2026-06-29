@@ -51,6 +51,7 @@ import * as suppliersRepo from '../database/repositories/suppliers'
 import * as purchasesRepo from '../database/repositories/purchases'
 import * as priceHistoryRepo from '../database/repositories/priceHistory'
 import * as salesReports from '../database/repositories/salesReports'
+import * as customerAnalytics from '../database/repositories/customerAnalytics'
 import * as backupService from '../database/backup'
 import * as smartExportService from '../database/smartExport'
 import * as migrationService from '../database/migration'
@@ -495,6 +496,11 @@ export function registerAllHandlers(): void {
   handleArg<{ startDate?: string; endDate?: string }, any[]>('reports:salesByHour', (a) => salesReports.getSalesByHour(a.startDate, a.endDate))
   handleArg<{ startDate?: string; endDate?: string }, any[]>('reports:salesByDayOfWeek', (a) => salesReports.getSalesByDayOfWeek(a.startDate, a.endDate))
   handleArg<{ currentStart: string; currentEnd: string; previousStart: string; previousEnd: string }, any>('reports:periodComparison', (a) => salesReports.getPeriodComparison(a.currentStart, a.currentEnd, a.previousStart, a.previousEnd))
+
+  // ─── Customer Analytics ─────────────────────────────────
+  handleArg<{ limit?: number }, any[]>('reports:bestCustomers', (a) => customerAnalytics.getBestCustomers(a.limit))
+  handleArg<{ startDate?: string; endDate?: string }, any[]>('reports:categoryProfitMargin', (a) => customerAnalytics.getCategoryProfitMargin(a.startDate, a.endDate))
+  handle('reports:customerPatterns', () => customerAnalytics.getCustomerPatterns())
 
   // ─── Dialog ────────────────────────────────────────
   ipcMain.handle('dialog:saveBackup', async () => {
