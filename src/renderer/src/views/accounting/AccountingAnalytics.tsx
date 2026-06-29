@@ -53,7 +53,7 @@ export default function AccountingAnalytics() {
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
 
-  const fs = textSize === 'sm' ? { label: '8', value: '7', kpi: '14', title: '11' } : textSize === 'lg' ? { label: '12', value: '10', kpi: '22', title: '16' } : { label: '10', value: '8', kpi: '18', title: '13' }
+  const fs = textSize === 'sm' ? { label: '10', value: '9', kpi: '18', title: '14' } : textSize === 'lg' ? { label: '16', value: '13', kpi: '28', title: '20' } : { label: '13', value: '11', kpi: '24', title: '17' }
 
   // ─── Data loading ─────────────────────────────────────
   // Fetch P&L, balance sheet, cash flow, and journal entries in parallel
@@ -129,7 +129,7 @@ export default function AccountingAnalytics() {
     </div>
   )
 
-  const Donut = ({ data, size = 140, total: donutTotal }: { data: { label: string; amount: number; color: string }[]; size?: number; total?: number }) => {
+  const Donut = ({ data, size = 180, total: donutTotal }: { data: { label: string; amount: number; color: string }[]; size?: number; total?: number }) => {
     const t = donutTotal || data.reduce((s, d) => s + d.amount, 0) || 1
     const r = 40, cx = 50, cy = 50, circ = 2 * Math.PI * r
     let offset = 0
@@ -197,8 +197,8 @@ export default function AccountingAnalytics() {
         {/* P&L Bars */}
         <Card title="صورت سود و زیان">
           <div ref={chartRef}>
-            <svg viewBox="0 0 300 160" className="w-full" style={{ maxHeight: 180 }}>
-              {plItems.map((item, i) => { const x = i * 75 + 10; const h = (Math.abs(item.value) / maxPL) * 120; return (<g key={item.label}><rect x={x} y={140 - h} width={50} height={h} rx="4" fill={item.color} opacity="0.85" /><text x={x + 25} y={136 - h} textAnchor="middle" fill={tPri} fontSize={fs.value} fontWeight="bold">{formatPriceComma(item.value)}</text><text x={x + 25} y={154} textAnchor="middle" fill={tSec} fontSize="6">{item.label}</text></g>) })}
+            <svg viewBox="0 0 340 180" className="w-full" style={{ maxHeight: 200 }}>
+              {plItems.map((item, i) => { const x = i * 85 + 10; const h = (Math.abs(item.value) / maxPL) * 140; return (<g key={item.label}><rect x={x} y={160 - h} width={60} height={h} rx="4" fill={item.color} opacity="0.85" /><text x={x + 30} y={156 - h} textAnchor="middle" fill={tPri} fontSize={fs.value} fontWeight="bold">{formatPriceComma(item.value)}</text><text x={x + 30} y={174} textAnchor="middle" fill={tSec} fontSize={fs.value}>{item.label}</text></g>) })}
             </svg>
           </div>
         </Card>
@@ -211,7 +211,7 @@ export default function AccountingAnalytics() {
           </div>
           {pl && pl.operatingExpenses.length > 0 ? (
             expenseChartType === 'donut' ? (
-              <Donut data={pl.operatingExpenses.slice(0, 8).map((e, i) => ({ label: e.accountName, amount: e.amount, color: COLORS[i % COLORS.length] }))} />
+              <Donut data={pl.operatingExpenses.slice(0, 8).map((e, i) => ({ label: e.accountName, amount: e.amount, color: COLORS[i % COLORS.length] }))} size={180} />
             ) : (
               <div className="space-y-1.5">
                 {pl.operatingExpenses.slice(0, 8).map((e, i) => {
@@ -257,8 +257,8 @@ export default function AccountingAnalytics() {
         {/* Journal Volume */}
         <Card title="تعداد اسناد ماهانه">
           {months.length > 0 ? (
-            <svg viewBox={`0 0 ${months.length * 28} 100`} className="w-full" style={{ maxHeight: 120 }}>
-              {months.map(([month, count], i) => { const x = i * 28; const h = (count / maxMonthCount) * 70; return (<g key={month}><rect x={x} y={85 - h} width={22} height={h} rx="2" fill={COLORS[i % COLORS.length]} opacity="0.8" /><text x={x + 11} y={85 - h - 3} textAnchor="middle" fill={tPri} fontSize={fs.value} fontWeight="bold">{count}</text><text x={x + 11} y={98} textAnchor="middle" fill={tSec} fontSize="5">{month.slice(5)}</text></g>) })}
+            <svg viewBox={`0 0 ${months.length * 32} 120`} className="w-full" style={{ maxHeight: 140 }}>
+              {months.map(([month, count], i) => { const x = i * 32; const h = (count / maxMonthCount) * 85; return (<g key={month}><rect x={x} y={100 - h} width={26} height={h} rx="2" fill={COLORS[i % COLORS.length]} opacity="0.8" /><text x={x + 13} y={100 - h - 4} textAnchor="middle" fill={tPri} fontSize={fs.value} fontWeight="bold">{count}</text><text x={x + 13} y={115} textAnchor="middle" fill={tSec} fontSize={fs.value}>{month.slice(5)}</text></g>) })}
             </svg>
           ) : <p className="text-xs text-center" style={{ color: tSec }}>سندی ثبت نشده</p>}
         </Card>

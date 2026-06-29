@@ -42,7 +42,7 @@ export default function InventoryAnalytics() {
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
 
-  const fs = textSize === 'sm' ? { label: '8', value: '7', kpi: '14', title: '11' } : textSize === 'lg' ? { label: '12', value: '10', kpi: '22', title: '16' } : { label: '10', value: '8', kpi: '18', title: '13' }
+  const fs = textSize === 'sm' ? { label: '10', value: '9', kpi: '18', title: '14' } : textSize === 'lg' ? { label: '16', value: '13', kpi: '28', title: '20' } : { label: '13', value: '11', kpi: '24', title: '17' }
 
   // ─── Data loading ─────────────────────────────────────
   // Fetch all active products from the database on mount
@@ -139,7 +139,7 @@ export default function InventoryAnalytics() {
   )
 
   // ─── Donut ────────────────────────────────────────────
-  const Donut = ({ data, size = 160 }: { data: { label: string; value: number; color: string }[]; size?: number }) => {
+  const Donut = ({ data, size = 200 }: { data: { label: string; value: number; color: string }[]; size?: number }) => {
     const r = 40, cx = 50, cy = 50, circ = 2 * Math.PI * r
     let offset = 0
     return (
@@ -198,8 +198,8 @@ export default function InventoryAnalytics() {
 
         {/* Stock Histogram */}
         <Card title="توزيع موجودی">
-          <svg viewBox="0 0 220 100" className="w-full" style={{ maxHeight: 120 }}>
-            {stockRanges.map((r, i) => { const x = i * 35; const h = (r.count / maxHistogramCount) * 70; return (<g key={r.label}><rect x={x} y={90 - h} width={28} height={h} rx="3" fill={COLORS[i % COLORS.length]} opacity="0.8" /><text x={x + 14} y={90 - h - 3} textAnchor="middle" fill={tPri} fontSize={fs.value} fontWeight="bold">{r.count}</text><text x={x + 14} y={100} textAnchor="middle" fill={tSec} fontSize="5">{r.label}</text></g>) })}
+            <svg viewBox="0 0 260 120" className="w-full" style={{ maxHeight: 140 }}>
+              {stockRanges.map((r, i) => { const x = i * 40; const h = (r.count / maxHistogramCount) * 85; return (<g key={r.label}><rect x={x} y={110 - h} width={32} height={h} rx="3" fill={COLORS[i % COLORS.length]} opacity="0.8" /><text x={x + 16} y={110 - h - 4} textAnchor="middle" fill={tPri} fontSize={fs.value} fontWeight="bold">{r.count}</text><text x={x + 16} y={120} textAnchor="middle" fill={tSec} fontSize={fs.value}>{r.label}</text></g>) })}
           </svg>
         </Card>
 
@@ -210,8 +210,8 @@ export default function InventoryAnalytics() {
             <button onClick={() => setCatChartType('donut')} className="px-2 py-0.5 rounded text-[10px] font-bold" style={{ backgroundColor: catChartType === 'donut' ? '#006194' : 'transparent', color: catChartType === 'donut' ? '#fff' : tSec }}>دایره‌ای</button>
           </div>
           {catChartType === 'bar' ? (
-            <svg viewBox="0 0 300 180" className="w-full" style={{ maxHeight: 200 }}>
-              {categories.slice(0, 8).map((cat, i) => { const y = i * 22; const w = (cat.value / maxValue) * 180; return (<g key={cat.name}><text x="0" y={y + 12} fill={tSec} fontSize={fs.value}>{cat.name}</text><rect x="65" y={y} width={w} height={18} rx="3" fill={COLORS[i % COLORS.length]} opacity="0.85" /><text x={70 + w} y={y + 13} fill={tPri} fontSize={fs.value} fontWeight="bold">{formatPriceComma(cat.value)}</text></g>) })}
+            <svg viewBox="0 0 320 200" className="w-full" style={{ maxHeight: 220 }}>
+              {categories.slice(0, 8).map((cat, i) => { const y = i * 24; const w = (cat.value / maxValue) * 200; return (<g key={cat.name}><text x="0" y={y + 14} fill={tSec} fontSize={fs.value}>{cat.name}</text><rect x="65" y={y} width={w} height={20} rx="3" fill={COLORS[i % COLORS.length]} opacity="0.85" /><text x={70 + w} y={y + 15} fill={tPri} fontSize={fs.value} fontWeight="bold">{formatPriceComma(cat.value)}</text></g>) })}
             </svg>
           ) : (
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -236,8 +236,8 @@ export default function InventoryAnalytics() {
             <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded" style={{ backgroundColor: '#22c55e' }} /><span className="text-[10px]" style={{ color: tSec }}>فروش</span></div>
             <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded" style={{ backgroundColor: '#3b82f6' }} /><span className="text-[10px]" style={{ color: tSec }}>خرید</span></div>
           </div>
-          <svg viewBox="0 0 300 240" className="w-full" style={{ maxHeight: 260 }}>
-            {categories.slice(0, 7).map((cat, i) => { const y = i * 34; const saleW = (cat.value / maxValue) * 180; const purchaseW = (cat.purchaseValue / maxValue) * 180; return (<g key={cat.name}><text x="0" y={y + 6} fill={tSec} fontSize={fs.value}>{cat.name}</text><rect x="55" y={y} width={saleW} height={12} rx="2" fill="#22c55e" opacity="0.8" /><text x={60 + saleW} y={y + 10} fill={tPri} fontSize={fs.value}>{formatPriceComma(cat.value)}</text><rect x="55" y={y + 14} width={purchaseW} height={12} rx="2" fill="#3b82f6" opacity="0.8" /><text x={60 + purchaseW} y={y + 24} fill={tPri} fontSize={fs.value}>{formatPriceComma(cat.purchaseValue)}</text></g>) })}
+          <svg viewBox="0 0 340 260" className="w-full" style={{ maxHeight: 280 }}>
+            {categories.slice(0, 7).map((cat, i) => { const y = i * 36; const saleW = (cat.value / maxValue) * 200; const purchaseW = (cat.purchaseValue / maxValue) * 200; return (<g key={cat.name}><text x="0" y={y + 8} fill={tSec} fontSize={fs.value}>{cat.name}</text><rect x="55" y={y} width={saleW} height={14} rx="2" fill="#22c55e" opacity="0.8" /><text x={60 + saleW} y={y + 11} fill={tPri} fontSize={fs.value}>{formatPriceComma(cat.value)}</text><rect x="55" y={y + 16} width={purchaseW} height={14} rx="2" fill="#3b82f6" opacity="0.8" /><text x={60 + purchaseW} y={y + 27} fill={tPri} fontSize={fs.value}>{formatPriceComma(cat.purchaseValue)}</text></g>) })}
           </svg>
         </Card>
       </div>
