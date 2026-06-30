@@ -49,13 +49,22 @@ export function loadSuspended(id: number): SuspendedInvoice | undefined {
   const row = db.prepare('SELECT * FROM suspended_invoices WHERE id = ?').get(id) as Record<string, unknown> | undefined
   if (!row) return undefined
 
+  // Parse JSON BEFORE deleting — prevents data loss on corrupted JSON
+  let items: CartItem[]
+  try {
+    items = JSON.parse(row.items_json as string) as CartItem[]
+  } catch {
+    console.error(`[Suspend] Corrupted JSON for id ${id}, data lost`)
+    items = []
+  }
+
   db.prepare('DELETE FROM suspended_invoices WHERE id = ?').run(id)
 
   return {
     id: row.id as number,
     userId: row.userId as number,
     slotIndex: row.slotIndex as number,
-    items: JSON.parse(row.items_json as string) as CartItem[],
+    items,
     createdAt: row.createdAt as string,
   }
 }

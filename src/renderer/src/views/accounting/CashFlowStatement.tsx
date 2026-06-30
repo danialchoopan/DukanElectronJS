@@ -131,7 +131,7 @@ export default function CashFlowStatement() {
                   {data.operating.map((row, i) => (
                     <tr key={i} className="hover:bg-opacity-5 hover:bg-blue-500 transition-colors" style={{ borderTop: `1px solid ${cardBorder}` }}>
                       <td className="px-4 py-2.5" style={{ color: textPrimary }}>{row.label}</td>
-                      <td className="px-4 py-2.5 font-mono font-bold" style={{ color: row.amount >= 0 ? '#16a34a' : '#dc2626' }}>{row.amount.toLocaleString('fa-IR')}</td>
+                      <td className="px-4 py-2.5 font-mono font-bold" style={{ color: i === 0 ? '#16a34a' : '#dc2626' }}>{row.amount.toLocaleString('fa-IR')}</td>
                     </tr>
                   ))}
                   <tr className="total-row" style={{ borderTop: `2px solid ${cardBorder}` }}>
