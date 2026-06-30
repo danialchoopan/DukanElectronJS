@@ -213,6 +213,13 @@ export function deleteProduct(id: number): boolean {
 
 export function updateStock(productId: number, quantityChange: number): boolean {
   const db = getDatabase()
+  // Prevent stock from going below zero
+  if (quantityChange < 0) {
+    const result = db.prepare(
+      "UPDATE products SET stock = stock + ?, updatedAt = datetime('now', 'localtime') WHERE id = ? AND stock >= ?"
+    ).run(quantityChange, productId, Math.abs(quantityChange))
+    return result.changes > 0
+  }
   const result = db.prepare(
     "UPDATE products SET stock = stock + ?, updatedAt = datetime('now', 'localtime') WHERE id = ?"
   ).run(quantityChange, productId)

@@ -220,9 +220,9 @@ export default function SalesTerminal() {
         </DialogField>
         <DialogField label="نوع فروش">
           <div className="flex gap-2">
-            <button onClick={() => setSaleType('in-person')} className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+            <button onClick={() => { setSaleType('in-person'); setPendingPayment(prev => prev ? { ...prev, saleType: 'in-person' } : null) }} className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
               style={{ background: saleType === 'in-person' ? 'linear-gradient(135deg, #006194, #007bb9)' : 'var(--bg-tertiary)', color: saleType === 'in-person' ? '#fff' : 'var(--text-secondary)', border: `1px solid ${saleType === 'in-person' ? '#006194' : 'var(--border-color)'}` }}>حضوری</button>
-            <button onClick={() => setSaleType('online')} className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+            <button onClick={() => { setSaleType('online'); setPendingPayment(prev => prev ? { ...prev, saleType: 'online' } : null) }} className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
               style={{ background: saleType === 'online' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'var(--bg-tertiary)', color: saleType === 'online' ? '#fff' : 'var(--text-secondary)', border: `1px solid ${saleType === 'online' ? '#22c55e' : 'var(--border-color)'}` }}>آنلاین</button>
           </div>
         </DialogField>
