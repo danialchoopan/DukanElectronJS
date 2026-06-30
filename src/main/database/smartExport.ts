@@ -368,6 +368,13 @@ export function smartImport(data: SmartExportPayload, options: ImportOptions, us
       for (const [table, rows] of Object.entries(modData.tables)) {
         if (!rows || rows.length === 0) continue
 
+        // Whitelist validation: only allow table names from MODULE_TABLES
+        const allowedTables = MODULE_TABLES[modName] || []
+        if (!allowedTables.includes(table)) {
+          importErrors.push({ table, error: `Invalid table name '${table}' in module '${modName}' — skipped for security` })
+          continue
+        }
+
         if (options.validate) {
           const decrypted = (data.encrypted && options.password)
             ? decryptSensitiveFields(rows, table, options.password)

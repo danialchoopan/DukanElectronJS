@@ -65,7 +65,8 @@ export function updateAccount(id: number, data: Partial<CreateAccountInput>): Ac
 
 export function deleteAccount(id: number): boolean {
   const db = getDatabase()
-  const hasChildren = db.prepare('SELECT COUNT(*) as c FROM accounts WHERE parentId = ? AND isActive = 1').get(id) as { c: number }
+  // Check for ANY children (active or inactive) to prevent orphaning
+  const hasChildren = db.prepare('SELECT COUNT(*) as c FROM accounts WHERE parentId = ?').get(id) as { c: number }
   if (hasChildren.c > 0) return false
   const hasTransactions = db.prepare('SELECT COUNT(*) as c FROM journal_entry_lines WHERE accountId = ?').get(id) as { c: number }
   if (hasTransactions.c > 0) {
