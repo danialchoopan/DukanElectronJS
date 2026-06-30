@@ -316,5 +316,125 @@ export function seedDatabase(): void {
     createAuditEntry(1, 'create', 'supplier', null, 'ایجاد ۵ تأمین‌کننده نمونه با خریدها')
   }
 
-  console.log('[SEED] Done: 4 users, 32 products, 15+ categories, 8 customers, ~60 sales, 12 expenses, 3 returns, 12 fiscal periods, 5 suppliers')
+  // ═══ Seed: New Features ════════════════════════════════
+  const existingProducts = db.prepare('SELECT COUNT(*) as c FROM products WHERE isActive = 1').get() as any
+  const existingCustomers = db.prepare('SELECT COUNT(*) as c FROM customers WHERE isActive = 1').get() as any
+
+  // Seed Cross-Sell Rules
+  const existingRules = (db.prepare('SELECT COUNT(*) as c FROM cross_sell_rules').get() as { c: number }).c
+  if (existingRules === 0 && existingProducts.c > 0) {
+    const rule1 = db.prepare("INSERT INTO cross_sell_rules (name, triggerType, triggerValue, ruleType, priority, createdBy) VALUES (?, ?, ?, ?, ?, 'admin')").run('لبنیات + نان', 'category', 'لبنیات', 'recommended', 1)
+    const rule2 = db.prepare("INSERT INTO cross_sell_rules (name, triggerType, triggerValue, ruleType, priority, createdBy) VALUES (?, ?, ?, ?, ?, 'admin')").run('آب معدنی + میان‌وعده', 'category', 'نوشیدنی', 'optional', 2)
+    db.prepare("INSERT INTO cross_sell_rules (name, triggerType, triggerValue, ruleType, priority, createdBy) VALUES (?, ?, ?, ?, ?, 'admin')").run('خرید بالای ۲۰۰ هزار', 'price', '>=', 'mandatory', 0)
+
+    // Add items to rules
+    const insertRuleItem = db.prepare('INSERT INTO cross_sell_rule_items (ruleId, productId, quantity, discountPercent) VALUES (?, ?, ?, ?)')
+    const allProdRows = db.prepare('SELECT id, category FROM products WHERE isActive = 1').all() as { id: number; category: string }[]
+    const nanProducts = allProdRows.filter(p => p.category === 'نان سنگک' || p.category === 'نان بربری' || p.category === 'نان لواش')
+    if (nanProducts.length > 0) {
+      insertRuleItem.run(rule1.lastInsertRowid, nanProducts[0].id, 1, 10)
+    }
+    const drinkProducts = allProdRows.filter(p => p.category === 'پفک' || p.category === 'چیپس' || p.category === 'شکلات')
+    if (drinkProducts.length > 0) {
+      insertRuleItem.run(rule2.lastInsertRowid, drinkProducts[0].id, 1, 0)
+    }
+    createAuditEntry(1, 'create', 'cross_sell_rule', null, 'ایجاد ۳ قانون فروش مکمل')
+  }
+
+  // Seed Installments
+  const existingInstallments = (db.prepare('SELECT COUNT(*) as c FROM installments').get() as { c: number }).c
+  if (existingInstallments === 0 && existingCustomers.c > 0) {
+    const custIds = db.prepare('SELECT id FROM customers WHERE isActive = 1').all() as { id: number }[]
+    if (custIds.length >= 2) {
+      // Create 2 installment plans
+      const inst1 = db.prepare("INSERT INTO installments (installmentNumber, customerId, totalAmount, downPayment, installmentCount, monthlyAmount, status, startDate, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'admin')").run(
+        'INS-202606-0001', custIds[0].id, 1200000, 200000, 4, 250000, 'active', getDateDaysAgo(30))
+      const inst2 = db.prepare("INSERT INTO installments (installmentNumber, customerId, totalAmount, downPayment, installmentCount, monthlyAmount, status, startDate, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'admin')").run(
+        'INS-202606-0002', custIds[1].id, 800000, 0, 3, 266667, 'active', getDateDaysAgo(15))
+
+      // Payment schedules
+      const insertPay = db.prepare('INSERT INTO installment_payments (installmentId, installmentNumber, amount, dueDate, paidDate, status) VALUES (?, ?, ?, ?, ?, ?)')
+      // Inst 1: 4 payments, 2 paid
+      const d1 = new Date(); d1.setDate(d1.getDate() + 15)
+      insertPay.run(inst1.lastInsertRowid, 1, 250000, getDateDaysAgo(-15), getDateDaysAgo(-14), 'paid')
+      insertPay.run(inst1.lastInsertRowid, 2, 250000, getDateDaysAgo(15), getDateDaysAgo(16), 'paid')
+      insertPay.run(inst1.lastInsertRowid, 3, 250000, getDateDaysAgo(45), null, 'pending')
+      insertPay.run(inst1.lastInsertRowid, 4, 250000, getDateDaysAgo(75), null, 'pending')
+      // Inst 2: 3 payments, 1 overdue
+      insertPay.run(inst2.lastInsertRowid, 1, 266667, getDateDaysAgo(0), null, 'overdue')
+      insertPay.run(inst2.lastInsertRowid, 2, 266667, getDateDaysAgo(30), null, 'pending')
+      insertPay.run(inst2.lastInsertRowid, 3, 266667, getDateDaysAgo(60), null, 'pending')
+      createAuditEntry(1, 'create', 'installment', null, 'ایجاد ۲ طرح اقساطی نمونه')
+    }
+  }
+
+  // Seed Proformas
+  const existingProformas = (db.prepare('SELECT COUNT(*) as c FROM proformas').get() as { c: number }).c
+  if (existingProformas === 0 && existingCustomers.c > 0 && existingProducts.c > 0) {
+    const custIds = db.prepare('SELECT id FROM customers WHERE isActive = 1').all() as { id: number }[]
+    const prods = db.prepare('SELECT id, title, sale_price FROM products WHERE isActive = 1').all() as { id: number; title: string; sale_price: number }[]
+
+    if (custIds.length > 0 && prods.length > 0) {
+      const pf1 = db.prepare("INSERT INTO proformas (proformaNumber, customerId, userId, subtotal, totalAmount, taxRate, status, validUntil, notes) VALUES (?, ?, 1, ?, ?, 9, 'draft', ?, ?)").run(
+        'PR-202606-0001', custIds[0].id, prods[0].sale_price * 3, Math.round(prods[0].sale_price * 3 * 1.09), getDateDaysAgo(-30), 'پیش‌فاکتور صادرات')
+      const pf2 = db.prepare("INSERT INTO proformas (proformaNumber, customerId, userId, subtotal, totalAmount, taxRate, status, validUntil, notes) VALUES (?, ?, 1, ?, ?, 9, 'sent', ?, ?)").run(
+        'PR-202606-0002', custIds[0].id, prods[1].sale_price * 2, Math.round(prods[1].sale_price * 2 * 1.09), getDateDaysAgo(-10), 'پیش‌فاکتور فروش عمده')
+
+      const insertPfItem = db.prepare('INSERT INTO proforma_items (proformaId, productId, productTitle, quantity, unitPrice, subtotal) VALUES (?, ?, ?, ?, ?, ?)')
+      insertPfItem.run(pf1.lastInsertRowid, prods[0].id, prods[0].title, 3, prods[0].sale_price, prods[0].sale_price * 3)
+      insertPfItem.run(pf2.lastInsertRowid, prods[1].id, prods[1].title, 2, prods[1].sale_price, prods[1].sale_price * 2)
+      createAuditEntry(1, 'create', 'proforma', null, 'ایجاد ۲ پیش‌فاکتور نمونه')
+    }
+  }
+
+  // Seed Service Tickets
+  const existingTickets = (db.prepare('SELECT COUNT(*) as c FROM service_tickets').get() as { c: number }).c
+  if (existingTickets === 0 && existingProducts.c > 0) {
+    const prods = db.prepare('SELECT id, title FROM products WHERE isActive = 1').all() as { id: number; title: string }[]
+    const custIds = db.prepare('SELECT id FROM customers WHERE isActive = 1').all() as { id: number }[]
+    if (prods.length >= 2 && custIds.length >= 1) {
+      db.prepare("INSERT INTO service_tickets (ticketNumber, customerId, productId, serialNumber, warrantyClaim, warrantyStartDate, warrantyEndDate, status, priority, problemDescription, diagnosis, technician, partsCost, laborCost, totalCost, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'admin')").run(
+        'SRV-202606-0001', custIds[0].id, prods[0].id, 'SN-12345', 1, getDateDaysAgo(365), getDateDaysAgo(-180), 'in_repair', 'high', 'خرابی دستگاه - روشن نمی‌شود', 'خرابی برد الکترونیکی', 'محمد تکنسین', 150000, 80000, 230000)
+      db.prepare("INSERT INTO service_tickets (ticketNumber, customerId, productId, serialNumber, status, priority, problemDescription, diagnosis, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'admin')").run(
+        'SRV-202606-0002', custIds[0].id, prods[1].id, 'SN-67890', 'completed', 'normal', 'تعمیر صفحه نمایش', 'تعویض ال‌سی‌دی انجام شد', 'admin')
+      createAuditEntry(1, 'create', 'service_ticket', null, 'ایجاد ۲ تیکت خدماتی نمونه')
+    }
+  }
+
+  // Seed Customer Credit
+  const existingCredit = (db.prepare('SELECT COUNT(*) as c FROM customer_credit').get() as { c: number }).c
+  if (existingCredit === 0 && existingCustomers.c > 0) {
+    const custIds = db.prepare('SELECT id FROM customers WHERE isActive = 1').all() as { id: number }[]
+    for (let i = 0; i < Math.min(3, custIds.length); i++) {
+      const creditLimit = (i + 1) * 5000000
+      db.prepare('INSERT INTO customer_credit (customerId, creditLimit, currentDebt, creditScore) VALUES (?, ?, ?, ?)').run(
+        custIds[i].id, creditLimit, Math.floor(Math.random() * creditLimit * 0.3), 50 + Math.floor(Math.random() * 50))
+    }
+    createAuditEntry(1, 'create', 'credit', null, 'ایجاد رکوردهای اعتباری نمونه')
+  }
+
+  // Seed Audit Log entries
+  const existingAudit = (db.prepare('SELECT COUNT(*) as c FROM audit_log').get() as { c: number }).c
+  if (existingAudit === 0) {
+    createAuditEntry(1, 'login', 'user', 1, 'ورود مدیر سیستم')
+    createAuditEntry(1, 'create', 'product', null, 'ایجاد محصولات نمونه')
+    createAuditEntry(1, 'create', 'sale', null, 'ایجاد فاکتورهای فروش')
+    createAuditEntry(1, 'create', 'supplier', null, 'ایجاد تأمین‌کنندگان')
+    createAuditEntry(1, 'create', 'customer', null, 'ایجاد مشتریان')
+  }
+
+  // Seed Inventory Adjustments
+  const existingAdj = (db.prepare('SELECT COUNT(*) as c FROM inventory_adjustments').get() as { c: number }).c
+  if (existingAdj === 0 && existingProducts.c > 0) {
+    const prods = db.prepare('SELECT id, stock FROM products WHERE isActive = 1').all() as { id: number; stock: number }[]
+    if (prods.length > 0) {
+      db.prepare('INSERT INTO inventory_adjustments (productId, previousStock, newStock, adjustmentQty, reason, adjustmentType, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+        prods[0].id, prods[0].stock + 10, prods[0].stock + 10, 10, 'شمارش فیزیکی - مغایرت', 'reconciliation', 'admin')
+      db.prepare('INSERT INTO inventory_adjustments (productId, previousStock, newStock, adjustmentQty, reason, adjustmentType, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+        prods[1].id, prods[1].stock, prods[1].stock - 5, -5, 'ضایعات - آسیب بسته‌بندی', 'damage', 'admin')
+      createAuditEntry(1, 'create', 'inventory_adjustment', null, 'ایجاد ۲ اصلاح موجودی نمونه')
+    }
+  }
+
+  console.log('[SEED] Done: 4 users, 32 products, 15+ categories, 8 customers, ~60 sales, 12 expenses, 3 returns, 12 fiscal periods, 5 suppliers, 3 cross-sell rules, 2 installments, 2 proformas, 2 service tickets, 3 credit records, audit entries, inventory adjustments')
 }
