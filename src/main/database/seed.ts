@@ -325,7 +325,7 @@ export function seedDatabase(): void {
   if (existingRules === 0 && existingProducts.c > 0) {
     const rule1 = db.prepare("INSERT INTO cross_sell_rules (name, triggerType, triggerValue, ruleType, priority, createdBy) VALUES (?, ?, ?, ?, ?, 'admin')").run('لبنیات + نان', 'category', 'لبنیات', 'recommended', 1)
     const rule2 = db.prepare("INSERT INTO cross_sell_rules (name, triggerType, triggerValue, ruleType, priority, createdBy) VALUES (?, ?, ?, ?, ?, 'admin')").run('آب معدنی + میان‌وعده', 'category', 'نوشیدنی', 'optional', 2)
-    db.prepare("INSERT INTO cross_sell_rules (name, triggerType, triggerValue, ruleType, priority, createdBy) VALUES (?, ?, ?, ?, ?, 'admin')").run('خرید بالای ۲۰۰ هزار', 'price', '>=', 'mandatory', 0)
+    db.prepare("INSERT INTO cross_sell_rules (name, triggerType, triggerValue, ruleType, priority, createdBy) VALUES (?, ?, ?, ?, ?, 'admin')").run('خرید بالای ۲۰۰ هزار', 'price', '200000', 'mandatory', 0)
 
     // Add items to rules
     const insertRuleItem = db.prepare('INSERT INTO cross_sell_rule_items (ruleId, productId, quantity, discountPercent) VALUES (?, ?, ?, ?)')
@@ -352,18 +352,17 @@ export function seedDatabase(): void {
       const inst2 = db.prepare("INSERT INTO installments (installmentNumber, customerId, totalAmount, downPayment, installmentCount, monthlyAmount, status, startDate, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'admin')").run(
         'INS-202606-0002', custIds[1].id, 800000, 0, 3, 266667, 'active', getDateDaysAgo(15))
 
-      // Payment schedules
+      // Payment schedules — dates progress from past (paid) to future (pending)
       const insertPay = db.prepare('INSERT INTO installment_payments (installmentId, installmentNumber, amount, dueDate, paidDate, status) VALUES (?, ?, ?, ?, ?, ?)')
-      // Inst 1: 4 payments, 2 paid
-      const d1 = new Date(); d1.setDate(d1.getDate() + 15)
-      insertPay.run(inst1.lastInsertRowid, 1, 250000, getDateDaysAgo(-15), getDateDaysAgo(-14), 'paid')
-      insertPay.run(inst1.lastInsertRowid, 2, 250000, getDateDaysAgo(15), getDateDaysAgo(16), 'paid')
-      insertPay.run(inst1.lastInsertRowid, 3, 250000, getDateDaysAgo(45), null, 'pending')
-      insertPay.run(inst1.lastInsertRowid, 4, 250000, getDateDaysAgo(75), null, 'pending')
-      // Inst 2: 3 payments, 1 overdue
-      insertPay.run(inst2.lastInsertRowid, 1, 266667, getDateDaysAgo(0), null, 'overdue')
-      insertPay.run(inst2.lastInsertRowid, 2, 266667, getDateDaysAgo(30), null, 'pending')
-      insertPay.run(inst2.lastInsertRowid, 3, 266667, getDateDaysAgo(60), null, 'pending')
+      // Inst 1: 4 payments, 2 paid (first already due, second early)
+      insertPay.run(inst1.lastInsertRowid, 1, 250000, getDateDaysAgo(15), getDateDaysAgo(14), 'paid')
+      insertPay.run(inst1.lastInsertRowid, 2, 250000, getDateDaysAgo(-15), getDateDaysAgo(-14), 'paid')
+      insertPay.run(inst1.lastInsertRowid, 3, 250000, getDateDaysAgo(-45), null, 'pending')
+      insertPay.run(inst1.lastInsertRowid, 4, 250000, getDateDaysAgo(-75), null, 'pending')
+      // Inst 2: 3 payments, 1 overdue (past due date)
+      insertPay.run(inst2.lastInsertRowid, 1, 266667, getDateDaysAgo(15), null, 'overdue')
+      insertPay.run(inst2.lastInsertRowid, 2, 266667, getDateDaysAgo(-15), null, 'pending')
+      insertPay.run(inst2.lastInsertRowid, 3, 266667, getDateDaysAgo(-45), null, 'pending')
       createAuditEntry(1, 'create', 'installment', null, 'ایجاد ۲ طرح اقساطی نمونه')
     }
   }
