@@ -8,7 +8,7 @@ import { app } from 'electron'
 import { join } from 'path'
 import { copyFileSync, existsSync, readdirSync, unlinkSync, statSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { createHash } from 'crypto'
-import { closeDatabase } from './connection'
+import { closeDatabase, getDatabase } from './connection'
 
 const BACKUP_DIR = join(app.getPath('userData'), 'backups')
 const DB_PATH = join(app.getPath('userData'), 'pos.db')
@@ -35,7 +35,6 @@ export function createBackup(label?: string): { success: boolean; path?: string;
 
     // Checkpoint WAL into main DB before copying for atomic consistency
     try {
-      const { getDatabase } = require('./connection')
       const liveDb = getDatabase()
       liveDb.pragma('wal_checkpoint(TRUNCATE)')
     } catch (e) {
