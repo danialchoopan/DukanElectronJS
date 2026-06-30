@@ -150,28 +150,33 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
       return
     }
     setSubmitting(true)
-    const finalBusinessType = businessType === 'other' ? (customBusinessName || 'سایر') : businessType
-    await Promise.all([
-      window.api.settings.set('storeName', shopName || (lang === 'fa' ? 'فروشگاه من' : 'My Store')),
-      window.api.settings.set('storeAddress', shopAddress),
-      window.api.settings.set('storePhone', shopPhone),
-      window.api.settings.set('businessType', finalBusinessType),
-      window.api.settings.set('autoRounding', '500'),
-      window.api.settings.set('taxEnabled', String(enableTax)),
-      window.api.settings.set('language', lang),
-      window.api.settings.set('theme', theme),
-      window.api.settings.set('isSetupComplete', 'true'),
-    ])
-    if (enableTax) {
-      await window.api.settings.set('taxRate', '9')
+    try {
+      const finalBusinessType = businessType === 'other' ? (customBusinessName || 'سایر') : businessType
+      await Promise.all([
+        window.api.settings.set('storeName', shopName || (lang === 'fa' ? 'فروشگاه من' : 'My Store')),
+        window.api.settings.set('storeAddress', shopAddress),
+        window.api.settings.set('storePhone', shopPhone),
+        window.api.settings.set('businessType', finalBusinessType),
+        window.api.settings.set('autoRounding', '500'),
+        window.api.settings.set('taxEnabled', String(enableTax)),
+        window.api.settings.set('language', lang),
+        window.api.settings.set('theme', theme),
+        window.api.settings.set('isSetupComplete', 'true'),
+      ])
+      if (enableTax) {
+        await window.api.settings.set('taxRate', '9')
+      }
+      if (adminPin.length >= 4) {
+        await window.api.auth.createUser({ name: lang === 'fa' ? 'مدیر' : 'Admin', pinCode: adminPin, role: 'admin' })
+      }
+      useSettingsStore.getState().setLanguage(lang)
+      useSettingsStore.getState().setTheme(theme)
+      setSubmitting(false)
+      onComplete()
+    } catch (err) {
+      setSubmitting(false)
+      setPinError(lang === 'fa' ? 'خطا در ذخیره تنظیمات' : 'Error saving settings')
     }
-    if (adminPin.length >= 4) {
-      await window.api.auth.createUser({ name: lang === 'fa' ? 'مدیر' : 'Admin', pinCode: adminPin, role: 'admin' })
-    }
-    useSettingsStore.getState().setLanguage(lang)
-    useSettingsStore.getState().setTheme(theme)
-    setSubmitting(false)
-    onComplete()
   }
 
   const handleRestoreOld = async () => {

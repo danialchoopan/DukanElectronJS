@@ -59,6 +59,7 @@ export default function AccountingDashboard() {
     const totalDebit = validLines.reduce((s, l) => s + l.debit, 0)
     const totalCredit = validLines.reduce((s, l) => s + l.credit, 0)
     if (Math.abs(totalDebit - totalCredit) > 0.01) { setJournalError('جمع بدهکار و بستانکار باید برابر باشد'); return }
+    if (totalDebit === 0) { setJournalError('مبلغ بدهکار نمی‌تواند صفر باشد'); return }
     if (!journalForm.description.trim()) { setJournalError('شرح سند الزامی است'); return }
     const res = await window.api.journal.create({
       entryDate: journalForm.entryDate,

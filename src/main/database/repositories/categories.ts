@@ -68,6 +68,12 @@ export function deleteCategory(id: number): { success: boolean; error?: string }
   if (!cat) return { success: false, error: 'دسته‌بندی یافت نشد' }
   const productCount = (db.prepare('SELECT COUNT(*) as c FROM products WHERE category = ? AND isActive = 1').get(cat.name) as { c: number }).c
   if (productCount > 0) return { success: false, error: `${productCount} کالا در این دسته‌بندی وجود دارد. ابتدا کالاها را منتقل کنید.` }
+  // Also check for products in subcategories before deleting them
+  const subcats = db.prepare('SELECT id, name FROM categories WHERE parent_id = ?').all(id) as { id: number; name: string }[]
+  for (const sub of subcats) {
+    const subProductCount = (db.prepare('SELECT COUNT(*) as c FROM products WHERE category = ? AND isActive = 1').get(sub.name) as { c: number }).c
+    if (subProductCount > 0) return { success: false, error: `${subProductCount} کالا در زیردسته "${sub.name}" وجود دارد.` }
+  }
   db.prepare('DELETE FROM categories WHERE parent_id = ?').run(id)
   db.prepare('DELETE FROM categories WHERE id = ?').run(id)
   return { success: true }

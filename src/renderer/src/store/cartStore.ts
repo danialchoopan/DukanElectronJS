@@ -59,6 +59,7 @@ export const useCartStore = create<CartState>((set, get) => ({
         }
       }
       if (item.maxStock !== undefined && item.maxStock <= 0) {
+        success = false
         return { ...state, lastError: `${item.title}: تمام شده` }
       }
       return { items: [...state.items, { ...item, quantity: 1 }], lastError: '' }

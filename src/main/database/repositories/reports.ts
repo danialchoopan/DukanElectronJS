@@ -7,7 +7,7 @@
 import { getDatabase } from '../connection'
 import type { ProfitLossReport, BalanceSheetReport, ARAgingReport, ARAgingRow } from '../../../types'
 
-function getAccountDetails(codePrefix: string, isDebitNormal: boolean, startDate?: string, endDate?: string): { accountCode: string; accountName: string; amount: number }[] {
+function getAccountDetails(codePrefix: string, _isDebitNormal: boolean, startDate?: string, endDate?: string): { accountCode: string; accountName: string; amount: number }[] {
   const db = getDatabase()
   let where = "WHERE a.code LIKE ? AND a.isActive = 1 AND a.parentId IS NOT NULL"
   const params: any[] = [codePrefix + '%']
@@ -26,7 +26,7 @@ function getAccountDetails(codePrefix: string, isDebitNormal: boolean, startDate
   `).all(...params) as { accountCode: string; accountName: string; rawBalance: number }[]
   return rows.map(r => ({
     accountCode: r.accountCode, accountName: r.accountName,
-    amount: isDebitNormal ? Math.abs(r.rawBalance) : Math.abs(r.rawBalance)
+    amount: Math.abs(r.rawBalance)
   }))
 }
 
