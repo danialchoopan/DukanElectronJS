@@ -6,6 +6,8 @@
 
 **Smart Accounting, Professional Sales**
 
+> **فارسی | [English](README-en.md)**
+
 ---
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/danialchoopan/DukanElectronJS)
@@ -197,19 +199,23 @@ npm run test:migration
 
 ## مستندات
 
-فایل‌های مستندات در پوشه `docs/` قرار دارند:
-
-| فایل | توضیح |
-|------|-------|
-| `docs/index.html` | صفحه اصلی مستندات فنی |
-| `docs/developer-fa.html` | راهنمای توسعه‌دهندگان (فارسی) |
-| `docs/developer-en.html` | Developer Guide (English) |
-| `docs/doc-schema.html` | ساختار جداول دیتابیس |
-| `docs/doc-api.html` | مرجع API و IPC |
-| `docs/doc-accounting.html` | سیستم حسابداری دوطرفه |
-| `docs/doc-backup.html` | پشتیبان‌گیری و مهاجرت خودکار |
-| `docs/doc-ui.html` | کامپوننت‌ها، هوک‌ها و ابزارها |
-| `docs/doc-features.html` | راهنمای کامل قابلیت‌ها (کاربر + فنی) |
+| فایل | زبان | توضیح |
+|------|------|-------|
+| `README.md` | فارسی | نمای کلی پروژه |
+| `README-en.md` | English | Project overview |
+| `SETUP.md` | فارسی | راهنمای نصب |
+| `SETUP-en.md` | English | Installation guide |
+| `TECHNICAL.md` | فارسی | مستندات فنی |
+| `TECHNICAL-en.md` | English | Technical documentation |
+| `docs/index.html` | فارسی | مرجع فنی کامل |
+| `docs/developer-fa.html` | فارسی | راهنمای توسعه‌دهندگان |
+| `docs/developer-en.html` | English | Developer guide |
+| `docs/doc-features.html` | English | Features reference (20 sections) |
+| `docs/doc-schema.html` | English | Database schema documentation |
+| `docs/doc-api.html` | English | API reference |
+| `docs/doc-accounting.html` | English | Accounting system docs |
+| `docs/doc-backup.html` | English | Backup & migration docs |
+| `docs/doc-ui.html` | English | UI components documentation |
 
 ## مجوز
 
