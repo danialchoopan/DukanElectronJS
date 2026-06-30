@@ -40,7 +40,8 @@ function getJalaliFromGregorian(dateStr: string): { jy: number; jm: number; jd: 
 }
 
 function getDaysInJalaliMonth(jy: number, jm: number): number {
-  if (jm === 12 && jy % 4 === 3) return 30
+  // Jalali uses a 33-year leap cycle. Leap years are at positions 1,5,9,13,17,22,26,30
+  if (jm === 12 && [1, 5, 9, 13, 17, 22, 26, 30].includes(jy % 33)) return 30
   return jMonthDays[jm - 1]
 }
 
