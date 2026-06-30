@@ -392,7 +392,7 @@ export function seedDatabase(): void {
     const prods = db.prepare('SELECT id, title FROM products WHERE isActive = 1').all() as { id: number; title: string }[]
     const custIds = db.prepare('SELECT id FROM customers WHERE isActive = 1').all() as { id: number }[]
     if (prods.length >= 2 && custIds.length >= 1) {
-      db.prepare("INSERT INTO service_tickets (ticketNumber, customerId, productId, serialNumber, warrantyClaim, warrantyStartDate, warrantyEndDate, status, priority, problemDescription, diagnosis, technician, partsCost, laborCost, totalCost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(
+      db.prepare("INSERT INTO service_tickets (ticketNumber, customerId, productId, serialNumber, warrantyClaim, warrantyStartDate, warrantyEndDate, status, priority, problemDescription, diagnosis, technician, partsCost, laborCost, totalCost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(
         'SRV-202606-0001', custIds[0].id, prods[0].id, 'SN-12345', 1, getDateDaysAgo(365), getDateDaysAgo(-180), 'in_repair', 'high', 'خرابی دستگاه - روشن نمی‌شود', 'خرابی برد الکترونیکی', 'محمد تکنسین', 150000, 80000, 230000)
       db.prepare("INSERT INTO service_tickets (ticketNumber, customerId, productId, serialNumber, status, priority, problemDescription, diagnosis) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").run(
         'SRV-202606-0002', custIds[0].id, prods[1].id, 'SN-67890', 'completed', 'normal', 'تعمیر صفحه نمایش', 'تعویض ال‌سی‌دی انجام شد')
