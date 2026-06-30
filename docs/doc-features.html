@@ -238,6 +238,66 @@
       <li><strong>Label Printing:</strong> Generate QR/barcode labels for products</li>
     </ul>
 
+    <h2>15. Professional Calculator</h2>
+    <ul>
+      <li><strong>Basic Arithmetic:</strong> +, -, ×, ÷ with keyboard shortcuts</li>
+      <li><strong>Scientific Ops:</strong> √, x², 1/x, ±, %</li>
+      <li><strong>Memory Functions:</strong> M+, M-, MR, MC with visual indicator</li>
+      <li><strong>Currency Conversion:</strong> USD ↔ EUR ↔ IRR with static rates</li>
+      <li><strong>History:</strong> Timestamped calculation history, click to re-use, copy all</li>
+      <li><strong>Floating Mode:</strong> Bottom-right overlay + docked mode via sidebar</li>
+      <li><strong>Global Shortcut:</strong> Ctrl+M toggles floating calculator from any screen</li>
+    </ul>
+
+    <h2>16. Role-Based Access Control (RBAC)</h2>
+    <ul>
+      <li><strong>7 Roles:</strong> Admin, Manager, Accountant, Salesperson, Warehouse, Cashier, Viewer</li>
+      <li><strong>35 Granular Permissions:</strong> sales:create, inventory:edit, accounting:journal, etc.</li>
+      <li><strong>Permission Groups:</strong> Sales, Inventory, Accounting, Customers, Reports, Settings, Users</li>
+      <li><strong>Utility Functions:</strong> hasPermission(), hasAnyPermission(), getEffectivePermissions()</li>
+      <li><strong>User Management:</strong> Role assignment, permission configuration, login/activity tracking</li>
+    </ul>
+
+    <h2>17. Warranty & Repair Service</h2>
+    <ul>
+      <li><strong>Service Tickets:</strong> Full workflow: received → diagnosing → awaiting_parts → in_repair → completed → returned</li>
+      <li><strong>Parts Management:</strong> Add/remove parts per ticket with cost tracking</li>
+      <li><strong>Warranty Tracking:</strong> Serial numbers, start/end dates, expiry alerts</li>
+      <li><strong>Technician Assignment:</strong> Assign technicians to tickets</li>
+      <li><strong>Cost Tracking:</strong> Parts + labor + shipping = total cost</li>
+      <li><strong>History:</strong> Complete status change log per ticket</li>
+    </ul>
+
+    <h2>18. Customer Credit Management</h2>
+    <ul>
+      <li><strong>Credit Limits:</strong> Per-customer maximum debt setting</li>
+      <li><strong>Block/Unblock:</strong> Block types (credit, fraud, inactive, other) with reason tracking</li>
+      <li><strong>Credit Score:</strong> 0-100 scale based on payment history, debt ratio, delay days</li>
+      <li><strong>Real-time Check:</strong> Credit validation before each sale</li>
+      <li><strong>Unblock Workflow:</strong> Customer requests → admin approves</li>
+      <li><strong>Audit Trail:</strong> Every change logged in credit_history table</li>
+    </ul>
+
+    <h2>19. Audit Log & Restore Points</h2>
+    <ul>
+      <li><strong>Enhanced Audit:</strong> userName, beforeValue, afterValue, IP tracking with search/filters</li>
+      <li><strong>Auto-cleanup:</strong> Configurable retention (30d, 90d, 6mo, 1yr, 2yr) — toggleable on/off</li>
+      <li><strong>Restore Points:</strong> Create named snapshots with SHA-256 verification</li>
+      <li><strong>Point-in-Time Recovery:</strong> Create/verify/delete/restore from any saved point</li>
+      <li><strong>Auto-cleanup:</strong> Keep last N points (5/10/20/50) — toggleable on/off</li>
+    </ul>
+
+    <h2>20. Database Migration System</h2>
+    <ul>
+      <li><strong>Versioned Migrations:</strong> v1.0 → v1.5 with incremental scripts</li>
+      <li><strong>Auto-detection:</strong> Detects current schema version on startup</li>
+      <li><strong>Pre-migration Backup:</strong> Auto-creates backup before any migration</li>
+      <li><strong>Migration History:</strong> All migrations logged with status (applied/failed)</li>
+      <li><strong>Dry-run:</strong> Preview changes without applying</li>
+      <li><strong>Validation:</strong> Post-migration integrity + foreign key + table checks</li>
+      <li><strong>IPC + Preload:</strong> Schema version, dry-run, run, history, validate APIs</li>
+    </ul>
+
     <div style="text-align:center;margin-top:48px;padding:24px;border-top:1px solid var(--border);color:var(--muted);font-size:12px">
       <p><a href="developer-en.html" style="color:var(--primary)">Developer Guide</a> | <a href="developer-fa.html" style="color:var(--primary)">راهنمای توسعه‌دهندگان</a> | <a href="index.html" style="color:var(--primary)">مستندات فنی</a></p>
     </div>
