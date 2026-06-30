@@ -80,13 +80,15 @@ export function postSaleJournal(saleId: number, saleDate: string, data: {
 
   // Only post COGS/inventory lines if inventory was affected
   if (data.affectsInventory !== false) {
-    const inventoryAcct = getAccountByCode('1300')!
-    const cogsAcct = getAccountByCode('5100')!
-    const cogs = data.items.reduce((s, i) => s + i.purchasePrice * i.quantity, 0)
-    lines.push(
-      { accountId: cogsAcct.id, debit: cogs, credit: 0, description: 'بهای تمام شده' },
-      { accountId: inventoryAcct.id, debit: 0, credit: cogs, description: 'کاهش موجودی' },
-    )
+    const inventoryAcct = getAccountByCode('1300')
+    const cogsAcct = getAccountByCode('5100')
+    if (inventoryAcct && cogsAcct) {
+      const cogs = data.items.reduce((s, i) => s + i.purchasePrice * i.quantity, 0)
+      lines.push(
+        { accountId: cogsAcct.id, debit: cogs, credit: 0, description: 'بهای تمام شده' },
+        { accountId: inventoryAcct.id, debit: 0, credit: cogs, description: 'کاهش موجودی' },
+      )
+    }
   }
 
   createJournalEntry({
