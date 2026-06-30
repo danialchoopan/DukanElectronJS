@@ -58,6 +58,7 @@ import * as proformasRepo from '../database/repositories/proformas'
 import * as serviceTicketsRepo from '../database/repositories/serviceTickets'
 import * as customerCreditRepo from '../database/repositories/customerCredit'
 import * as restorePointsRepo from '../database/repositories/restorePoints'
+import * as schemaMigration from '../database/schemaMigration'
 import * as backupService from '../database/backup'
 import * as smartExportService from '../database/smartExport'
 import * as migrationService from '../database/migration'
@@ -569,6 +570,13 @@ export function registerAllHandlers(): void {
   ipcMain.handle('restorePoints:verify', (_event, a: { id: number }) => restorePointsRepo.verifyRestorePoint(a.id))
   handleArg<{ keepCount?: number }, any>('restorePoints:cleanup', (a) => restorePointsRepo.cleanupRestorePoints(a.keepCount || 10))
   handle('restorePoints:stats', () => restorePointsRepo.getRestorePointStats())
+
+  // ─── Schema Migration ─────────────────────────────────
+  handle('migration:getVersion', () => ({ version: schemaMigration.getSchemaVersion() }))
+  handle('migration:dryRun', () => schemaMigration.dryRunMigrations())
+  handle('migration:run', () => schemaMigration.runMigrations())
+  handle('migration:history', () => schemaMigration.getMigrationHistory())
+  handle('migration:validate', () => schemaMigration.validateAfterMigration())
 
   // ─── Dialog ────────────────────────────────────────
   ipcMain.handle('dialog:saveBackup', async () => {

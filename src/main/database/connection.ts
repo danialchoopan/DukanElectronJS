@@ -35,6 +35,13 @@ export function getDatabase(): Database.Database {
     db.pragma('busy_timeout = 5000')
     initializeDatabase(db)
     migrateSchema(db)
+    // Run schema migrations for version upgrades
+    try {
+      const { runMigrations } = require('./schemaMigration')
+      const result = runMigrations()
+      if (result.applied.length > 0) console.log(`[Migration] Applied: ${result.applied.join(', ')}`)
+      if (result.errors.length > 0) console.error(`[Migration] Errors: ${result.errors.join('; ')}`)
+    } catch (e) { console.warn('[Migration] Schema migration skipped:', e) }
   }
   return db
 }

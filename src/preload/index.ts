@@ -241,6 +241,14 @@ const api = {
     getStats: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('restorePoints:stats'),
   },
 
+  schemaMigration: {
+    getVersion: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('migration:getVersion'),
+    dryRun: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('migration:dryRun'),
+    run: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('migration:run'),
+    getHistory: (): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('migration:history'),
+    validate: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('migration:validate'),
+  },
+
   returns: {
     create: (data: { saleId: number; userId: number; productId: number; quantity: number; reason: string; refundAmount: number }): Promise<IPCResponse<any>> =>
       ipcRenderer.invoke('returns:create', data),

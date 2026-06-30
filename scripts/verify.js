@@ -67,6 +67,76 @@ checks.push(['DB has products.subcategory column', conn.includes("subcategory TE
 checks.push(['DB has products.isSellable column', conn.includes('isSellable INTEGER NOT NULL DEFAULT 1')]);
 checks.push(['DB has sales.saleDate column', conn.includes('saleDate TEXT NOT NULL')]);
 checks.push(['DB has sales.affectsInventory column', conn.includes('affectsInventory INTEGER NOT NULL DEFAULT 1')]);
+checks.push(['DB has cross_sell_rules table', conn.includes('CREATE TABLE IF NOT EXISTS cross_sell_rules')]);
+checks.push(['DB has installments table', conn.includes('CREATE TABLE IF NOT EXISTS installments')]);
+checks.push(['DB has installment_payments table', conn.includes('CREATE TABLE IF NOT EXISTS installment_payments')]);
+checks.push(['DB has proformas table', conn.includes('CREATE TABLE IF NOT EXISTS proformas')]);
+checks.push(['DB has proforma_items table', conn.includes('CREATE TABLE IF NOT EXISTS proforma_items')]);
+checks.push(['DB has service_tickets table', conn.includes('CREATE TABLE IF NOT EXISTS service_tickets')]);
+checks.push(['DB has customer_credit table', conn.includes('CREATE TABLE IF NOT EXISTS customer_credit')]);
+checks.push(['DB has credit_history table', conn.includes('CREATE TABLE IF NOT EXISTS credit_history')]);
+checks.push(['DB has restore_points table', conn.includes('CREATE TABLE IF NOT EXISTS restore_points')]);
+checks.push(['DB has users.permissions column', conn.includes("permissions TEXT DEFAULT '{}'")]);
+checks.push(['DB has products.has_expiry column', conn.includes('has_expiry INTEGER NOT NULL DEFAULT 0')]);
+checks.push(['DB has products.expiry_date column', conn.includes("expiry_date TEXT DEFAULT ''")]);
+
+// 13. Migration system exists
+const mig = readFile('src/main/database/schemaMigration.ts');
+checks.push(['schemaMigration exists', mig.includes('runMigrations')]);
+checks.push(['schemaMigration has version tracking', mig.includes('getSchemaVersion')]);
+checks.push(['schemaMigration has dry-run', mig.includes('dryRunMigrations')]);
+checks.push(['schemaMigration has validation', mig.includes('validateAfterMigration')]);
+checks.push(['schemaMigration has migration_history', mig.includes('migration_history')]);
+
+// 14. Cross-sell rules repo
+const crossSell = readFile('src/main/database/repositories/crossSellRules.ts');
+checks.push(['crossSell has evaluateRules', crossSell.includes('evaluateRules')]);
+checks.push(['crossSell has rule types', crossSell.includes('mandatory') || crossSell.includes('ruleType')]);
+
+// 15. Installments repo
+const installments = readFile('src/main/database/repositories/installments.ts');
+checks.push(['installments has createInstallment', installments.includes('createInstallment')]);
+checks.push(['installments has recordPayment', installments.includes('recordPayment')]);
+
+// 16. Proformas repo
+const proformas = readFile('src/main/database/repositories/proformas.ts');
+checks.push(['proformas has convertToSale', proformas.includes('convertToSale')]);
+checks.push(['proformas has expireProformas', proformas.includes('expireProformas')]);
+
+// 17. Service tickets repo
+const service = readFile('src/main/database/repositories/serviceTickets.ts');
+checks.push(['service has workflow states', service.includes("'received'") && service.includes("'completed'")]);
+checks.push(['service has updateTicketStatus', service.includes('updateTicketStatus')]);
+
+// 18. Customer credit repo
+const credit = readFile('src/main/database/repositories/customerCredit.ts');
+checks.push(['credit has checkCredit', credit.includes('checkCredit')]);
+checks.push(['credit has blockCustomer', credit.includes('blockCustomer')]);
+checks.push(['credit has recalculateScore', credit.includes('recalculateScore')]);
+
+// 19. Calculator component exists
+const calc = readFile('src/renderer/src/components/business/Calculator.tsx');
+checks.push(['Calculator has memory functions', calc.includes('handleMemory')]);
+checks.push(['Calculator has currency conversion', calc.includes('handleCurrencyConvert')]);
+checks.push(['Calculator has keyboard support', calc.includes('keydown')]);
+
+// 20. RBAC permissions system
+const perms = readFile('src/renderer/src/utils/permissions.ts');
+checks.push(['permissions has role definitions', perms.includes('ROLE_PERMISSIONS')]);
+checks.push(['permissions has hasPermission function', perms.includes('hasPermission')]);
+checks.push(['permissions has all 7 roles', perms.includes("'admin'") && perms.includes("'manager'") && perms.includes("'accountant'") && perms.includes("'viewer'")]);
+
+// 21. Audit log enhancements
+const audit = readFile('src/main/database/repositories/audit.ts');
+checks.push(['audit has getAuditLog with filters', audit.includes('getAuditLog')]);
+checks.push(['audit has cleanupAuditLogs', audit.includes('cleanupAuditLogs')]);
+checks.push(['audit has getRecentActivity', audit.includes('getRecentActivity')]);
+
+// 22. Restore points
+const rp = readFile('src/main/database/repositories/restorePoints.ts');
+checks.push(['restorePoints has createRestorePoint', rp.includes('createRestorePoint')]);
+checks.push(['restorePoints has verifyRestorePoint', rp.includes('verifyRestorePoint')]);
+checks.push(['restorePoints has cleanupRestorePoints', rp.includes('cleanupRestorePoints')]);
 
 // 11. No confirm() in renderer (Electron rule)
 let confirmCount = 0;
