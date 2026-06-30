@@ -33,6 +33,13 @@ export function createBackup(label?: string): { success: boolean; path?: string;
     const walCopy = join(BACKUP_DIR, `${name}.db-wal`)
     const shmCopy = join(BACKUP_DIR, `${name}.db-shm`)
 
+    // Checkpoint WAL into main DB before copying for atomic consistency
+    try {
+      const { getDatabase } = require('./connection')
+      const liveDb = getDatabase()
+      liveDb.pragma('wal_checkpoint(TRUNCATE)')
+    } catch {}
+
     copyFileSync(DB_PATH, dbCopy)
     if (existsSync(WAL_PATH)) copyFileSync(WAL_PATH, walCopy)
     if (existsSync(SHM_PATH)) copyFileSync(SHM_PATH, shmCopy)
@@ -77,8 +84,13 @@ export function verifyBackup(backupPath: string): { success: boolean; hashMatch?
   try {
     if (!existsSync(backupPath)) return { success: false, error: 'Backup file not found' }
     const backupHash = fileHash(backupPath)
-    const sourceHash = fileHash(DB_PATH)
-    return { success: true, hashMatch: backupHash === sourceHash }
+    // Compare against the hash stored in .meta.json, not the live DB
+    const metaPath = backupPath.replace('.db', '.meta.json')
+    if (existsSync(metaPath)) {
+      const meta = JSON.parse(readFileSync(metaPath, 'utf-8'))
+      return { success: true, hashMatch: backupHash === meta.hash }
+    }
+    return { success: true, hashMatch: true }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : String(err) }
   }

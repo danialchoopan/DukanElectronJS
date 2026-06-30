@@ -62,26 +62,34 @@ export function createJournalEntry(data: {
 export function postSaleJournal(saleId: number, saleDate: string, data: {
   items: { purchasePrice: number; quantity: number }[]
   total_amount: number; paymentMethod: string
+  affectsInventory?: boolean
 }): void {
   const cashAcct = getAccountByCode('1100')!
   const bankAcct = getAccountByCode('1200')!
   const arAcct = getAccountByCode('1400')!
   const salesAcct = getAccountByCode('4100')!
-  const inventoryAcct = getAccountByCode('1300')!
-  const cogsAcct = getAccountByCode('5100')!
 
-  const cogs = data.items.reduce((s, i) => s + i.purchasePrice * i.quantity, 0)
   const receiveAccount = data.paymentMethod === 'cash' ? cashAcct : data.paymentMethod === 'card' ? bankAcct : arAcct
+  const lines: { accountId: number; debit: number; credit: number; description: string }[] = [
+    { accountId: receiveAccount.id, debit: data.total_amount, credit: 0, description: 'دریافت وجه' },
+    { accountId: salesAcct.id, debit: 0, credit: data.total_amount, description: 'درآمد فروش' },
+  ]
+
+  // Only post COGS/inventory lines if inventory was affected
+  if (data.affectsInventory !== false) {
+    const inventoryAcct = getAccountByCode('1300')!
+    const cogsAcct = getAccountByCode('5100')!
+    const cogs = data.items.reduce((s, i) => s + i.purchasePrice * i.quantity, 0)
+    lines.push(
+      { accountId: cogsAcct.id, debit: cogs, credit: 0, description: 'بهای تمام شده' },
+      { accountId: inventoryAcct.id, debit: 0, credit: cogs, description: 'کاهش موجودی' },
+    )
+  }
 
   createJournalEntry({
     entryDate: saleDate, description: `فروش فاکتور #${saleId}`,
     referenceType: 'sale', referenceId: saleId,
-    lines: [
-      { accountId: receiveAccount.id, debit: data.total_amount, credit: 0, description: 'دریافت وجه' },
-      { accountId: salesAcct.id, debit: 0, credit: data.total_amount, description: 'درآمد فروش' },
-      { accountId: cogsAcct.id, debit: cogs, credit: 0, description: 'بهای تمام شده' },
-      { accountId: inventoryAcct.id, debit: 0, credit: cogs, description: 'کاهش موجودی' },
-    ]
+    lines,
   })
 }
 
@@ -247,5 +255,37 @@ export function getGeneralLedger(accountId: number, startDate?: string, endDate?
   return rows.map(r => {
     runningBalance += r.debit - r.credit
     return { ...r, balance: runningBalance }
+  })
+}
+
+/**
+ * Reverse a journal entry for a deleted expense or sale.
+ * Creates a compensating entry that reverses the original.
+ */
+export function reverseExpenseJournal(expenseId: number, referenceType: string): void {
+  const db = getDatabase()
+  // Find the original journal entry
+  const entry = db.prepare(
+    "SELECT * FROM journal_entries WHERE referenceType = ? AND referenceId = ?"
+  ).get(referenceType, expenseId) as { id: number } | undefined
+  if (!entry) return
+
+  // Get the lines
+  const lines = db.prepare('SELECT * FROM journal_entry_lines WHERE entryId = ?').all(entry.id) as { accountId: number; debit: number; credit: number; description: string }[]
+  if (lines.length === 0) return
+
+  // Create reverse entry: swap debit and credit
+  const reverseLines = lines.map(l => ({
+    accountId: l.accountId,
+    debit: l.credit,
+    credit: l.debit,
+    description: `برگشت: ${l.description}`,
+  }))
+  createJournalEntry({
+    entryDate: new Date().toISOString().slice(0, 10),
+    description: `برگشت هزینه #${expenseId}`,
+    referenceType: 'reversal',
+    referenceId: expenseId,
+    lines: reverseLines,
   })
 }

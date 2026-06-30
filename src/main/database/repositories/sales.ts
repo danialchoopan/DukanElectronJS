@@ -86,7 +86,8 @@ export function createSale(input: SaleInput): Sale {
   try {
     postSaleJournal(saleId, saleDate.slice(0, 10), {
       items: input.items.map(i => ({ purchasePrice: i.purchasePrice, quantity: i.quantity })),
-      total_amount, paymentMethod: input.paymentMethod
+      total_amount, paymentMethod: input.paymentMethod,
+      affectsInventory: affectsInventory === 1,
     })
   } catch (err) {
     console.error(`[Sales] Journal posting failed for sale ${saleId}:`, err)
