@@ -325,7 +325,7 @@ export function seedDatabase(): void {
   if (existingRules === 0 && existingProducts.c > 0) {
     const rule1 = db.prepare("INSERT INTO cross_sell_rules (name, triggerType, triggerValue, ruleType, priority, createdBy) VALUES (?, ?, ?, ?, ?, 'admin')").run('لبنیات + نان', 'category', 'لبنیات', 'recommended', 1)
     const rule2 = db.prepare("INSERT INTO cross_sell_rules (name, triggerType, triggerValue, ruleType, priority, createdBy) VALUES (?, ?, ?, ?, ?, 'admin')").run('آب معدنی + میان‌وعده', 'category', 'نوشیدنی', 'optional', 2)
-    db.prepare("INSERT INTO cross_sell_rules (name, triggerType, triggerValue, ruleType, priority, createdBy) VALUES (?, ?, ?, ?, ?, 'admin')").run('خرید بالای ۲۰۰ هزار', 'price', '200000', 'mandatory', 0)
+    db.prepare("INSERT INTO cross_sell_rules (name, triggerType, triggerValue, triggerCondition, triggerThreshold, ruleType, priority, createdBy) VALUES (?, ?, '', '>=', ?, ?, ?, 'admin')").run('خرید بالای ۲۰۰ هزار', 'price', 200000, 'mandatory', 0)
 
     // Add items to rules
     const insertRuleItem = db.prepare('INSERT INTO cross_sell_rule_items (ruleId, productId, quantity, discountPercent) VALUES (?, ?, ?, ?)')
