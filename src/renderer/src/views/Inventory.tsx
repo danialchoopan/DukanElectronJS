@@ -1177,8 +1177,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
                     </div>
                     <div>
                       <label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>تاریخ (اختیاری)</label>
-                      <input type="date" value={adjustmentDate} onChange={(e) => setAdjustmentDate(e.target.value)}
-                        className="input-field text-sm" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', color: textPrimary, border: `1px solid ${cardBorder}`, direction: 'ltr', textAlign: 'center' }} />
+                      <ShamsiDateInput value={adjustmentDate} onChange={(v) => setAdjustmentDate(v)} />
                     </div>
                     <div className="col-span-2 flex justify-end gap-2 mt-2">
                       <button onClick={async () => {

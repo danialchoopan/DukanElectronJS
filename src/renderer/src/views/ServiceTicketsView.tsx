@@ -16,6 +16,7 @@ import { useState, useEffect } from 'react'
 import { useSettingsStore } from '../store/settingsStore'
 import { useAuthStore } from '../store/authStore'
 import { formatPriceFA, formatPriceComma } from '../utils/jalali'
+import ShamsiDateInput from '../components/business/ShamsiDateInput'
 import Dialog, { DialogButton } from '../components/ui/Dialog'
 
 const STATUS_COLORS: Record<string, string> = { received: '#3b82f6', diagnosing: '#f59e0b', awaiting_parts: '#a855f7', in_repair: '#06b6d4', completed: '#22c55e', returned: '#14b8a6', cancelled: '#94a3b8' }
@@ -177,7 +178,7 @@ export default function ServiceTicketsView() {
               <textarea value={createForm.problemDescription} onChange={(e) => setCreateForm({ ...createForm, problemDescription: e.target.value })} className="input-field text-sm w-full" rows={3} style={inputStyle} /></div>
             <div className="grid grid-cols-2 gap-2">
               <div><label className="text-xs font-bold block mb-1" style={{ color: tSec }}>تکنسین</label><input value={createForm.technician} onChange={(e) => setCreateForm({ ...createForm, technician: e.target.value })} className="input-field text-sm w-full" style={inputStyle} /></div>
-              <div><label className="text-xs font-bold block mb-1" style={{ color: tSec }}>تاریخ تقریبی تکمیل</label><input type="date" value={createForm.estimatedCompletion} onChange={(e) => setCreateForm({ ...createForm, estimatedCompletion: e.target.value })} className="input-field text-sm w-full" style={{ ...inputStyle, direction: 'ltr' }} /></div>
+              <div><label className="text-xs font-bold block mb-1" style={{ color: tSec }}>تاریخ تقریبی تکمیل</label><ShamsiDateInput value={createForm.estimatedCompletion} onChange={(v) => setCreateForm({ ...createForm, estimatedCompletion: v })} /></div>
             </div>
             <div className="flex items-center gap-2">
               <input type="checkbox" checked={createForm.warrantyClaim} onChange={(e) => setCreateForm({ ...createForm, warrantyClaim: e.target.checked })} style={{ accentColor: '#3b82f6' }} />
@@ -185,8 +186,8 @@ export default function ServiceTicketsView() {
             </div>
             {createForm.warrantyClaim && (
               <div className="grid grid-cols-2 gap-2">
-                <div><label className="text-[10px] font-bold block mb-1" style={{ color: tSec }}>شروع گارانتی</label><input type="date" value={createForm.warrantyStartDate} onChange={(e) => setCreateForm({ ...createForm, warrantyStartDate: e.target.value })} className="input-field text-xs w-full" style={{ ...inputStyle, direction: 'ltr' }} /></div>
-                <div><label className="text-[10px] font-bold block mb-1" style={{ color: tSec }}>پایان گارانتی</label><input type="date" value={createForm.warrantyEndDate} onChange={(e) => setCreateForm({ ...createForm, warrantyEndDate: e.target.value })} className="input-field text-xs w-full" style={{ ...inputStyle, direction: 'ltr' }} /></div>
+                <div><label className="text-[10px] font-bold block mb-1" style={{ color: tSec }}>شروع گارانتی</label><ShamsiDateInput value={createForm.warrantyStartDate} onChange={(v) => setCreateForm({ ...createForm, warrantyStartDate: v })} /></div>
+                <div><label className="text-[10px] font-bold block mb-1" style={{ color: tSec }}>پایان گارانتی</label><ShamsiDateInput value={createForm.warrantyEndDate} onChange={(v) => setCreateForm({ ...createForm, warrantyEndDate: v })} /></div>
               </div>
             )}
           </div>

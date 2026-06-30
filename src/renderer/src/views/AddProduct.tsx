@@ -32,6 +32,7 @@ import { useSortable } from '../hooks/useSortable'
 import PrintDialog from '../components/print/PrintDialog'
 import { getProductImageUrl } from '../utils/productImage'
 import Dialog from '../components/ui/Dialog'
+import ShamsiDateInput from '../components/business/ShamsiDateInput'
 
 const primary = '#006194'
 
@@ -381,8 +382,7 @@ export default function AddProduct() {
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   <div>
                     <label className="text-[10px] font-bold block mb-1" style={{ color: textSecondary }}>تاریخ انقضا</label>
-                    <input type="date" value={form.expiryDate || ''} onChange={(e) => setForm((f) => ({ ...f, expiryDate: e.target.value }))}
-                      className="input-field text-xs w-full" style={{ ...inputStyle, direction: 'ltr', textAlign: 'center' }} />
+                    <ShamsiDateInput value={form.expiryDate || ''} onChange={(v) => setForm((f) => ({ ...f, expiryDate: v }))} />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold block mb-1" style={{ color: textSecondary }}>روزهای هشدار</label>

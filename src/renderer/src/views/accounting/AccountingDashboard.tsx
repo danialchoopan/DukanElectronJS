@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import { downloadExcel, printA4Report } from '../../utils/a4Print'
+import ShamsiDateInput from '../../components/business/ShamsiDateInput'
 
 export default function AccountingDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0)
@@ -188,7 +189,7 @@ export default function AccountingDashboard() {
           <div className="grid grid-cols-2 gap-3 mb-3">
             <div>
               <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.journal.date}</label>
-              <input type="date" value={journalForm.entryDate} onChange={e => setJournalForm(f => ({ ...f, entryDate: e.target.value }))} className="input-field w-full text-sm" />
+              <ShamsiDateInput value={journalForm.entryDate} onChange={e => setJournalForm(f => ({ ...f, entryDate: e }))} />
             </div>
             <div>
               <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>{fa.accounting.journal.description}</label>

@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { useSettingsStore } from '../../store/settingsStore'
 import Pagination from '../../components/ui/Pagination'
 import { formatJalaliDateTime } from '../../utils/jalali'
+import ShamsiDateInput from '../../components/business/ShamsiDateInput'
 
 export default function PriceHistory() {
   const theme = useSettingsStore(s => s.theme)
@@ -111,11 +112,9 @@ export default function PriceHistory() {
               <option value="sale">قیمت فروش</option>
               <option value="purchase">قیمت خرید</option>
             </select>
-            <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setPage(0) }}
-              className="px-3 py-2 rounded-xl text-xs" style={{ backgroundColor: cBg, border: `1px solid ${cBorder}`, color: tPri }} />
+            <ShamsiDateInput value={startDate} onChange={(v) => { setStartDate(v); setPage(0) }} />
             <span className="text-xs self-center" style={{ color: tSec }}>تا</span>
-            <input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setPage(0) }}
-              className="px-3 py-2 rounded-xl text-xs" style={{ backgroundColor: cBg, border: `1px solid ${cBorder}`, color: tPri }} />
+            <ShamsiDateInput value={endDate} onChange={(v) => { setEndDate(v); setPage(0) }} />
             <input type="text" value={search} onChange={e => { setSearch(e.target.value); setPage(0) }} placeholder="جستجوی محصول..."
               className="px-3 py-2 rounded-xl text-xs flex-1" style={{ backgroundColor: cBg, border: `1px solid ${cBorder}`, color: tPri }} />
           </div>

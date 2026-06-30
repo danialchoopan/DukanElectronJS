@@ -38,6 +38,7 @@ import Notification from '../components/layout/Notification'
 import { CameraIcon } from '../components/ui/Icons'
 import PopularItems from '../components/business/PopularItems'
 import { formatJalaliDateTime, getTodayGregorian } from '../utils/jalali'
+import ShamsiDateInput from '../components/business/ShamsiDateInput'
 import type { Sale, Customer, Product } from "../../../types"
 import Dialog, { DialogField, DialogInput, DialogTextarea, DialogButton } from '../components/ui/Dialog'
 
@@ -227,8 +228,7 @@ export default function SalesTerminal() {
           </div>
         </DialogField>
         <DialogField label="تاریخ فاکتور">
-          <input type="date" value={saleDate || getTodayGregorian()} onChange={(e) => setSaleDate(e.target.value)}
-            className="input-field text-sm" style={{ direction: 'ltr', textAlign: 'center', backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '8px 12px', width: '100%' }} />
+          <ShamsiDateInput value={saleDate || getTodayGregorian()} onChange={(v) => setSaleDate(v)} label="" />
         </DialogField>
         <DialogField label="تأثیر بر موجودی">
           <div className="flex items-center gap-2">

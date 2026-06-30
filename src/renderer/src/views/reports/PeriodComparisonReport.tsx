@@ -16,6 +16,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useSettingsStore } from '../../store/settingsStore'
 import { formatPriceFA, formatPriceComma } from '../../utils/jalali'
 import { downloadExcel } from '../../utils/a4Print'
+import ShamsiDateInput from '../../components/business/ShamsiDateInput'
 
 type Preset = 'today' | 'week' | 'month' | 'quarter' | 'year' | 'custom'
 
@@ -135,19 +136,15 @@ export default function PeriodComparisonReport() {
           <div>
             <label className="text-[10px] font-bold block mb-1" style={{ color: tSec }}>دوره فعلی</label>
             <div className="flex gap-2">
-              <input type="date" value={customCurrent.start} onChange={(e) => setCustomCurrent({ ...customCurrent, start: e.target.value })}
-                className="input-field text-xs flex-1 outline-none" style={{ border: `1px solid ${cardBorder}`, color: tPri, direction: 'ltr' }} />
-              <input type="date" value={customCurrent.end} onChange={(e) => setCustomCurrent({ ...customCurrent, end: e.target.value })}
-                className="input-field text-xs flex-1 outline-none" style={{ border: `1px solid ${cardBorder}`, color: tPri, direction: 'ltr' }} />
+              <ShamsiDateInput value={customCurrent.start} onChange={(v) => setCustomCurrent({ ...customCurrent, start: v })} />
+              <ShamsiDateInput value={customCurrent.end} onChange={(v) => setCustomCurrent({ ...customCurrent, end: v })} />
             </div>
           </div>
           <div>
             <label className="text-[10px] font-bold block mb-1" style={{ color: tSec }}>دوره قبل</label>
             <div className="flex gap-2">
-              <input type="date" value={customPrevious.start} onChange={(e) => setCustomPrevious({ ...customPrevious, start: e.target.value })}
-                className="input-field text-xs flex-1 outline-none" style={{ border: `1px solid ${cardBorder}`, color: tPri, direction: 'ltr' }} />
-              <input type="date" value={customPrevious.end} onChange={(e) => setCustomPrevious({ ...customPrevious, end: e.target.value })}
-                className="input-field text-xs flex-1 outline-none" style={{ border: `1px solid ${cardBorder}`, color: tPri, direction: 'ltr' }} />
+              <ShamsiDateInput value={customPrevious.start} onChange={(v) => setCustomPrevious({ ...customPrevious, start: v })} />
+              <ShamsiDateInput value={customPrevious.end} onChange={(v) => setCustomPrevious({ ...customPrevious, end: v })} />
             </div>
           </div>
         </div>

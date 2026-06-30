@@ -13,6 +13,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSettingsStore } from '../store/settingsStore'
 import { downloadExcel } from '../utils/a4Print'
+import ShamsiDateInput from '../components/business/ShamsiDateInput'
 import Dialog, { DialogButton } from '../components/ui/Dialog'
 
 const ACTION_COLORS: Record<string, string> = { create: '#22c55e', update: '#3b82f6', delete: '#ef4444', restock: '#f59e0b', return: '#a855f7', login: '#06b6d4', block: '#ef4444', unblock: '#22c55e' }
@@ -90,10 +91,8 @@ export default function AuditLogView() {
           <option value="">همه عملیات</option>
           {Object.entries(ACTION_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
-        <input type="date" value={filters.startDate} onChange={(e) => { setFilters({ ...filters, startDate: e.target.value }); setPage(0) }}
-          className="px-2 py-1 rounded-lg text-xs outline-none" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cardBorder}`, color: tPri, direction: 'ltr' }} />
-        <input type="date" value={filters.endDate} onChange={(e) => { setFilters({ ...filters, endDate: e.target.value }); setPage(0) }}
-          className="px-2 py-1 rounded-lg text-xs outline-none" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cardBorder}`, color: tPri, direction: 'ltr' }} />
+        <ShamsiDateInput value={filters.startDate} onChange={(v) => { setFilters({ ...filters, startDate: v }); setPage(0) }} />
+        <ShamsiDateInput value={filters.endDate} onChange={(v) => { setFilters({ ...filters, endDate: v }); setPage(0) }} />
         <div className="flex-1" />
         <button onClick={handleExport} className="px-3 py-1.5 rounded-xl text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>خروجی</button>
         <button onClick={() => setShowCleanup(true)} className="px-3 py-1.5 rounded-xl text-xs font-bold" style={{ backgroundColor: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}>پاکسازی</button>

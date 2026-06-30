@@ -16,6 +16,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSettingsStore } from '../store/settingsStore'
 import { formatPriceFA, formatPriceComma } from '../utils/jalali'
 import { downloadExcel } from '../utils/a4Print'
+import ShamsiDateInput from '../components/business/ShamsiDateInput'
 
 interface ProfitRow {
   productId: number; productTitle: string; barcode: string; category: string
@@ -99,8 +100,8 @@ export default function ProfitReport() {
         ))}
         {period === 'custom' && (
           <div className="flex gap-2">
-            <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} className="px-2 py-1 rounded-lg text-xs outline-none" style={{ border: `1px solid ${cardBorder}`, color: tPri, direction: 'ltr' }} />
-            <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} className="px-2 py-1 rounded-lg text-xs outline-none" style={{ border: `1px solid ${cardBorder}`, color: tPri, direction: 'ltr' }} />
+            <ShamsiDateInput value={customStart} onChange={(v) => setCustomStart(v)} />
+            <ShamsiDateInput value={customEnd} onChange={(v) => setCustomEnd(v)} />
           </div>
         )}
         <div className="flex-1" />
