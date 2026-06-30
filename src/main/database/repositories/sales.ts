@@ -64,7 +64,10 @@ export function createSale(input: SaleInput): Sale {
 
       itemStmt.run(saleId, item.productId, item.productTitle, item.quantity, item.unitPrice, item.purchasePrice, lineSubtotal, lineProfit)
       if (affectsInventory) {
-        decrementStock(item.productId, item.quantity)
+        const stockOk = decrementStock(item.productId, item.quantity)
+        if (!stockOk) {
+          console.warn(`[Sales] Stock insufficient for product ${item.productId} (${item.productTitle}): requested ${item.quantity}`)
+        }
       }
     }
 
@@ -80,10 +83,14 @@ export function createSale(input: SaleInput): Sale {
 
   const saleId = createSaleTx()
 
-  postSaleJournal(saleId, saleDate.slice(0, 10), {
-    items: input.items.map(i => ({ purchasePrice: i.purchasePrice, quantity: i.quantity })),
-    total_amount, paymentMethod: input.paymentMethod
-  })
+  try {
+    postSaleJournal(saleId, saleDate.slice(0, 10), {
+      items: input.items.map(i => ({ purchasePrice: i.purchasePrice, quantity: i.quantity })),
+      total_amount, paymentMethod: input.paymentMethod
+    })
+  } catch (err) {
+    console.error(`[Sales] Journal posting failed for sale ${saleId}:`, err)
+  }
 
   return getSaleById(saleId)!
 }

@@ -118,10 +118,21 @@ function getPendingMigrations(): Migration[] {
  * Returns { success, applied, errors }.
  */
 export function runMigrations(): { success: boolean; applied: string[]; errors: string[] } {
+  const db = getDatabase()
+  // Ensure migration_history table exists before running any migrations
+  db.exec(`CREATE TABLE IF NOT EXISTS migration_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fromVersion TEXT NOT NULL,
+    toVersion TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'applied',
+    errorMessage TEXT DEFAULT '',
+    createdAt TEXT DEFAULT (datetime('now', 'localtime'))
+  )`)
+
   const pending = getPendingMigrations()
   if (pending.length === 0) return { success: true, applied: [], errors: [] }
 
-  const db = getDatabase()
   const applied: string[] = []
   const errors: string[] = []
 

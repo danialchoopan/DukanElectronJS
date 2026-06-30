@@ -71,10 +71,10 @@ export function getRuleById(id: number): CrossSellRule | undefined {
   if (!row) return undefined
   const rule = formatRule(row)
   rule.items = db.prepare(`
-    SELECT csr.*, p.title as productName
-    FROM cross_sell_rules csr
-    JOIN products p ON csr.productId = p.id
-    WHERE csr.ruleId = ?
+    SELECT csi.*, p.title as productName
+    FROM cross_sell_rule_items csi
+    JOIN products p ON csi.productId = p.id
+    WHERE csi.ruleId = ?
   `).all(id) as CrossSellRuleItem[]
   return rule
 }
@@ -165,10 +165,10 @@ export function evaluateRules(
 
     if (matches) {
       const items = db.prepare(`
-        SELECT csr.*, p.title as productName
-        FROM cross_sell_rules csr
-        JOIN products p ON csr.productId = p.id
-        WHERE csr.ruleId = ?
+        SELECT csi.*, p.title as productName
+        FROM cross_sell_rule_items csi
+        JOIN products p ON csi.productId = p.id
+        WHERE csi.ruleId = ?
       `).all(rule.id) as any[]
 
       for (const item of items) {

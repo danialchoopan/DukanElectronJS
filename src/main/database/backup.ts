@@ -8,6 +8,7 @@ import { app } from 'electron'
 import { join } from 'path'
 import { copyFileSync, existsSync, readdirSync, unlinkSync, statSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { createHash } from 'crypto'
+import { closeDatabase } from './connection'
 
 const BACKUP_DIR = join(app.getPath('userData'), 'backups')
 const DB_PATH = join(app.getPath('userData'), 'pos.db')
@@ -91,6 +92,9 @@ export function restoreBackup(backupPath: string): { success: boolean; error?: s
     if (!check.success) return { success: false, error: `Backup integrity failed: ${check.error || check.integrityCheck}` }
 
     createBackup('pre-restore')
+
+    // Close the database connection before overwriting the file
+    closeDatabase()
 
     copyFileSync(backupPath, DB_PATH)
 

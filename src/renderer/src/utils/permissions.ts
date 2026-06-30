@@ -144,7 +144,8 @@ export function hasAnyPermission(userPermissions: string[] | string, permissions
 /** Get permissions for a role (includes role defaults + custom permissions) */
 export function getEffectivePermissions(role: RoleName, customPermissions: string = '{}'): Permission[] {
   const rolePerms = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.viewer
-  const custom = typeof customPermissions === 'string' ? JSON.parse(customPermissions || '{}') : customPermissions
+  let custom: any = {}
+  try { custom = typeof customPermissions === 'string' ? JSON.parse(customPermissions || '{}') : customPermissions } catch {}
   const extra = custom.extra || []
   return [...new Set([...rolePerms, ...extra])]
 }

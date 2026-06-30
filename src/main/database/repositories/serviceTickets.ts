@@ -128,6 +128,23 @@ export function updateTicketStatus(id: number, newStatus: string, note: string =
   const db = getDatabase()
   const ticket = db.prepare('SELECT status FROM service_tickets WHERE id = ?').get(id) as { status: string } | undefined
   if (!ticket) return false
+
+  // Validate status transition
+  const validTransitions: Record<string, string[]> = {
+    received: ['diagnosing', 'cancelled'],
+    diagnosing: ['awaiting_parts', 'in_repair', 'cancelled'],
+    awaiting_parts: ['in_repair', 'cancelled'],
+    in_repair: ['completed', 'cancelled'],
+    completed: ['returned'],
+    returned: [],
+    cancelled: [],
+  }
+  const allowed = validTransitions[ticket.status] || []
+  if (!allowed.includes(newStatus)) {
+    console.warn(`[Service] Invalid transition: ${ticket.status} → ${newStatus}`)
+    return false
+  }
+
   db.prepare("UPDATE service_tickets SET status = ?, updatedAt = datetime('now', 'localtime') WHERE id = ?").run(newStatus, id)
   db.prepare("INSERT INTO service_history (ticketId, fromStatus, toStatus, note, changedBy) VALUES (?, ?, ?, ?, ?)").run(id, ticket.status, newStatus, note, changedBy)
   return true

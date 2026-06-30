@@ -170,6 +170,8 @@ export function expireProformas(): number {
 
 export function deleteProforma(id: number): boolean {
   const db = getDatabase()
-  const result = db.prepare('DELETE FROM proformas WHERE id = ?').run(id)
-  return result.changes > 0
+  const proforma = db.prepare('SELECT status FROM proformas WHERE id = ?').get(id) as { status: string } | undefined
+  if (!proforma) return false
+  if (proforma.status === 'converted') return false // Cannot delete converted proformas
+  return db.prepare('DELETE FROM proformas WHERE id = ?').run(id).changes > 0
 }

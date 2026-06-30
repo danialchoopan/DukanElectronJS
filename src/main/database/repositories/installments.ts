@@ -109,10 +109,12 @@ export function recordPayment(installmentPaymentId: number, amount: number, note
   if (!payment) return false
 
   const paidDate = new Date().toISOString().slice(0, 19).replace('T', ' ')
-  const newStatus = amount >= payment.amount ? 'paid' : 'partial'
+  const alreadyPaid = payment.paidDate ? payment.amount : 0
+  const totalPaid = alreadyPaid + amount
+  const newStatus = totalPaid >= payment.amount ? 'paid' : 'partial'
 
-  db.prepare('UPDATE installment_payments SET paidDate = ?, amount = ?, status = ?, notes = ? WHERE id = ?')
-    .run(paidDate, amount, newStatus, notes, installmentPaymentId)
+  db.prepare("UPDATE installment_payments SET paidDate = ?, amount = ?, status = ?, notes = ? WHERE id = ?")
+    .run(paidDate, totalPaid, newStatus, notes, installmentPaymentId)
 
   // Check if all payments are paid -> mark installment as completed
   const installment = db.prepare('SELECT * FROM installments WHERE id = ?').get(payment.installmentId) as any
