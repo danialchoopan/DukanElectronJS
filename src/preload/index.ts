@@ -242,11 +242,11 @@ const api = {
   },
 
   schemaMigration: {
-    getVersion: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('migration:getVersion'),
-    dryRun: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('migration:dryRun'),
-    run: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('migration:run'),
-    getHistory: (): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('migration:history'),
-    validate: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('migration:validate'),
+    getVersion: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('schema:getVersion'),
+    dryRun: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('schema:dryRun'),
+    run: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('schema:run'),
+    getHistory: (): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('schema:history'),
+    validate: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('schema:validate'),
   },
 
   returns: {

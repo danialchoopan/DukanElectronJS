@@ -572,11 +572,11 @@ export function registerAllHandlers(): void {
   handle('restorePoints:stats', () => restorePointsRepo.getRestorePointStats())
 
   // ─── Schema Migration ─────────────────────────────────
-  handle('migration:getVersion', () => ({ version: schemaMigration.getSchemaVersion() }))
-  handle('migration:dryRun', () => schemaMigration.dryRunMigrations())
-  handle('migration:run', () => schemaMigration.runMigrations())
-  handle('migration:history', () => schemaMigration.getMigrationHistory())
-  handle('migration:validate', () => schemaMigration.validateAfterMigration())
+  handle('schema:getVersion', () => ({ version: schemaMigration.getSchemaVersion() }))
+  handle('schema:dryRun', () => schemaMigration.dryRunMigrations())
+  handle('schema:run', () => schemaMigration.runMigrations())
+  handle('schema:history', () => schemaMigration.getMigrationHistory())
+  handle('schema:validate', () => schemaMigration.validateAfterMigration())
 
   // ─── Dialog ────────────────────────────────────────
   ipcMain.handle('dialog:saveBackup', async () => {

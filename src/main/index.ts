@@ -6,6 +6,7 @@ import { readFileSync } from 'fs'
 import { appendFileSync } from 'fs'
 import { seedDatabase } from './database/seed'
 import { autoBackup } from './database/backup'
+import { runMigrations } from './database/schemaMigration'
 import * as settingsRepo from './database/repositories/settings'
 
 let mainWindow: BrowserWindow | null = null
@@ -79,6 +80,10 @@ app.whenReady().then(async () => {
   try {
     getDatabase()
     seedDatabase()
+    // Run schema migrations for version upgrades
+    const migResult = runMigrations()
+    if (migResult.applied.length > 0) console.log(`[Migration] Applied: ${migResult.applied.join(', ')}`)
+    if (migResult.errors.length > 0) console.error(`[Migration] Errors: ${migResult.errors.join('; ')}`)
     registerAllHandlers()
     const autoBackupSetting = settingsRepo.getSetting('autoBackupEnabled')
     if (autoBackupSetting !== 'false') await autoBackup()
