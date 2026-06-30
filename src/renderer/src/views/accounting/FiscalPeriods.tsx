@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
+import { useAuthStore } from '../../store/authStore'
 
 interface FiscalPeriod {
   id: number; name: string; startDate: string; endDate: string
@@ -8,6 +9,7 @@ interface FiscalPeriod {
 
 export default function FiscalPeriods() {
   const [periods, setPeriods] = useState<FiscalPeriod[]>([])
+  const user = useAuthStore((s: any) => s.user)
   const [showCreate, setShowCreate] = useState(false)
   const [newYear, setNewYear] = useState(String(new Date().getFullYear()))
   const [loading, setLoading] = useState(false)
@@ -48,7 +50,7 @@ export default function FiscalPeriods() {
   const handleClose = async (id: number) => {
     if (!confirm('آیا از بستن این دوره اطمینان دارید؟')) return
     setLoading(true)
-    await window.api.periods.close(id, 1)
+    await window.api.periods.close(id, user?.id || 1)
     setLoading(false)
     load()
   }

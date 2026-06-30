@@ -10,8 +10,8 @@ export function getActivePeriod(): FiscalPeriod | undefined {
 }
 
 export function closePeriod(id: number, userId: number): boolean {
-  getDatabase().prepare('UPDATE fiscal_periods SET isClosed = 1, closedAt = datetime("now", "localtime"), closedBy = ? WHERE id = ? AND isClosed = 0').run(userId, id)
-  return true
+  const r = getDatabase().prepare('UPDATE fiscal_periods SET isClosed = 1, closedAt = datetime("now", "localtime"), closedBy = ? WHERE id = ? AND isClosed = 0').run(userId, id)
+  return r.changes > 0
 }
 
 export function createPeriod(name: string, startDate: string, endDate: string): FiscalPeriod {
@@ -20,6 +20,6 @@ export function createPeriod(name: string, startDate: string, endDate: string): 
 }
 
 export function reopenPeriod(id: number): boolean {
-  getDatabase().prepare('UPDATE fiscal_periods SET isClosed = 0, closedAt = NULL, closedBy = NULL WHERE id = ?').run(id)
-  return true
+  const r = getDatabase().prepare('UPDATE fiscal_periods SET isClosed = 0, closedAt = NULL, closedBy = NULL WHERE id = ?').run(id)
+  return r.changes > 0
 }

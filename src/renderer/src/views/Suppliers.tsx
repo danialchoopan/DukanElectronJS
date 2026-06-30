@@ -152,11 +152,12 @@ export default function Suppliers() {
   const purchaseTotal = purchaseSubtotal + purchaseForm.taxAmount - purchaseForm.discountAmount
 
   const handleCreatePurchase = async () => {
-    if (!purchaseForm.supplierId || purchaseForm.items.length === 0) return
+    const validItems = purchaseForm.items.filter(i => i.productTitle.trim() && i.quantity > 0 && i.unitCost >= 0)
+    if (!purchaseForm.supplierId || validItems.length === 0) return
     setLoading(true)
     await window.api.purchases.create({
       supplierId: purchaseForm.supplierId,
-      items: purchaseForm.items.filter(i => i.productTitle.trim()),
+      items: validItems,
       taxAmount: purchaseForm.taxAmount,
       discountAmount: purchaseForm.discountAmount,
       paidAmount: purchaseForm.paidAmount,
