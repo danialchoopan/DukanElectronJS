@@ -38,7 +38,9 @@ export function createBackup(label?: string): { success: boolean; path?: string;
       const { getDatabase } = require('./connection')
       const liveDb = getDatabase()
       liveDb.pragma('wal_checkpoint(TRUNCATE)')
-    } catch {}
+    } catch (e) {
+      console.warn('[Backup] WAL checkpoint failed:', e)
+    }
 
     copyFileSync(DB_PATH, dbCopy)
     if (existsSync(WAL_PATH)) copyFileSync(WAL_PATH, walCopy)

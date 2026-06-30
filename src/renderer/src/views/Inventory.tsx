@@ -115,7 +115,10 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
   }
 
   const handleInlineUpdate = async (id: number, field: string, value: number) => {
-    await window.api.products.update(id, { [field]: value } as any)
+    try {
+      const r = await window.api.products.update(id, { [field]: value } as any)
+      if (!r.success) { await loadProducts(); return }
+    } catch { await loadProducts(); return }
     await loadProducts()
   }
 
