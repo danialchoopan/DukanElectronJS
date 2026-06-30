@@ -67,6 +67,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
 
   setLanguage: (language) => {
     set({ language })
+    document.documentElement.dir = language === 'fa' ? 'rtl' : 'ltr'
+    document.documentElement.lang = language
     window.api.settings.set('language', language)
   },
 
@@ -115,6 +117,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       const showCameraScanner = result.data.showCameraScanner !== 'false'
       set({ theme, language, navTheme, fontSize, fontSizeCustom, highContrast, showCameraScanner })
       applyTheme(theme)
+      document.documentElement.dir = language === 'fa' ? 'rtl' : 'ltr'
+      document.documentElement.lang = language
       document.documentElement.style.fontSize = `${fontSizeCustom * 16}px`
       if (highContrast) document.documentElement.classList.add('high-contrast')
     }

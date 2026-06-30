@@ -64,10 +64,13 @@ export function postSaleJournal(saleId: number, saleDate: string, data: {
   total_amount: number; paymentMethod: string
   affectsInventory?: boolean
 }): void {
-  const cashAcct = getAccountByCode('1100')!
-  const bankAcct = getAccountByCode('1200')!
-  const arAcct = getAccountByCode('1400')!
-  const salesAcct = getAccountByCode('4100')!
+  const cashAcct = getAccountByCode('1100')
+  const bankAcct = getAccountByCode('1200')
+  const arAcct = getAccountByCode('1400')
+  const salesAcct = getAccountByCode('4100')
+  if (!cashAcct || !bankAcct || !arAcct || !salesAcct) {
+    console.error('[Journal] Missing required account codes for sale journal'); return
+  }
 
   const receiveAccount = data.paymentMethod === 'cash' ? cashAcct : data.paymentMethod === 'card' ? bankAcct : arAcct
   const lines: { accountId: number; debit: number; credit: number; description: string }[] = [
@@ -99,13 +102,16 @@ export function postSaleJournal(saleId: number, saleDate: string, data: {
  *   Credit: Cash (1100)
  */
 export function postExpenseJournal(expenseId: number, expenseDate: string, amount: number, category: string): void {
-  const cashAcct = getAccountByCode('1100')!
+  const cashAcct = getAccountByCode('1100')
   const categoryMap: Record<string, string> = {
     'اجاره': '6100', 'قبوض': '6200', 'حقوق': '6300', 'لوازم': '6400',
     'تعمیرات': '6500', 'حمل\u200cونقل': '6600',
   }
   const code = categoryMap[category] || '6700'
-  const expenseAcct = getAccountByCode(code) || getAccountByCode('6700')!
+  const expenseAcct = getAccountByCode(code) || getAccountByCode('6700')
+  if (!cashAcct || !expenseAcct) {
+    console.error('[Journal] Missing account codes for expense journal'); return
+  }
 
   createJournalEntry({
     entryDate: expenseDate, description: `هزینه: ${category}`,
@@ -123,8 +129,11 @@ export function postExpenseJournal(expenseId: number, expenseDate: string, amoun
  *   Credit: Cash refund (1100)
  */
 export function postReturnJournal(returnId: number, returnDate: string, refundAmount: number): void {
-  const cashAcct = getAccountByCode('1100')!
-  const salesAcct = getAccountByCode('4100')!
+  const cashAcct = getAccountByCode('1100')
+  const salesAcct = getAccountByCode('4100')
+  if (!cashAcct || !salesAcct) {
+    console.error('[Journal] Missing account codes for return journal'); return
+  }
 
   createJournalEntry({
     entryDate: returnDate, description: `مرجوعی فاکتور #${returnId}`,

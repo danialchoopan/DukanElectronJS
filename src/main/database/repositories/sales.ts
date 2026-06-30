@@ -189,8 +189,8 @@ export function getUserPerformance(startDate?: string, endDate?: string): {
   `
   const conditions: string[] = []
   const params: string[] = []
-  if (startDate) { conditions.push('s.createdAt >= ?'); params.push(startDate) }
-  if (endDate) { conditions.push('s.createdAt <= ?'); params.push(endDate) }
+  if (startDate) { conditions.push('s.saleDate >= ?'); params.push(startDate) }
+  if (endDate) { conditions.push('s.saleDate <= ?'); params.push(endDate) }
   if (conditions.length) query += ' WHERE ' + conditions.join(' AND ')
   query += ' GROUP BY u.id ORDER BY totalSales DESC'
   return db.prepare(query).all(...params) as any[]
@@ -205,8 +205,8 @@ export function getTopProducts(startDate?: string, endDate?: string, limit = 10)
   `
   const conditions: string[] = []
   const params: string[] = []
-  if (startDate) { conditions.push('s.createdAt >= ?'); params.push(startDate) }
-  if (endDate) { conditions.push('s.createdAt <= ?'); params.push(endDate) }
+  if (startDate) { conditions.push('s.saleDate >= ?'); params.push(startDate) }
+  if (endDate) { conditions.push('s.saleDate <= ?'); params.push(endDate) }
   if (conditions.length) query += ' WHERE ' + conditions.join(' AND ')
   query += ' GROUP BY si.productTitle ORDER BY totalRevenue DESC LIMIT ?'
   params.push(String(limit))
