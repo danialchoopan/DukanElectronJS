@@ -28,8 +28,8 @@ checks.push(['customers.deleteLedgerEntry handles payment correctly', customers.
 
 // 4. Suppliers deleteSupplierLedgerEntry handles all types
 const suppliers = readFile('src/main/database/repositories/suppliers.ts');
-checks.push(['suppliers.deleteLedgerEntry handles purchase', suppliers.includes("entry.type === 'purchase'")]);
-checks.push(['suppliers.deleteLedgerEntry handles payment', suppliers.includes("entry.type === 'payment'")]);
+checks.push(['suppliers.deleteLedgerEntry reverses balance', suppliers.includes("UPDATE suppliers SET balance = balance - ? WHERE id = ?")]);
+checks.push(['suppliers.deleteLedgerEntry deletes entry', suppliers.includes("DELETE FROM supplier_ledger WHERE id = ?")]);
 
 // 5. Purchase journal: verify balance for fully-paid
 const purchases = readFile('src/main/database/repositories/purchases.ts');

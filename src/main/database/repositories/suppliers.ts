@@ -113,11 +113,8 @@ export function deleteSupplierLedgerEntry(entryId: number): { success: boolean; 
   const entry = db.prepare('SELECT * FROM supplier_ledger WHERE id = ?').get(entryId) as any
   if (!entry) return { success: false, error: 'رکورد یافت نشد' }
   db.transaction(() => {
-    if (entry.type === 'purchase' || entry.type === 'debt' || entry.type === 'adjustment') {
-      db.prepare('UPDATE suppliers SET balance = balance - ? WHERE id = ?').run(entry.amount, entry.supplierId)
-    } else if (entry.type === 'payment' || entry.type === 'return') {
-      db.prepare('UPDATE suppliers SET balance = balance - ? WHERE id = ?').run(entry.amount, entry.supplierId)
-    }
+    // Reverse the original balance change (all entry types use balance += amount on creation)
+    db.prepare('UPDATE suppliers SET balance = balance - ? WHERE id = ?').run(entry.amount, entry.supplierId)
     db.prepare('DELETE FROM supplier_ledger WHERE id = ?').run(entryId)
   })()
   return { success: true }

@@ -146,7 +146,9 @@ export function createPurchase(input: PurchaseInput): Purchase {
   if (lines.length > 0) {
     try {
       createJournalEntry(purchaseDate, `خرید از تأمین\u200cکننده — ${purchase.supplierName || ''}`, 'purchase', result as number, lines)
-    } catch {}
+    } catch (err) {
+      console.error('[Purchases] Journal posting failed:', err)
+    }
   }
 
   return purchase
