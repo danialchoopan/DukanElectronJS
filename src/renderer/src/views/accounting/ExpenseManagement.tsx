@@ -56,12 +56,10 @@ export default function ExpenseManagement() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files) return
-    const newImages = [...(form.images || [])]
     Array.from(files).forEach(file => {
       const reader = new FileReader()
       reader.onload = () => {
-        newImages.push(reader.result as string)
-        setForm(f => ({ ...f, images: [...newImages] }))
+        setForm(f => ({ ...f, images: [...(f.images || []), reader.result as string] }))
       }
       reader.readAsDataURL(file)
     })
