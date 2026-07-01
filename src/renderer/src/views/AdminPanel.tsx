@@ -7,6 +7,7 @@ import CustomizationSettings from './settings/CustomizationSettings'
 import { useHighlight } from '../hooks/useHighlight'
 import SmartExportDialog from '../components/print/SmartExportDialog'
 import SettingsTab from './settings/SettingsTab'
+import RestorePointsView from './RestorePointsView'
 import Dialog from '../components/ui/Dialog'
 
 const primary = '#006194'
@@ -19,17 +20,18 @@ interface Props {
 }
 
 export default function AdminPanel({ view = 'admin', initialTab, highlightId, onHighlightDone }: Props) {
-  const allTabs: { key: 'users' | 'settings' | 'ui' | 'shortcuts' | 'customization' | 'login'; label: string; icon: string }[] = [
+  const allTabs: { key: 'users' | 'settings' | 'ui' | 'shortcuts' | 'customization' | 'login' | 'restorePoints'; label: string; icon: string }[] = [
     { key: 'users', label: fa.admin.users, icon: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75' },
     { key: 'login', label: 'تنظیمات ورود', icon: 'M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3' },
     { key: 'settings', label: fa.admin.settings, icon: 'M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z' },
     { key: 'ui', label: 'ظاهر برنامه', icon: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 100-6 3 3 0 000 6z' },
     { key: 'shortcuts', label: 'میانبرها', icon: 'M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3' },
     { key: 'customization', label: 'شخصی\u200cسازی', icon: 'M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z' },
+    { key: 'restorePoints', label: 'نقاط بازیابی', icon: 'M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8M3 3v5h5' },
   ]
 
   const tabs = view === 'settings'
-    ? allTabs.filter(t => ['settings', 'ui', 'shortcuts', 'customization'].includes(t.key))
+    ? allTabs.filter(t => ['settings', 'ui', 'shortcuts', 'customization', 'restorePoints'].includes(t.key))
     : allTabs.filter(t => ['users', 'login'].includes(t.key))
 
   const defaultTab = view === 'settings' ? 'settings' : 'users'
@@ -102,6 +104,7 @@ export default function AdminPanel({ view = 'admin', initialTab, highlightId, on
         {tab === 'ui' && <UISettings />}
         {tab === 'shortcuts' && <ShortcutsSettings />}
         {tab === 'customization' && <CustomizationSettings />}
+        {tab === 'restorePoints' && <RestorePointsView />}
       </div>
 
       <SmartExportDialog open={smartExportMode !== null} mode={smartExportMode || 'export'} onClose={() => setSmartExportMode(null)} />

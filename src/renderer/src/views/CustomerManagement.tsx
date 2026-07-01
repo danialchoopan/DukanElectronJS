@@ -24,6 +24,8 @@ import { formatJalaliShort, formatJalaliDateTime } from '../utils/jalali'
 import { getProductImageUrl } from '../utils/productImage'
 import { showPrint } from '../utils/showPrint'
 import { useHighlight } from '../hooks/useHighlight'
+import CustomerCreditView from './CustomerCreditView'
+import InstallmentsView from './InstallmentsView'
 
 type FilterType = 'all' | 'debtor' | 'creditor' | 'inactive' | 'real' | 'legal'
 
@@ -56,6 +58,7 @@ interface Props {
 }
 
 export default function CustomerManagement({ highlightId, onHighlightDone }: Props) {
+  const [mainTab, setMainTab] = useState<'customers' | 'credit' | 'installments'>('customers')
   const [customers, setCustomers] = useState<Customer[]>([])
   const [stats, setStats] = useState<CustomerStats>({ totalCustomers: 0, totalDebtors: 0, totalCreditors: 0, totalDebtAmount: 0, totalCreditAmount: 0 })
   const [search, setSearch] = useState('')
@@ -356,6 +359,18 @@ export default function CustomerManagement({ highlightId, onHighlightDone }: Pro
 
   return (
     <div className="h-full flex flex-col overflow-hidden" style={{ padding: '16px', gap: '16px' }}>
+      {/* Tab Bar */}
+      <div className="flex gap-2">
+        {[['customers', 'مشتریان'], ['credit', 'اعتبار مشتری'], ['installments', 'اقساط']].map(([key, label]) => (
+          <button key={key} onClick={() => setMainTab(key as any)}
+            className="px-4 py-2 rounded-xl text-sm font-bold transition-all"
+            style={{ background: mainTab === key ? 'linear-gradient(135deg, #3b82f6, #2563eb)' : cardBg, color: mainTab === key ? '#fff' : textSecondary, border: `1px solid ${mainTab === key ? '#3b82f6' : cardBorder}` }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {mainTab === 'customers' && (<>
       {/* Stats Bar */}
       <div className="grid grid-cols-4 gap-3">
         <StatCard label="كلى مشتریان" value={stats.totalCustomers} color={PRIMARY} />
@@ -1170,6 +1185,19 @@ export default function CustomerManagement({ highlightId, onHighlightDone }: Pro
               )}
             </div>
           </div>
+        </div>
+      )}
+      </>)}
+
+      {mainTab === 'credit' && (
+        <div className="flex-1 overflow-auto">
+          <CustomerCreditView />
+        </div>
+      )}
+
+      {mainTab === 'installments' && (
+        <div className="flex-1 overflow-auto">
+          <InstallmentsView />
         </div>
       )}
     </div>

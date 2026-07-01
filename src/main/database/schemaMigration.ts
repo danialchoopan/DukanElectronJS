@@ -34,13 +34,13 @@ interface Migration {
 const MIGRATIONS: Migration[] = [
   {
     version: '1.0.0',
-    description: 'نقطه شروع — ساختار پایه دیتابیس',
+    description: 'Initial baseline schema',
     up: () => {},
     down: () => {},
   },
   {
     version: '1.1.0',
-    description: 'افزودن زیردسته و وضعیت فروش به محصولات',
+    description: 'Add subcategory and isSellable to products',
     up: (db) => {
       const cols = db.prepare('PRAGMA table_info(products)').all().map((c: any) => c.name)
       if (!cols.includes('subcategory')) db.exec("ALTER TABLE products ADD COLUMN subcategory TEXT DEFAULT ''")
@@ -52,7 +52,7 @@ const MIGRATIONS: Migration[] = [
   },
   {
     version: '1.2.0',
-    description: 'افزودن تاریخ فاکتور و تأثیر بر موجودی به فروش‌ها',
+    description: 'Add saleDate and affectsInventory to sales',
     up: (db) => {
       const cols = db.prepare('PRAGMA table_info(sales)').all().map((c: any) => c.name)
       if (!cols.includes('saleDate')) db.exec("ALTER TABLE sales ADD COLUMN saleDate TEXT DEFAULT datetime('now', 'localtime')")
@@ -62,7 +62,7 @@ const MIGRATIONS: Migration[] = [
   },
   {
     version: '1.3.0',
-    description: 'افزودن اصلاح موجودی و مسدودی مشتری',
+    description: 'Add inventory adjustments and customer blocking',
     up: (db) => {
       const cols = db.prepare('PRAGMA table_info(customers)').all().map((c: any) => c.name)
       if (!cols.includes('is_blocked')) db.exec("ALTER TABLE customers ADD COLUMN is_blocked INTEGER DEFAULT 0")
@@ -71,13 +71,13 @@ const MIGRATIONS: Migration[] = [
   },
   {
     version: '1.4.0',
-    description: 'افزودن جداول جدید: cross_sell_rules, installments, proformas, service_tickets, customer_credit',
+    description: 'Add cross_sell_rules, installments, proformas, service_tickets, customer_credit tables',
     up: () => {},
     down: () => {},
   },
   {
     version: '1.5.0',
-    description: 'افزودن نقش‌های جدید کاربر، لاگ تقویت‌شده، و نقاط بازیابی',
+    description: 'Add RBAC roles, enhanced audit log, and restore points',
     up: (db) => {
       const cols = db.prepare('PRAGMA table_info(users)').all().map((c: any) => c.name)
       if (!cols.includes('permissions')) db.exec("ALTER TABLE users ADD COLUMN permissions TEXT DEFAULT '{}'")

@@ -23,21 +23,18 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
     { key: 'dashboard', label: ui.nav.dashboard, icon: <DashboardIcon className="w-5 h-5" /> },
     { key: 'pos', label: ui.nav.checkout, icon: <CartIconNav /> },
     { key: 'sales', label: fa.dashboard.recentSales, icon: <ClipboardIcon /> },
+    { key: 'proformas', label: 'پیش‌فاکتور', icon: <ProformaIcon /> },
     { key: 'addproduct', label: fa.admin.addProduct, icon: <PackageIcon /> },
     { key: 'categories', label: fa.nav.categories, icon: <TagIcon /> },
     { key: 'inventory', label: ui.nav.inventory, icon: <BoxIcon /> },
     { key: 'accounting', label: ui.nav.accounting, icon: <CalculatorIcon /> },
     { key: 'reports', label: 'گزارش‌ها', icon: <ChartIcon /> },
-    { key: 'proformas', label: 'پیش‌فاکتور', icon: <ProformaIcon /> },
-    { key: 'installments', label: 'اقساط', icon: <InstallmentIcon /> },
     { key: 'crossSell', label: 'فروش مکمل', icon: <RuleIcon /> },
     { key: 'service', label: 'تعمیرات', icon: <WrenchIcon /> },
-    { key: 'credit', label: 'اعتبار مشتری', icon: <CreditIcon /> },
-    { key: 'calculator', label: 'ماشین حساب', icon: <CalcIcon /> },
-    { key: 'auditLog', label: 'لاگ فعالیت', icon: <AuditLogIcon /> },
-    { key: 'restorePoints', label: 'نقاط بازیابی', icon: <RestoreIcon /> },
     { key: 'customers', label: ui.nav.customers, icon: <UsersIcon className="w-5 h-5" /> },
     { key: 'suppliers', label: 'تأمین\u200cکنندگان', icon: <TruckIcon /> },
+    { key: 'calculator', label: 'ماشین حساب', icon: <CalcIcon /> },
+    { key: 'auditLog', label: 'لاگ فعالیت', icon: <AuditLogIcon /> },
     { key: 'settings', label: 'تنظیمات', icon: <SettingsIcon className="w-5 h-5" /> },
     { key: 'admin', label: 'مدیریت', icon: <AdminIcon />, adminOnly: true },
     { key: 'help', label: fa.nav.help, icon: <HelpIcon /> },
@@ -376,15 +373,6 @@ function ProformaIcon() {
   )
 }
 
-function InstallmentIcon() {
-  return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="1" y="4" width="22" height="16" rx="2" />
-      <line x1="1" y1="10" x2="23" y2="10" />
-    </svg>
-  )
-}
-
 function RuleIcon() {
   return (
     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -401,27 +389,11 @@ function WrenchIcon() {
   )
 }
 
-function CreditIcon() {
-  return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="1" y="4" width="22" height="16" rx="2" />
-      <line x1="1" y1="10" x2="23" y2="10" />
-    </svg>
-  )
-}
-
 function CalcIcon() {
   return (
     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="4" y="2" width="16" height="20" rx="2" />
       <line x1="8" y1="6" x2="16" y2="6" />
-      <line x1="8" y1="10" x2="8" y2="10.01" />
-      <line x1="12" y1="10" x2="12" y2="10.01" />
-      <line x1="16" y1="10" x2="16" y2="10.01" />
-      <line x1="8" y1="14" x2="8" y2="14.01" />
-      <line x1="12" y1="14" x2="12" y2="14.01" />
-      <line x1="8" y1="18" x2="8" y2="18.01" />
-      <line x1="12" y1="18" x2="12" y2="18.01" />
       <line x1="16" y1="14" x2="16" y2="18" />
     </svg>
   )
@@ -434,15 +406,6 @@ function AuditLogIcon() {
       <polyline points="14 2 14 8 20 8" />
       <line x1="16" y1="13" x2="8" y2="13" />
       <line x1="16" y1="17" x2="8" y2="17" />
-    </svg>
-  )
-}
-
-function RestoreIcon() {
-  return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8" />
-      <path d="M3 3v5h5" />
     </svg>
   )
 }
