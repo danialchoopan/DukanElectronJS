@@ -464,10 +464,20 @@ export default function LockScreen() {
 
   const handleLogin = async (pw: string) => {
     if (!selectedUser) return
-    // When loginMethod is 'none', skip PIN validation
-    const loginPin = loginMethod === 'none' ? '0000' : pw
-    if (loginMethod !== 'none' && loginPin.length < 4) return
     setLoading(true); setError('')
+
+    // When loginMethod is 'none', skip PIN validation entirely
+    if (loginMethod === 'none') {
+      clearCart()
+      setUser(selectedUser as any)
+      const suspendsResult = await window.api.suspend.list(selectedUser.id)
+      if (suspendsResult.success && suspendsResult.data) loadSuspendSlots(suspendsResult.data)
+      setLoading(false)
+      return
+    }
+
+    // For 'pin' and 'password' modes, validate against stored PIN hash
+    const loginPin = pw.length < 4 ? '0000' : pw
     const result = await window.api.auth.login(loginPin)
     if (result.success && result.data) {
       clearCart(); setUser(result.data)
