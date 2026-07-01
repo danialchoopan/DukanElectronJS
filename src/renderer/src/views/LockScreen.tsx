@@ -165,6 +165,7 @@ interface LayoutProps {
   loading: boolean
   pin: string
   showPin: boolean
+  loginMethod: 'pin' | 'password' | 'none'
   onSelectUser: (u: User) => void
   onSubmit: (e: React.FormEvent) => void
   setPin: (v: string) => void
@@ -173,7 +174,7 @@ interface LayoutProps {
   isDark: boolean
 }
 
-function UnifiedLayout({ users, selectedUser, error, loading, pin, showPin, onSelectUser, onSubmit, setPin, setShowPin, pinRefs, isDark }: LayoutProps) {
+function UnifiedLayout({ users, selectedUser, error, loading, pin, showPin, loginMethod, onSelectUser, onSubmit, setPin, setShowPin, pinRefs, isDark }: LayoutProps) {
   const ui = t()
 
   const brandCardBlur = 'blur(12px)'
@@ -317,9 +318,10 @@ function UnifiedLayout({ users, selectedUser, error, loading, pin, showPin, onSe
 
             {selectedUser && (
               <form onSubmit={onSubmit} className="space-y-5">
+                {loginMethod !== 'none' ? (<>
                 <div className="space-y-2">
                   <label className="text-[14px] leading-[20px] font-medium block pr-1" style={{ color: labelColor, fontFamily: "'IBM Plex Sans', sans-serif" }}>
-                    رمز ۴ رقمی (PIN)
+                    {loginMethod === 'password' ? 'رمز عبور' : 'رمز ۴ رقمی (PIN)'}
                   </label>
                   <div className="flex flex-row-reverse gap-3 justify-center">
                     {Array.from({ length: 4 }).map((_, i) => (
@@ -392,6 +394,17 @@ function UnifiedLayout({ users, selectedUser, error, loading, pin, showPin, onSe
                     </>
                   )}
                 </button>
+                </>) : (
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full text-[24px] leading-[36px] font-semibold py-3 rounded-xl transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-3"
+                  style={{ background: loading ? colors.primaryContainer : colors.primary, color: colors.onPrimary }}>
+                  {loading ? <span className="text-sm">...</span> : (
+                    <><span>ورود بدون رمز</span><ArrowIcon className="w-5 h-5 rotate-180" color={colors.onPrimary} /></>
+                  )}
+                </button>
+                )}
               </form>
             )}
 
@@ -423,6 +436,7 @@ export default function LockScreen() {
   const [showPin, setShowPin] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loginMethod, setLoginMethod] = useState<'pin' | 'password' | 'none'>('pin')
   const ui = t()
   const isDark = theme === 'dark'
   const pinRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -430,22 +444,31 @@ export default function LockScreen() {
   const selectedUser = users.find((u) => u.id === selectedUserId) || null
 
   useEffect(() => {
+    // Fetch user list and login method setting
     window.api.auth.listUsers().then((r) => {
       if (r.success && r.data) setUsers(r.data)
+    })
+    window.api.settings.get('loginMethod').then((r) => {
+      if (r.success && r.data) setLoginMethod((r.data as 'pin' | 'password' | 'none') || 'pin')
     })
   }, [])
 
   useEffect(() => {
-    // Auto-login when PIN reaches 4 digits
-    if (pin.length === 4 && selectedUser) {
+    // Auto-login: when PIN reaches 4 digits (pin mode) or when loginMethod is 'none'
+    if (loginMethod === 'none' && selectedUser) {
+      handleLogin('')
+    } else if (pin.length === 4 && selectedUser) {
       handleLogin(pin)
     }
-  }, [pin])
+  }, [pin, selectedUser, loginMethod])
 
   const handleLogin = async (pw: string) => {
-    if (!selectedUser || pw.length < 4) return
+    if (!selectedUser) return
+    // When loginMethod is 'none', skip PIN validation
+    const loginPin = loginMethod === 'none' ? '0000' : pw
+    if (loginMethod !== 'none' && loginPin.length < 4) return
     setLoading(true); setError('')
-    const result = await window.api.auth.login(pw)
+    const result = await window.api.auth.login(loginPin)
     if (result.success && result.data) {
       clearCart(); setUser(result.data)
       const suspendsResult = await window.api.suspend.list(result.data.id)
@@ -499,6 +522,7 @@ export default function LockScreen() {
         loading={loading}
         pin={pin}
         showPin={showPin}
+        loginMethod={loginMethod}
         onSelectUser={handleSelectUser}
         onSubmit={handleSubmit}
         setPin={setPin}
