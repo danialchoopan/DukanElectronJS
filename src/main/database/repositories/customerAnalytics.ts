@@ -53,6 +53,14 @@ export function getBestCustomers(limit: number = 20): BestCustomer[] {
   console.log(`[Analytics] Sale customerIds:`, debugSaleCustIds.map((r: any) => r.customerId))
   const debugMatch = db.prepare('SELECT COUNT(*) as c FROM sales s JOIN customers c ON c.id = s.customerId WHERE c.isActive = 1').get() as any
   console.log(`[Analytics] Direct JOIN match count: ${debugMatch.c}`)
+  // Direct raw check
+  const rawSales = db.prepare('SELECT id, customerId, typeof(customerId) as custType, total_amount FROM sales LIMIT 3').all() as any[]
+  console.log(`[Analytics] Raw sales sample:`, JSON.stringify(rawSales))
+  const rawCustomers = db.prepare('SELECT id, typeof(id) as idType, name FROM customers LIMIT 3').all() as any[]
+  console.log(`[Analytics] Raw customers sample:`, JSON.stringify(rawCustomers))
+  // Try explicit type cast JOIN
+  const castJoin = db.prepare('SELECT COUNT(*) as c FROM sales s JOIN customers c ON CAST(c.id AS TEXT) = CAST(s.customerId AS TEXT)').get() as any
+  console.log(`[Analytics] Cast JOIN match: ${castJoin.c}`)
   const rows = db.prepare(`
     SELECT
       c.id as customerId, c.name as customerName, c.phone,
