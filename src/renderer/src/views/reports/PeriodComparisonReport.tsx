@@ -14,7 +14,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSettingsStore } from '../../store/settingsStore'
-import { formatPriceFA, formatPriceComma } from '../../utils/jalali'
+import { formatPriceFA, formatPriceComma, formatISOToJalali } from '../../utils/jalali'
 import { downloadExcel } from '../../utils/a4Print'
 import ShamsiDateInput from '../../components/business/ShamsiDateInput'
 
@@ -152,8 +152,8 @@ export default function PeriodComparisonReport() {
 
       {/* Period labels */}
       <div className="flex items-center justify-between text-xs" style={{ color: tSec }}>
-        <span>دوره فعلی: {data.currentPeriod.startDate} → {data.currentPeriod.endDate}</span>
-        <span>دوره قبل: {data.previousPeriod.startDate} → {data.previousPeriod.endDate}</span>
+        <span>دوره فعلی: {formatISOToJalali(data.currentPeriod.startDate)} → {formatISOToJalali(data.currentPeriod.endDate)}</span>
+        <span>دوره قبل: {formatISOToJalali(data.previousPeriod.startDate)} → {formatISOToJalali(data.previousPeriod.endDate)}</span>
       </div>
 
       {/* Main Metrics */}

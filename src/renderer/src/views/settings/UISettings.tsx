@@ -34,7 +34,7 @@ const fontSizes = [
 ]
 
 export default function UISettings() {
-  const { theme, setTheme, language, setLanguage: setLang, navTheme, setNavTheme, fontSize, setFontSize, fontSizeCustom, setFontSizeCustom, highContrast, setHighContrast, showCameraScanner, setShowCameraScanner } = useSettingsStore()
+  const { theme, setTheme, language, setLanguage: setLang, navTheme, setNavTheme, fontSize, setFontSize, fontSizeCustom, setFontSizeCustom, highContrast, setHighContrast, showCameraScanner, setShowCameraScanner, showCalculatorNav, setShowCalculatorNav } = useSettingsStore()
   const isDark = theme === 'dark'
   const ui = t()
   const primary = getNavColors(navTheme, isDark)
@@ -142,6 +142,22 @@ export default function UISettings() {
               style={{ backgroundColor: showCameraScanner ? primary : isDark ? '#475569' : '#d1d5db' }}>
               <div className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200"
                 style={{ left: showCameraScanner ? '22px' : '2px' }} />
+            </button>
+          </div>
+        </Card>
+
+        {/* Calculator Nav Toggle */}
+        <Card title="ماشین حساب">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm" style={{ color: tSec }}>نمایش آیتم ماشین حساب در منوی ناوبری</p>
+              <p className="text-[10px] mt-0.5" style={{ color: isDark ? '#64748b' : '#94a3b8' }}>قابل دسترسی با Ctrl+M حتی بدون نمایش در منو</p>
+            </div>
+            <button onClick={() => setShowCalculatorNav(!showCalculatorNav)}
+              className="relative w-11 h-6 rounded-full transition-all duration-200"
+              style={{ backgroundColor: showCalculatorNav ? primary : isDark ? '#475569' : '#d1d5db' }}>
+              <div className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200"
+                style={{ left: showCalculatorNav ? '22px' : '2px' }} />
             </button>
           </div>
         </Card>

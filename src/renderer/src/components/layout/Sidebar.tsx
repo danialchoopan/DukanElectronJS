@@ -15,7 +15,7 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
   const [collapsed, setCollapsed] = useState(false)
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
-  const { theme, setTheme, language, setLanguage, navTheme } = useSettingsStore()
+  const { theme, setTheme, language, setLanguage, navTheme, showCalculatorNav } = useSettingsStore()
   const ui = t()
   const isDark = theme === 'dark'
 
@@ -39,6 +39,8 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
     { key: 'admin', label: 'مدیریت', icon: <AdminIcon />, adminOnly: true },
     { key: 'help', label: fa.nav.help, icon: <HelpIcon /> },
   ]
+
+  const filteredNavItems = navItems.filter(item => item.key !== 'calculator' || showCalculatorNav)
 
   const primary = getNavColors(navTheme, isDark)
   const sidebarWidth = collapsed ? 64 : 220
@@ -103,7 +105,7 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
       {/* Nav Items */}
       <nav className="flex-1 overflow-y-auto py-3 px-2.5">
         <div className="space-y-0.5">
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             if (item.adminOnly && user?.role !== 'admin') return null
             const active = currentView === item.key
             return (
