@@ -160,7 +160,7 @@ export function seedDatabase(): void {
           const saleDate = randomDateTime(day + 1)
           const userId = userIds[randInt(0, userIds.length - 1)].id
           const paymentMethod = methods[randInt(0, methods.length - 1)]
-          const customerId = paymentMethod === 'ledger' ? custIds[randInt(0, custIds.length - 1)] : (Math.random() > 0.3 ? custIds[randInt(0, custIds.length - 1)] : null)
+          const customerId = custIds[randInt(0, custIds.length - 1)]
 
           const numItems = randInt(2, 5)
           const pickedItems: { id: number; title: string; purchase_price: number; sale_price: number; qty: number }[] = []
@@ -207,6 +207,8 @@ export function seedDatabase(): void {
       }
     })
     salesTx()
+    const salesWithCustomer = db.prepare('SELECT COUNT(*) as c FROM sales WHERE customerId IS NOT NULL').get() as { c: number }
+    console.log(`[SEED] ${saleIds.length} sales created, ${salesWithCustomer.c} with customerId, ${custIds.length} customers`)
     createAuditEntry(1, 'create', 'sale', null, `ایجاد ${saleIds.length} فاکتور فروش با سند حسابداری`)
 
     if (saleIds.length >= 3) {
