@@ -129,7 +129,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
 
   const loadAudit = async (startDate?: string, endDate?: string) => {
     const r = await window.api.audit.getAll(undefined, undefined, startDate, endDate)
-    if (r.success && r.data) setAuditLog(r.data)
+    if (r.success && r.data) setAuditLog(r.data.entries || [])
   }
 
   const loadReturnStats = async () => {
