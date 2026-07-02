@@ -709,14 +709,14 @@ export default function AddProduct() {
           footer={<>
             <button onClick={() => setDetailProduct(null)} className="px-4 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>بستن</button>
             {!detailEditMode ? (
-              <button onClick={() => { setDetailEditMode(true); setDetailForm({ title: detailProduct.title, barcode: detailProduct.barcode || '', category: detailProduct.category || '', purchase_price: detailProduct.purchase_price, sale_price: detailProduct.sale_price, stock: detailProduct.stock, minStock: detailProduct.minStock || 0, description: detailProduct.description || '', imageBase64: detailProduct.imageBase64 || '' }) }} className="px-5 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #006194, #007bb9)' }}>ویرایش</button>
+              <button onClick={() => { setDetailEditMode(true); setDetailForm({ title: detailProduct.title, barcode: detailProduct.barcode || '', category: detailProduct.category || '', subcategory: detailProduct.subcategory || '', purchase_price: detailProduct.purchase_price, sale_price: detailProduct.sale_price, stock: detailProduct.stock, minStock: detailProduct.minStock || 0, unit: detailProduct.unit || 'number', isSellable: detailProduct.isSellable !== false, hasExpiry: detailProduct.hasExpiry || false, expiryDate: detailProduct.expiryDate || '', expiryAlertDays: detailProduct.expiryAlertDays || 30, description: detailProduct.description || '', imageBase64: detailProduct.imageBase64 || '' }) }} className="px-5 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #006194, #007bb9)' }}>ویرایش</button>
             ) : (
               <button onClick={async () => { await window.api.products.update(detailProduct.id, detailForm); setDetailProduct(null); setDetailEditMode(false); loadProducts() }} className="px-5 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>ذخیره تغییرات</button>
             )}
           </>}>
           {detailImageUrl && (
             <div className="flex justify-center mb-4">
-              <img src={detailImageUrl} className="w-24 h-24 rounded-xl object-cover" style={{ border: `1px solid ${cardBorder}` }} />
+              <img src={detailImageUrl} className="w-32 h-32 rounded-xl object-cover" style={{ border: `2px solid ${cardBorder}` }} />
             </div>
           )}
           {!detailEditMode ? (
@@ -724,11 +724,15 @@ export default function AddProduct() {
               <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>نام</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{detailProduct.title}</div></div>
               <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>بارکد</div><div className="text-sm font-bold font-mono" style={{ color: textPrimary }}>{detailProduct.barcode || '-'}</div></div>
               <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>دسته‌بندی</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{detailProduct.category || '-'}</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>زیردسته</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{detailProduct.subcategory || '-'}</div></div>
               <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>موجودی</div><div className="text-sm font-bold" style={{ color: detailProduct.stock <= 0 ? '#ef4444' : '#22c55e' }}>{detailProduct.stock}</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>واحد</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{detailProduct.unit === 'weight' ? 'کیلوگرم' : 'عددی'}</div></div>
               <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>قیمت خرید</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{detailProduct.purchase_price.toLocaleString('fa-IR')} تومان</div></div>
               <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>قیمت فروش</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{detailProduct.sale_price.toLocaleString('fa-IR')} تومان</div></div>
               <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>حداقل موجودی</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{detailProduct.minStock || 0}</div></div>
-              <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>واحد</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{detailProduct.unit === 'weight' ? 'کیلوگرم' : 'عددی'}</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>وضعیت فروش</div><div className="text-sm font-bold" style={{ color: detailProduct.isSellable ? '#22c55e' : '#ef4444' }}>{detailProduct.isSellable ? 'فعال' : 'غیرفعال'}</div></div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>نحوه فروش</div><div className="text-sm font-bold" style={{ color: textPrimary }}>{detailProduct.isLoose ? 'کیلوگرم' : 'عددی'}</div></div>
+              {detailProduct.hasExpiry && <div className="rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>تاریخ انقضا</div><div className="text-sm font-bold" style={{ color: detailProduct.expiryDate && new Date(detailProduct.expiryDate) < new Date() ? '#ef4444' : '#f59e0b' }}>{detailProduct.expiryDate || 'تعیین نشده'}</div></div>}
               {detailProduct.description && <div className="col-span-2 rounded-lg p-3" style={{ backgroundColor: inputBg }}><div className="text-[10px] font-bold mb-1" style={{ color: textSecondary }}>توضیحات</div><div className="text-sm" style={{ color: textPrimary }}>{detailProduct.description}</div></div>}
             </div>
           ) : (
@@ -736,12 +740,37 @@ export default function AddProduct() {
               <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>نام</label><input value={detailForm.title} onChange={e => setDetailForm({ ...detailForm, title: e.target.value })} className="input-field text-sm" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
               <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>بارکد</label><input value={detailForm.barcode} onChange={e => setDetailForm({ ...detailForm, barcode: e.target.value })} className="input-field text-sm font-mono" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
               <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>دسته‌بندی</label><input value={detailForm.category} onChange={e => setDetailForm({ ...detailForm, category: e.target.value })} className="input-field text-sm" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
+              <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>زیردسته</label><input value={detailForm.subcategory || ''} onChange={e => setDetailForm({ ...detailForm, subcategory: e.target.value })} className="input-field text-sm" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
               <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>موجودی</label><FormattedPriceInput value={detailForm.stock} onChange={v => setDetailForm({ ...detailForm, stock: v })} className="input-field text-sm" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
               <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>قیمت خرید</label><FormattedPriceInput value={detailForm.purchase_price} onChange={v => setDetailForm({ ...detailForm, purchase_price: v })} className="input-field text-sm" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
               <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>قیمت فروش</label><FormattedPriceInput value={detailForm.sale_price} onChange={v => setDetailForm({ ...detailForm, sale_price: v })} className="input-field text-sm" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
               <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>حداقل موجودی</label><FormattedPriceInput value={detailForm.minStock} onChange={v => setDetailForm({ ...detailForm, minStock: v })} className="input-field text-sm" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
-              <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>واحد</label><select value={detailForm.unit || 'number'} onChange={e => setDetailForm({ ...detailForm, unit: e.target.value })} className="input-field text-sm" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }}><option value="number">عددی</option><option value="weight">کیلوگرم</option></select></div>
+              <div><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>نحوه فروش</label><select value={detailForm.unit || 'number'} onChange={e => setDetailForm({ ...detailForm, unit: e.target.value })} className="input-field text-sm" style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }}><option value="number">عددی</option><option value="weight">کیلوگرم</option></select></div>
+              <div className="flex items-center gap-2"><input type="checkbox" checked={detailForm.isSellable !== false} onChange={e => setDetailForm({ ...detailForm, isSellable: e.target.checked })} style={{ accentColor: '#22c55e' }} /><label className="text-xs font-bold" style={{ color: textSecondary }}>فعال برای فروش</label></div>
+              <div className="flex items-center gap-2"><input type="checkbox" checked={detailForm.hasExpiry || false} onChange={e => setDetailForm({ ...detailForm, hasExpiry: e.target.checked })} style={{ accentColor: '#ef4444' }} /><label className="text-xs font-bold" style={{ color: textSecondary }}>دارای تاریخ انقضا</label></div>
+              {detailForm.hasExpiry && <div><label className="text-[10px] font-bold block mb-1" style={{ color: textSecondary }}>تاریخ انقضا</label><ShamsiDateInput value={detailForm.expiryDate || ''} onChange={v => setDetailForm({ ...detailForm, expiryDate: v })} /></div>}
               <div className="col-span-2"><label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>توضیحات</label><textarea value={detailForm.description || ''} onChange={e => setDetailForm({ ...detailForm, description: e.target.value })} className="input-field text-sm" rows={2} style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }} /></div>
+              <div className="col-span-2">
+                <label className="text-xs font-bold block mb-1" style={{ color: textSecondary }}>تصویر محصول</label>
+                <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl cursor-pointer" style={{ border: `2px dashed ${cardBorder}`, color: textSecondary, backgroundColor: inputBg }}>
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                  <span className="text-xs font-bold">انتخاب تصویر</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      const reader = new FileReader()
+                      reader.onload = (ev) => setDetailForm({ ...detailForm, imageBase64: ev.target?.result as string })
+                      reader.readAsDataURL(file)
+                    }
+                  }} />
+                </label>
+                {detailForm.imageBase64 && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <img src={detailForm.imageBase64} className="w-16 h-16 rounded-xl object-cover" style={{ border: `1px solid ${cardBorder}` }} />
+                    <button onClick={() => setDetailForm({ ...detailForm, imageBase64: '' })} className="text-xs px-2 py-1 rounded-lg font-bold" style={{ color: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)' }}>حذف تصویر</button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
       </Dialog>
