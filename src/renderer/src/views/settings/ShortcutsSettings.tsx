@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useShortcutsStore, SHORTCUT_CATEGORIES } from '../../store/shortcutsStore'
+import { useTheme } from '../../hooks/useTheme'
 
 export default function ShortcutsSettings() {
   const { shortcuts, editingId, setEditingId, updateShortcut, saveShortcuts, resetToDefaults } = useShortcutsStore()
   const [listening, setListening] = useState(false)
   const [conflicts, setConflicts] = useState<string[]>([])
 
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'

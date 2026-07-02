@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTheme } from '../../hooks/useTheme'
 
 interface HelpPopupProps {
   title: string
@@ -7,7 +8,7 @@ interface HelpPopupProps {
 
 export default function HelpPopup({ title, sections }: HelpPopupProps) {
   const [open, setOpen] = useState(false)
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
   const textSecondary = isDark ? '#94a3b8' : '#64748b'
   const cardBg = isDark ? '#1e293b' : '#ffffff'

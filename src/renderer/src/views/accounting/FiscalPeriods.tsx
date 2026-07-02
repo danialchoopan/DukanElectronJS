@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import { useAuthStore } from '../../store/authStore'
+import { useTheme } from '../../hooks/useTheme'
 
 interface FiscalPeriod {
   id: number; name: string; startDate: string; endDate: string
@@ -14,7 +15,7 @@ export default function FiscalPeriods() {
   const [newYear, setNewYear] = useState(String(new Date().getFullYear()))
   const [loading, setLoading] = useState(false)
 
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'

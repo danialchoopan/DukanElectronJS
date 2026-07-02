@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { Product } from '../../../../types'
+import { useTheme } from '../../hooks/useTheme'
 
 interface Props {
   onProductAdd: (product: Product) => void
@@ -8,7 +9,7 @@ interface Props {
 
 export default function PopularItems({ onProductAdd, refreshKey }: Props) {
   const [popular, setPopular] = useState<Product[]>([])
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
 
   const loadPopular = async () => {
     const r = await window.api.sales.getTopProducts()

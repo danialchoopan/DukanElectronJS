@@ -1,3 +1,5 @@
+import { useTheme } from '../../hooks/useTheme'
+
 interface Column<T> {
   key: keyof T
   label: string
@@ -13,7 +15,7 @@ interface Props<T> {
 }
 
 export function SortableTableHeader<T>({ columns, sortKey, sortDir, onSort }: Props<T>) {
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const headerBg = isDark ? '#0f172a' : '#f8fafc'
   const textSecondary = isDark ? '#94a3b8' : '#64748b'
 

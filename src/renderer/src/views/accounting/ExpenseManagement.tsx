@@ -5,6 +5,7 @@ import { formatJalaliShort, getTodayGregorian } from '../../utils/jalali'
 import ShamsiDateInput from '../../components/business/ShamsiDateInput'
 import Pagination from '../../components/ui/Pagination'
 import { useSortable } from '../../hooks/useSortable'
+import { useTheme } from '../../hooks/useTheme'
 
 export default function ExpenseManagement() {
   const [expenses, setExpenses] = useState<Expense[]>([])
@@ -22,7 +23,7 @@ export default function ExpenseManagement() {
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(20)
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
 
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { printA4Report } from '../../utils/a4Print'
 import { formatDateNow } from '../../utils/jalali'
 import { usePrintPreviewStore } from '../../store/printPreviewStore'
+import { useTheme } from '../../hooks/useTheme'
 
 interface TemplateInfo { key: string; name: string; color: string; border: string; align: string; shopName?: string }
 
@@ -24,7 +25,7 @@ export default function PrintPreviewDialog() {
   const [templateShopNames, setTemplateShopNames] = useState<Record<string, string>>({})
   const [editingShopName, setEditingShopName] = useState(false)
   const [tempShopName, setTempShopName] = useState('')
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
 
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'

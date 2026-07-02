@@ -15,7 +15,7 @@
  */
 
 import { useEffect } from 'react'
-import { useSettingsStore } from '../../store/settingsStore'
+import { useTheme } from '../../hooks/useTheme'
 
 interface DialogProps {
   open: boolean
@@ -31,8 +31,7 @@ interface DialogProps {
 }
 
 export default function Dialog({ open, onClose, title, subtitle, icon, maxWidth = 'max-w-md', children, footer, closeOnBackdrop = true, className = '' }: DialogProps) {
-  const theme = useSettingsStore(s => s.theme)
-  const isDark = theme === 'dark'
+  const { isDark } = useTheme()
 
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
@@ -92,7 +91,7 @@ export default function Dialog({ open, onClose, title, subtitle, icon, maxWidth 
 
 /* Helper components for consistent dialog content */
 export function DialogField({ label, children }: { label: string; children: React.ReactNode }) {
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const textSecondary = isDark ? '#94a3b8' : '#64748b'
   return (
     <div className="mb-3">
@@ -103,7 +102,7 @@ export function DialogField({ label, children }: { label: string; children: Reac
 }
 
 export function DialogInput({ value, onChange, placeholder, autoFocus }: { value: string; onChange: (v: string) => void; placeholder?: string; autoFocus?: boolean }) {
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const inputBg = isDark ? '#0f172a' : '#f8fafc'
   const inputBorder = isDark ? '#334155' : '#e2e8f0'
   const inputColor = isDark ? '#f1f5f9' : '#0f172a'
@@ -115,7 +114,7 @@ export function DialogInput({ value, onChange, placeholder, autoFocus }: { value
 }
 
 export function DialogTextarea({ value, onChange, placeholder, rows = 3 }: { value: string; onChange: (v: string) => void; placeholder?: string; rows?: number }) {
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const inputBg = isDark ? '#0f172a' : '#f8fafc'
   const inputBorder = isDark ? '#334155' : '#e2e8f0'
   const inputColor = isDark ? '#f1f5f9' : '#0f172a'
@@ -127,7 +126,7 @@ export function DialogTextarea({ value, onChange, placeholder, rows = 3 }: { val
 }
 
 export function DialogButton({ children, onClick, variant = 'primary', disabled, className = '' }: { children: React.ReactNode; onClick?: () => void; variant?: 'primary' | 'danger' | 'ghost' | 'success'; disabled?: boolean; className?: string }) {
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const styles: Record<string, string> = {
     primary: 'linear-gradient(135deg, #006194, #007bb9)',
     danger: 'linear-gradient(135deg, #ef4444, #dc2626)',

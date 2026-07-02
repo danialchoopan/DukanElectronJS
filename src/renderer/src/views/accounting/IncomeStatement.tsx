@@ -5,13 +5,14 @@ import { printA4Report, downloadExcel } from '../../utils/a4Print'
 import { formatDateNow } from '../../utils/jalali'
 import HelpPopup from '../../components/ui/HelpPopup'
 import { useSortable } from '../../hooks/useSortable'
+import { useTheme } from '../../hooks/useTheme'
 
 export default function IncomeStatement() {
   const [data, setData] = useState<any>(null)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
 
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'

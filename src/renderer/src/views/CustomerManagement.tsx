@@ -26,6 +26,7 @@ import { showPrint } from '../utils/showPrint'
 import { useHighlight } from '../hooks/useHighlight'
 import CustomerCreditView from './CustomerCreditView'
 import InstallmentsView from './InstallmentsView'
+import { useTheme } from '../hooks/useTheme'
 
 type FilterType = 'all' | 'debtor' | 'creditor' | 'inactive' | 'real' | 'legal'
 
@@ -82,7 +83,7 @@ export default function CustomerManagement({ highlightId, onHighlightDone }: Pro
   const [imgZoom, setImgZoom] = useState(1)
   const [imgRotation, setImgRotation] = useState(0)
 
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const textPrimary = isDark ? '#f1f5f9' : '#0d1c2e'

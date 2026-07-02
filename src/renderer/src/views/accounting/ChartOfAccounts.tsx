@@ -3,6 +3,7 @@ import { fa } from '../../i18n'
 import { printA4Report } from '../../utils/a4Print'
 import { formatJalaliDateTime } from '../../utils/jalali'
 import HelpPopup from '../../components/ui/HelpPopup'
+import { useTheme } from '../../hooks/useTheme'
 
 interface AccountNode { account: any; children: AccountNode[] }
 
@@ -21,7 +22,7 @@ export default function ChartOfAccounts() {
   const [ledgerAccount, setLedgerAccount] = useState<any>(null)
   const [ledgerEntries, setLedgerEntries] = useState<any[]>([])
 
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'

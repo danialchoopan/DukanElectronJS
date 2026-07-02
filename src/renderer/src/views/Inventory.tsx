@@ -28,6 +28,7 @@ import { gregorianToJalali, formatDateNow } from '../utils/jalali'
 import Pagination from '../components/ui/Pagination'
 import ShamsiDateInput from '../components/business/ShamsiDateInput'
 import HelpPopup from '../components/ui/HelpPopup'
+import { useTheme } from '../hooks/useTheme'
 import { printA4Report, downloadExcel } from '../utils/a4Print'
 import { useSortable } from '../hooks/useSortable'
 import PrintDialog from '../components/print/PrintDialog'
@@ -92,7 +93,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
   const [categories, setCategories] = useState<string[]>([])
   const [viewProduct, setViewProduct] = useState<Product | null>(null)
 
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'

@@ -24,6 +24,7 @@ import Pagination from '../components/ui/Pagination'
 import { useSortable } from '../hooks/useSortable'
 import PrintDialog from '../components/print/PrintDialog'
 import { TrendingUpIcon } from '../components/ui/Icons'
+import { useTheme } from '../hooks/useTheme'
 
 const primary = '#006194'
 
@@ -40,7 +41,7 @@ export default function Dashboard() {
   const [salesPage, setSalesPage] = useState(0)
   const [salesPageSize, setSalesPageSize] = useState(10)
 
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'

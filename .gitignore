@@ -63,6 +63,8 @@ __tests__/
 stitch_persian_rtl_accounting_ui/
 screen.png
 code.html
+*.rar
+*.zip
 
 # Git
 *.orig

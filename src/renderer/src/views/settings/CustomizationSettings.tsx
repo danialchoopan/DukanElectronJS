@@ -16,6 +16,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { printA4Report, setPrintCustomization } from '../../utils/a4Print'
 import { formatDateNow } from '../../utils/jalali'
+import { useTheme } from '../../hooks/useTheme'
 
 interface PrintSettings {
   printInvoiceTitle: string
@@ -76,7 +77,7 @@ export default function CustomizationSettings() {
   const logoRef = useRef<HTMLInputElement>(null)
   const sigRef = useRef<HTMLInputElement>(null)
   const wmRef = useRef<HTMLInputElement>(null)
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const primary = settings.printColorScheme || '#006194'
 
   const cardBg = isDark ? '#1e293b' : '#ffffff'

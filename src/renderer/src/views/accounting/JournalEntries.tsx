@@ -6,6 +6,7 @@ import ShamsiDateInput from '../../components/business/ShamsiDateInput'
 import Pagination from '../../components/ui/Pagination'
 import HelpPopup from '../../components/ui/HelpPopup'
 import { useSortable } from '../../hooks/useSortable'
+import { useTheme } from '../../hooks/useTheme'
 
 export default function JournalEntries() {
   const [entries, setEntries] = useState<any[]>([])
@@ -17,7 +18,7 @@ export default function JournalEntries() {
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(20)
 
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'

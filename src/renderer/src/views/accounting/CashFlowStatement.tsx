@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import { downloadExcel, printA4Report } from '../../utils/a4Print'
 import ShamsiDateInput from '../../components/business/ShamsiDateInput'
+import { useTheme } from '../../hooks/useTheme'
 
 export default function CashFlowStatement() {
   const [data, setData] = useState<{ operating: { label: string; amount: number }[]; totalInflow: number; totalOutflow: number; netChange: number } | null>(null)
@@ -9,7 +10,7 @@ export default function CashFlowStatement() {
   const [endDate, setEndDate] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'

@@ -2,6 +2,7 @@ import type { Sale } from '../../../../types'
 import { fa } from '../../i18n'
 import { formatJalaliDateTime } from '../../utils/jalali'
 import { generateReceiptHTML, printContent } from '../../utils/receipt'
+import { useTheme } from '../../hooks/useTheme'
 
 interface Props {
   sale: Sale
@@ -13,7 +14,7 @@ interface Props {
 }
 
 export default function ReceiptPrinter({ sale, storeName, storeAddress, storePhone, receiptFooter, onClose }: Props) {
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const methodLabel = sale.paymentMethod === 'cash' ? fa.payment.cash : sale.paymentMethod === 'card' ? fa.payment.card : fa.payment.ledger
 
   const handlePrint = () => {

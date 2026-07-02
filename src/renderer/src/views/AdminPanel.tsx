@@ -9,6 +9,7 @@ import SmartExportDialog from '../components/print/SmartExportDialog'
 import SettingsTab from './settings/SettingsTab'
 import RestorePointsView from './RestorePointsView'
 import Dialog from '../components/ui/Dialog'
+import { useTheme } from '../hooks/useTheme'
 
 const primary = '#006194'
 
@@ -36,7 +37,7 @@ export default function AdminPanel({ view = 'admin', initialTab, highlightId, on
 
   const defaultTab = view === 'settings' ? 'settings' : 'users'
   const [tab, setTab] = useState<typeof allTabs[0]['key']>((initialTab as any) || defaultTab)
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const [smartExportMode, setSmartExportMode] = useState<'export' | 'import' | null>(null)
 
   useEffect(() => {
@@ -121,7 +122,7 @@ function UsersTab() {
   const [editForm, setEditForm] = useState({ name: '', pinCode: '', role: 'cashier' })
   const [newPin, setNewPin] = useState('')
   const [confirmDeleteUser, setConfirmDeleteUser] = useState<User | null>(null)
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
 
   const load = async () => { const r = await window.api.auth.listUsers(); if (r.success && r.data) setUsers(r.data) }
   useEffect(() => { load() }, [])
@@ -304,7 +305,7 @@ function LoginSettingsTab() {
   const [loginMethod, setLoginMethod] = useState<'pin' | 'password' | 'none'>('pin')
   const [showDisableWarning, setShowDisableWarning] = useState(false)
   const [saved, setSaved] = useState(false)
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const cBg = isDark ? '#1e293b' : '#ffffff'
   const cBorder = isDark ? '#334155' : '#e2e8f0'
   const tPri = isDark ? '#f1f5f9' : '#0f172a'

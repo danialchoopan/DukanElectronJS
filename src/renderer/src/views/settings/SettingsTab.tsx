@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react'
 import { fa } from '../../i18n'
 import { setShopName } from '../../utils/a4Print'
 import BackupSection from './BackupSection'
+import { useTheme } from '../../hooks/useTheme'
 
 const primary = '#006194'
 
@@ -34,7 +35,7 @@ export default function SettingsTab({ onExport, onImport }: Props) {
   const [storeAddress, setStoreAddress] = useState('')
   const [storePhone, setStorePhone] = useState('')
   const [saved, setSaved] = useState(false)
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
 
   const tPri = isDark ? '#f1f5f9' : '#0f172a'
   const tSec = isDark ? '#94a3b8' : '#64748b'

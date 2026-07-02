@@ -14,6 +14,7 @@ import CashFlowStatement from './accounting/CashFlowStatement'
 import PriceHistory from './accounting/PriceHistory'
 import AccountingAnalytics from './accounting/AccountingAnalytics'
 import { useHighlight } from '../hooks/useHighlight'
+import { useTheme } from '../hooks/useTheme'
 
 type AccountingTab = 'dashboard' | 'analytics' | 'accounts' | 'journal' | 'trialBalance' | 'incomeStatement' | 'balanceSheet' | 'arAging' | 'expenses' | 'periods' | 'cashFlow' | 'priceHistory'
 
@@ -25,7 +26,7 @@ interface Props {
 
 export default function Accounting({ initialTab, highlightId, onHighlightDone }: Props) {
   const [tab, setTab] = useState<AccountingTab>((initialTab as AccountingTab) || 'dashboard')
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
   const textSecondary = isDark ? '#94a3b8' : '#64748b'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'

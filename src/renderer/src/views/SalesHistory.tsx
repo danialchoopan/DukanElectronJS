@@ -9,6 +9,7 @@ import Pagination from '../components/ui/Pagination'
 import { useAuthStore } from '../store/authStore'
 import { useSortable } from '../hooks/useSortable'
 import PrintDialog from '../components/print/PrintDialog'
+import { useTheme } from '../hooks/useTheme'
 
 const primary = '#006194'
 
@@ -30,7 +31,7 @@ export default function SalesHistory() {
   const [showReturnAllConfirm, setShowReturnAllConfirm] = useState(false)
   const [returnAllReason, setReturnAllReason] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
-  const isDark = document.documentElement.classList.contains('dark')
+  const { isDark } = useTheme()
   const user = useAuthStore((s) => s.user)
 
   const cardBg = isDark ? '#1e293b' : '#ffffff'
