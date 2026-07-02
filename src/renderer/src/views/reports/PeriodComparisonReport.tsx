@@ -86,7 +86,7 @@ export default function PeriodComparisonReport() {
     </span>
   )
 
-  const MetricCard = ({ label, current, previous, change, percent }: { label: string; current: number; previous: number; change: number; percent: number }) => (
+  const MetricCard = ({ label, current, previous, change, changePercent }: { label: string; current: number; previous: number; change: number; changePercent: number }) => (
     <div className="rounded-xl p-3" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
       <div className="text-[10px] font-bold mb-1" style={{ color: tSec }}>{label}</div>
       <div className="flex items-center justify-between">
@@ -94,7 +94,7 @@ export default function PeriodComparisonReport() {
           <div className="text-sm font-bold" style={{ color: tPri }}>{formatPriceFA(current)}</div>
           <div className="text-[10px]" style={{ color: tSec }}>قبل: {formatPriceFA(previous)}</div>
         </div>
-        <ChangeIndicator value={change} percent={percent} />
+        <ChangeIndicator value={change} percent={changePercent} />
       </div>
     </div>
   )
@@ -159,7 +159,7 @@ export default function PeriodComparisonReport() {
       {/* Main Metrics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <MetricCard label="درآمد کل" {...data.totalSales} />
-        <MetricCard label="تعداد سفارشات" {...data.ordersCount} current={data.ordersCount.current} previous={data.ordersCount.previous} change={data.ordersCount.change} percent={data.ordersCount.changePercent} />
+        <MetricCard label="تعداد سفارشات" {...data.ordersCount} />
         <MetricCard label="میانگین سفارش" {...data.avgOrderValue} />
       </div>
 

@@ -101,7 +101,7 @@ export default function UISettings() {
             ))}
           </div>
           <div className="mt-3 p-2 rounded-lg" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cBorder}` }}>
-            <div className="text-[10px] font-bold mb-1" style={{ color: tSec }}>پیش\u200cنمایش</div>
+            <div className="text-[10px] font-bold mb-1" style={{ color: tSec }}>پیش‌نمایش</div>
             <div className="flex gap-2">
               <div className="w-6 h-6 rounded-lg" style={{ backgroundColor: primary }} />
               <div className="w-6 h-6 rounded-lg" style={{ background: `linear-gradient(135deg, ${primary}, ${primary}cc)` }} />
@@ -146,7 +146,7 @@ export default function UISettings() {
         <Card title="اسکنر دوربین">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm" style={{ color: tSec }}>فعال\u200cسازی اسکن بارکد و QR با دوربین</p>
+              <p className="text-sm" style={{ color: tSec }}>فعال‌سازی اسکن بارکد و QR با دوربین</p>
               <p className="text-[10px] mt-0.5" style={{ color: isDark ? '#64748b' : '#94a3b8' }}>صفحه فروش + صفحه افزودن کالا</p>
             </div>
             <button onClick={() => setShowCameraScanner(!showCameraScanner)}
@@ -159,13 +159,13 @@ export default function UISettings() {
         </Card>
 
         {/* Navigation Customization */}
-        <Card title="سفارشی\u200cسازی منوی ناوبری" className="md:col-span-2">
+        <Card title="سفارشی‌سازی منوی ناوبری" className="md:col-span-2">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[10px]" style={{ color: tSec }}>ترتیب و نمایش آیتم\u200cهای منوی سمت راست را تغییر دهید</p>
+            <p className="text-[10px]" style={{ color: tSec }}>ترتیب و نمایش آیتم‌های منوی سمت راست را تغییر دهید</p>
             <button onClick={resetNavConfig}
               className="px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all"
               style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', color: '#ef4444', border: `1px solid ${cBorder}` }}>
-              بازنشانی پیش\u200cفرض
+              بازنشانی پیش‌فرض
             </button>
           </div>
           <div className="space-y-1.5 max-h-[400px] overflow-y-auto pr-1">
