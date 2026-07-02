@@ -46,6 +46,13 @@ export function getBestCustomers(limit: number = 20): BestCustomer[] {
   const debugSales = db.prepare('SELECT COUNT(*) as c FROM sales').get() as any
   const debugSalesWithCust = db.prepare('SELECT COUNT(*) as c FROM sales WHERE customerId IS NOT NULL').get() as any
   console.log(`[Analytics] DB state: ${debugCustomers.c} active customers, ${debugSales.c} total sales, ${debugSalesWithCust.c} sales with customerId`)
+  // Debug: check actual values
+  const debugCustIds = db.prepare('SELECT id FROM customers WHERE isActive = 1').all() as any[]
+  const debugSaleCustIds = db.prepare('SELECT DISTINCT customerId FROM sales WHERE customerId IS NOT NULL').all() as any[]
+  console.log(`[Analytics] Customer IDs:`, debugCustIds.map((r: any) => r.id))
+  console.log(`[Analytics] Sale customerIds:`, debugSaleCustIds.map((r: any) => r.customerId))
+  const debugMatch = db.prepare('SELECT COUNT(*) as c FROM sales s JOIN customers c ON c.id = s.customerId WHERE c.isActive = 1').get() as any
+  console.log(`[Analytics] Direct JOIN match count: ${debugMatch.c}`)
   const rows = db.prepare(`
     SELECT
       c.id as customerId, c.name as customerName, c.phone,
