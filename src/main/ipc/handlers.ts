@@ -507,9 +507,9 @@ export function registerAllHandlers(): void {
   handleArg<{ currentStart: string; currentEnd: string; previousStart: string; previousEnd: string }, any>('reports:periodComparison', (a) => salesReports.getPeriodComparison(a.currentStart, a.currentEnd, a.previousStart, a.previousEnd))
 
   // ─── Customer Analytics ─────────────────────────────────
-  handleArg<{ limit?: number }, any[]>('reports:bestCustomers', (a) => customerAnalytics.getBestCustomers(a.limit))
+  handleArg<{ limit?: number }, any[]>('reports:bestCustomers', (a) => { const r = customerAnalytics.getBestCustomers(a.limit); console.log(`[IPC] bestCustomers: ${r.length} rows`); return r })
   handleArg<{ startDate?: string; endDate?: string }, any[]>('reports:categoryProfitMargin', (a) => customerAnalytics.getCategoryProfitMargin(a.startDate, a.endDate))
-  handle('reports:customerPatterns', () => customerAnalytics.getCustomerPatterns())
+  handle('reports:customerPatterns', () => { const r = customerAnalytics.getCustomerPatterns(); console.log(`[IPC] customerPatterns: ${r.customers.length} customers`); return r })
 
   // ─── Cross-Sell Rules ───────────────────────────────────
   handle('crossSell:getAll', () => crossSellRules.getAllRules())

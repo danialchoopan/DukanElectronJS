@@ -42,6 +42,10 @@ export { TIER_COLORS }
  */
 export function getBestCustomers(limit: number = 20): BestCustomer[] {
   const db = getDatabase()
+  const debugCustomers = db.prepare('SELECT COUNT(*) as c FROM customers WHERE isActive = 1').get() as any
+  const debugSales = db.prepare('SELECT COUNT(*) as c FROM sales').get() as any
+  const debugSalesWithCust = db.prepare('SELECT COUNT(*) as c FROM sales WHERE customerId IS NOT NULL').get() as any
+  console.log(`[Analytics] DB state: ${debugCustomers.c} active customers, ${debugSales.c} total sales, ${debugSalesWithCust.c} sales with customerId`)
   const rows = db.prepare(`
     SELECT
       c.id as customerId, c.name as customerName, c.phone,
