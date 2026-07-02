@@ -29,7 +29,7 @@ export default function BestCustomersReport() {
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316']
 
-  useEffect(() => { window.api.reports.getBestCustomers(20).then(r => { console.log('[REPORT] bestCustomers response:', JSON.stringify(r).slice(0, 500)); if (r.success && r.data) setData(r.data) }) }, [])
+  useEffect(() => { window.api.reports.getBestCustomers(20).then(r => { if (r.success && r.data) setData(r.data) }) }, [])
 
   const top10 = data.slice(0, 10)
   const maxSpent = Math.max(...top10.map(r => r.totalSpent), 1)

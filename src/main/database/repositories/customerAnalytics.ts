@@ -42,43 +42,29 @@ export { TIER_COLORS }
  */
 export function getBestCustomers(limit: number = 20): BestCustomer[] {
   const db = getDatabase()
-  const debugCustomers = db.prepare('SELECT COUNT(*) as c FROM customers WHERE isActive = 1').get() as any
-  const debugSales = db.prepare('SELECT COUNT(*) as c FROM sales').get() as any
-  const debugSalesWithCust = db.prepare('SELECT COUNT(*) as c FROM sales WHERE customerId IS NOT NULL').get() as any
-  console.log(`[Analytics] DB state: ${debugCustomers.c} active customers, ${debugSales.c} total sales, ${debugSalesWithCust.c} sales with customerId`)
-  // Debug: check actual values
-  const debugCustIds = db.prepare('SELECT id FROM customers WHERE isActive = 1').all() as any[]
-  const debugSaleCustIds = db.prepare('SELECT DISTINCT customerId FROM sales WHERE customerId IS NOT NULL').all() as any[]
-  console.log(`[Analytics] Customer IDs:`, debugCustIds.map((r: any) => r.id))
-  console.log(`[Analytics] Sale customerIds:`, debugSaleCustIds.map((r: any) => r.customerId))
-  const debugMatch = db.prepare('SELECT COUNT(*) as c FROM sales s JOIN customers c ON c.id = s.customerId WHERE c.isActive = 1').get() as any
-  console.log(`[Analytics] Direct JOIN match count: ${debugMatch.c}`)
-  // Direct raw check
-  const rawSales = db.prepare('SELECT id, customerId, typeof(customerId) as custType, total_amount FROM sales LIMIT 3').all() as any[]
-  console.log(`[Analytics] Raw sales sample:`, JSON.stringify(rawSales))
-  const rawCustomers = db.prepare('SELECT id, typeof(id) as idType, name FROM customers LIMIT 3').all() as any[]
-  console.log(`[Analytics] Raw customers sample:`, JSON.stringify(rawCustomers))
-  // Try explicit type cast JOIN
-  const castJoin = db.prepare('SELECT COUNT(*) as c FROM sales s JOIN customers c ON CAST(c.id AS TEXT) = CAST(s.customerId AS TEXT)').get() as any
-  console.log(`[Analytics] Cast JOIN match: ${castJoin.c}`)
-  const rows = db.prepare(`
+
+  // Build results from sales side, then look up customer info — avoids JOIN issues
+  const saleAgg = db.prepare(`
     SELECT
-      c.id as customerId, c.name as customerName, c.phone,
-      COUNT(DISTINCT s.id) as totalPurchases,
-      COALESCE(SUM(s.total_amount), 0) as totalSpent,
-      CASE WHEN COUNT(DISTINCT s.id) > 0 THEN COALESCE(SUM(s.total_amount), 0) / COUNT(DISTINCT s.id) ELSE 0 END as avgOrderValue,
-      MAX(s.saleDate) as lastPurchaseDate,
-      MIN(s.saleDate) as firstPurchaseDate
-    FROM customers c
-    LEFT JOIN sales s ON c.id = s.customerId
-    WHERE c.isActive = 1
-    GROUP BY c.id
-    HAVING totalPurchases > 0
+      customerId,
+      COUNT(DISTINCT id) as totalPurchases,
+      COALESCE(SUM(total_amount), 0) as totalSpent,
+      MAX(saleDate) as lastPurchaseDate,
+      MIN(saleDate) as firstPurchaseDate
+    FROM sales
+    WHERE customerId IS NOT NULL
+    GROUP BY customerId
     ORDER BY totalSpent DESC
     LIMIT ?
   `).all(limit) as any[]
 
+  const rows = saleAgg.map(s => {
+    const cust = db.prepare('SELECT id, name, phone FROM customers WHERE id = ? AND isActive = 1').get(s.customerId) as any
+    return cust ? { ...s, customerName: cust.name, phone: cust.phone, customerId: cust.id } : null
+  }).filter(Boolean)
+
   return rows.map((r, i) => {
+    const avgOrderValue = r.totalPurchases > 0 ? r.totalSpent / r.totalPurchases : 0
     const daysBetween = r.totalPurchases > 1 && r.firstPurchaseDate && r.lastPurchaseDate
       ? Math.max(1, Math.round((new Date(r.lastPurchaseDate).getTime() - new Date(r.firstPurchaseDate).getTime()) / 86400000) / (r.totalPurchases - 1))
       : 0
@@ -89,7 +75,7 @@ export function getBestCustomers(limit: number = 20): BestCustomer[] {
       phone: r.phone,
       totalPurchases: r.totalPurchases,
       totalSpent: r.totalSpent,
-      avgOrderValue: r.avgOrderValue,
+      avgOrderValue,
       lastPurchaseDate: r.lastPurchaseDate || '',
       firstPurchaseDate: r.firstPurchaseDate || '',
       tier: getTier(r.totalSpent),
@@ -212,37 +198,37 @@ export interface PatternSummary {
 export function getCustomerPatterns(): { customers: CustomerPattern[]; summary: PatternSummary } {
   const db = getDatabase()
 
-  const rows = db.prepare(`
+  // Build from sales side, then look up customer info — avoids JOIN issues
+  const saleAgg = db.prepare(`
     SELECT
-      c.id as customerId, c.name as customerName,
-      COUNT(DISTINCT s.id) as totalPurchases,
-      COALESCE(SUM(s.total_amount), 0) as totalSpent,
-      MAX(s.saleDate) as lastPurchaseDate,
-      MIN(s.saleDate) as firstPurchaseDate
-    FROM customers c
-    LEFT JOIN sales s ON c.id = s.customerId
-    WHERE c.isActive = 1
-    GROUP BY c.id
-    HAVING totalPurchases > 0
+      customerId,
+      COUNT(DISTINCT id) as totalPurchases,
+      COALESCE(SUM(total_amount), 0) as totalSpent,
+      MAX(saleDate) as lastPurchaseDate,
+      MIN(saleDate) as firstPurchaseDate
+    FROM sales
+    WHERE customerId IS NOT NULL
+    GROUP BY customerId
     ORDER BY totalSpent DESC
   `).all() as any[]
 
   const now = new Date()
 
-  const customers: CustomerPattern[] = rows.map(r => {
-    const daysSinceLast = r.lastPurchaseDate
-      ? Math.floor((now.getTime() - new Date(r.lastPurchaseDate).getTime()) / 86400000)
+  const customers: CustomerPattern[] = saleAgg.map(s => {
+    const cust = db.prepare('SELECT id, name FROM customers WHERE id = ? AND isActive = 1').get(s.customerId) as any
+    if (!cust) return null
+
+    const daysSinceLast = s.lastPurchaseDate
+      ? Math.floor((now.getTime() - new Date(s.lastPurchaseDate).getTime()) / 86400000)
       : 999
-    const daysBetween = r.totalPurchases > 1 && r.firstPurchaseDate && r.lastPurchaseDate
-      ? Math.round(Math.max(1, (new Date(r.lastPurchaseDate).getTime() - new Date(r.firstPurchaseDate).getTime()) / 86400000) / (r.totalPurchases - 1))
+    const daysBetween = s.totalPurchases > 1 && s.firstPurchaseDate && s.lastPurchaseDate
+      ? Math.round(Math.max(1, (new Date(s.lastPurchaseDate).getTime() - new Date(s.firstPurchaseDate).getTime()) / 86400000) / (s.totalPurchases - 1))
       : 0
 
-    // Determine status
     let status: CustomerPattern['status'] = 'active'
     if (daysSinceLast > 90) status = 'churned'
     else if (daysSinceLast > 30) status = 'at_risk'
 
-    // Get favorite categories
     const cats = db.prepare(`
       SELECT p.category, COUNT(*) as cnt
       FROM sale_items si
@@ -252,19 +238,19 @@ export function getCustomerPatterns(): { customers: CustomerPattern[]; summary: 
       GROUP BY p.category
       ORDER BY cnt DESC
       LIMIT 3
-    `).all(r.customerId) as { category: string; cnt: number }[]
+    `).all(s.customerId) as { category: string; cnt: number }[]
 
     return {
-      customerId: r.customerId,
-      customerName: r.customerName,
-      totalPurchases: r.totalPurchases,
-      totalSpent: r.totalSpent,
+      customerId: cust.id,
+      customerName: cust.name,
+      totalPurchases: s.totalPurchases,
+      totalSpent: s.totalSpent,
       avgDaysBetween: daysBetween,
       favoriteCategories: cats.map(c => c.category).join(', ') || '-',
       lastPurchaseDaysAgo: daysSinceLast,
       status,
     }
-  })
+  }).filter(Boolean) as CustomerPattern[]
 
   // Summary
   const activeCustomers = customers.filter(c => c.status === 'active').length
@@ -272,7 +258,7 @@ export function getCustomerPatterns(): { customers: CustomerPattern[]; summary: 
   const churnedCustomers = customers.filter(c => c.status === 'churned').length
 
   // New vs Returning (new = only 1 purchase)
-  const firstPurchaseDates = rows.map(r => r.firstPurchaseDate).filter(Boolean)
+  const firstPurchaseDates = saleAgg.map(s => s.firstPurchaseDate).filter(Boolean)
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000).toISOString().slice(0, 10)
   const newCustomers = firstPurchaseDates.filter(d => d >= thirtyDaysAgo).length
   const returningCustomers = customers.length - newCustomers

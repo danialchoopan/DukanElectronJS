@@ -209,8 +209,6 @@ export function seedDatabase(): void {
       }
     })
     salesTx()
-    const salesWithCustomer = db.prepare('SELECT COUNT(*) as c FROM sales WHERE customerId IS NOT NULL').get() as { c: number }
-    console.log(`[SEED] ${saleIds.length} sales created, ${salesWithCustomer.c} with customerId, ${custIds.length} customers`)
     createAuditEntry(1, 'create', 'sale', null, `ایجاد ${saleIds.length} فاکتور فروش با سند حسابداری`)
 
     if (saleIds.length >= 3) {
