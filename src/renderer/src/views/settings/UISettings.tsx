@@ -12,7 +12,8 @@
  */
 
 import { t, setLanguage } from '../../i18n'
-import { useSettingsStore, type NavTheme, getNavColors } from '../../store/settingsStore'
+import { useSettingsStore, type NavTheme } from '../../store/settingsStore'
+import { useTheme } from '../../hooks/useTheme'
 
 const themes: { key: NavTheme; name: string; colors: string[] }[] = [
   { key: 'blue', name: 'آبی', colors: ['#006194', '#007bb9'] },
@@ -33,13 +34,12 @@ const fontSizes = [
 
 export default function UISettings() {
   const { theme, setTheme, language, setLanguage: setLang, navTheme, setNavTheme, fontSize, setFontSize, fontSizeCustom, setFontSizeCustom, highContrast, setHighContrast, showCameraScanner, setShowCameraScanner, navConfig, setNavConfig, resetNavConfig } = useSettingsStore()
-  const isDark = theme === 'dark'
+  const { isDark, colors, primary } = useTheme()
   const ui = t()
-  const primary = getNavColors(navTheme, isDark)
-  const cBg = isDark ? '#1e293b' : '#ffffff'
-  const cBorder = isDark ? '#334155' : '#e2e8f0'
-  const tPri = isDark ? '#f1f5f9' : '#0f172a'
-  const tSec = isDark ? '#94a3b8' : '#64748b'
+  const cBg = colors.bg.card
+  const cBorder = colors.border.default
+  const tPri = colors.text.primary
+  const tSec = colors.text.secondary
 
   const moveItem = (index: number, direction: -1 | 1) => {
     const newConfig = [...navConfig]
@@ -75,15 +75,15 @@ export default function UISettings() {
         <Card title={ui.admin.theme}>
           <div className="grid grid-cols-3 gap-2">
             <button onClick={() => setTheme('dark')} className="py-2.5 rounded-xl text-xs font-bold transition-all"
-              style={{ background: theme === 'dark' ? `linear-gradient(135deg, ${primary}, ${primary}cc)` : isDark ? '#0f172a' : '#f8fafc', color: theme === 'dark' ? '#fff' : tSec, border: `1px solid ${theme === 'dark' ? primary : cBorder}` }}>
+              style={{ background: theme === 'dark' ? `linear-gradient(135deg, ${primary}, ${primary}cc)` : colors.bg.tertiary, color: theme === 'dark' ? '#fff' : tSec, border: `1px solid ${theme === 'dark' ? primary : cBorder}` }}>
               {ui.admin.darkMode}
             </button>
             <button onClick={() => setTheme('light')} className="py-2.5 rounded-xl text-xs font-bold transition-all"
-              style={{ background: theme === 'light' ? `linear-gradient(135deg, ${primary}, ${primary}cc)` : isDark ? '#0f172a' : '#f8fafc', color: theme === 'light' ? '#fff' : tSec, border: `1px solid ${theme === 'light' ? primary : cBorder}` }}>
+              style={{ background: theme === 'light' ? `linear-gradient(135deg, ${primary}, ${primary}cc)` : colors.bg.tertiary, color: theme === 'light' ? '#fff' : tSec, border: `1px solid ${theme === 'light' ? primary : cBorder}` }}>
               {ui.admin.lightMode}
             </button>
             <button onClick={() => setHighContrast(!highContrast)} className="py-2.5 rounded-xl text-xs font-bold transition-all"
-              style={{ background: highContrast ? `linear-gradient(135deg, ${primary}, ${primary}cc)` : isDark ? '#0f172a' : '#f8fafc', color: highContrast ? '#fff' : tSec, border: `1px solid ${highContrast ? primary : cBorder}` }}>
+              style={{ background: highContrast ? `linear-gradient(135deg, ${primary}, ${primary}cc)` : colors.bg.tertiary, color: highContrast ? '#fff' : tSec, border: `1px solid ${highContrast ? primary : cBorder}` }}>
               کنتراست
             </button>
           </div>
@@ -95,12 +95,12 @@ export default function UISettings() {
             {themes.map((th) => (
               <button key={th.key} onClick={() => setNavTheme(th.key)}
                 className="py-2.5 rounded-xl text-xs font-bold transition-all"
-                style={{ background: navTheme === th.key ? `linear-gradient(135deg, ${th.colors[0]}, ${th.colors[1]})` : isDark ? '#0f172a' : '#f8fafc', color: navTheme === th.key ? '#fff' : tSec, border: `1px solid ${navTheme === th.key ? th.colors[0] : cBorder}`, transform: navTheme === th.key ? 'scale(1.05)' : 'scale(1)' }}>
+                style={{ background: navTheme === th.key ? `linear-gradient(135deg, ${th.colors[0]}, ${th.colors[1]})` : colors.bg.tertiary, color: navTheme === th.key ? '#fff' : tSec, border: `1px solid ${navTheme === th.key ? th.colors[0] : cBorder}`, transform: navTheme === th.key ? 'scale(1.05)' : 'scale(1)' }}>
                 {th.name}
               </button>
             ))}
           </div>
-          <div className="mt-3 p-2 rounded-lg" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cBorder}` }}>
+          <div className="mt-3 p-2 rounded-lg" style={{ backgroundColor: colors.bg.tertiary, border: `1px solid ${cBorder}` }}>
             <div className="text-[10px] font-bold mb-1" style={{ color: tSec }}>پیش‌نمایش</div>
             <div className="flex gap-2">
               <div className="w-6 h-6 rounded-lg" style={{ backgroundColor: primary }} />
@@ -114,9 +114,9 @@ export default function UISettings() {
         <Card title={ui.admin.language}>
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => { setLang('fa'); setLanguage('fa') }} className="py-2.5 rounded-xl text-sm font-bold transition-all"
-              style={{ background: language === 'fa' ? `linear-gradient(135deg, ${primary}, ${primary}cc)` : isDark ? '#0f172a' : '#f8fafc', color: language === 'fa' ? '#fff' : tSec, border: `1px solid ${language === 'fa' ? primary : cBorder}` }}>فارسی</button>
+              style={{ background: language === 'fa' ? `linear-gradient(135deg, ${primary}, ${primary}cc)` : colors.bg.tertiary, color: language === 'fa' ? '#fff' : tSec, border: `1px solid ${language === 'fa' ? primary : cBorder}` }}>فارسی</button>
             <button onClick={() => { setLang('en'); setLanguage('en') }} className="py-2.5 rounded-xl text-sm font-bold transition-all"
-              style={{ background: language === 'en' ? `linear-gradient(135deg, ${primary}, ${primary}cc)` : isDark ? '#0f172a' : '#f8fafc', color: language === 'en' ? '#fff' : tSec, border: `1px solid ${language === 'en' ? primary : cBorder}` }}>English</button>
+              style={{ background: language === 'en' ? `linear-gradient(135deg, ${primary}, ${primary}cc)` : colors.bg.tertiary, color: language === 'en' ? '#fff' : tSec, border: `1px solid ${language === 'en' ? primary : cBorder}` }}>English</button>
           </div>
         </Card>
 
@@ -126,7 +126,7 @@ export default function UISettings() {
             {fontSizes.map((fs) => (
               <button key={fs.key} onClick={() => setFontSize(fs.key)}
                 className="py-2 rounded-lg font-bold text-center transition-all"
-                style={{ background: fontSize === fs.key ? `linear-gradient(135deg, ${primary}, ${primary}cc)` : isDark ? '#0f172a' : '#f8fafc', color: fontSize === fs.key ? '#fff' : tSec, fontSize: `${fs.scale * 14}px`, border: `1px solid ${fontSize === fs.key ? primary : cBorder}` }}>
+                style={{ background: fontSize === fs.key ? `linear-gradient(135deg, ${primary}, ${primary}cc)` : colors.bg.tertiary, color: fontSize === fs.key ? '#fff' : tSec, fontSize: `${fs.scale * 14}px`, border: `1px solid ${fontSize === fs.key ? primary : cBorder}` }}>
                 {fs.label}
               </button>
             ))}
@@ -134,7 +134,7 @@ export default function UISettings() {
           <div>
             <div className="flex justify-between items-center mb-1">
               <span className="text-[10px] font-bold" style={{ color: tSec }}>دستی</span>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', color: tPri }}>{Math.round(fontSizeCustom * 100)}%</span>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: colors.bg.tertiary, color: tPri }}>{Math.round(fontSizeCustom * 100)}%</span>
             </div>
             <input type="range" min="0.7" max="1.6" step="0.01" value={fontSizeCustom} onChange={(e) => setFontSizeCustom(parseFloat(e.target.value))}
               className="w-full h-1.5 rounded-lg appearance-none cursor-pointer"
@@ -147,11 +147,11 @@ export default function UISettings() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm" style={{ color: tSec }}>فعال‌سازی اسکن بارکد و QR با دوربین</p>
-              <p className="text-[10px] mt-0.5" style={{ color: isDark ? '#64748b' : '#94a3b8' }}>صفحه فروش + صفحه افزودن کالا</p>
+              <p className="text-[10px] mt-0.5" style={{ color: colors.text.muted }}>صفحه فروش + صفحه افزودن کالا</p>
             </div>
             <button onClick={() => setShowCameraScanner(!showCameraScanner)}
               className="relative w-11 h-6 rounded-full transition-all duration-200"
-              style={{ backgroundColor: showCameraScanner ? primary : isDark ? '#475569' : '#d1d5db' }}>
+              style={{ backgroundColor: showCameraScanner ? primary : colors.toggle.track }}>
               <div className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200"
                 style={{ left: showCameraScanner ? '22px' : '2px' }} />
             </button>
@@ -164,7 +164,7 @@ export default function UISettings() {
             <p className="text-[10px]" style={{ color: tSec }}>ترتیب و نمایش آیتم‌های منوی سمت راست را تغییر دهید</p>
             <button onClick={resetNavConfig}
               className="px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all"
-              style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', color: '#ef4444', border: `1px solid ${cBorder}` }}>
+              style={{ backgroundColor: colors.bg.tertiary, color: '#ef4444', border: `1px solid ${cBorder}` }}>
               بازنشانی پیش‌فرض
             </button>
           </div>
@@ -172,7 +172,7 @@ export default function UISettings() {
             {navConfig.map((item, index) => (
               <div key={item.key} className="flex items-center gap-2 p-2 rounded-lg transition-all"
                 style={{
-                  backgroundColor: item.visible ? (isDark ? '#0f172a' : '#f8fafc') : (isDark ? '#0a0f1a' : '#f1f5f9'),
+                  backgroundColor: item.visible ? (colors.bg.tertiary) : (isDark ? '#0a0f1a' : '#f1f5f9'),
                   border: `1px solid ${cBorder}`,
                   opacity: item.visible ? 1 : 0.5,
                 }}>
@@ -194,7 +194,7 @@ export default function UISettings() {
                 {/* Visibility toggle */}
                 <button onClick={() => toggleItem(item.key)}
                   className="relative w-9 h-5 rounded-full transition-all duration-200"
-                  style={{ backgroundColor: item.visible ? primary : isDark ? '#475569' : '#d1d5db' }}>
+                  style={{ backgroundColor: item.visible ? primary : colors.toggle.track }}>
                   <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
                     style={{ left: item.visible ? '18px' : '2px' }} />
                 </button>

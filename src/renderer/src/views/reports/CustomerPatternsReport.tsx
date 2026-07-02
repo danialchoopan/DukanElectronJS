@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useSettingsStore } from '../../store/settingsStore'
+import { useTheme } from '../../hooks/useTheme'
 import { formatPriceFA } from '../../utils/jalali'
 import { downloadExcel } from '../../utils/a4Print'
 
@@ -21,16 +21,15 @@ const STATUS_COLORS = { active: '#22c55e', at_risk: '#f59e0b', churned: '#ef4444
 const STATUS_LABELS = { active: 'فعال', at_risk: 'در خطر', churned: 'غیرفعال' }
 
 export default function CustomerPatternsReport() {
-  const theme = useSettingsStore(s => s.theme)
-  const isDark = theme === 'dark'
+  const { isDark, colors } = useTheme()
   const [customers, setCustomers] = useState<any[]>([])
   const [summary, setSummary] = useState<any>(null)
   const [filter, setFilter] = useState<'all' | 'active' | 'at_risk' | 'churned'>('all')
 
-  const tPri = isDark ? '#f1f5f9' : '#0f172a'
-  const tSec = isDark ? '#94a3b8' : '#64748b'
-  const cardBg = isDark ? '#1e293b' : '#ffffff'
-  const cardBorder = isDark ? '#334155' : '#e2e8f0'
+  const tPri = colors.text.primary
+  const tSec = colors.text.secondary
+  const cardBg = colors.bg.card
+  const cardBorder = colors.border.default
 
   useEffect(() => {
     window.api.reports.getCustomerPatterns().then(r => {

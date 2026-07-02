@@ -13,7 +13,7 @@
  */
 
 import { useState } from 'react'
-import { useSettingsStore } from '../store/settingsStore'
+import { useTheme } from '../hooks/useTheme'
 import BestSellingReport from './reports/BestSellingReport'
 import SalesByHourReport from './reports/SalesByHourReport'
 import PeriodComparisonReport from './reports/PeriodComparisonReport'
@@ -24,14 +24,13 @@ import CustomerPatternsReport from './reports/CustomerPatternsReport'
 type ReportTab = 'bestSelling' | 'salesByHour' | 'periodComparison' | 'bestCustomers' | 'categoryProfit' | 'customerPatterns'
 
 export default function Reports() {
-  const theme = useSettingsStore(s => s.theme)
-  const isDark = theme === 'dark'
+  const { isDark, colors } = useTheme()
   const [tab, setTab] = useState<ReportTab>('bestSelling')
 
-  const tPri = isDark ? '#f1f5f9' : '#0f172a'
-  const tSec = isDark ? '#94a3b8' : '#64748b'
-  const cardBg = isDark ? '#1e293b' : '#ffffff'
-  const cardBorder = isDark ? '#334155' : '#e2e8f0'
+  const tPri = colors.text.primary
+  const tSec = colors.text.secondary
+  const cardBg = colors.bg.card
+  const cardBorder = colors.border.default
 
   const tabs: { key: ReportTab; label: string; icon: JSX.Element }[] = [
     { key: 'bestSelling', label: 'پرفروش‌ها', icon: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-5.18 2.75L8 13.61l-5-4.87 6.91-1.01L12 2z"/></svg> },

@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { useSettingsStore } from '../../store/settingsStore'
+import { useTheme } from '../../hooks/useTheme'
 import { formatPriceFA, formatPriceComma, formatISOToJalali } from '../../utils/jalali'
 import { downloadExcel } from '../../utils/a4Print'
 import ShamsiDateInput from '../../components/business/ShamsiDateInput'
@@ -21,17 +21,16 @@ import ShamsiDateInput from '../../components/business/ShamsiDateInput'
 type Preset = 'today' | 'week' | 'month' | 'quarter' | 'year' | 'custom'
 
 export default function PeriodComparisonReport() {
-  const theme = useSettingsStore(s => s.theme)
-  const isDark = theme === 'dark'
+  const { isDark, colors } = useTheme()
   const [data, setData] = useState<any>(null)
   const [preset, setPreset] = useState<Preset>('month')
   const [customCurrent, setCustomCurrent] = useState({ start: '', end: '' })
   const [customPrevious, setCustomPrevious] = useState({ start: '', end: '' })
 
-  const tPri = isDark ? '#f1f5f9' : '#0f172a'
-  const tSec = isDark ? '#94a3b8' : '#64748b'
-  const cardBg = isDark ? '#1e293b' : '#ffffff'
-  const cardBorder = isDark ? '#334155' : '#e2e8f0'
+  const tPri = colors.text.primary
+  const tSec = colors.text.secondary
+  const cardBg = colors.bg.card
+  const cardBorder = colors.border.default
 
   const getDateRanges = useCallback((): { current: [string, string]; previous: [string, string] } => {
     const now = new Date()

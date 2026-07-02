@@ -12,21 +12,20 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useSettingsStore } from '../../store/settingsStore'
+import { useTheme } from '../../hooks/useTheme'
 import { formatPriceFA, formatPriceComma, formatISOToJalali } from '../../utils/jalali'
 import { downloadExcel } from '../../utils/a4Print'
 
 const TIER_COLORS: Record<string, string> = { VIP: '#a855f7', Gold: '#f59e0b', Silver: '#94a3b8', Bronze: '#cd7f32' }
 
 export default function BestCustomersReport() {
-  const theme = useSettingsStore(s => s.theme)
-  const isDark = theme === 'dark'
+  const { isDark, colors } = useTheme()
   const [data, setData] = useState<any[]>([])
 
-  const tPri = isDark ? '#f1f5f9' : '#0f172a'
-  const tSec = isDark ? '#94a3b8' : '#64748b'
-  const cardBg = isDark ? '#1e293b' : '#ffffff'
-  const cardBorder = isDark ? '#334155' : '#e2e8f0'
+  const tPri = colors.text.primary
+  const tSec = colors.text.secondary
+  const cardBg = colors.bg.card
+  const cardBorder = colors.border.default
   const COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316']
 
   useEffect(() => { window.api.reports.getBestCustomers(20).then(r => { if (r.success && r.data) setData(r.data) }) }, [])

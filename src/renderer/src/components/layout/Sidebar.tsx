@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuthStore } from '../../store/authStore'
-import { useSettingsStore, getNavColors } from '../../store/settingsStore'
+import { useSettingsStore } from '../../store/settingsStore'
+import { useTheme } from '../../hooks/useTheme'
 import { t, fa } from '../../i18n'
 import { DashboardIcon, UsersIcon, SettingsIcon, LogoutIcon, MoonIcon, SunIcon, LanguageIcon } from '../ui/Icons'
 
@@ -15,9 +16,9 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
   const [collapsed, setCollapsed] = useState(false)
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
-  const { theme, setTheme, language, setLanguage, navTheme, navConfig } = useSettingsStore()
+  const { theme, setTheme, language, setLanguage, navConfig } = useSettingsStore()
+  const { isDark, colors, primary } = useTheme()
   const ui = t()
-  const isDark = theme === 'dark'
 
   const iconMap: Record<string, JSX.Element> = {
     dashboard: <DashboardIcon className="w-5 h-5" />,
@@ -70,7 +71,6 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
       adminOnly: item.key === 'admin',
     }))
 
-  const primary = getNavColors(navTheme, isDark)
   const sidebarWidth = collapsed ? 64 : 220
 
   return (
@@ -80,13 +80,9 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
         width: sidebarWidth,
         minWidth: sidebarWidth,
         transition: 'width 0.25s ease, min-width 0.25s ease',
-        background: isDark
-          ? 'linear-gradient(180deg, #0f1a2e 0%, #162033 100%)'
-          : 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
-        borderLeft: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-        boxShadow: isDark
-          ? '-4px 0 24px rgba(0,0,0,0.25)'
-          : '-4px 0 24px rgba(0,0,0,0.04)',
+        background: `linear-gradient(180deg, ${colors.bg.sidebar[0]} 0%, ${colors.bg.sidebar[1]} 100%)`,
+        borderLeft: `1px solid ${colors.borderSubtle}`,
+        boxShadow: colors.shadow,
       }}
     >
       {/* Collapse Toggle Button */}
@@ -124,7 +120,7 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
           <StoreLogo />
         </div>
         {!collapsed && (
-          <span className="text-base font-extrabold tracking-tight whitespace-nowrap" style={{ color: isDark ? '#f1f5f9' : '#0f172a' }}>
+          <span className="text-base font-extrabold tracking-tight whitespace-nowrap" style={{ color: colors.text.primary }}>
             {ui.app.title}
           </span>
         )}
@@ -147,10 +143,10 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
                     : 'transparent',
                   color: active
                     ? isDark ? '#93ccff' : primary
-                    : isDark ? '#94a3b8' : '#64748b',
+                    : colors.text.muted,
                 }}
                 onMouseEnter={(e) => {
-                  if (!active) e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'
+                  if (!active) e.currentTarget.style.backgroundColor = colors.hover.light
                 }}
                 onMouseLeave={(e) => {
                   if (!active) e.currentTarget.style.backgroundColor = 'transparent'
@@ -212,7 +208,7 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
               {user?.name?.charAt(0) || '?'}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-bold truncate" style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}>
+              <div className="text-xs font-bold truncate" style={{ color: colors.text.primary }}>
                 {user?.name}
               </div>
               <div className="text-[10px] font-medium" style={{ color: isDark ? '#64748b' : '#94a3b8' }}>
@@ -246,14 +242,14 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
               className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
               title={language === 'fa' ? 'English' : 'فارسی'}
               style={{
-                color: isDark ? '#94a3b8' : '#64748b',
+                color: colors.text.muted,
                 background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
+                e.currentTarget.style.backgroundColor = colors.hover.medium
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'
+                e.currentTarget.style.backgroundColor = colors.hover.light
               }}
             >
               <LanguageIcon className="w-4 h-4" />
@@ -282,14 +278,14 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
               onClick={() => setLanguage(language === 'fa' ? 'en' : 'fa')}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200"
               style={{
-                color: isDark ? '#94a3b8' : '#64748b',
+                color: colors.text.muted,
                 background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
+                e.currentTarget.style.backgroundColor = colors.hover.medium
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'
+                e.currentTarget.style.backgroundColor = colors.hover.light
               }}
             >
               <LanguageIcon className="w-3.5 h-3.5" />
