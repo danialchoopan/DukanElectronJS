@@ -1,5 +1,5 @@
 /**
- * Settings Store — manages theme, language, UI preferences, and scanner toggle.
+ * Settings Store — manages theme, language, UI preferences, scanner toggle, and nav config.
  *
  * Persists all settings to the database via IPC (settings:set/get).
  * Restores settings from DB on app startup.
@@ -11,12 +11,40 @@
  *   - fontSize / fontSizeCustom: text size control
  *   - highContrast: accessibility mode
  *   - showCameraScanner: enables barcode/QR camera in POS and AddProduct
+ *   - navConfig: ordered list of nav items with visibility flags
  */
 
 import { create } from 'zustand'
 
 export type Theme = 'dark' | 'light'
 export type NavTheme = 'blue' | 'green' | 'purple' | 'orange' | 'teal' | 'slate'
+
+export interface NavConfigItem {
+  key: string
+  label: string
+  visible: boolean
+}
+
+export const DEFAULT_NAV_CONFIG: NavConfigItem[] = [
+  { key: 'dashboard', label: 'داشبورد', visible: true },
+  { key: 'pos', label: 'فروش', visible: true },
+  { key: 'sales', label: 'فروش‌های اخیر', visible: true },
+  { key: 'proformas', label: 'پیش‌فاکتور', visible: true },
+  { key: 'addproduct', label: 'افزودن کالا', visible: true },
+  { key: 'categories', label: 'دسته‌بندی‌ها', visible: true },
+  { key: 'inventory', label: 'انبار', visible: true },
+  { key: 'accounting', label: 'حسابداری', visible: true },
+  { key: 'reports', label: 'گزارش‌ها', visible: true },
+  { key: 'crossSell', label: 'فروش مکمل', visible: true },
+  { key: 'service', label: 'تعمیرات', visible: true },
+  { key: 'customers', label: 'مشتریان', visible: true },
+  { key: 'suppliers', label: 'تأمین\u200cکنندگان', visible: true },
+  { key: 'calculator', label: 'ماشین حساب', visible: false },
+  { key: 'auditLog', label: 'لاگ فعالیت', visible: true },
+  { key: 'settings', label: 'تنظیمات', visible: true },
+  { key: 'admin', label: 'مدیریت', visible: true },
+  { key: 'help', label: 'راهنما', visible: true },
+]
 
 const navColors: Record<NavTheme, { dark: string; light: string }> = {
   blue: { dark: '#1e293b', light: '#2563eb' },
@@ -32,6 +60,26 @@ export function getNavColors(navTheme: NavTheme, isDark: boolean) {
   return isDark ? colors.dark : colors.light
 }
 
+function mergeNavConfig(saved: NavConfigItem[] | null): NavConfigItem[] {
+  if (!saved || saved.length === 0) return [...DEFAULT_NAV_CONFIG]
+  const savedMap = new Map(saved.map(i => [i.key, i.visible]))
+  const result: NavConfigItem[] = []
+  const seen = new Set<string>()
+  // Follow DEFAULT order, use saved visibility
+  for (const def of DEFAULT_NAV_CONFIG) {
+    const visible = savedMap.has(def.key) ? savedMap.get(def.key)! : def.visible
+    result.push({ key: def.key, label: def.label, visible })
+    seen.add(def.key)
+  }
+  // Append any saved items not in defaults (future items)
+  for (const s of saved) {
+    if (!seen.has(s.key)) {
+      result.push({ key: s.key, label: s.key, visible: s.visible })
+    }
+  }
+  return result
+}
+
 interface SettingsState {
   theme: Theme
   language: 'fa' | 'en'
@@ -40,7 +88,7 @@ interface SettingsState {
   fontSizeCustom: number
   highContrast: boolean
   showCameraScanner: boolean
-  showCalculatorNav: boolean
+  navConfig: NavConfigItem[]
   setTheme: (theme: Theme) => void
   setLanguage: (lang: 'fa' | 'en') => void
   setNavTheme: (navTheme: NavTheme) => void
@@ -48,7 +96,8 @@ interface SettingsState {
   setFontSizeCustom: (size: number) => void
   setHighContrast: (hc: boolean) => void
   setShowCameraScanner: (v: boolean) => void
-  setShowCalculatorNav: (v: boolean) => void
+  setNavConfig: (config: NavConfigItem[]) => void
+  resetNavConfig: () => void
   init: () => Promise<void>
 }
 
@@ -60,7 +109,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   fontSizeCustom: 1,
   highContrast: false,
   showCameraScanner: true,
-  showCalculatorNav: false,
+  navConfig: [...DEFAULT_NAV_CONFIG],
 
   setTheme: (theme) => {
     set({ theme })
@@ -108,9 +157,15 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     window.api.settings.set('showCameraScanner', String(showCameraScanner))
   },
 
-  setShowCalculatorNav: (showCalculatorNav) => {
-    set({ showCalculatorNav })
-    window.api.settings.set('showCalculatorNav', String(showCalculatorNav))
+  setNavConfig: (navConfig) => {
+    set({ navConfig })
+    window.api.settings.set('navConfig', JSON.stringify(navConfig))
+  },
+
+  resetNavConfig: () => {
+    const navConfig = [...DEFAULT_NAV_CONFIG]
+    set({ navConfig })
+    window.api.settings.set('navConfig', JSON.stringify(navConfig))
   },
 
   init: async () => {
@@ -123,8 +178,11 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       const fontSizeCustom = parseFloat(result.data.fontSizeCustom) || 1
       const highContrast = result.data.highContrast === 'true'
       const showCameraScanner = result.data.showCameraScanner !== 'false'
-      const showCalculatorNav = result.data.showCalculatorNav === 'true'
-      set({ theme, language, navTheme, fontSize, fontSizeCustom, highContrast, showCameraScanner, showCalculatorNav })
+      let navConfig = [...DEFAULT_NAV_CONFIG]
+      try {
+        if (result.data.navConfig) navConfig = mergeNavConfig(JSON.parse(result.data.navConfig))
+      } catch {}
+      set({ theme, language, navTheme, fontSize, fontSizeCustom, highContrast, showCameraScanner, navConfig })
       applyTheme(theme)
       document.documentElement.dir = language === 'fa' ? 'rtl' : 'ltr'
       document.documentElement.lang = language

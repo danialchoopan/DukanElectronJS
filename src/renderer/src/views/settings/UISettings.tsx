@@ -8,9 +8,7 @@
  *   - Font size: slider with custom override
  *   - High contrast: accessibility mode for visually impaired
  *   - Camera scanner toggle: enables barcode/QR scanning in POS and AddProduct
- *
- * All settings are persisted to the database via the settings store.
- * Theme changes are applied immediately by toggling the 'dark' class on <html>.
+ *   - Navigation customization: reorder, enable/disable nav items, reset defaults
  */
 
 import { t, setLanguage } from '../../i18n'
@@ -34,7 +32,7 @@ const fontSizes = [
 ]
 
 export default function UISettings() {
-  const { theme, setTheme, language, setLanguage: setLang, navTheme, setNavTheme, fontSize, setFontSize, fontSizeCustom, setFontSizeCustom, highContrast, setHighContrast, showCameraScanner, setShowCameraScanner, showCalculatorNav, setShowCalculatorNav } = useSettingsStore()
+  const { theme, setTheme, language, setLanguage: setLang, navTheme, setNavTheme, fontSize, setFontSize, fontSizeCustom, setFontSizeCustom, highContrast, setHighContrast, showCameraScanner, setShowCameraScanner, navConfig, setNavConfig, resetNavConfig } = useSettingsStore()
   const isDark = theme === 'dark'
   const ui = t()
   const primary = getNavColors(navTheme, isDark)
@@ -43,8 +41,22 @@ export default function UISettings() {
   const tPri = isDark ? '#f1f5f9' : '#0f172a'
   const tSec = isDark ? '#94a3b8' : '#64748b'
 
-  const Card = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="rounded-xl p-4 border" style={{ backgroundColor: cBg, borderColor: cBorder }}>
+  const moveItem = (index: number, direction: -1 | 1) => {
+    const newConfig = [...navConfig]
+    const target = index + direction
+    if (target < 0 || target >= newConfig.length) return
+    const temp = newConfig[index]
+    newConfig[index] = newConfig[target]
+    newConfig[target] = temp
+    setNavConfig(newConfig)
+  }
+
+  const toggleItem = (key: string) => {
+    setNavConfig(navConfig.map(item => item.key === key ? { ...item, visible: !item.visible } : item))
+  }
+
+  const Card = ({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) => (
+    <div className={`rounded-xl p-4 border ${className}`} style={{ backgroundColor: cBg, borderColor: cBorder }}>
       <div className="flex items-center gap-2 mb-3">
         <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${primary}15` }}>
           <div className="w-3 h-3 rounded" style={{ backgroundColor: primary }} />
@@ -89,7 +101,7 @@ export default function UISettings() {
             ))}
           </div>
           <div className="mt-3 p-2 rounded-lg" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cBorder}` }}>
-            <div className="text-[10px] font-bold mb-1" style={{ color: tSec }}>پیش‌نمایش</div>
+            <div className="text-[10px] font-bold mb-1" style={{ color: tSec }}>پیش\u200cنمایش</div>
             <div className="flex gap-2">
               <div className="w-6 h-6 rounded-lg" style={{ backgroundColor: primary }} />
               <div className="w-6 h-6 rounded-lg" style={{ background: `linear-gradient(135deg, ${primary}, ${primary}cc)` }} />
@@ -134,7 +146,7 @@ export default function UISettings() {
         <Card title="اسکنر دوربین">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm" style={{ color: tSec }}>فعال‌سازی اسکن بارکد و QR با دوربین</p>
+              <p className="text-sm" style={{ color: tSec }}>فعال\u200cسازی اسکن بارکد و QR با دوربین</p>
               <p className="text-[10px] mt-0.5" style={{ color: isDark ? '#64748b' : '#94a3b8' }}>صفحه فروش + صفحه افزودن کالا</p>
             </div>
             <button onClick={() => setShowCameraScanner(!showCameraScanner)}
@@ -146,21 +158,51 @@ export default function UISettings() {
           </div>
         </Card>
 
-        {/* Calculator Nav Toggle */}
-        <Card title="ماشین حساب">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm" style={{ color: tSec }}>نمایش آیتم ماشین حساب در منوی ناوبری</p>
-              <p className="text-[10px] mt-0.5" style={{ color: isDark ? '#64748b' : '#94a3b8' }}>قابل دسترسی با Ctrl+M حتی بدون نمایش در منو</p>
-            </div>
-            <button onClick={() => setShowCalculatorNav(!showCalculatorNav)}
-              className="relative w-11 h-6 rounded-full transition-all duration-200"
-              style={{ backgroundColor: showCalculatorNav ? primary : isDark ? '#475569' : '#d1d5db' }}>
-              <div className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200"
-                style={{ left: showCalculatorNav ? '22px' : '2px' }} />
+        {/* Navigation Customization */}
+        <Card title="سفارشی\u200cسازی منوی ناوبری" className="md:col-span-2">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[10px]" style={{ color: tSec }}>ترتیب و نمایش آیتم\u200cهای منوی سمت راست را تغییر دهید</p>
+            <button onClick={resetNavConfig}
+              className="px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all"
+              style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', color: '#ef4444', border: `1px solid ${cBorder}` }}>
+              بازنشانی پیش\u200cفرض
             </button>
           </div>
+          <div className="space-y-1.5 max-h-[400px] overflow-y-auto pr-1">
+            {navConfig.map((item, index) => (
+              <div key={item.key} className="flex items-center gap-2 p-2 rounded-lg transition-all"
+                style={{
+                  backgroundColor: item.visible ? (isDark ? '#0f172a' : '#f8fafc') : (isDark ? '#0a0f1a' : '#f1f5f9'),
+                  border: `1px solid ${cBorder}`,
+                  opacity: item.visible ? 1 : 0.5,
+                }}>
+                {/* Up/Down arrows */}
+                <div className="flex flex-col gap-0.5">
+                  <button onClick={() => moveItem(index, -1)} disabled={index === 0}
+                    className="w-5 h-5 flex items-center justify-center rounded transition-all hover:bg-blue-500/20 disabled:opacity-20"
+                    style={{ color: tSec }}>
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 15l-6-6-6 6"/></svg>
+                  </button>
+                  <button onClick={() => moveItem(index, 1)} disabled={index === navConfig.length - 1}
+                    className="w-5 h-5 flex items-center justify-center rounded transition-all hover:bg-blue-500/20 disabled:opacity-20"
+                    style={{ color: tSec }}>
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
+                  </button>
+                </div>
+                {/* Label */}
+                <span className="flex-1 text-xs font-bold" style={{ color: item.visible ? tPri : tSec }}>{item.label}</span>
+                {/* Visibility toggle */}
+                <button onClick={() => toggleItem(item.key)}
+                  className="relative w-9 h-5 rounded-full transition-all duration-200"
+                  style={{ backgroundColor: item.visible ? primary : isDark ? '#475569' : '#d1d5db' }}>
+                  <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
+                    style={{ left: item.visible ? '18px' : '2px' }} />
+                </button>
+              </div>
+            ))}
+          </div>
         </Card>
+
       </div>
     </div>
   )

@@ -15,32 +15,60 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
   const [collapsed, setCollapsed] = useState(false)
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
-  const { theme, setTheme, language, setLanguage, navTheme, showCalculatorNav } = useSettingsStore()
+  const { theme, setTheme, language, setLanguage, navTheme, navConfig } = useSettingsStore()
   const ui = t()
   const isDark = theme === 'dark'
 
-  const navItems: { key: View; label: string; icon: JSX.Element; adminOnly?: boolean }[] = [
-    { key: 'dashboard', label: ui.nav.dashboard, icon: <DashboardIcon className="w-5 h-5" /> },
-    { key: 'pos', label: ui.nav.checkout, icon: <CartIconNav /> },
-    { key: 'sales', label: fa.dashboard.recentSales, icon: <ClipboardIcon /> },
-    { key: 'proformas', label: 'پیش‌فاکتور', icon: <ProformaIcon /> },
-    { key: 'addproduct', label: fa.admin.addProduct, icon: <PackageIcon /> },
-    { key: 'categories', label: fa.nav.categories, icon: <TagIcon /> },
-    { key: 'inventory', label: ui.nav.inventory, icon: <BoxIcon /> },
-    { key: 'accounting', label: ui.nav.accounting, icon: <CalculatorIcon /> },
-    { key: 'reports', label: 'گزارش‌ها', icon: <ChartIcon /> },
-    { key: 'crossSell', label: 'فروش مکمل', icon: <RuleIcon /> },
-    { key: 'service', label: 'تعمیرات', icon: <WrenchIcon /> },
-    { key: 'customers', label: ui.nav.customers, icon: <UsersIcon className="w-5 h-5" /> },
-    { key: 'suppliers', label: 'تأمین\u200cکنندگان', icon: <TruckIcon /> },
-    { key: 'calculator', label: 'ماشین حساب', icon: <CalcIcon /> },
-    { key: 'auditLog', label: 'لاگ فعالیت', icon: <AuditLogIcon /> },
-    { key: 'settings', label: 'تنظیمات', icon: <SettingsIcon className="w-5 h-5" /> },
-    { key: 'admin', label: 'مدیریت', icon: <AdminIcon />, adminOnly: true },
-    { key: 'help', label: fa.nav.help, icon: <HelpIcon /> },
-  ]
+  const iconMap: Record<string, JSX.Element> = {
+    dashboard: <DashboardIcon className="w-5 h-5" />,
+    pos: <CartIconNav />,
+    sales: <ClipboardIcon />,
+    proformas: <ProformaIcon />,
+    addproduct: <PackageIcon />,
+    categories: <TagIcon />,
+    inventory: <BoxIcon />,
+    accounting: <CalculatorIcon />,
+    reports: <ChartIcon />,
+    crossSell: <RuleIcon />,
+    service: <WrenchIcon />,
+    customers: <UsersIcon className="w-5 h-5" />,
+    suppliers: <TruckIcon />,
+    calculator: <CalcIcon />,
+    auditLog: <AuditLogIcon />,
+    settings: <SettingsIcon className="w-5 h-5" />,
+    admin: <AdminIcon />,
+    help: <HelpIcon />,
+  }
 
-  const filteredNavItems = navItems.filter(item => item.key !== 'calculator' || showCalculatorNav)
+  const labelMap: Record<string, string> = {
+    dashboard: ui.nav.dashboard,
+    pos: ui.nav.checkout,
+    sales: fa.dashboard.recentSales,
+    proformas: 'پیش\u200cفاکتور',
+    addproduct: fa.admin.addProduct,
+    categories: fa.nav.categories,
+    inventory: ui.nav.inventory,
+    accounting: ui.nav.accounting,
+    reports: 'گزارش\u200cها',
+    crossSell: 'فروش مکمل',
+    service: 'تعمیرات',
+    customers: ui.nav.customers,
+    suppliers: 'تأمین\u200cکنندگان',
+    calculator: 'ماشین حساب',
+    auditLog: 'لاگ فعالیت',
+    settings: 'تنظیمات',
+    admin: 'مدیریت',
+    help: fa.nav.help,
+  }
+
+  const filteredNavItems = navConfig
+    .filter(item => item.visible)
+    .map(item => ({
+      key: item.key as View,
+      label: labelMap[item.key] || item.label,
+      icon: iconMap[item.key] || <SettingsIcon className="w-5 h-5" />,
+      adminOnly: item.key === 'admin',
+    }))
 
   const primary = getNavColors(navTheme, isDark)
   const sidebarWidth = collapsed ? 64 : 220
