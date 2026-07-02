@@ -198,11 +198,13 @@ export function seedDatabase(): void {
             db.prepare("INSERT INTO customer_ledger (customerId, saleId, type, amount, description, createdAt) VALUES (?, ?, 'sale', ?, ?, ?)").run(customerId, saleId, subtotal, `فاکتور ${invoiceNum}`, saleDate)
           }
 
-          postSaleJournal(saleId, saleDate, {
-            items: journalItems,
-            total_amount: subtotal,
-            paymentMethod,
-          })
+          try {
+            postSaleJournal(saleId, saleDate, {
+              items: journalItems,
+              total_amount: subtotal,
+              paymentMethod,
+            })
+          } catch (e) { console.warn('[Seed] Journal post failed for sale', saleId, e) }
         }
       }
     })
