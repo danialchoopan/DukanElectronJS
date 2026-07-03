@@ -58,6 +58,8 @@ export default function AddProduct() {
   const [subcategories, setSubcategories] = useState<{ id: number; name: string }[]>([])
   const [newSubcategory, setNewSubcategory] = useState('')
   const [showNewSubcatInput, setShowNewSubcatInput] = useState(false)
+  const [newCategory, setNewCategory] = useState('')
+  const [showNewCatInput, setShowNewCatInput] = useState(false)
   const [detailProduct, setDetailProduct] = useState<any>(null)
   const [detailImageUrl, setDetailImageUrl] = useState('')
   const [detailEditMode, setDetailEditMode] = useState(false)
@@ -114,6 +116,19 @@ export default function AddProduct() {
       setNewSubcategory('')
       setShowNewSubcatInput(false)
       showNotif(`زیردسته "${r.data.name}" ایجاد شد`)
+    }
+  }
+
+  const handleCreateCategory = async () => {
+    if (!newCategory.trim()) return
+    const r = await window.api.categories.create({ name: newCategory.trim() })
+    if (r.success && r.data) {
+      setCategories(prev => [...prev, { id: r.data.id, name: r.data.name, parentId: null }])
+      setForm(f => ({ ...f, category: r.data.name, subcategory: '' }))
+      setSubcategories([])
+      setNewCategory('')
+      setShowNewCatInput(false)
+      showNotif(`دسته‌بندی "${r.data.name}" ایجاد شد`)
     }
   }
 
@@ -308,14 +323,27 @@ export default function AddProduct() {
             </div>
             <div>
               <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.category} *</label>
-              <select value={form.category} onChange={(e) => handleCategoryChange(e.target.value)}
-                className="input-field text-sm" style={{ ...inputStyle, borderColor: !form.category ? '#ef4444' : cardBorder }}>
-                <option value="">-- انتخاب دسته‌بندی --</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
-                ))}
-              </select>
-              {!form.category && <p className="text-[10px] mt-1" style={{ color: '#ef4444' }}>انتخاب دسته‌بندی الزامی است</p>}
+              <div className="flex gap-1">
+                <select value={showNewCatInput ? '__new__' : form.category} onChange={(e) => {
+                  if (e.target.value === '__new__') { setShowNewCatInput(true); setForm(f => ({ ...f, category: '', subcategory: '' })) }
+                  else { setShowNewCatInput(false); handleCategoryChange(e.target.value) }
+                }} className="input-field text-sm flex-1" style={{ ...inputStyle, borderColor: !form.category ? '#ef4444' : cardBorder }}>
+                  <option value="">-- انتخاب دسته‌بندی --</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.name}>{c.name}</option>
+                  ))}
+                  <option value="__new__">+ افزودن دسته‌بندی جدید</option>
+                </select>
+              </div>
+              {!form.category && !showNewCatInput && <p className="text-[10px] mt-1" style={{ color: '#ef4444' }}>انتخاب دسته‌بندی الزامی است</p>}
+              {showNewCatInput && (
+                <div className="flex gap-1 mt-1">
+                  <input value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="نام دسته‌بندی جدید"
+                    className="input-field text-xs flex-1" style={inputStyle} onKeyDown={(e) => e.key === 'Enter' && handleCreateCategory()} />
+                  <button onClick={handleCreateCategory} className="px-2 py-1 rounded-lg text-[10px] font-bold text-white" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>افزودن</button>
+                  <button onClick={() => { setShowNewCatInput(false); setNewCategory('') }} className="px-2 py-1 rounded-lg text-[10px] font-bold" style={{ color: textSecondary }}>لغو</button>
+                </div>
+              )}
             </div>
             <div>
               <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>زیردسته</label>
