@@ -15,7 +15,7 @@
 import { getDatabase } from './connection'
 import { createBackup } from './backup'
 
-const CURRENT_VERSION = '1.5.0'
+const CURRENT_VERSION = '1.6.0'
 
 // Expose for external use
 export { CURRENT_VERSION }
@@ -89,6 +89,15 @@ const MIGRATIONS: Migration[] = [
       if (!auditCols.includes('beforeValue')) db.exec("ALTER TABLE audit_log ADD COLUMN beforeValue TEXT DEFAULT ''")
       if (!auditCols.includes('afterValue')) db.exec("ALTER TABLE audit_log ADD COLUMN afterValue TEXT DEFAULT ''")
       if (!auditCols.includes('ip')) db.exec("ALTER TABLE audit_log ADD COLUMN ip TEXT DEFAULT ''")
+    },
+    down: () => {},
+  },
+  {
+    version: '1.6.0',
+    description: 'Add isDamaged flag to returns for loss vs return distinction',
+    up: (db) => {
+      const cols = db.prepare('PRAGMA table_info(returns)').all().map((c: any) => c.name)
+      if (!cols.includes('isDamaged')) db.exec("ALTER TABLE returns ADD COLUMN isDamaged INTEGER DEFAULT 0")
     },
     down: () => {},
   },

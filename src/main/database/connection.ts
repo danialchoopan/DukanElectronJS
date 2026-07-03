@@ -322,6 +322,7 @@ function initializeDatabase(db: Database.Database): void {
       reason TEXT,
       refundAmount REAL,
       status TEXT DEFAULT 'pending',
+      isDamaged INTEGER DEFAULT 0,
       createdAt TEXT DEFAULT (datetime('now', 'localtime')),
       FOREIGN KEY (saleId) REFERENCES sales(id),
       FOREIGN KEY (userId) REFERENCES users(id),

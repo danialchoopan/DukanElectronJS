@@ -649,9 +649,9 @@ export function registerAllHandlers(): void {
   handleArg<{ limit?: number }, any[]>('audit:recent', (a) => auditRepo.getRecentActivity(a.limit || 20))
 
   // ─── Returns ─────────────────────────────────────
-  ipcMain.handle('returns:create', (_event, a: { saleId: number; userId: number; productId: number; quantity: number; reason: string; refundAmount: number }) => {
+  ipcMain.handle('returns:create', (_event, a: { saleId: number; userId: number; productId: number; quantity: number; reason: string; refundAmount: number; isDamaged?: boolean }) => {
     try {
-      const result = returnsRepo.createReturn(a.saleId, a.userId, a.productId, a.quantity, a.reason, a.refundAmount)
+      const result = returnsRepo.createReturn(a.saleId, a.userId, a.productId, a.quantity, a.reason, a.refundAmount, a.isDamaged)
       auditRepo.createAuditEntry(a.userId, 'return', 'return', result.id, JSON.stringify({ saleId: a.saleId, productId: a.productId, quantity: a.quantity, refundAmount: a.refundAmount }))
       return { success: true, data: result }
     } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }

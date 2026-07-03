@@ -28,6 +28,7 @@ export default function SalesHistory() {
   const [returnItem, setReturnItem] = useState<{ sale: Sale; item: any } | null>(null)
   const [returnQty, setReturnQty] = useState('')
   const [returnReason, setReturnReason] = useState('')
+  const [isDamaged, setIsDamaged] = useState(false)
   const [showReturnAllConfirm, setShowReturnAllConfirm] = useState(false)
   const [returnAllReason, setReturnAllReason] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
@@ -71,7 +72,7 @@ export default function SalesHistory() {
     if (!returnItem || !returnQty || !returnReason) return
     const qty = parseInt(returnQty)
     if (qty <= 0 || qty > returnItem.item.quantity) return
-    const refundAmount = returnItem.item.unitPrice * qty
+    const refundAmount = isDamaged ? returnItem.item.unitPrice * qty : 0
     const r = await window.api.returns.create({
       saleId: returnItem.sale.id,
       userId: user?.id || 1,
@@ -79,11 +80,13 @@ export default function SalesHistory() {
       quantity: qty,
       reason: returnReason,
       refundAmount,
+      isDamaged,
     })
     if (r.success) {
       setReturnItem(null)
       setReturnQty('')
       setReturnReason('')
+      setIsDamaged(false)
       setSelectedSale(null)
       loadData()
       loadReturns()
@@ -522,13 +525,35 @@ export default function SalesHistory() {
                 <input type="number" min="1" max={returnItem.item.quantity} value={returnQty} onChange={(e) => setReturnQty(e.target.value)} className="input-field text-sm" />
               </div>
               <div>
+                <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>نوع مرجوعی</label>
+                <div className="flex gap-2">
+                  <button onClick={() => setIsDamaged(false)} className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+                    style={{ background: !isDamaged ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'transparent', color: !isDamaged ? '#fff' : textSecondary, border: `1px solid ${!isDamaged ? '#22c55e' : cardBorder}` }}>
+                    بازگشت کالا (بدون ضرر)
+                  </button>
+                  <button onClick={() => setIsDamaged(true)} className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+                    style={{ background: isDamaged ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'transparent', color: isDamaged ? '#fff' : textSecondary, border: `1px solid ${isDamaged ? '#ef4444' : cardBorder}` }}>
+                    ضرر / معیوب
+                  </button>
+                </div>
+                <p className="text-[10px] mt-1" style={{ color: textSecondary }}>
+                  {isDamaged ? 'مبلغ از فاکتور کسر می‌شود و سند حسابداری ثبت می‌گردد' : 'فقط موجودی انبار بازیابی می‌شود — بدون تغییر مالی'}
+                </p>
+              </div>
+              <div>
                 <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>دلیل مرجوعی</label>
                 <input type="text" value={returnReason} onChange={(e) => setReturnReason(e.target.value)} className="input-field text-sm" placeholder="مثال: کالای معیوب" />
               </div>
-              {returnQty && parseInt(returnQty) > 0 && (
+              {isDamaged && returnQty && parseInt(returnQty) > 0 && (
                 <div className="rounded-xl p-3" style={{ backgroundColor: isDark ? '#450a0a' : '#fee2e2' }}>
-                  <div className="text-xs" style={{ color: textSecondary }}>مبلغ بازگشتی</div>
+                  <div className="text-xs" style={{ color: textSecondary }}>مبلغ کسر شده از فاکتور</div>
                   <div className="text-lg font-extrabold" style={{ color: '#ef4444' }}>{(returnItem.item.unitPrice * parseInt(returnQty)).toLocaleString('fa-IR')} تومان</div>
+                </div>
+              )}
+              {!isDamaged && returnQty && parseInt(returnQty) > 0 && (
+                <div className="rounded-xl p-3" style={{ backgroundColor: isDark ? 'rgba(34,197,94,0.1)' : '#dcfce7' }}>
+                  <div className="text-xs" style={{ color: textSecondary }}>موجودی بازیابی می‌شود — بدون تغییر مالی</div>
+                  <div className="text-sm font-bold" style={{ color: '#22c55e' }}>{returnQty} عدد به انبار اضافه می‌شود</div>
                 </div>
               )}
             </div>

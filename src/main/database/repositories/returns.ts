@@ -29,15 +29,17 @@ export interface Return {
   userName?: string
 }
 
-export function createReturn(saleId: number, userId: number, productId: number, quantity: number, reason: string, refundAmount: number): Return {
+export function createReturn(saleId: number, userId: number, productId: number, quantity: number, reason: string, refundAmount: number, isDamaged: boolean = false): Return {
   const db = getDatabase()
-  const result = db.prepare('INSERT INTO returns (saleId, userId, productId, quantity, reason, refundAmount, status) VALUES (?, ?, ?, ?, ?, ?, ?)').run(saleId, userId, productId, quantity, reason, refundAmount, 'completed')
+  const result = db.prepare('INSERT INTO returns (saleId, userId, productId, quantity, reason, refundAmount, status, isDamaged) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(saleId, userId, productId, quantity, reason, refundAmount, 'completed', isDamaged ? 1 : 0)
+  // Always restore stock
   db.prepare('UPDATE products SET stock = stock + ? WHERE id = ?').run(quantity, productId)
-  if (saleId) {
-    db.prepare('UPDATE sales SET total_amount = total_amount - ?, totalNetProfit = totalNetProfit - ? WHERE id = ?').run(refundAmount, refundAmount, saleId)
-  }
   const returnId = result.lastInsertRowid as number
-  postReturnJournal(returnId, new Date().toISOString().slice(0, 10), refundAmount)
+  // Only reduce sale totals and post journal if it's a damaged/loss return
+  if (isDamaged && saleId && refundAmount > 0) {
+    db.prepare('UPDATE sales SET total_amount = total_amount - ?, totalNetProfit = totalNetProfit - ? WHERE id = ?').run(refundAmount, refundAmount, saleId)
+    postReturnJournal(returnId, new Date().toISOString().slice(0, 10), refundAmount)
+  }
   return db.prepare('SELECT r.*, s.invoiceNumber as saleInvoiceNumber, p.title as productTitle, u.name as userName FROM returns r LEFT JOIN sales s ON r.saleId = s.id LEFT JOIN products p ON r.productId = p.id LEFT JOIN users u ON r.userId = u.id WHERE r.id = ?').get(returnId) as Return
 }
 

@@ -250,7 +250,7 @@ const api = {
   },
 
   returns: {
-    create: (data: { saleId: number; userId: number; productId: number; quantity: number; reason: string; refundAmount: number }): Promise<IPCResponse<any>> =>
+    create: (data: { saleId: number; userId: number; productId: number; quantity: number; reason: string; refundAmount: number; isDamaged?: boolean }): Promise<IPCResponse<any>> =>
       ipcRenderer.invoke('returns:create', data),
     list: (limit?: number): Promise<IPCResponse<any[]>> =>
       ipcRenderer.invoke('returns:list', { limit }),
