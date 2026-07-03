@@ -709,7 +709,10 @@ export default function AddProduct() {
           footer={<>
             <button onClick={() => setDetailProduct(null)} className="px-4 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>بستن</button>
             {!detailEditMode ? (
-              <button onClick={() => { setDetailEditMode(true); setDetailForm({ title: detailProduct.title, barcode: detailProduct.barcode || '', category: detailProduct.category || '', subcategory: detailProduct.subcategory || '', purchase_price: detailProduct.purchase_price, sale_price: detailProduct.sale_price, stock: detailProduct.stock, minStock: detailProduct.minStock || 0, unit: detailProduct.unit || 'number', isSellable: detailProduct.isSellable !== false, hasExpiry: detailProduct.hasExpiry || false, expiryDate: detailProduct.expiryDate || '', expiryAlertDays: detailProduct.expiryAlertDays || 30, description: detailProduct.description || '', imageBase64: detailProduct.imageBase64 || '' }) }} className="px-5 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #006194, #007bb9)' }}>ویرایش</button>
+              <>
+                <button onClick={() => setShowDeleteConfirm(true)} className="px-4 py-2 rounded-xl text-sm font-bold" style={{ color: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>حذف کالا</button>
+                <button onClick={() => { setDetailEditMode(true); setDetailForm({ title: detailProduct.title, barcode: detailProduct.barcode || '', category: detailProduct.category || '', subcategory: detailProduct.subcategory || '', purchase_price: detailProduct.purchase_price, sale_price: detailProduct.sale_price, stock: detailProduct.stock, minStock: detailProduct.minStock || 0, unit: detailProduct.unit || 'number', isSellable: detailProduct.isSellable !== false, hasExpiry: detailProduct.hasExpiry || false, expiryDate: detailProduct.expiryDate || '', expiryAlertDays: detailProduct.expiryAlertDays || 30, description: detailProduct.description || '', imageBase64: detailProduct.imageBase64 || '' }) }} className="px-5 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #006194, #007bb9)' }}>ویرایش</button>
+              </>
             ) : (
               <button onClick={async () => { await window.api.products.update(detailProduct.id, detailForm); setDetailProduct(null); setDetailEditMode(false); loadProducts() }} className="px-5 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>ذخیره تغییرات</button>
             )}
@@ -774,6 +777,37 @@ export default function AddProduct() {
             </div>
           )}
       </Dialog>
+      )}
+      {showDeleteConfirm && detailProduct && (
+        <Dialog open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} maxWidth="max-w-md"
+          title="حذف کالا"
+          icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><path d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>}
+          footer={<>
+            <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>لغو</button>
+            <button onClick={async () => {
+              await window.api.products.delete(detailProduct.id)
+              setShowDeleteConfirm(false)
+              setDetailProduct(null)
+              loadProducts()
+            }} className="px-5 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>حذف</button>
+          </>}>
+          <div className="space-y-3">
+            <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <p className="text-sm font-bold" style={{ color: '#ef4444' }}>آیا از حذف «{detailProduct.title}» اطمینان دارید؟</p>
+            </div>
+            <div className="rounded-lg p-3" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cardBorder}` }}>
+              <p className="text-xs font-bold mb-2" style={{ color: textPrimary }}>این عملیات انجام می‌شود:</p>
+              <div className="flex items-start gap-2 mb-1.5">
+                <span className="text-xs mt-0.5" style={{ color: '#ef4444' }}>•</span>
+                <p className="text-xs" style={{ color: textSecondary }}>محصول و موجودی انبار آن <span style={{ color: '#ef4444', fontWeight: 700 }}>حذف</span> خواهد شد</p>
+              </div>
+              <div className="flex items-start gap-2 mb-1.5">
+                <span className="text-xs mt-0.5" style={{ color: '#22c55e' }}>•</span>
+                <p className="text-xs" style={{ color: textSecondary }}>تاریخچه فروش و اسناد حسابداری <span style={{ color: '#22c55e', fontWeight: 700 }}>حفظ</span> خواهد شد</p>
+              </div>
+            </div>
+          </div>
+        </Dialog>
       )}
       <PrintDialog open={showPrintDialog} title="چاپ لیست کالاها" totalCount={products.length} onClose={() => setShowPrintDialog(false)} onPrint={(range) => { setShowPrintDialog(false); handlePrintProducts(range) }} />
     </div>
