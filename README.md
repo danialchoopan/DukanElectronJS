@@ -1,136 +1,214 @@
 # حسابداری دانیال — HesabDari Danial
 
+**نرم‌افزار جامع حسابداری، انبارداری و فروش برای کسب‌وکارهای مدرن**
+
 **Smart Accounting, Professional Sales**
 
 > **فارسی | [English](README-en.md)**
 
+[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/danialchoopan/DukanElectronJS)
+[![License](https://img.shields.io/badge/license-MIT-green)](#)
+[![Electron](https://img.shields.io/badge/Electron-33-purple)](https://electronjs.org)
+[![React](https://img.shields.io/badge/React-18-cyan)](https://reactjs.org)
+
 ---
 
-## Quick Start (Clone & Run)
+## دسترسی سریع
+
+| [![](https://img.shields.io/badge/🚀_نصب_و_راه_اندازی-نحوه_شروع-blue)](SETUP.md) | [![](https://img.shields.io/badge/📚_مستندات_فنی-توضیحات_تکمیلی-green)](TECHNICAL.md) | [![](https://img.shields.io/badge/📋_برنامه_پیاده_سازی-نقشه_راه-orange)](IMPLEMENTATION_PLAN.md) |
+|---|---|---|
+
+---
+
+## چرا حسابداری دانیال؟
+
+| ویژگی | توضیح |
+|--------|--------|
+| **یکپارچگی کامل** | حسابداری دوطرفه، مدیریت انبار، فاکتور و مشتری — همه در یکجا |
+| **همگام‌سازی خودکار** | هر تراکنش فروش، خرید یا پرداخت خودکار در دفتر کل ثبت می‌شود |
+| **امنیت بالا** | رمزنگاری AES-256، امضای دیجیتال، پشتیبان‌گیری خودکار |
+| **طراحی مدرن** | رابط کاربری زیبا با پشتیبانی از حالت تاریک و روشن |
+| **تقویم شمسی** | تمام تاریخ‌ها با تقویم شمسی (Jalali) نمایش داده می‌شوند |
+| **انواع فروش** | فروش حضوری (پیشخوان) و فروش آنلاین با فیلتر و گزارش |
+| **تاریخچه قیمت** | ثبت و پیگیری تغییرات قیمت خرید و فروش |
+| **سازگاری نسخه‌ها** | مهاجرت خودکار داده‌ها بین نسخه‌های مختلف |
+| **پشتیبانی چندزبانه** | فارسی و انگلیسی با پشتیبانی RTL کامل |
+
+---
+
+## ویژگی‌های کامل
+
+### حسابداری (Accounting)
+- دفتر حسابها با ساختار درختی (Chart of Accounts)
+- ثبت اسناد حسابداری دوطرفه (Journal Entries)
+- تراز آزمایشی (Trial Balance)
+- صورت سود و زیان (Income Statement)
+- ترازنامه (Balance Sheet)
+- گردش وجوه نقد (Cash Flow Statement)
+- گزارش سنی مطالبات مشتریان (AR Aging)
+- مدیریت دوره‌های مالی (Fiscal Periods)
+- همگام‌سازی خودکار فروش و خرید با دفتر کل
+- تاریخچه تغییرات قیمت خرید و فروش
+- هزینه‌ها با ثبت خودکار حسابداری
+- ماشین حساب حرفه‌ای با تاریخچه و تبدیل ارز (Ctrl+M)
+
+### انبارداری (Inventory)
+- مدیریت محصولات با بارکد و QR
+- اسکنر دوربین برای خواندن بارکد
+- چاپ لیبل بارکد و QR
+- گزارش موجودی و ارزش ریالی انبار
+- کالاهای کندفروش
+- تنظیم موجودی با ثبت خودکار (Inventory Adjustment)
+- کالاهای تاریخ انقضا با هشدار خودکار
+- چاپ A4 و خروجی اکسل
+- تاریخچه تغییرات (Audit Log)
+
+### فروش (Sales)
+- صندوق فروش (POS) با اسکنر بارکد
+- فاکتور الکترونیکی و چاپی
+- انواع فروش: حضوری (پیشخوان) و آنلاین
+- فروش نقدی، کارتی و اعتباری
+- فروش با تاریخ گذشته (Backdated Sales)
+- مرجوعی کالا با تفکیک ضرر/بازگشت
+- فروش با موجودی صفر (غیرفعال شدن از صفحه POS)
+- تاریخچه فروش با جستجو و فیلتر
+
+### مشتریان و تأمین‌کنندگان
+- مدیریت مشتریان با حساب دفتری (حقیقی/حقوقی)
+- مدیریت تأمین‌کنندگان با حساب دفتری
+- پیگیری بدهی و طلب
+- پرداخت و دریافت با ثبت خودکار حسابداری
+- مدیریت اعتبار مشتریان و مسدودی
+- گزارش مشتریان برتر و الگوی خرید
+- تحلیل سودآوری به تفکیک دسته‌بندی
+
+### فروش پیشرفته
+- قوانین فروش مکمل (اجباری / اختیاری / پیشنهادی)
+- فروش اقساطی با برنامه پرداخت و پیگیری
+- پیش‌فاکتور با تبدیل یک‌کلیک به فاکتور
+- سرویس و گارانتی با گردش کار تیکت
+- گزارش‌های پیشرفته فروش (۶ گزارش):
+  - پرفروش‌ها
+  - فروش ساعتی
+  - مقایسه دوره‌ها
+  - مشتریان برتر
+  - سود دسته‌ها
+  - الگوی خرید
+
+### امنیت و پشتیبانی
+- رمزنگاری AES-256
+- امضای دیجیتال فایل‌ها
+- پشتیبان‌گیری خودکار با قابلیت حذف
+- پشتیبان‌گیری به USB با تشخیص خودکار
+- بازیابی با اعتبارسنجی نسخه
+- نقاط بازیابی با تأیید یکپارچگی (SHA-256)
+- مهاجرت خودکار دیتابیس هنگام ارتقا نسخه
+- لاگ فعالیت جامع با قابلیت جستجو و فیلتر
+- کنترل دسترسی بر اساس نقش (RBAC — ۳۵ مجوز)
+
+### سفارشی‌سازی و رابط کاربری
+- سفارشی‌سازی منوی ناوبری (ترتیب، نمایش/مخفی کردن، بازنشانی)
+- تم تاریک و روشن با ۶ رنگ اصلی
+- اندازه متن قابل تنظیم (۵ سطح + دستی)
+- کنتراست بالا برای دسترسی‌پذیری
+- فونت وزیرمتن فارسی
+- اسکنر دوربین برای بارکد و QR
+- ماشین حساب شناور (Ctrl+M) و تمام‌صفحه
+
+### صادرات و واردات هوشمند
+- انتخاب بخش‌های دلخواه برای صادرات/واردات
+- تشخیص خودکار وابستگی داده‌ها
+- پیش‌نمایش قبل از واردات
+- اعتبارسنجی و بررسی یکپارچگی
+- خروجی SQLite (.db) / JSON (.json)
+
+### مستندات و گزارش‌ها
+- صورت سود و زیان با مقایسه دوره
+- ترازنامه و گردش وجوه نقد
+- گزارش سنی مطالبات مشتریان
+- چاپ فاکتور، لیبل بارکد و QR
+- خروجی اکسل از تمام گزارش‌ها
+
+---
+
+## مناسب برای چه کسب‌وکارهایی؟
+
+| نوع کسب‌وکار | قابلیت‌های کلیدی |
+|-------------|-----------------|
+| فروشگاه اینترنتی | مدیریت سفارشات آنلاین، ارسال، مالیات الکترونیکی |
+| سوپرمارکت | بارکد خوان، مدیریت موجودی، صندوق فروش |
+| لباس‌فروشی | مدیریت سایز و رنگ، فصلی‌بودن، حسابداری دقیق |
+| لوازم الکترونیک | گارانتی، سریال نامبر، قیمت‌گذاری پویا |
+| کتاب‌فروشی | ناشران، چاپ‌ها، فروش آنلاین و حضوری |
+| آرایشی و بهداشتی | تاریخ انقضا، لاین‌های مختلف محصولات |
+| مواد غذایی | تاریخ انقضا، مدیریت ضایعات، وزنی/عددی |
+| فروشگاه صنعتی | ابزارآلات، قطعات، پروژه‌محور |
+| خدمات | صورتحساب خدمات، پروژه‌ها، ساعات کاری |
+| عمده‌فروشی | قیمت‌گذاری عمده، مشتریان ویژه، اعتباری |
+| رستوران و کافی‌شاپ | منو، سفارشات، مواد اولیه |
+| طلا و جواهر | قیمت لحظه‌ای طلا، اجرت، مالیات ویژه |
+
+---
+
+## تکنولوژی‌ها
+
+| لایه | تکنولوژی |
+|------|----------|
+| **فرانت‌اند** | React 18 + TypeScript 5 + Tailwind CSS |
+| **بک‌اند** | Electron 33 + Node.js |
+| **پایگاه داده** | SQLite (better-sqlite3) |
+| **وضعیت** | Zustand 5 |
+| **بیلد** | Vite 6 |
+| **تقویم** | jalaali-js (Shamsi/Jalali) |
+| **فونت** | Vazirmatn (local woff2) |
+
+---
+
+## نصب سریع
 
 ```bash
-# 1. Clone the repo
 git clone https://github.com/danialchoopan/DukanElectronJS.git
 cd DukanElectronJS
-
-# 2. Install dependencies
 npm install
-
-# 3. Start the app in dev mode
 npm run dev
 ```
 
-That's it — the app launches with an empty database. No database setup needed.
-
-### Prerequisites
-
-| Tool | Version | Notes |
-|------|---------|-------|
-| **Node.js** | 18+ | https://nodejs.org |
-| **npm** | 9+ | Comes with Node.js |
-| **Git** | any | https://git-scm.com |
-
-No SQLite install needed — `better-sqlite3` is bundled as a native dependency and installs automatically with `npm install`.
-
-### Build for Production
-
-```bash
-# Windows
-npm run dist:win
-
-# Linux
-npm run dist:linux
-
-# Typecheck only (no build)
-npm run typecheck
-
-# Run verification checks
-node scripts/verify.js
-```
+> **راهنمای کامل نصب:** [SETUP.md](SETUP.md) | [SETUP-en.md](SETUP-en.md)
 
 ---
 
-## Project Structure
+## مستندات
 
-```
-src/
-├── main/                         # Electron main process
-│   ├── database/
-│   │   ├── connection.ts         # SQLite schema (20+ tables)
-│   │   ├── repositories/         # All CRUD operations
-│   │   ├── seed.ts               # Sample data generator
-│   │   ├── schemaMigration.ts    # Version-based migrations
-│   │   ├── backup.ts             # Backup/restore
-│   │   └── smartExport.ts        # Selective import/export
-│   ├── ipc/handlers.ts           # IPC bridge (main ↔ renderer)
-│   └── index.ts                  # App entry point
-├── renderer/src/
-│   ├── views/                    # Page components
-│   │   ├── reports/              # 6 advanced sales reports
-│   │   ├── accounting/           # Journal, Balance, Income, etc.
-│   │   ├── settings/             # UI, Login, Shortcuts, Customization
-│   │   └── ...
-│   ├── components/
-│   │   ├── layout/               # Sidebar, TitleBar
-│   │   ├── ui/                   # Dialog, Button, Table, etc.
-│   │   ├── business/             # ShamsiDateInput, Scanner, etc.
-│   │   └── print/                # Print dialogs, Receipt
-│   ├── store/                    # Zustand stores (settings, auth, etc.)
-│   ├── hooks/                    # useTheme, useShortcuts, etc.
-│   ├── theme.ts                  # Centralized dark/light color tokens
-│   ├── utils/                    # Jalali, export, QR, etc.
-│   ├── i18n/                     # Farsi + English translations
-│   └── App.tsx                   # Root component & routing
-├── preload/index.ts              # Electron preload (IPC bridge)
-└── types/index.ts                # TypeScript interfaces
-```
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Frontend | React 18 + TypeScript 5 + Tailwind CSS |
-| Backend | Electron 33 + Node.js |
-| Database | SQLite (better-sqlite3) |
-| State | Zustand 5 |
-| Build | Vite 6 |
-| Calendar | jalaali-js (Shamsi/Jalali) |
-| Font | Vazirmatn (local woff2) |
-
-## Key Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start in dev mode (Vite + Electron) |
-| `npm run build` | TypeScript check + Vite build |
-| `npm run typecheck` | TypeScript check only |
-| `npm run dist:win` | Build Windows installer |
-| `npm run dist:linux` | Build Linux package |
-| `node scripts/verify.js` | Run 72 verification checks |
-
----
-
-## Documentation
-
-| File | Language | Description |
-|------|----------|-------------|
-| [README.md](README.md) | فارسی | Overview & quick start |
-| [README-en.md](README-en.md) | English | Overview & quick start |
-| [SETUP.md](SETUP.md) | فارسی | Installation guide |
-| [SETUP-en.md](SETUP-en.md) | English | Installation guide |
-| [TECHNICAL.md](TECHNICAL.md) | فارسی | Technical documentation |
-| [TECHNICAL-en.md](TECHNICAL-en.md) | English | Technical documentation |
-| [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | English | Feature implementation plan |
-| [docs/index.html](docs/index.html) | فارسی | Full technical reference |
-| [docs/developer-fa.html](docs/developer-fa.html) | فارسی | Developer guide |
+| فایل | زبان | توضیح |
+|------|------|-------|
+| **[README.md](README.md)** | فارسی | نمای کلی پروژه و ویژگی‌ها |
+| **[README-en.md](README-en.md)** | English | Project overview & features |
+| **[SETUP.md](SETUP.md)** | فارسی | راهنمای نصب و راه‌اندازی |
+| **[SETUP-en.md](SETUP-en.md)** | English | Installation guide |
+| **[TECHNICAL.md](TECHNICAL.md)** | فارسی | مستندات فنی و معماری |
+| **[TECHNICAL-en.md](TECHNICAL-en.md)** | English | Technical documentation |
+| **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)** | English | Feature implementation plan |
+| [docs/index.html](docs/index.html) | فارسی | مرجع فنی کامل |
+| [docs/developer-fa.html](docs/developer-fa.html) | فارسی | راهنمای توسعه‌دهندگان |
 | [docs/developer-en.html](docs/developer-en.html) | English | Developer guide |
-| [docs/doc-features.html](docs/doc-features.html) | English | Features (20 sections) |
+| [docs/doc-features.html](docs/doc-features.html) | English | Features reference |
 | [docs/doc-schema.html](docs/doc-schema.html) | English | Database schema |
 | [docs/doc-api.html](docs/doc-api.html) | English | API reference |
 | [docs/doc-accounting.html](docs/doc-accounting.html) | English | Accounting system |
 | [docs/doc-backup.html](docs/doc-backup.html) | English | Backup & migration |
 | [docs/doc-ui.html](docs/doc-ui.html) | English | UI components |
 
-## License
+---
 
-MIT License — free for all uses.
+## مجوز
+
+MIT License — استفاده آزاد برای همه.
+
+---
+
+<div align="center">
+
+**دانیال، همراه کسب‌وکارهای امروز**
+**Danial, Partner for Today's Businesses**
+
+</div>
