@@ -38,7 +38,10 @@ export function createReturn(saleId: number, userId: number, productId: number, 
   // Only reduce sale totals and post journal if it's a damaged/loss return
   if (isDamaged && saleId && refundAmount > 0) {
     db.prepare('UPDATE sales SET total_amount = total_amount - ?, totalNetProfit = totalNetProfit - ? WHERE id = ?').run(refundAmount, refundAmount, saleId)
-    postReturnJournal(returnId, new Date().toISOString().slice(0, 10), refundAmount)
+    // Look up the purchase price (COGS) for this product in the sale
+    const saleItem = db.prepare('SELECT purchasePrice FROM sale_items WHERE saleId = ? AND productId = ?').get(saleId, productId) as { purchasePrice: number } | undefined
+    const cogsAmount = saleItem ? saleItem.purchasePrice * quantity : 0
+    postReturnJournal(returnId, new Date().toISOString().slice(0, 10), refundAmount, cogsAmount)
   }
   return db.prepare('SELECT r.*, s.invoiceNumber as saleInvoiceNumber, p.title as productTitle, u.name as userName FROM returns r LEFT JOIN sales s ON r.saleId = s.id LEFT JOIN products p ON r.productId = p.id LEFT JOIN users u ON r.userId = u.id WHERE r.id = ?').get(returnId) as Return
 }
@@ -50,7 +53,7 @@ export function getReturns(limit: number = 100): Return[] {
 
 export function getReturnStats(): { totalReturns: number; totalRefund: number; todayReturns: number } {
   const db = getDatabase()
-  const total = (db.prepare('SELECT COUNT(*) as c, COALESCE(SUM(refundAmount), 0) as refund FROM returns').get() as { c: number; refund: number })
+  const total = (db.prepare('SELECT COUNT(*) as c, COALESCE(SUM(CASE WHEN isDamaged = 1 THEN refundAmount ELSE 0 END), 0) as refund FROM returns').get() as { c: number; refund: number })
   const today = (db.prepare("SELECT COUNT(*) as c FROM returns WHERE date(createdAt) = date('now', 'localtime')").get() as { c: number }).c
   return { totalReturns: total.c, totalRefund: total.refund, todayReturns: today }
 }

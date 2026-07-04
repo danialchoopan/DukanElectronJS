@@ -110,7 +110,8 @@ export default function SalesHistory() {
         productId: item.productId,
         quantity: item.quantity,
         reason: returnAllReason,
-        refundAmount: item.unitPrice * item.quantity,
+        refundAmount: 0,
+        isDamaged: false,
       })
     }
     setShowReturnAllConfirm(false)
@@ -198,7 +199,6 @@ export default function SalesHistory() {
   ]
 
   const unreturnedItems = selectedSale?.items?.filter((item: any) => !returnedIds.has(`${selectedSale.id}-${item.productId}`)) || []
-  const returnAllRefund = unreturnedItems.reduce((sum: number, item: any) => sum + item.unitPrice * item.quantity, 0)
 
   return (
     <div className="h-full p-4 overflow-auto" style={{ background: isDark ? '#0f172a' : '#f8fafc' }}>
@@ -578,9 +578,9 @@ export default function SalesHistory() {
               <h3 className="font-extrabold text-lg" style={{ color: '#f59e0b' }}>بازگشت کل فاکتور</h3>
             </div>
             <p className="text-sm mb-3" style={{ color: textSecondary }}>آیا از بازگشت تمام اقلام این فاکتور اطمینان دارید؟</p>
-            <div className="rounded-xl p-3 mb-4" style={{ backgroundColor: isDark ? '#451a03' : '#fef3c7' }}>
-              <div className="text-xs" style={{ color: textSecondary }}>مبلغ کل بازگشتی</div>
-              <div className="text-lg font-extrabold" style={{ color: '#f59e0b' }}>{returnAllRefund.toLocaleString('fa-IR')} تومان</div>
+            <div className="rounded-xl p-3 mb-4" style={{ backgroundColor: isDark ? '#0f2922' : '#dcfce7' }}>
+              <div className="text-xs" style={{ color: textSecondary }}>بازگشت کل اقلام — فقط موجودی انبار</div>
+              <div className="text-sm font-bold" style={{ color: '#22c55e' }}>{unreturnedItems.length} قلم — بدون تغییر مالی</div>
             </div>
             <div className="mb-4">
               <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>دلیل مرجوعی *</label>

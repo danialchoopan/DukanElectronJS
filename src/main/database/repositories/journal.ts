@@ -126,24 +126,40 @@ export function postExpenseJournal(expenseId: number, expenseDate: string, amoun
 }
 
 /**
- * Auto-posts a 2-line journal entry for a sale return:
- *   Debit:  Sales revenue reversal (4100)
- *   Credit: Cash refund (1100)
+ * Auto-posts journal entry for a sale return:
+ *   Debit:  Sales revenue reversal (4100) — reduces revenue
+ *   Credit: Cash refund (1100) — money leaves
+ *   Debit:  Inventory (1300) — stock returns to warehouse
+ *   Credit: COGS reversal (5100) — cost is reversed
  */
-export function postReturnJournal(returnId: number, returnDate: string, refundAmount: number): void {
+export function postReturnJournal(returnId: number, returnDate: string, refundAmount: number, cogsAmount: number = 0): void {
   const cashAcct = getAccountByCode('1100')
   const salesAcct = getAccountByCode('4100')
   if (!cashAcct || !salesAcct) {
     console.error('[Journal] Missing account codes for return journal'); return
   }
 
+  const lines: { accountId: number; debit: number; credit: number; description: string }[] = [
+    { accountId: salesAcct.id, debit: refundAmount, credit: 0, description: 'کاهش درآمد' },
+    { accountId: cashAcct.id, debit: 0, credit: refundAmount, description: 'بازپرداخت وجه' },
+  ]
+
+  // Reverse COGS/inventory if we have the cost amount
+  if (cogsAmount > 0) {
+    const inventoryAcct = getAccountByCode('1300')
+    const cogsAcct = getAccountByCode('5100')
+    if (inventoryAcct && cogsAcct) {
+      lines.push(
+        { accountId: inventoryAcct.id, debit: cogsAmount, credit: 0, description: 'بازگشت موجودی' },
+        { accountId: cogsAcct.id, debit: 0, credit: cogsAmount, description: 'کاهش بهای تمام شده' },
+      )
+    }
+  }
+
   createJournalEntry({
     entryDate: returnDate, description: `مرجوعی فاکتور #${returnId}`,
     referenceType: 'return', referenceId: returnId,
-    lines: [
-      { accountId: salesAcct.id, debit: refundAmount, credit: 0, description: 'کاهش درآمد' },
-      { accountId: cashAcct.id, debit: 0, credit: refundAmount, description: 'بازپرداخت وجه' },
-    ]
+    lines,
   })
 }
 
