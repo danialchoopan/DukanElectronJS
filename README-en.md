@@ -1,8 +1,8 @@
-# حسابداری دانیال — HesabDari Danial
+# HesabDari Danial — حسابداری دانیال
 
 **Smart Accounting, Professional Sales**
 
-> **فارسی | [English](README-en.md)**
+> **English | [فارسی](README.md)**
 
 ---
 

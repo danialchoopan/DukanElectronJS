@@ -8,7 +8,6 @@ release/
 
 # Logs
 *.log
-.mimocode
 npm-debug.log*
 error.log
 *.db
@@ -57,7 +56,13 @@ __tests__/
 *.txt
 *.md
 !README.md
+!README-en.md
 !SETUP.md
+!SETUP-en.md
+!TECHNICAL.md
+!TECHNICAL-en.md
+!IMPLEMENTATION_PLAN.md
+.mimocode/
 
 # Designer mockup files (not source code)
 stitch_persian_rtl_accounting_ui/
