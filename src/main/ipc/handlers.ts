@@ -27,7 +27,7 @@
  * provide standardized error handling and type-safe IPCResponse returns.
  */
 
-import { ipcMain, dialog, BrowserWindow } from 'electron'
+import { ipcMain, dialog, BrowserWindow, shell } from 'electron'
 import type { ProductInput, SaleInput, CustomerInput, ExpenseInput } from '../../types'
 import * as products from '../database/repositories/products'
 import * as sales from '../database/repositories/sales'
@@ -419,6 +419,13 @@ export function registerAllHandlers(): void {
       if (result.canceled || !result.filePath) return { success: false, error: 'cancelled' }
       copyFileSync(join(app.getPath('userData'), 'pos.db'), result.filePath)
       return { success: true, data: result.filePath }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
+  ipcMain.handle('backup:openFolder', () => {
+    try {
+      const dir = join(app.getPath('userData'), 'backups')
+      shell.openPath(dir)
+      return { success: true }
     } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
   })
   ipcMain.handle('backup:delete', (_event, arg: { name: string }) => {
