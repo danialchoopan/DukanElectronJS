@@ -37,10 +37,11 @@ export function createReturn(saleId: number, userId: number, productId: number, 
   const returnId = result.lastInsertRowid as number
   // Only reduce sale totals and post journal if it's a damaged/loss return
   if (isDamaged && saleId && refundAmount > 0) {
-    db.prepare('UPDATE sales SET total_amount = total_amount - ?, totalNetProfit = totalNetProfit - ? WHERE id = ?').run(refundAmount, refundAmount, saleId)
     // Look up the purchase price (COGS) for this product in the sale
     const saleItem = db.prepare('SELECT purchasePrice FROM sale_items WHERE saleId = ? AND productId = ?').get(saleId, productId) as { purchasePrice: number } | undefined
     const cogsAmount = saleItem ? saleItem.purchasePrice * quantity : 0
+    // Reduce sale total and profit — profit reduction = refund - cost
+    db.prepare('UPDATE sales SET total_amount = total_amount - ?, totalNetProfit = totalNetProfit - ? WHERE id = ?').run(refundAmount, refundAmount - cogsAmount, saleId)
     postReturnJournal(returnId, new Date().toISOString().slice(0, 10), refundAmount, cogsAmount)
   }
   return db.prepare('SELECT r.*, s.invoiceNumber as saleInvoiceNumber, p.title as productTitle, u.name as userName FROM returns r LEFT JOIN sales s ON r.saleId = s.id LEFT JOIN products p ON r.productId = p.id LEFT JOIN users u ON r.userId = u.id WHERE r.id = ?').get(returnId) as Return
