@@ -35,12 +35,10 @@ export function createReturn(saleId: number, userId: number, productId: number, 
   // Always restore stock
   db.prepare('UPDATE products SET stock = stock + ? WHERE id = ?').run(quantity, productId)
   const returnId = result.lastInsertRowid as number
-  // Only reduce sale totals and post journal if it's a damaged/loss return
-  if (isDamaged && saleId && refundAmount > 0) {
-    // Look up the purchase price (COGS) for this product in the sale
+  // Any return with a refund reduces the sale and posts journal — money goes back to customer regardless of product condition
+  if (saleId && refundAmount > 0) {
     const saleItem = db.prepare('SELECT purchasePrice FROM sale_items WHERE saleId = ? AND productId = ?').get(saleId, productId) as { purchasePrice: number } | undefined
     const cogsAmount = saleItem ? saleItem.purchasePrice * quantity : 0
-    // Reduce sale total and profit — profit reduction = refund - cost
     db.prepare('UPDATE sales SET total_amount = total_amount - ?, totalNetProfit = totalNetProfit - ? WHERE id = ?').run(refundAmount, refundAmount - cogsAmount, saleId)
     postReturnJournal(returnId, new Date().toISOString().slice(0, 10), refundAmount, cogsAmount)
   }

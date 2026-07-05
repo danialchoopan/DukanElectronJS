@@ -73,7 +73,7 @@ export default function SalesHistory() {
     if (!returnItem || !returnQty || !returnReason) return
     const qty = parseInt(returnQty)
     if (qty <= 0 || qty > returnItem.item.quantity) return
-    const refundAmount = isDamaged ? returnItem.item.unitPrice * qty : 0
+    const refundAmount = returnItem.item.unitPrice * qty
     const r = await window.api.returns.create({
       saleId: returnItem.sale.id,
       userId: user?.id || 1,
@@ -111,7 +111,7 @@ export default function SalesHistory() {
         productId: item.productId,
         quantity: item.quantity,
         reason: returnAllReason,
-        refundAmount: returnAllDamaged ? item.unitPrice * item.quantity : 0,
+        refundAmount: item.unitPrice * item.quantity,
         isDamaged: returnAllDamaged,
       })
     }
@@ -531,15 +531,15 @@ export default function SalesHistory() {
                 <div className="flex gap-2">
                   <button onClick={() => setIsDamaged(false)} className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
                     style={{ background: !isDamaged ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'transparent', color: !isDamaged ? '#fff' : textSecondary, border: `1px solid ${!isDamaged ? '#22c55e' : cardBorder}` }}>
-                    بازگشت کالا (بدون ضرر)
+                    بازگشت کالا سالم
                   </button>
                   <button onClick={() => setIsDamaged(true)} className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
                     style={{ background: isDamaged ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'transparent', color: isDamaged ? '#fff' : textSecondary, border: `1px solid ${isDamaged ? '#ef4444' : cardBorder}` }}>
-                    ضرر / معیوب
+                    کالا معیوب / ضرر
                   </button>
                 </div>
                 <p className="text-[10px] mt-1" style={{ color: textSecondary }}>
-                  {isDamaged ? 'مبلغ از فاکتور کسر می‌شود و سند حسابداری ثبت می‌گردد' : 'فقط موجودی انبار بازیابی می‌شود — بدون تغییر مالی'}
+                  هر دو حالت شامل بازگشت وجه و ثبت سند حسابداری هستند — تفاوت فقط در وضعیت کالا
                 </p>
               </div>
               <div>
@@ -586,15 +586,15 @@ export default function SalesHistory() {
                 <div className="flex gap-2">
                   <button onClick={() => setReturnAllDamaged(false)} className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
                     style={{ background: !returnAllDamaged ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'transparent', color: !returnAllDamaged ? '#fff' : textSecondary, border: `1px solid ${!returnAllDamaged ? '#22c55e' : cardBorder}` }}>
-                    بازگشت کالا (بدون ضرر)
+                    بازگشت کالا سالم
                   </button>
                   <button onClick={() => setReturnAllDamaged(true)} className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
                     style={{ background: returnAllDamaged ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'transparent', color: returnAllDamaged ? '#fff' : textSecondary, border: `1px solid ${returnAllDamaged ? '#ef4444' : cardBorder}` }}>
-                    ضرر / معیوب
+                    کالا معیوب / ضرر
                   </button>
                 </div>
                 <p className="text-[10px] mt-1" style={{ color: textSecondary }}>
-                  {returnAllDamaged ? 'مبلغ کل اقلام از فاکتور کسر می‌شود و سند حسابداری ثبت می‌گردد' : 'فقط موجودی انبار بازیابی می‌شود — بدون تغییر مالی'}
+                  هر دو حالت شامل بازگشت وجه به مشتری و ثبت سند حسابداری هستند
                 </p>
               </div>
               <div className="rounded-xl p-3" style={{ backgroundColor: returnAllDamaged ? (isDark ? '#450a0a' : '#fee2e2') : (isDark ? '#0f2922' : '#dcfce7') }}>
