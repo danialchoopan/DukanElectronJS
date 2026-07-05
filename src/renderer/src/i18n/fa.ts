@@ -89,7 +89,7 @@ export const fa = {
     profit: 'سود خالص',
     cashierPerformance: 'عملکرد صندوک‌دار',
     topProducts: 'پرفروش‌ترین کالاها',
-    recentSales: 'آخرین فروش‌ها',
+    recentSales: 'تاریخچه فروش',
     dateFrom: 'از تاریخ',
     dateTo: 'تا تاریخ',
     refresh: 'بروزرسانی',

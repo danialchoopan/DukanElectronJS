@@ -31,6 +31,7 @@ export default function SalesHistory() {
   const [isDamaged, setIsDamaged] = useState(false)
   const [showReturnAllConfirm, setShowReturnAllConfirm] = useState(false)
   const [returnAllReason, setReturnAllReason] = useState('')
+  const [returnAllDamaged, setReturnAllDamaged] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
   const { isDark } = useTheme()
   const user = useAuthStore((s) => s.user)
@@ -110,12 +111,13 @@ export default function SalesHistory() {
         productId: item.productId,
         quantity: item.quantity,
         reason: returnAllReason,
-        refundAmount: 0,
-        isDamaged: false,
+        refundAmount: returnAllDamaged ? item.unitPrice * item.quantity : 0,
+        isDamaged: returnAllDamaged,
       })
     }
     setShowReturnAllConfirm(false)
     setReturnAllReason('')
+    setReturnAllDamaged(false)
     setSelectedSale(null)
     loadData()
     loadReturns()
@@ -578,9 +580,33 @@ export default function SalesHistory() {
               <h3 className="font-extrabold text-lg" style={{ color: '#f59e0b' }}>بازگشت کل فاکتور</h3>
             </div>
             <p className="text-sm mb-3" style={{ color: textSecondary }}>آیا از بازگشت تمام اقلام این فاکتور اطمینان دارید؟</p>
-            <div className="rounded-xl p-3 mb-4" style={{ backgroundColor: isDark ? '#0f2922' : '#dcfce7' }}>
-              <div className="text-xs" style={{ color: textSecondary }}>بازگشت کل اقلام — فقط موجودی انبار</div>
-              <div className="text-sm font-bold" style={{ color: '#22c55e' }}>{unreturnedItems.length} قلم — بدون تغییر مالی</div>
+            <div className="space-y-3 mb-4">
+              <div>
+                <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>نوع مرجوعی</label>
+                <div className="flex gap-2">
+                  <button onClick={() => setReturnAllDamaged(false)} className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+                    style={{ background: !returnAllDamaged ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'transparent', color: !returnAllDamaged ? '#fff' : textSecondary, border: `1px solid ${!returnAllDamaged ? '#22c55e' : cardBorder}` }}>
+                    بازگشت کالا (بدون ضرر)
+                  </button>
+                  <button onClick={() => setReturnAllDamaged(true)} className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+                    style={{ background: returnAllDamaged ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'transparent', color: returnAllDamaged ? '#fff' : textSecondary, border: `1px solid ${returnAllDamaged ? '#ef4444' : cardBorder}` }}>
+                    ضرر / معیوب
+                  </button>
+                </div>
+                <p className="text-[10px] mt-1" style={{ color: textSecondary }}>
+                  {returnAllDamaged ? 'مبلغ کل اقلام از فاکتور کسر می‌شود و سند حسابداری ثبت می‌گردد' : 'فقط موجودی انبار بازیابی می‌شود — بدون تغییر مالی'}
+                </p>
+              </div>
+              <div className="rounded-xl p-3" style={{ backgroundColor: returnAllDamaged ? (isDark ? '#450a0a' : '#fee2e2') : (isDark ? '#0f2922' : '#dcfce7') }}>
+                <div className="text-xs" style={{ color: textSecondary }}>
+                  {returnAllDamaged ? 'مبلغ کسر شده از فاکتور' : 'بازگشت کل اقلام — فقط موجودی انبار'}
+                </div>
+                <div className="text-sm font-bold" style={{ color: returnAllDamaged ? '#ef4444' : '#22c55e' }}>
+                  {returnAllDamaged
+                    ? `${unreturnedItems.reduce((s: number, i: any) => s + i.unitPrice * i.quantity, 0).toLocaleString('fa-IR')} تومان`
+                    : `${unreturnedItems.length} قلم — بدون تغییر مالی`}
+                </div>
+              </div>
             </div>
             <div className="mb-4">
               <label className="text-xs font-medium block mb-1" style={{ color: textSecondary }}>دلیل مرجوعی *</label>
