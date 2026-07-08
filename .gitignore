@@ -53,7 +53,7 @@ userData/
 !SETUP-en.md
 !TECHNICAL.md
 !TECHNICAL-en.md
-!IMPLEMENTATION_PLAN.md
+IMPLEMENTATION_PLAN.md
 .mimocode/
 
 # Designer mockup files (not source code)
