@@ -88,6 +88,7 @@ interface SettingsState {
   fontSizeCustom: number
   highContrast: boolean
   showCameraScanner: boolean
+  abbreviatedPrices: boolean
   navConfig: NavConfigItem[]
   setTheme: (theme: Theme) => void
   setLanguage: (lang: 'fa' | 'en') => void
@@ -96,6 +97,7 @@ interface SettingsState {
   setFontSizeCustom: (size: number) => void
   setHighContrast: (hc: boolean) => void
   setShowCameraScanner: (v: boolean) => void
+  setAbbreviatedPrices: (v: boolean) => void
   setNavConfig: (config: NavConfigItem[]) => void
   resetNavConfig: () => void
   init: () => Promise<void>
@@ -109,6 +111,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   fontSizeCustom: 1,
   highContrast: false,
   showCameraScanner: true,
+  abbreviatedPrices: true,
   navConfig: [...DEFAULT_NAV_CONFIG],
 
   setTheme: (theme) => {
@@ -157,6 +160,11 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     window.api.settings.set('showCameraScanner', String(showCameraScanner))
   },
 
+  setAbbreviatedPrices: (abbreviatedPrices) => {
+    set({ abbreviatedPrices })
+    window.api.settings.set('abbreviatedPrices', String(abbreviatedPrices))
+  },
+
   setNavConfig: (navConfig) => {
     set({ navConfig })
     window.api.settings.set('navConfig', JSON.stringify(navConfig))
@@ -178,11 +186,12 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       const fontSizeCustom = parseFloat(result.data.fontSizeCustom) || 1
       const highContrast = result.data.highContrast === 'true'
       const showCameraScanner = result.data.showCameraScanner !== 'false'
+      const abbreviatedPrices = result.data.abbreviatedPrices !== 'false'
       let navConfig = [...DEFAULT_NAV_CONFIG]
       try {
         if (result.data.navConfig) navConfig = mergeNavConfig(JSON.parse(result.data.navConfig))
       } catch {}
-      set({ theme, language, navTheme, fontSize, fontSizeCustom, highContrast, showCameraScanner, navConfig })
+      set({ theme, language, navTheme, fontSize, fontSizeCustom, highContrast, showCameraScanner, abbreviatedPrices, navConfig })
       applyTheme(theme)
       document.documentElement.dir = language === 'fa' ? 'rtl' : 'ltr'
       document.documentElement.lang = language

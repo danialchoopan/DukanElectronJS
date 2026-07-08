@@ -25,6 +25,7 @@ import { useSortable } from '../hooks/useSortable'
 import PrintDialog from '../components/print/PrintDialog'
 import { TrendingUpIcon } from '../components/ui/Icons'
 import { useTheme } from '../hooks/useTheme'
+import { useSettingsStore } from '../store/settingsStore'
 
 const primary = '#006194'
 
@@ -42,6 +43,7 @@ export default function Dashboard() {
   const [salesPageSize, setSalesPageSize] = useState(10)
 
   const { isDark } = useTheme()
+  const abbreviatedPrices = useSettingsStore(s => s.abbreviatedPrices)
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
@@ -273,8 +275,8 @@ export default function Dashboard() {
               {kpi.label}
             </div>
             <div className="text-lg font-extrabold relative" style={{ color: kpi.accent }}>
-              {kpi.value}
-              {kpi.isPrice && kpi.rawValue > 999 && (
+              {kpi.isPrice && abbreviatedPrices ? formatPriceFA(kpi.rawValue) : kpi.value}
+              {kpi.isPrice && abbreviatedPrices && kpi.rawValue > 999 && (
                 <div className="text-[10px] font-bold opacity-60 mt-0.5" style={{ color: kpi.accent }}>
                   {formatPriceFull(kpi.rawValue)} تومان
                 </div>

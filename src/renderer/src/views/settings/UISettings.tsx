@@ -33,7 +33,7 @@ const fontSizes = [
 ]
 
 export default function UISettings() {
-  const { theme, setTheme, language, setLanguage: setLang, navTheme, setNavTheme, fontSize, setFontSize, fontSizeCustom, setFontSizeCustom, highContrast, setHighContrast, showCameraScanner, setShowCameraScanner, navConfig, setNavConfig, resetNavConfig } = useSettingsStore()
+  const { theme, setTheme, language, setLanguage: setLang, navTheme, setNavTheme, fontSize, setFontSize, fontSizeCustom, setFontSizeCustom, highContrast, setHighContrast, showCameraScanner, setShowCameraScanner, abbreviatedPrices, setAbbreviatedPrices, navConfig, setNavConfig, resetNavConfig } = useSettingsStore()
   const { isDark, colors, primary } = useTheme()
   const ui = t()
   const cBg = colors.bg.card
@@ -154,6 +154,22 @@ export default function UISettings() {
               style={{ backgroundColor: showCameraScanner ? primary : colors.toggle.track }}>
               <div className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200"
                 style={{ left: showCameraScanner ? '22px' : '2px' }} />
+            </button>
+          </div>
+        </Card>
+
+        {/* Price Format */}
+        <Card title="فرمت قیمت">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm" style={{ color: tSec }}>نمایش خلاصه قیمت‌ها</p>
+              <p className="text-[10px] mt-0.5" style={{ color: colors.text.muted }}>۵۰ میلیون / ۱.۵ میلیارد به جای اعداد کامل</p>
+            </div>
+            <button onClick={() => setAbbreviatedPrices(!abbreviatedPrices)}
+              className="relative w-11 h-6 rounded-full transition-all duration-200"
+              style={{ backgroundColor: abbreviatedPrices ? primary : colors.toggle.track }}>
+              <div className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200"
+                style={{ left: abbreviatedPrices ? '22px' : '2px' }} />
             </button>
           </div>
         </Card>

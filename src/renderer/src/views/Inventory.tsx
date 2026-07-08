@@ -29,6 +29,7 @@ import Pagination from '../components/ui/Pagination'
 import ShamsiDateInput from '../components/business/ShamsiDateInput'
 import HelpPopup from '../components/ui/HelpPopup'
 import { useTheme } from '../hooks/useTheme'
+import { useSettingsStore } from '../store/settingsStore'
 import { printA4Report, downloadExcel } from '../utils/a4Print'
 import { useSortable } from '../hooks/useSortable'
 import PrintDialog from '../components/print/PrintDialog'
@@ -94,6 +95,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
   const [viewProduct, setViewProduct] = useState<Product | null>(null)
 
   const { isDark } = useTheme()
+  const abbreviatedPrices = useSettingsStore(s => s.abbreviatedPrices)
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
@@ -757,7 +759,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
                 </div>
                 <span className="text-xs font-medium" style={{ color: textSecondary }}>ارزش خرید کل</span>
               </div>
-              <div className="text-xl font-bold" style={{ color: '#3b82f6' }}>{formatPriceFA(totalStockValue)}<div className="text-[10px] font-bold opacity-60">{formatPriceFull(totalStockValue)} تومان</div></div>
+              <div className="text-xl font-bold" style={{ color: '#3b82f6' }}>{abbreviatedPrices ? formatPriceFA(totalStockValue) : totalStockValue.toLocaleString('fa-IR')}{abbreviatedPrices && <div className="text-[10px] font-bold opacity-60">{formatPriceFull(totalStockValue)} تومان</div>}</div>
             </div>
             <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
               <div className="flex items-center gap-2 mb-2">
@@ -766,7 +768,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
                 </div>
                 <span className="text-xs font-medium" style={{ color: textSecondary }}>ارزش فروش کل</span>
               </div>
-              <div className="text-xl font-bold" style={{ color: '#22c55e' }}>{formatPriceFA(totalRetailValue)}<div className="text-[10px] font-bold opacity-60">{formatPriceFull(totalRetailValue)} تومان</div></div>
+              <div className="text-xl font-bold" style={{ color: '#22c55e' }}>{abbreviatedPrices ? formatPriceFA(totalRetailValue) : totalRetailValue.toLocaleString('fa-IR')}{abbreviatedPrices && <div className="text-[10px] font-bold opacity-60">{formatPriceFull(totalRetailValue)} تومان</div>}</div>
             </div>
             <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
               <div className="flex items-center gap-2 mb-2">
@@ -775,7 +777,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
                 </div>
                 <span className="text-xs font-medium" style={{ color: textSecondary }}>سود بالقوه</span>
               </div>
-              <div className="text-xl font-bold" style={{ color: '#10b981' }}>{formatPriceFA(totalProfit)}<div className="text-[10px] font-bold opacity-60">{formatPriceFull(totalProfit)} تومان</div></div>
+              <div className="text-xl font-bold" style={{ color: '#10b981' }}>{abbreviatedPrices ? formatPriceFA(totalProfit) : totalProfit.toLocaleString('fa-IR')}{abbreviatedPrices && <div className="text-[10px] font-bold opacity-60">{formatPriceFull(totalProfit)} تومان</div>}</div>
               <div className="text-[10px] mt-1" style={{ color: textSecondary }}>{totalStockValue > 0 ? Math.round((totalProfit / totalStockValue) * 100) : 0}% حاشیه سود</div>
             </div>
             <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>

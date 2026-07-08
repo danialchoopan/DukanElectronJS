@@ -4,6 +4,7 @@ import { downloadExcel, printA4Report } from '../../utils/a4Print'
 import ShamsiDateInput from '../../components/business/ShamsiDateInput'
 import { useTheme } from '../../hooks/useTheme'
 import { formatPriceFA, formatPriceFull } from '../../utils/jalali'
+import { useSettingsStore } from '../../store/settingsStore'
 
 export default function AccountingDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0)
@@ -19,6 +20,7 @@ export default function AccountingDashboard() {
   const [journalError, setJournalError] = useState('')
 
   const { isDark } = useTheme()
+  const abbreviatedPrices = useSettingsStore(s => s.abbreviatedPrices)
   const cardBg = isDark ? '#1e293b' : '#ffffff'
   const cardBorder = isDark ? '#334155' : '#e2e8f0'
   const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
@@ -257,8 +259,8 @@ export default function AccountingDashboard() {
               <span className="text-xs font-medium" style={{ color: textSecondary }}>{kpi.label}</span>
             </div>
             <div className="text-2xl font-bold" style={{ color: kpi.color }}>
-              {formatPriceFA(kpi.value)}
-              {kpi.value > 999 && (
+              {abbreviatedPrices ? formatPriceFA(kpi.value) : kpi.value.toLocaleString('fa-IR')}
+              {abbreviatedPrices && kpi.value > 999 && (
                 <div className="text-[11px] font-bold opacity-60 mt-0.5" style={{ color: kpi.color }}>
                   {formatPriceFull(kpi.value)} تومان
                 </div>
