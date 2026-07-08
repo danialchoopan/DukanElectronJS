@@ -126,11 +126,14 @@ export function postExpenseJournal(expenseId: number, expenseDate: string, amoun
 }
 
 /**
- * Auto-posts journal entry for a sale return:
- *   Debit:  Sales revenue reversal (4100) — reduces revenue
- *   Credit: Cash refund (1100) — money leaves
- *   Debit:  Inventory (1300) — stock returns to warehouse
- *   Credit: COGS reversal (5100) — cost is reversed
+ * Auto-posts a journal entry for a product return. The 4-line reversal:
+ *   1. Debit  Sales revenue (4100) — reverses the original sale revenue
+ *   2. Credit Cash (1100) — refund leaves the business
+ *   3. Debit  Inventory (1300) — stock value returns (if cogsAmount > 0)
+ *   4. Credit COGS (5100) — cost of goods sold is reversed (if cogsAmount > 0)
+ *
+ * Lines 3-4 are conditional: only posted when there's a COGS amount to reverse,
+ * which means the original sale affected inventory.
  */
 export function postReturnJournal(returnId: number, returnDate: string, refundAmount: number, cogsAmount: number = 0): void {
   const cashAcct = getAccountByCode('1100')

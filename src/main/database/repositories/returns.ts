@@ -32,13 +32,16 @@ export interface Return {
 export function createReturn(saleId: number, userId: number, productId: number, quantity: number, reason: string, refundAmount: number, isDamaged: boolean = false): Return {
   const db = getDatabase()
   const result = db.prepare('INSERT INTO returns (saleId, userId, productId, quantity, reason, refundAmount, status, isDamaged) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(saleId, userId, productId, quantity, reason, refundAmount, 'completed', isDamaged ? 1 : 0)
-  // Always restore stock
+  // Both damaged and normal returns restore stock — the product physically comes back
   db.prepare('UPDATE products SET stock = stock + ? WHERE id = ?').run(quantity, productId)
   const returnId = result.lastInsertRowid as number
-  // Any return with a refund reduces the sale and posts journal — money goes back to customer regardless of product condition
+  // Both return types affect accounting: refund goes back to customer, sale totals drop,
+  // and a reverse journal entry is posted. Damaged vs normal doesn't change the accounting path.
   if (saleId && refundAmount > 0) {
+    // COGS = original purchase price × quantity (from sale_items, not current price)
     const saleItem = db.prepare('SELECT purchasePrice FROM sale_items WHERE saleId = ? AND productId = ?').get(saleId, productId) as { purchasePrice: number } | undefined
     const cogsAmount = saleItem ? saleItem.purchasePrice * quantity : 0
+    // Reduce sale total by refund; reduce profit by (refund - cogs) since COGS is also reversed
     db.prepare('UPDATE sales SET total_amount = total_amount - ?, totalNetProfit = totalNetProfit - ? WHERE id = ?').run(refundAmount, refundAmount - cogsAmount, saleId)
     postReturnJournal(returnId, new Date().toISOString().slice(0, 10), refundAmount, cogsAmount)
   }

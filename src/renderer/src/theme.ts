@@ -5,14 +5,26 @@
  * Keep this file flat and simple — no side effects, no store imports.
  */
 
+/**
+ * Complete theme color tokens. Components import from here instead of
+ * using isDark ternaries inline. Keep flat — no side effects.
+ */
 export interface ThemeColors {
+  /** Background layers: primary (page), secondary (cards), tertiary (subtle), input, card, sidebar (gradient pair) */
   bg: { primary: string; secondary: string; tertiary: string; input: string; card: string; sidebar: [string, string] }
+  /** Border colors: default (standard), light (subtle dividers) */
   border: { default: string; light: string }
+  /** Text hierarchy: primary (headings), secondary (body), muted (labels) */
   text: { primary: string; secondary: string; muted: string }
+  /** Accent/brand: primary (base), hover (darker), active (pressed state overlay) */
   accent: { primary: string; hover: string; active: string }
+  /** Toggle/switch track color */
   toggle: { track: string }
+  /** Row hover states: light (subtle), medium (more visible) */
   hover: { light: string; medium: string }
+  /** Very subtle border for cards/sections (rgba with low opacity) */
   borderSubtle: string
+  /** Box shadow for elevated elements */
   shadow: string
 }
 

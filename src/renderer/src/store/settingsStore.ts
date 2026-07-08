@@ -16,15 +16,18 @@
 
 import { create } from 'zustand'
 
+// ── Theme settings ──────────────────────────────────────────────────────────
 export type Theme = 'dark' | 'light'
 export type NavTheme = 'blue' | 'green' | 'purple' | 'orange' | 'teal' | 'slate'
 
+// ── Nav configuration ───────────────────────────────────────────────────────
 export interface NavConfigItem {
   key: string
   label: string
   visible: boolean
 }
 
+/** Default navigation items in display order with Persian labels. */
 export const DEFAULT_NAV_CONFIG: NavConfigItem[] = [
   { key: 'dashboard', label: 'داشبورد', visible: true },
   { key: 'pos', label: 'فروش', visible: true },
@@ -80,6 +83,7 @@ function mergeNavConfig(saved: NavConfigItem[] | null): NavConfigItem[] {
   return result
 }
 
+// ── Price format ────────────────────────────────────────────────────────────
 interface SettingsState {
   theme: Theme
   language: 'fa' | 'en'
