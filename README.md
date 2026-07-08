@@ -13,6 +13,18 @@
 
 ---
 
+## اسکرین‌شات‌ها
+
+| صفحه فروش | داشبورد | تاریخچه فروش |
+|-----------|---------|--------------|
+| ![sell](screenshot/sell.png) | ![dashboard](screenshot/sellDash.png) | ![history](screenshot/sellHistory.png) |
+
+| ورود | انبار | حسابداری |
+|------|-------|----------|
+| ![login](screenshot/login.png) | ![inventory](screenshot/inventory.png) | ![accounting](screenshot/accouting.png) |
+
+---
+
 ## دسترسی سریع
 
 | [![](https://img.shields.io/badge/🚀_نصب_و_راه_اندازی-نحوه_شروع-blue)](SETUP.md) | [![](https://img.shields.io/badge/📚_مستندات_فنی-توضیحات_تکمیلی-green)](TECHNICAL.md) | [![](https://img.shields.io/badge/📋_برنامه_پیاده_سازی-نقشه_راه-orange)](IMPLEMENTATION_PLAN.md) |

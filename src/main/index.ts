@@ -4,7 +4,7 @@ import { registerAllHandlers } from './ipc/handlers'
 import { getDatabase, closeDatabase } from './database/connection'
 import { readFileSync } from 'fs'
 import { appendFileSync } from 'fs'
-import { seedDatabase } from './database/seed'
+// import { seedDatabase } from './database/seed' // disabled
 import { autoBackup } from './database/backup'
 import { runMigrations } from './database/schemaMigration'
 import * as settingsRepo from './database/repositories/settings'
@@ -79,7 +79,7 @@ function registerNavigationShortcuts(): void {
 app.whenReady().then(async () => {
   try {
     getDatabase()
-    seedDatabase()
+    // seedDatabase() — disabled; uncomment to re-seed on next startup
     // Run schema migrations for version upgrades
     const migResult = runMigrations()
     if (migResult.applied.length > 0) console.log(`[Migration] Applied: ${migResult.applied.join(', ')}`)

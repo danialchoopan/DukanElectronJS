@@ -13,6 +13,18 @@
 
 ---
 
+## Screenshots
+
+| Point of Sale | Dashboard | Sales History |
+|---------------|-----------|---------------|
+| ![sell](screenshot/sell.png) | ![dashboard](screenshot/sellDash.png) | ![history](screenshot/sellHistory.png) |
+
+| Login | Inventory | Accounting |
+|-------|-----------|------------|
+| ![login](screenshot/login.png) | ![inventory](screenshot/inventory.png) | ![accounting](screenshot/accouting.png) |
+
+---
+
 ## Quick Links
 
 | [![](https://img.shields.io/badge/🚀_Setup_Guide-Get_Started-blue)](SETUP-en.md) | [![](https://img.shields.io/badge/📚_Technical_Docs-Deep_Dive-green)](TECHNICAL-en.md) | [![](https://img.shields.io/badge/📋_Implementation_Plan-Roadmap-orange)](IMPLEMENTATION_PLAN.md) |
