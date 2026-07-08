@@ -320,11 +320,13 @@ function UnifiedLayout({ users, selectedUser, error, loading, pin, password, sho
 
             {selectedUser && (
               <form onSubmit={onSubmit} className="space-y-5">
+                {/* 'none' mode: simple login button, no credential input needed */}
                 {loginMethod !== 'none' ? (<>
                 <div className="space-y-2">
                   <label className="text-[14px] leading-[20px] font-medium block pr-1" style={{ color: labelColor, fontFamily: "'IBM Plex Sans', sans-serif" }}>
                     {loginMethod === 'password' ? 'رمز عبور' : 'رمز ۴ رقمی (PIN)'}
                   </label>
+                  {/* Password mode: single text input. PIN mode: 4 individual digit boxes below */}
                   {loginMethod === 'password' ? (
                     <input
                       type={showPin ? 'text' : 'password'}
@@ -448,10 +450,11 @@ export default function LockScreen() {
   const [users, setUsers] = useState<User[]>([])
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const [pin, setPin] = useState('')
-  const [password, setPassword] = useState('')
+  const [password, setPassword] = useState('') // Used only when loginMethod is 'password'
   const [showPin, setShowPin] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  // Three modes: 'pin' = 4-digit PIN input, 'password' = free-text password, 'none' = no auth required
   const [loginMethod, setLoginMethod] = useState<'pin' | 'password' | 'none'>('pin')
   const ui = t()
   const isDark = theme === 'dark'
@@ -508,6 +511,8 @@ export default function LockScreen() {
     setLoading(false)
   }
 
+  // Routes login to the correct handler based on auth mode:
+  // 'password' mode sends the text password, 'pin'/'none' modes send the 4-digit PIN
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedUser) return

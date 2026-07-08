@@ -91,6 +91,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
   const [adminPinConfirm, setAdminPinConfirm] = useState('')
   const [adminPassword, setAdminPassword] = useState('')
   const [adminPasswordConfirm, setAdminPasswordConfirm] = useState('')
+  // Controls whether admin setup uses a 4-digit PIN or a free-text password
   const [authType, setAuthType] = useState<'pin' | 'password'>('pin')
   const [pinError, setPinError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -143,6 +144,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
     setEnableTax(d.tax)
   }
 
+  // Validates credentials based on the selected auth type before creating the admin user
   const handleSubmit = async () => {
     if (authType === 'pin') {
       if (adminPin.length < 4) {
@@ -181,6 +183,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
       if (enableTax) {
         await window.api.settings.set('taxRate', '9')
       }
+      // Pick the right credential value for createUser based on auth type
       const credential = authType === 'pin' ? adminPin : adminPassword
       if (credential.length >= 4) {
         await window.api.auth.createUser({ name: lang === 'fa' ? 'مدیر' : 'Admin', pinCode: credential, role: 'admin' })
@@ -565,7 +568,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
               </div>
 
               <div className="space-y-6">
-                {/* Auth Type Toggle */}
+                {/* Toggle between 4-digit PIN and text password for admin login */}
                 <div className="flex gap-2 justify-center">
                   <button onClick={() => setAuthType('pin')} className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
                     style={{ background: authType === 'pin' ? `linear-gradient(135deg, ${colors.primary}, ${colors.primary}cc)` : 'transparent', color: authType === 'pin' ? '#fff' : subtitleColor, border: `1px solid ${authType === 'pin' ? colors.primary : cardBorder}` }}>
@@ -577,6 +580,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                   </button>
                 </div>
 
+                {/* PIN mode: 4 individual digit boxes. Password mode: text inputs below */}
                 {authType === 'pin' ? (<>
                 <div>
                   <label className="text-xs font-medium mb-2 block" style={{ color: subtitleColor }}>
