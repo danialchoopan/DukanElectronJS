@@ -44,14 +44,6 @@ userData/
 .vite/
 *.tsbuildinfo
 
-# Test files
-tests/
-__tests__/
-*.test.ts
-*.test.tsx
-*.spec.ts
-*.spec.tsx
-
 # Spec/plan files (not source code)
 *.txt
 *.md
