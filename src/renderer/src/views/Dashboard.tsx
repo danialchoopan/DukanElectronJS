@@ -16,7 +16,7 @@
 
 import { useState, useEffect } from 'react'
 import { fa } from '../i18n'
-import { formatJalaliDateTime, gregorianToJalali } from '../utils/jalali'
+import { formatJalaliDateTime, gregorianToJalali, formatPriceFA, formatPriceFull } from '../utils/jalali'
 import { generateReceiptHTML, printContent } from '../utils/receipt'
 import { printA4Report, downloadExcel } from '../utils/a4Print'
 import ShamsiDateInput from '../components/business/ShamsiDateInput'
@@ -103,41 +103,53 @@ export default function Dashboard() {
     {
       label: fa.dashboard.invoices,
       value: sales.length.toLocaleString('fa-IR'),
+      rawValue: sales.length,
+      isPrice: false,
       gradient: isDark ? 'linear-gradient(135deg, #0f2940 0%, #1a3a5c 100%)' : 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
       accent: '#0ea5e9',
       iconPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
     },
     {
       label: fa.dashboard.totalSales,
-      value: totalSales.toLocaleString('fa-IR'),
+      value: formatPriceFA(totalSales),
+      rawValue: totalSales,
+      isPrice: true,
       gradient: isDark ? 'linear-gradient(135deg, #052e16 0%, #14532d 100%)' : 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
       accent: '#22c55e',
       iconPath: 'M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6',
     },
     {
       label: fa.dashboard.cash,
-      value: cashTotal.toLocaleString('fa-IR'),
+      value: formatPriceFA(cashTotal),
+      rawValue: cashTotal,
+      isPrice: true,
       gradient: isDark ? 'linear-gradient(135deg, #052e16 0%, #14532d 100%)' : 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
       accent: '#16a34a',
       iconPath: 'M20 12V8H6a2 2 0 010-4h14v4M4 6v12a2 2 0 002 2h14v-5M18 12a2 2 0 000 4h4v-4z',
     },
     {
       label: fa.dashboard.card,
-      value: cardTotal.toLocaleString('fa-IR'),
+      value: formatPriceFA(cardTotal),
+      rawValue: cardTotal,
+      isPrice: true,
       gradient: isDark ? 'linear-gradient(135deg, #0c1e3a 0%, #1e3a5f 100%)' : 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
       accent: '#3b82f6',
       iconPath: 'M1 4h22v16H1zM1 10h22',
     },
     {
       label: fa.dashboard.ledger,
-      value: ledgerTotal.toLocaleString('fa-IR'),
+      value: formatPriceFA(ledgerTotal),
+      rawValue: ledgerTotal,
+      isPrice: true,
       gradient: isDark ? 'linear-gradient(135deg, #2e1065 0%, #4c1d95 100%)' : 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)',
       accent: '#a855f7',
       iconPath: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8',
     },
     {
       label: fa.dashboard.expenses,
-      value: totalExpenses.toLocaleString('fa-IR'),
+      value: formatPriceFA(totalExpenses),
+      rawValue: totalExpenses,
+      isPrice: true,
       gradient: isDark ? 'linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%)' : 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
       accent: '#ef4444',
       iconPath: 'M12 9v2m0 4h.01M5.07 19H18.93A2 2 0 0020.82 16L13.9 3.46a2 2 0 00-3.8 0L3.18 16a2 2 0 001.89 3z',
@@ -145,6 +157,8 @@ export default function Dashboard() {
     {
       label: 'مرجوعی',
       value: returnStats.totalReturns.toLocaleString('fa-IR'),
+      rawValue: returnStats.totalReturns,
+      isPrice: false,
       gradient: isDark ? 'linear-gradient(135deg, #451a03 0%, #78350f 100%)' : 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
       accent: '#f59e0b',
       iconPath: 'M3 10h10a5 5 0 015 5v2M3 10l4-4M3 10l4 4',
@@ -260,6 +274,11 @@ export default function Dashboard() {
             </div>
             <div className="text-lg font-extrabold relative" style={{ color: kpi.accent }}>
               {kpi.value}
+              {kpi.isPrice && kpi.rawValue > 999 && (
+                <div className="text-[10px] font-bold opacity-60 mt-0.5" style={{ color: kpi.accent }}>
+                  {formatPriceFull(kpi.rawValue)} تومان
+                </div>
+              )}
             </div>
           </div>
         ))}

@@ -24,7 +24,7 @@ import { useState, useEffect } from 'react'
 import type { Product } from '../../../types'
 import { fa } from '../i18n'
 import { generateReceiptHTML, printContent } from '../utils/receipt'
-import { gregorianToJalali, formatDateNow } from '../utils/jalali'
+import { gregorianToJalali, formatDateNow, formatPriceFA, formatPriceFull } from '../utils/jalali'
 import Pagination from '../components/ui/Pagination'
 import ShamsiDateInput from '../components/business/ShamsiDateInput'
 import HelpPopup from '../components/ui/HelpPopup'
@@ -757,7 +757,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
                 </div>
                 <span className="text-xs font-medium" style={{ color: textSecondary }}>ارزش خرید کل</span>
               </div>
-              <div className="text-xl font-bold font-mono" style={{ color: '#3b82f6' }}>{totalStockValue.toLocaleString('fa-IR')}</div>
+              <div className="text-xl font-bold" style={{ color: '#3b82f6' }}>{formatPriceFA(totalStockValue)}<div className="text-[10px] font-bold opacity-60">{formatPriceFull(totalStockValue)} تومان</div></div>
             </div>
             <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
               <div className="flex items-center gap-2 mb-2">
@@ -766,7 +766,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
                 </div>
                 <span className="text-xs font-medium" style={{ color: textSecondary }}>ارزش فروش کل</span>
               </div>
-              <div className="text-xl font-bold font-mono" style={{ color: '#22c55e' }}>{totalRetailValue.toLocaleString('fa-IR')}</div>
+              <div className="text-xl font-bold" style={{ color: '#22c55e' }}>{formatPriceFA(totalRetailValue)}<div className="text-[10px] font-bold opacity-60">{formatPriceFull(totalRetailValue)} تومان</div></div>
             </div>
             <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
               <div className="flex items-center gap-2 mb-2">
@@ -775,7 +775,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
                 </div>
                 <span className="text-xs font-medium" style={{ color: textSecondary }}>سود بالقوه</span>
               </div>
-              <div className="text-xl font-bold font-mono" style={{ color: '#10b981' }}>{totalProfit.toLocaleString('fa-IR')}</div>
+              <div className="text-xl font-bold" style={{ color: '#10b981' }}>{formatPriceFA(totalProfit)}<div className="text-[10px] font-bold opacity-60">{formatPriceFull(totalProfit)} تومان</div></div>
               <div className="text-[10px] mt-1" style={{ color: textSecondary }}>{totalStockValue > 0 ? Math.round((totalProfit / totalStockValue) * 100) : 0}% حاشیه سود</div>
             </div>
             <div className="rounded-2xl p-4 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>

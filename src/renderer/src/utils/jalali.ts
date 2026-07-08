@@ -156,3 +156,11 @@ export function formatPriceComma(n: number): string {
   if (abs >= 1_000) return `${sign}${(abs / 1_000).toFixed(0)} هزار`
   return `${sign}${abs.toLocaleString('fa-IR')}`
 }
+
+/**
+ * Format with commas for full precision display.
+ * Example: 50000000 → "۵۰,۰۰۰,۰۰۰"
+ */
+export function formatPriceFull(n: number): string {
+  return n.toLocaleString('fa-IR')
+}

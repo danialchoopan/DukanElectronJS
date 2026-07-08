@@ -3,6 +3,7 @@ import { fa } from '../../i18n'
 import { downloadExcel, printA4Report } from '../../utils/a4Print'
 import ShamsiDateInput from '../../components/business/ShamsiDateInput'
 import { useTheme } from '../../hooks/useTheme'
+import { formatPriceFA, formatPriceFull } from '../../utils/jalali'
 
 export default function AccountingDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0)
@@ -255,7 +256,14 @@ export default function AccountingDashboard() {
               {kpi.icon}
               <span className="text-xs font-medium" style={{ color: textSecondary }}>{kpi.label}</span>
             </div>
-            <div className="text-2xl font-bold font-mono" style={{ color: kpi.color }}>{kpi.value.toLocaleString('fa-IR')}</div>
+            <div className="text-2xl font-bold" style={{ color: kpi.color }}>
+              {formatPriceFA(kpi.value)}
+              {kpi.value > 999 && (
+                <div className="text-[11px] font-bold opacity-60 mt-0.5" style={{ color: kpi.color }}>
+                  {formatPriceFull(kpi.value)} تومان
+                </div>
+              )}
+            </div>
             {kpi.sub && <div className="text-xs mt-1 font-bold" style={{ color: kpi.color }}>{kpi.sub}</div>}
           </div>
         ))}
