@@ -164,17 +164,19 @@ interface LayoutProps {
   error: string
   loading: boolean
   pin: string
+  password: string
   showPin: boolean
   loginMethod: 'pin' | 'password' | 'none'
   onSelectUser: (u: User) => void
   onSubmit: (e: React.FormEvent) => void
   setPin: (v: string) => void
+  setPassword: (v: string) => void
   setShowPin: (v: boolean) => void
   pinRefs: React.MutableRefObject<(HTMLInputElement | null)[]>
   isDark: boolean
 }
 
-function UnifiedLayout({ users, selectedUser, error, loading, pin, showPin, loginMethod, onSelectUser, onSubmit, setPin, setShowPin, pinRefs, isDark }: LayoutProps) {
+function UnifiedLayout({ users, selectedUser, error, loading, pin, password, showPin, loginMethod, onSelectUser, onSubmit, setPin, setPassword, setShowPin, pinRefs, isDark }: LayoutProps) {
   const ui = t()
 
   const brandCardBlur = 'blur(12px)'
@@ -323,49 +325,62 @@ function UnifiedLayout({ users, selectedUser, error, loading, pin, showPin, logi
                   <label className="text-[14px] leading-[20px] font-medium block pr-1" style={{ color: labelColor, fontFamily: "'IBM Plex Sans', sans-serif" }}>
                     {loginMethod === 'password' ? 'رمز عبور' : 'رمز ۴ رقمی (PIN)'}
                   </label>
-                  <div className="flex flex-row-reverse gap-3 justify-center">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <input
-                        key={`pin-${i}`}
-                        ref={(el) => { pinRefs.current[i] = el }}
-                        type={showPin ? 'text' : 'password'}
-                        inputMode="numeric"
-                        maxLength={1}
-                        value={pin[i] || ''}
-                        onChange={(e) => handlePinInput(e, i)}
-                        onKeyDown={(e) => handlePinKeyDown(e, i)}
-                        className="w-14 h-16 text-center text-2xl font-bold rounded-xl outline-none transition-all focus:ring-2"
-                        style={{
-                          background: inputBg,
-                          border: pin[i] ? `2px solid ${colors.primary}` : inputBorder,
-                          color: inputText,
-                        }}
-                        onFocus={(e) => { 
-                          e.currentTarget.style.borderColor = colors.primary; 
-                          e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,97,148,0.15)' 
-                        }}
-                        onBlur={(e) => { 
-                          e.currentTarget.style.borderColor = pin[i] ? colors.primary : (isDark ? 'rgba(112,120,129,0.3)' : colors.outlineVariant); 
-                          e.currentTarget.style.boxShadow = 'none' 
-                        }}
-                      />
-                    ))}
+                  {loginMethod === 'password' ? (
+                    <input
+                      type={showPin ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="رمز عبور خود را وارد کنید"
+                      className="w-full px-4 py-3 rounded-xl text-sm font-bold outline-none transition-all"
+                      style={{ background: inputBg, border: inputBorder, color: inputText }}
+                      autoFocus
+                    />
+                  ) : (
+                    <div className="flex flex-row-reverse gap-3 justify-center">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <input
+                          key={`pin-${i}`}
+                          ref={(el) => { pinRefs.current[i] = el }}
+                          type={showPin ? 'text' : 'password'}
+                          inputMode="numeric"
+                          maxLength={1}
+                          value={pin[i] || ''}
+                          onChange={(e) => handlePinInput(e, i)}
+                          onKeyDown={(e) => handlePinKeyDown(e, i)}
+                          className="w-14 h-16 text-center text-2xl font-bold rounded-xl outline-none transition-all focus:ring-2"
+                          style={{
+                            background: inputBg,
+                            border: pin[i] ? `2px solid ${colors.primary}` : inputBorder,
+                            color: inputText,
+                          }}
+                          onFocus={(e) => { 
+                            e.currentTarget.style.borderColor = colors.primary; 
+                            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,97,148,0.15)' 
+                          }}
+                          onBlur={(e) => { 
+                            e.currentTarget.style.borderColor = pin[i] ? colors.primary : (isDark ? 'rgba(112,120,129,0.3)' : colors.outlineVariant); 
+                            e.currentTarget.style.boxShadow = 'none' 
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex justify-center">
                     <button
                       type="button"
-                      className="flex items-center justify-center w-10 h-16 rounded-xl transition-colors"
+                      className="flex items-center gap-1 text-xs transition-colors"
                       style={{ color: colors.outline }}
                       onClick={() => setShowPin(!showPin)}
                     >
-                      {showPin ? (
-                        <EyeOffIcon className="w-5 h-5" color={colors.outline} />
-                      ) : (
-                        <EyeIcon className="w-5 h-5" color={colors.outline} />
-                      )}
+                      {showPin ? <EyeOffIcon className="w-4 h-4" color={colors.outline} /> : <EyeIcon className="w-4 h-4" color={colors.outline} />}
+                      <span>{showPin ? 'مخفی کردن' : 'نمایش'}</span>
                     </button>
                   </div>
-                  <p className="text-xs text-center" style={{ color: subtitleColor, opacity: 0.7 }}>
-                    {fa.auth.defaultPin}
-                  </p>
+                  {loginMethod === 'pin' && (
+                    <p className="text-xs text-center" style={{ color: subtitleColor, opacity: 0.7 }}>
+                      {fa.auth.defaultPin}
+                    </p>
+                  )}
                 </div>
 
                 {error && (
@@ -374,15 +389,15 @@ function UnifiedLayout({ users, selectedUser, error, loading, pin, showPin, logi
 
                 <button
                   type="submit"
-                  disabled={loading || pin.length < 4}
+                  disabled={loading || (loginMethod === 'pin' ? pin.length < 4 : !password)}
                   className="w-full text-[24px] leading-[36px] font-semibold py-3 rounded-xl transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-3"
                   style={{
-                    background: loading || pin.length < 4 ? colors.primaryContainer : colors.primary,
+                    background: loading || (loginMethod === 'pin' ? pin.length < 4 : !password) ? colors.primaryContainer : colors.primary,
                     color: colors.onPrimary,
                     fontFamily: "'IBM Plex Sans', sans-serif",
                     boxShadow: '0 4px 16px rgba(0, 97, 148, 0.2)',
-                    opacity: loading || pin.length < 4 ? 0.7 : 1,
-                    cursor: loading || pin.length < 4 ? 'not-allowed' : 'pointer',
+                    opacity: loading || (loginMethod === 'pin' ? pin.length < 4 : !password) ? 0.7 : 1,
+                    cursor: loading || (loginMethod === 'pin' ? pin.length < 4 : !password) ? 'not-allowed' : 'pointer',
                   }}
                 >
                   {loading ? (
@@ -433,6 +448,7 @@ export default function LockScreen() {
   const [users, setUsers] = useState<User[]>([])
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const [pin, setPin] = useState('')
+  const [password, setPassword] = useState('')
   const [showPin, setShowPin] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -476,8 +492,8 @@ export default function LockScreen() {
       return
     }
 
-    // For 'pin' and 'password' modes, validate against stored PIN hash
-    const loginPin = pw.length < 4 ? '0000' : pw
+    // For 'pin' and 'password' modes, validate against stored hash
+    const loginPin = loginMethod === 'pin' && pw.length < 4 ? '0000' : pw
     const result = await window.api.auth.login(loginPin)
     if (result.success && result.data) {
       clearCart(); setUser(result.data)
@@ -494,15 +510,22 @@ export default function LockScreen() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedUser || pin.length < 4) return
-    handleLogin(pin)
+    if (!selectedUser) return
+    if (loginMethod === 'password') {
+      if (!password) return
+      handleLogin(password)
+    } else {
+      if (pin.length < 4) return
+      handleLogin(pin)
+    }
   }
 
   const handleSelectUser = (u: User) => {
     setSelectedUserId(u.id)
     setPin('')
+    setPassword('')
     setError('')
-    setTimeout(() => pinRefs.current[0]?.focus(), 100)
+    if (loginMethod === 'pin') setTimeout(() => pinRefs.current[0]?.focus(), 100)
   }
 
   return (
@@ -531,11 +554,13 @@ export default function LockScreen() {
         error={error}
         loading={loading}
         pin={pin}
+        password={password}
         showPin={showPin}
         loginMethod={loginMethod}
         onSelectUser={handleSelectUser}
         onSubmit={handleSubmit}
         setPin={setPin}
+        setPassword={setPassword}
         setShowPin={setShowPin}
         pinRefs={pinRefs}
         isDark={isDark}

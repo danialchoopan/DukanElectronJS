@@ -89,6 +89,9 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
   const [enableTax, setEnableTax] = useState(true)
   const [adminPin, setAdminPin] = useState('')
   const [adminPinConfirm, setAdminPinConfirm] = useState('')
+  const [adminPassword, setAdminPassword] = useState('')
+  const [adminPasswordConfirm, setAdminPasswordConfirm] = useState('')
+  const [authType, setAuthType] = useState<'pin' | 'password'>('pin')
   const [pinError, setPinError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [backupPreview, setBackupPreview] = useState<BackupPreview | null>(null)
@@ -141,13 +144,24 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
   }
 
   const handleSubmit = async () => {
-    if (adminPin.length < 4) {
-      setPinError(lang === 'fa' ? 'رمز باید حداقل ۴ رقم باشد' : 'PIN must be at least 4 digits')
-      return
-    }
-    if (adminPin !== adminPinConfirm) {
-      setPinError(lang === 'fa' ? 'رمزها مطابقت ندارند' : 'PINs do not match')
-      return
+    if (authType === 'pin') {
+      if (adminPin.length < 4) {
+        setPinError(lang === 'fa' ? 'رمز باید حداقل ۴ رقم باشد' : 'PIN must be at least 4 digits')
+        return
+      }
+      if (adminPin !== adminPinConfirm) {
+        setPinError(lang === 'fa' ? 'رمزها مطابقت ندارند' : 'PINs do not match')
+        return
+      }
+    } else {
+      if (adminPassword.length < 4) {
+        setPinError(lang === 'fa' ? 'رمز عبور باید حداقل ۴ کاراکتر باشد' : 'Password must be at least 4 characters')
+        return
+      }
+      if (adminPassword !== adminPasswordConfirm) {
+        setPinError(lang === 'fa' ? 'رمزهای عبور مطابقت ندارند' : 'Passwords do not match')
+        return
+      }
     }
     setSubmitting(true)
     try {
@@ -162,12 +176,14 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
         window.api.settings.set('language', lang),
         window.api.settings.set('theme', theme),
         window.api.settings.set('isSetupComplete', 'true'),
+        window.api.settings.set('loginMethod', authType),
       ])
       if (enableTax) {
         await window.api.settings.set('taxRate', '9')
       }
-      if (adminPin.length >= 4) {
-        await window.api.auth.createUser({ name: lang === 'fa' ? 'مدیر' : 'Admin', pinCode: adminPin, role: 'admin' })
+      const credential = authType === 'pin' ? adminPin : adminPassword
+      if (credential.length >= 4) {
+        await window.api.auth.createUser({ name: lang === 'fa' ? 'مدیر' : 'Admin', pinCode: credential, role: 'admin' })
       }
       useSettingsStore.getState().setLanguage(lang)
       useSettingsStore.getState().setTheme(theme)
@@ -549,6 +565,19 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
               </div>
 
               <div className="space-y-6">
+                {/* Auth Type Toggle */}
+                <div className="flex gap-2 justify-center">
+                  <button onClick={() => setAuthType('pin')} className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
+                    style={{ background: authType === 'pin' ? `linear-gradient(135deg, ${colors.primary}, ${colors.primary}cc)` : 'transparent', color: authType === 'pin' ? '#fff' : subtitleColor, border: `1px solid ${authType === 'pin' ? colors.primary : cardBorder}` }}>
+                    {lang === 'fa' ? 'رمز ۴ رقمی (PIN)' : '4-digit PIN'}
+                  </button>
+                  <button onClick={() => setAuthType('password')} className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
+                    style={{ background: authType === 'password' ? `linear-gradient(135deg, ${colors.primary}, ${colors.primary}cc)` : 'transparent', color: authType === 'password' ? '#fff' : subtitleColor, border: `1px solid ${authType === 'password' ? colors.primary : cardBorder}` }}>
+                    {lang === 'fa' ? 'رمز عبور متنی' : 'Text Password'}
+                  </button>
+                </div>
+
+                {authType === 'pin' ? (<>
                 <div>
                   <label className="text-xs font-medium mb-2 block" style={{ color: subtitleColor }}>
                     {lang === 'fa' ? 'رمز عبور ۴ رقمی (PIN)' : '4-digit PIN'}
@@ -581,11 +610,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                       />
                     ))}
                   </div>
-                  <p className="text-xs mt-2 text-center" style={{ color: subtitleColor, opacity: 0.7 }}>
-                    {lang === 'fa' ? 'این رمز برای ورود سریع به اپلیکیشن استفاده خواهد شد.' : 'This PIN is used for quick app login.'}
-                  </p>
                 </div>
-
                 <div>
                   <label className="text-xs font-medium mb-2 block" style={{ color: subtitleColor }}>
                     {lang === 'fa' ? 'تأیید رمز عبور' : 'Confirm PIN'}
@@ -593,7 +618,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                   <div className="flex flex-row-reverse gap-3 justify-center">
                     {Array.from({ length: 4 }).map((_, i) => (
                       <input
-                        key={`pinconf-${i}`}
+                        key={`pin-confirm-${i}`}
                         ref={(el) => { pinConfirmRefs.current[i] = el }}
                         type="text"
                         inputMode="numeric"
@@ -604,7 +629,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                         className="w-14 h-16 text-center text-2xl font-bold rounded-xl outline-none transition-all focus:ring-2"
                         style={{
                           background: pinBg,
-                          border: adminPinConfirm[i] ? `2px solid ${colors.primary}` : pinBorder,
+                          border: pinBorder,
                           color: colors.primary,
                         }}
                         onFocus={(e) => { 
@@ -612,32 +637,52 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                           e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,97,148,0.15)' 
                         }}
                         onBlur={(e) => { 
-                          e.currentTarget.style.borderColor = adminPinConfirm[i] ? colors.primary : (isDark ? 'rgba(191,199,210,0.2)' : '#bfc7d2'); 
+                          e.currentTarget.style.borderColor = isDark ? 'rgba(191,199,210,0.2)' : '#bfc7d2'; 
                           e.currentTarget.style.boxShadow = 'none' 
                         }}
                       />
                     ))}
                   </div>
+                </div>
+                </>) : (<>
+                <div>
+                  <label className="text-xs font-medium mb-2 block" style={{ color: subtitleColor }}>
+                    {lang === 'fa' ? 'رمز عبور' : 'Password'}
+                  </label>
+                  <input
+                    type="password"
+                    value={adminPassword}
+                    onChange={(e) => { setAdminPassword(e.target.value); setPinError('') }}
+                    placeholder={lang === 'fa' ? 'حداقل ۴ کاراکتر' : 'Min 4 characters'}
+                    className="w-full px-4 py-3 rounded-xl text-sm font-bold outline-none transition-all"
+                    style={{ background: pinBg, border: pinBorder, color: colors.primary }}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-2 block" style={{ color: subtitleColor }}>
+                    {lang === 'fa' ? 'تأیید رمز عبور' : 'Confirm Password'}
+                  </label>
+                  <input
+                    type="password"
+                    value={adminPasswordConfirm}
+                    onChange={(e) => { setAdminPasswordConfirm(e.target.value); setPinError('') }}
+                    placeholder={lang === 'fa' ? 'رمز عبور را دوباره وارد کنید' : 'Re-enter password'}
+                    className="w-full px-4 py-3 rounded-xl text-sm font-bold outline-none transition-all"
+                    style={{ background: pinBg, border: pinBorder, color: colors.primary }}
+                  />
+                </div>
+                </>)}
                   {pinError && (
                     <div className="mt-2 flex items-center justify-center gap-1.5">
                       <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#ba1a1a' }} />
                       <p className="text-xs" style={{ color: '#ba1a1a' }}>{pinError}</p>
                     </div>
                   )}
-                  {adminPin && adminPinConfirm && adminPin === adminPinConfirm && adminPin.length >= 4 && (
-                    <div className="mt-2 flex items-center justify-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#22c55e' }} />
-                      <p className="text-xs" style={{ color: '#22c55e' }}>
-                        {lang === 'fa' ? '✓ رمزها مطابقت دارند' : '✓ PINs match'}
-                      </p>
-                    </div>
-                  )}
                 </div>
-              </div>
 
               <button
                 onClick={handleSubmit}
-                disabled={adminPin.length < 4 || adminPin !== adminPinConfirm || submitting}
+                disabled={submitting || (authType === 'pin' ? adminPin.length < 4 || adminPin !== adminPinConfirm : adminPassword.length < 4 || adminPassword !== adminPasswordConfirm)}
                 className="w-full py-3.5 rounded-xl font-semibold text-base flex items-center justify-center gap-2 transition-all disabled:opacity-40 hover:scale-[1.02] active:scale-[0.98] mt-6"
                 style={{ 
                   background: colors.primary, 
