@@ -20,7 +20,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - run: npm ci
@@ -29,11 +29,17 @@ jobs:
 
       - run: npm run build
 
-      - run: npm run dist:${{ matrix.os == 'windows-latest' && 'win' || 'linux' }}
+      - name: Build Windows
         if: matrix.os == 'windows-latest'
+        run: npm run dist:win -- --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: npm run dist:linux
+      - name: Build Linux
         if: matrix.os == 'ubuntu-latest'
+        run: npm run dist:linux -- --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
@@ -43,5 +49,6 @@ jobs:
             release/*.AppImage
             release/*.deb
             release/*.zip
+            release/*.nsis.*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
