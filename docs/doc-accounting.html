@@ -1,23 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Accounting System — HesabDari Danial</title>
   <style>
-    :root{--primary:#006194;--bg:#0f172a;--card:#1e293b;--border:#334155;--text:#f1f5f9;--muted:#94a3b8}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);line-height:1.8}.container{max-width:960px;margin:0 auto;padding:40px 24px}h1{font-size:28px;margin-bottom:8px}h2{font-size:20px;margin:32px 0 12px;color:var(--primary);border-bottom:2px solid var(--primary);padding-bottom:8px}h3{font-size:16px;margin:20px 0 8px}p{line-height:1.8;margin-bottom:12px;color:var(--muted);font-size:14px}code{background:var(--card);padding:2px 6px;border-radius:4px;font-size:12px;color:#22c55e}pre{background:var(--card);padding:16px;border-radius:8px;overflow-x:auto;border:1px solid var(--border);font-size:12px;line-height:1.5}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{padding:8px 10px;text-align:left;border:1px solid var(--border);font-size:12px}th{background:var(--card);font-weight:600}.nav{margin-bottom:24px;padding:12px;background:var(--card);border-radius:8px}.nav a{color:var(--primary);text-decoration:none;font-size:13px;margin-right:12px}.note{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:13px}
+    :root { --primary: #006194; --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f1f5f9; --muted: #94a3b8; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); direction: ltr; }
+    .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: var(--card); border-right: 1px solid var(--border); padding: 20px; overflow-y: auto; }
+    .sidebar h1 { font-size: 16px; margin-bottom: 24px; color: var(--primary); }
+    .sidebar a { display: block; padding: 8px 12px; color: var(--muted); text-decoration: none; font-size: 13px; border-radius: 6px; margin-bottom: 2px; transition: all 0.2s; }
+    .sidebar a:hover, .sidebar a.active { background: var(--primary); color: #fff; }
+    .sidebar .section-title { font-size: 11px; text-transform: uppercase; color: var(--muted); margin: 16px 0 8px 12px; letter-spacing: 1px; }
+    .main { margin-left: 260px; padding: 40px; max-width: 900px; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 20px; margin: 32px 0 12px; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 8px; }
+    h3 { font-size: 16px; margin: 20px 0 8px; }
+    p { line-height: 1.8; margin-bottom: 12px; color: var(--muted); font-size: 14px; }
+    code { background: var(--card); padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #22c55e; }
+    pre { background: var(--card); padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid var(--border); font-size: 13px; line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { padding: 10px 12px; text-align: left; border: 1px solid var(--border); font-size: 13px; }
+    th { background: var(--card); font-weight: 600; }
+    ul, ol { color: var(--muted); font-size: 14px; margin: 8px 0 8px 20px; line-height: 2; }
+    li { margin-bottom: 4px; }
+    .note { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 13px; }
+    @media (max-width: 768px) { .sidebar { display: none; } .main { margin-left: 0; } }
   </style>
 </head>
 <body>
-  <div class="container">
-    <nav class="nav">
-      <a href="developer-en.html">Developer Guide</a>
-      <a href="doc-schema.html">Database Schema</a>
-      <a href="doc-api.html">API Reference</a>
-      <a href="doc-accounting.html">Accounting</a>
-      <a href="doc-backup.html">Backup & Migration</a>
-      <a href="doc-ui.html">UI Components</a>
-    </nav>
+  <nav class="sidebar">
+    <h1>HesabDari Danial</h1>
+    <div class="section-title">Documentation</div>
+    <a href="index.html">Overview</a>
+    <a href="doc-features.html">Features Guide</a>
+    <a href="doc-schema.html">Database Schema</a>
+    <a href="doc-api.html">API Reference</a>
+    <a href="doc-accounting.html" class="active">Accounting System</a>
+    <a href="doc-backup.html">Backup &amp; Migration</a>
+    <a href="doc-ui.html">UI Components</a>
+    <div class="section-title">Development</div>
+    <a href="developer-en.html">Developer Guide (English)</a>
+    <a href="developer-fa.html">Developer Guide (Farsi)</a>
+  </nav>
+
+  <main class="main">
     <h1>Accounting System</h1>
+    <p>Double-entry accounting with automatic journal entries, financial reports, and analytics.</p>
 
     <h2>1. Chart of Accounts</h2>
     <p>Uses a hierarchical chart of accounts with self-referencing <code>parentId</code>. Account types: asset, liability, equity, income, expense.</p>
@@ -47,46 +77,46 @@
     <p>Every financial transaction automatically posts double-entry journal entries via the repository functions.</p>
 
     <h3>Sale (Cash)</h3>
-<pre>
+    <pre>
 Dr. Cash (1100)               += total_amount
 Cr. Sales Revenue (4100)      += total_amount
 Dr. Sales COGS (5100)         += total COGS
 Cr. Inventory (1300)          += total COGS
-</pre>
+    </pre>
 
     <h3>Sale (Credit/Ledger)</h3>
-<pre>
+    <pre>
 Dr. Accounts Receivable (1400) += total_amount
 Cr. Sales Revenue (4100)       += total_amount
 + Customer ledger entry
-</pre>
+    </pre>
 
     <h3>Purchase</h3>
-<pre>
+    <pre>
 Dr. Inventory (1300)          += total_amount + tax
 Cr. Supplier Payable (2110)   += total_amount + tax
 + Supplier ledger entry
 + Stock increment per item
-</pre>
+    </pre>
 
     <h3>Expense</h3>
-<pre>
+    <pre>
 Dr. Expense Account (6100-6700) += amount
 Cr. Cash (1100)                += amount
-</pre>
+    </pre>
 
     <h3>Return (Sale)</h3>
-<pre>
+    <pre>
 Dr. Sales Revenue (4100)     -= refund amount
 Cr. Cash (1100)              -= refund amount
 Dr. Inventory (1300)         += restored stock value
 Cr. Sales COGS (5100)        += restored COGS
-</pre>
+    </pre>
 
     <h2>3. Reports</h2>
     <table>
       <tr><th>Report</th><th>Repository Function</th><th>Description</th></tr>
-      <tr><td>Profit & Loss</td><td><code>generateProfitLoss()</code></td><td>Revenue lines - COGS lines - OpEx lines = Net Profit</td></tr>
+      <tr><td>Profit &amp; Loss</td><td><code>generateProfitLoss()</code></td><td>Revenue lines - COGS lines - OpEx lines = Net Profit</td></tr>
       <tr><td>Balance Sheet</td><td><code>generateBalanceSheet()</code></td><td>Assets = Liabilities + Equity (as of date)</td></tr>
       <tr><td>Trial Balance</td><td><code>getTrialBalance()</code></td><td>All accounts with debit/credit totals and balance</td></tr>
       <tr><td>Cash Flow</td><td><code>generateCashFlow()</code></td><td>Inflow (debit cash) vs Outflow (credit cash)</td></tr>
@@ -99,14 +129,14 @@ Cr. Sales COGS (5100)        += restored COGS
       <li>Journal entries: total debit must equal total credit (tolerance 0.01)</li>
       <li>Account deletion: blocked if journal entries reference it</li>
       <li>Customer/supplier deletion: blocked if balance is non-zero</li>
-      <li>Sale creation: stock must be >= quantity (safety guard in decrementStock)</li>
+      <li>Sale creation: stock must be &gt;= quantity (safety guard in decrementStock)</li>
       <li>Rounding: totals rounded to nearest 500 tomans (configurable)</li>
     </ul>
 
     <h2>5. Analytics Tab</h2>
     <p>The "Analytics" tab in Accounting provides interactive charts:</p>
     <ul>
-      <li><strong>P&L Bar Chart:</strong> Revenue, COGS, OpEx, Net Profit comparison</li>
+      <li><strong>P&amp;L Bar Chart:</strong> Revenue, COGS, OpEx, Net Profit comparison</li>
       <li><strong>Expense Donut:</strong> Operating expenses by account (toggleable bar/donut)</li>
       <li><strong>Revenue Breakdown:</strong> Per-account revenue bars</li>
       <li><strong>Balance Distribution:</strong> Assets vs Liabilities vs Equity progress bars</li>
@@ -115,9 +145,11 @@ Cr. Sales COGS (5100)        += restored COGS
     </ul>
     <p>Controls: text size (sm/md/lg), 4 color themes, PNG export, chart type toggles.</p>
 
-    <div style="text-align:center;margin-top:48px;padding:24px;border-top:1px solid var(--border);color:var(--muted);font-size:12px">
-      <p><a href="developer-en.html" style="color:var(--primary)">Developer Guide</a> | <a href="developer-fa.html" style="color:var(--primary)">راهنمای توسعه‌دهندگان</a></p>
+    <div style="text-align: center; margin-top: 48px; padding: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px;">
+      <p>HesabDari Danial — Version 1.0</p>
+      <p>Last updated: June 2026</p>
+      <p style="margin-top: 8px"><a href="developer-en.html" style="color: var(--primary)">Developer Guide (English)</a> | <a href="developer-fa.html" style="color: var(--primary)">Developer Guide (Farsi)</a></p>
     </div>
-  </div>
+  </main>
 </body>
 </html>

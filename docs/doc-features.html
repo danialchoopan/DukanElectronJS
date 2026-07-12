@@ -1,43 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Features Guide — HesabDari Danial</title>
   <style>
-    :root{--primary:#006194;--bg:#0f172a;--card:#1e293b;--border:#334155;--text:#f1f5f9;--muted:#94a3b8}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);line-height:1.9}.container{max-width:960px;margin:0 auto;padding:40px 24px}h1{font-size:28px;margin-bottom:8px}h2{font-size:20px;margin:32px 0 12px;color:var(--primary);border-bottom:2px solid var(--primary);padding-bottom:8px}h3{font-size:16px;margin:20px 0 8px}p{line-height:1.9;margin-bottom:12px;color:var(--muted);font-size:14px}code{background:var(--card);padding:2px 6px;border-radius:4px;font-size:12px;color:#22c55e}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{padding:10px 12px;text-align:left;border:1px solid var(--border);font-size:13px}th{background:var(--card);font-weight:600}ul,ol{color:var(--muted);font-size:14px;margin:8px 0 8px 20px;line-height:2}li{margin-bottom:4px}.nav{margin-bottom:24px;padding:12px;background:var(--card);border-radius:8px}.nav a{color:var(--primary);text-decoration:none;font-size:13px;margin-right:12px}.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}.badge-green{background:rgba(34,197,94,.15);color:#22c55e}.badge-blue{background:rgba(59,130,246,.15);color:#3b82f6}.badge-yellow{background:rgba(245,158,11,.15);color:#f59e0b}.note{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:13px}
+    :root { --primary: #006194; --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f1f5f9; --muted: #94a3b8; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); direction: ltr; }
+    .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: var(--card); border-right: 1px solid var(--border); padding: 20px; overflow-y: auto; }
+    .sidebar h1 { font-size: 16px; margin-bottom: 24px; color: var(--primary); }
+    .sidebar a { display: block; padding: 8px 12px; color: var(--muted); text-decoration: none; font-size: 13px; border-radius: 6px; margin-bottom: 2px; transition: all 0.2s; }
+    .sidebar a:hover, .sidebar a.active { background: var(--primary); color: #fff; }
+    .sidebar .section-title { font-size: 11px; text-transform: uppercase; color: var(--muted); margin: 16px 0 8px 12px; letter-spacing: 1px; }
+    .main { margin-left: 260px; padding: 40px; max-width: 900px; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 20px; margin: 32px 0 12px; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 8px; }
+    h3 { font-size: 16px; margin: 20px 0 8px; }
+    p { line-height: 1.8; margin-bottom: 12px; color: var(--muted); font-size: 14px; }
+    code { background: var(--card); padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #22c55e; }
+    pre { background: var(--card); padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid var(--border); font-size: 13px; line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { padding: 10px 12px; text-align: left; border: 1px solid var(--border); font-size: 13px; }
+    th { background: var(--card); font-weight: 600; }
+    ul, ol { color: var(--muted); font-size: 14px; margin: 8px 0 8px 20px; line-height: 2; }
+    li { margin-bottom: 4px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .badge-green { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .badge-blue { background: rgba(59,130,246,0.15); color: #3b82f6; }
+    .badge-yellow { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .note { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 13px; }
+    @media (max-width: 768px) { .sidebar { display: none; } .main { margin-left: 0; } }
   </style>
 </head>
 <body>
-  <div class="container">
-    <nav class="nav">
-      <a href="developer-en.html">Developer Guide</a>
-      <a href="doc-schema.html">Database Schema</a>
-      <a href="doc-api.html">API Reference</a>
-      <a href="doc-accounting.html">Accounting</a>
-      <a href="doc-backup.html">Backup & Migration</a>
-      <a href="doc-ui.html">UI Components</a>
-      <a href="doc-features.html">Features Guide</a>
-    </nav>
+  <nav class="sidebar">
+    <h1>HesabDari Danial</h1>
+    <div class="section-title">Documentation</div>
+    <a href="index.html">Overview</a>
+    <a href="doc-features.html" class="active">Features Guide</a>
+    <a href="doc-schema.html">Database Schema</a>
+    <a href="doc-api.html">API Reference</a>
+    <a href="doc-accounting.html">Accounting System</a>
+    <a href="doc-backup.html">Backup &amp; Migration</a>
+    <a href="doc-ui.html">UI Components</a>
+    <div class="section-title">Development</div>
+    <a href="developer-en.html">Developer Guide (English)</a>
+    <a href="developer-fa.html">Developer Guide (Farsi)</a>
+  </nav>
 
+  <main class="main">
     <h1>Features Guide</h1>
     <p>Complete reference for all features in HesabDari Danial — what each feature does, where to find it, and how it works.</p>
 
-    <h2>1. Point of Sale (POS) — <code>فروش</code></h2>
+    <h2>1. Point of Sale (POS)</h2>
     <table>
       <tr><th>Feature</th><th>Description</th><th>Location</th></tr>
       <tr><td>Barcode Input</td><td>Type or scan barcode to add product to cart. Auto-search dropdown shows matching products.</td><td>Top of POS screen</td></tr>
-      <tr><td>Camera Scanner</td><td>Webcam barcode/QR scanning. Enabled in Settings > UI > Camera Scanner toggle.</td><td>Camera button next to barcode input</td></tr>
+      <tr><td>Camera Scanner</td><td>Webcam barcode/QR scanning. Enabled in Settings &gt; UI &gt; Camera Scanner toggle.</td><td>Camera button next to barcode input</td></tr>
       <tr><td>Cart Management</td><td>Add, remove, edit quantities inline. Supports weight-based products (kg).</td><td>Center panel</td></tr>
-      <tr><td>Sale Types</td><td>In-Person (حضوری) or Online (آنلاین) — displayed on invoice and reports.</td><td>Payment confirmation dialog</td></tr>
+      <tr><td>Sale Types</td><td>In-Person or Online — displayed on invoice and reports.</td><td>Payment confirmation dialog</td></tr>
       <tr><td>Payment Methods</td><td>Cash, Card, or Ledger (credit). Ledger requires customer selection.</td><td>Payment panel (right side)</td></tr>
-      <tr><td>Backdated Invoices</td><td>Custom date for invoice + option to skip inventory impact. For documentation without stock change.</td><td>Payment confirmation dialog > Date picker</td></tr>
+      <tr><td>Backdated Invoices</td><td>Custom date for invoice + option to skip inventory impact. For documentation without stock change.</td><td>Payment confirmation dialog &gt; Date picker</td></tr>
       <tr><td>Suspended Invoices</td><td>3 hold/resume slots. Save current cart and restore later.</td><td>Suspended slots (top of POS)</td></tr>
       <tr><td>Loose Items</td><td>Quick-add grid for weight-based products (fruits, vegetables).</td><td>Loose items panel</td></tr>
       <tr><td>Popular Items</td><td>Quick-add grid for top-selling products.</td><td>Popular items panel</td></tr>
       <tr><td>Receipt Printing</td><td>Thermal receipt + A4 invoice printing after sale.</td><td>Sale complete dialog</td></tr>
     </table>
 
-    <h2>2. Product Management — <code>افزودن کالا</code></h2>
+    <h2>2. Product Management</h2>
     <table>
       <tr><th>Feature</th><th>Description</th></tr>
       <tr><td>Auto Barcode</td><td>PRD-XXXXXX format auto-generated when barcode field is empty.</td></tr>
@@ -51,7 +82,7 @@
       <tr><td>Inline Editing</td><td>Click stock or purchase price cells to edit directly in the list view.</td></tr>
     </table>
 
-    <h2>3. Inventory Management — <code>انبارداری</code></h2>
+    <h2>3. Inventory Management</h2>
     <h3>Products Tab</h3>
     <ul>
       <li>Searchable, sortable, filterable product list with pagination</li>
@@ -69,14 +100,14 @@
       <li>Slow-moving items (not sold in 30+ days)</li>
       <li>A4 print and Excel export</li>
     </ul>
-    <h3>Analytics Tab — <code>تحلیل و نمودار</code></h3>
+    <h3>Analytics Tab</h3>
     <ul>
       <li><strong>Stock Status Donut:</strong> Healthy / Low / Out-of-stock products with counts</li>
       <li><strong>Stock Distribution Histogram:</strong> Products grouped by stock quantity ranges (0, 1-10, 11-30, etc.)</li>
       <li><strong>Category Value Chart:</strong> Bar or donut (toggleable) showing inventory value per category</li>
       <li><strong>Top 10 Products:</strong> Horizontal bars ranked by inventory value</li>
       <li><strong>Price Comparison:</strong> Side-by-side purchase vs sale price per category</li>
-      <li><strong>KPI Cards:</strong> Total items, sale value, cost value, potential profit (all in Iranian format: هزار/میلیون/میلیارد)</li>
+      <li><strong>KPI Cards:</strong> Total items, sale value, cost value, potential profit (all in Iranian format)</li>
     </ul>
     <h3>Adjustment Dialog</h3>
     <ul>
@@ -93,18 +124,18 @@
       <li>Date range filtering</li>
     </ul>
 
-    <h2>4. Accounting — <code>حسابداری</code></h2>
+    <h2>4. Accounting</h2>
     <h3>Dashboard Tab</h3>
     <ul>
       <li>Quick overview: total revenue, COGS, opEx, net profit</li>
       <li>Operating expenses donut chart</li>
-      <li>P&L bar chart</li>
+      <li>P&amp;L bar chart</li>
       <li>Manual journal entry form</li>
       <li>Recent journal entries list</li>
     </ul>
-    <h3>Analytics Tab — <code>تحلیل و نمودار</code></h3>
+    <h3>Analytics Tab</h3>
     <ul>
-      <li><strong>P&L Bar Chart:</strong> Revenue, COGS, Operating Expenses, Net Profit — 4 vertical bars</li>
+      <li><strong>P&amp;L Bar Chart:</strong> Revenue, COGS, Operating Expenses, Net Profit — 4 vertical bars</li>
       <li><strong>Expense Breakdown:</strong> Donut or bar chart (toggleable) of operating expenses by account</li>
       <li><strong>Revenue Breakdown:</strong> Progress bars for each revenue account</li>
       <li><strong>Balance Distribution:</strong> Assets vs Liabilities vs Equity with progress bars</li>
@@ -127,7 +158,7 @@
       <tr><td>Fiscal Periods</td><td>Manage accounting periods (open/close).</td></tr>
     </table>
 
-    <h2>5. Customers — <code>مشتریان</code></h2>
+    <h2>5. Customers</h2>
     <ul>
       <li><strong>CRUD:</strong> Create/edit customers with type (real/legal), address, notes, image</li>
       <li><strong>Ledger:</strong> View all transactions (charges, payments, sales) with running balance</li>
@@ -137,7 +168,7 @@
       <li><strong>Stats:</strong> Total spent, purchase count, last purchase date</li>
     </ul>
 
-    <h2>6. Suppliers — <code>تأمین‌کنندگان</code></h2>
+    <h2>6. Suppliers</h2>
     <ul>
       <li><strong>CRUD:</strong> Create/edit suppliers with company info</li>
       <li><strong>Purchases:</strong> Record purchases with items, quantities, unit costs</li>
@@ -147,10 +178,10 @@
       <li><strong>Accounting Sync:</strong> Purchases debit inventory, credit supplier payable</li>
     </ul>
 
-    <h2>7. Backup & Export/Import — <code>پشتیبان‌گیری</code></h2>
+    <h2>7. Backup &amp; Export/Import</h2>
     <h3>Auto Backup</h3>
     <ul>
-      <li>Toggle on/off in Settings > Backup</li>
+      <li>Toggle on/off in Settings &gt; Backup</li>
       <li>Interval: daily, weekly, or monthly</li>
       <li>Runs on app startup if enabled</li>
     </ul>
@@ -173,7 +204,7 @@
       <li>App reloads with fresh empty database</li>
     </ol>
 
-    <h2>8. Settings — <code>تنظیمات</code></h2>
+    <h2>8. Settings</h2>
     <table>
       <tr><th>Section</th><th>Settings</th></tr>
       <tr><td>Shop Info</td><td>Store name, phone, address (displayed on invoices)</td></tr>
@@ -187,7 +218,7 @@
       <tr><td>Print Customization</td><td>Invoice title, report title, footer, template selection, live preview</td></tr>
     </table>
 
-    <h2>9. Global Search — <code>جستجوی سراسری</code></h2>
+    <h2>9. Global Search</h2>
     <ul>
       <li>Full-text search across products, customers, suppliers</li>
       <li>Search by name, barcode, category, phone number</li>
@@ -195,7 +226,7 @@
       <li>Keyboard shortcut: Ctrl+K or the search button in sidebar</li>
     </ul>
 
-    <h2>10. Setup Wizard — <code>ویزارد راه‌اندازی</code></h2>
+    <h2>10. Setup Wizard</h2>
     <ul>
       <li>Appears on first run only</li>
       <li><strong>Step 1:</strong> Language, theme, store name/address/phone</li>
@@ -214,13 +245,13 @@
 
     <h2>12. Price Formatting</h2>
     <ul>
-      <li>Iranian number format: <code>formatPriceFA()</code> → "۱۰ میلیون", "۲.۵ میلیارد", "۱۵۰ هزار"</li>
+      <li>Iranian number format: <code>formatPriceFA()</code> → "10 million", "2.5 billion", "150 thousand"</li>
       <li>Comma separators: <code>formatPriceComma()</code> → "10,000,000"</li>
       <li>Inline editing: <code>FormattedPriceInput</code> component with live comma formatting</li>
-      <li>Chart labels: all use Iranian format (هزار/میلیون/میلیارد)</li>
+      <li>Chart labels: all use Iranian format</li>
     </ul>
 
-    <h2>13. Charts & Visualization</h2>
+    <h2>13. Charts &amp; Visualization</h2>
     <ul>
       <li><strong>Pure SVG:</strong> All charts built with inline SVG — no charting library dependency</li>
       <li><strong>4 Color Themes:</strong> Default, Ocean, Forest, Warm — switchable at runtime</li>
@@ -230,7 +261,7 @@
       <li><strong>No Data State:</strong> Clean empty state with icon and message when data is absent</li>
     </ul>
 
-    <h2>14. QR & Barcode System</h2>
+    <h2>14. QR &amp; Barcode System</h2>
     <ul>
       <li><strong>QR Generation:</strong> Proper ISO 18004 QR codes with Reed-Solomon error correction</li>
       <li><strong>Barcode Input:</strong> Text input with autocomplete + camera scanning</li>
@@ -258,7 +289,7 @@
       <li><strong>User Management:</strong> Role assignment, permission configuration, login/activity tracking</li>
     </ul>
 
-    <h2>17. Warranty & Repair Service</h2>
+    <h2>17. Warranty &amp; Repair Service</h2>
     <ul>
       <li><strong>Service Tickets:</strong> Full workflow: received → diagnosing → awaiting_parts → in_repair → completed → returned</li>
       <li><strong>Parts Management:</strong> Add/remove parts per ticket with cost tracking</li>
@@ -278,7 +309,7 @@
       <li><strong>Audit Trail:</strong> Every change logged in credit_history table</li>
     </ul>
 
-    <h2>19. Audit Log & Restore Points</h2>
+    <h2>19. Audit Log &amp; Restore Points</h2>
     <ul>
       <li><strong>Enhanced Audit:</strong> userName, beforeValue, afterValue, IP tracking with search/filters</li>
       <li><strong>Auto-cleanup:</strong> Configurable retention (30d, 90d, 6mo, 1yr, 2yr) — toggleable on/off</li>
@@ -298,9 +329,11 @@
       <li><strong>IPC + Preload:</strong> Schema version, dry-run, run, history, validate APIs</li>
     </ul>
 
-    <div style="text-align:center;margin-top:48px;padding:24px;border-top:1px solid var(--border);color:var(--muted);font-size:12px">
-      <p><a href="developer-en.html" style="color:var(--primary)">Developer Guide</a> | <a href="developer-fa.html" style="color:var(--primary)">راهنمای توسعه‌دهندگان</a> | <a href="index.html" style="color:var(--primary)">مستندات فنی</a></p>
+    <div style="text-align: center; margin-top: 48px; padding: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px;">
+      <p>HesabDari Danial — Version 1.0</p>
+      <p>Last updated: June 2026</p>
+      <p style="margin-top: 8px"><a href="developer-en.html" style="color: var(--primary)">Developer Guide (English)</a> | <a href="developer-fa.html" style="color: var(--primary)">Developer Guide (Farsi)</a></p>
     </div>
-  </div>
+  </main>
 </body>
 </html>

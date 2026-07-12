@@ -3,12 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مستندات توسعه‌دهندگان — حسابداری دانیال</title>
+  <title>راهنمای توسعه‌دهندگان — حسابداری دانیال</title>
   <style>
     :root { --primary: #006194; --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f1f5f9; --muted: #94a3b8; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); direction: rtl; line-height: 1.8; }
-    .container { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); direction: rtl; }
+    .sidebar { position: fixed; top: 0; right: 0; width: 260px; height: 100vh; background: var(--card); border-left: 1px solid var(--border); padding: 20px; overflow-y: auto; }
+    .sidebar h1 { font-size: 16px; margin-bottom: 24px; color: var(--primary); }
+    .sidebar a { display: block; padding: 8px 12px; color: var(--muted); text-decoration: none; font-size: 13px; border-radius: 6px; margin-bottom: 2px; transition: all 0.2s; }
+    .sidebar a:hover, .sidebar a.active { background: var(--primary); color: #fff; }
+    .sidebar .section-title { font-size: 11px; text-transform: uppercase; color: var(--muted); margin: 16px 0 8px 12px; letter-spacing: 1px; }
+    .main { margin-right: 260px; padding: 40px; max-width: 900px; }
     h1 { font-size: 28px; margin-bottom: 8px; }
     h2 { font-size: 20px; margin: 32px 0 12px; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 8px; }
     h3 { font-size: 16px; margin: 20px 0 8px; color: var(--text); }
@@ -27,19 +32,28 @@
     .warning { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 13px; }
     a { color: var(--primary); text-decoration: none; }
     a:hover { text-decoration: underline; }
-    .file-tree { font-family: monospace; font-size: 13px; line-height: 1.6; direction: ltr; text-align: left; }
-    .lang-switch { position: fixed; top: 16px; left: 16px; display: flex; gap: 8px; z-index: 100; }
-    .lang-switch a { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; background: var(--card); border: 1px solid var(--border); color: var(--muted); }
-    .lang-switch a.active { background: var(--primary); color: #fff; }
+    ul, ol { color: var(--muted); font-size: 14px; margin: 8px 0 8px 20px; line-height: 2; }
+    li { margin-bottom: 4px; }
+    @media (max-width: 768px) { .sidebar { display: none; } .main { margin-right: 0; } }
   </style>
 </head>
 <body>
-  <div class="lang-switch">
-    <a href="developer-fa.html" class="active">فارسی</a>
-    <a href="developer-en.html">English</a>
-  </div>
+  <nav class="sidebar">
+    <h1>حسابداری دانیال</h1>
+    <div class="section-title">مستندات</div>
+    <a href="index.html">نمای کلی</a>
+    <a href="doc-features.html">راهنمای قابلیت‌ها</a>
+    <a href="doc-schema.html">ساختار دیتابیس</a>
+    <a href="doc-api.html">مرجع API</a>
+    <a href="doc-accounting.html">سیستم حسابداری</a>
+    <a href="doc-backup.html">پشتیبان‌گیری و مهاجرت</a>
+    <a href="doc-ui.html">کامپوننت‌های UI</a>
+    <div class="section-title">توسعه</div>
+    <a href="developer-fa.html" class="active">راهنمای توسعه‌دهندگان (فارسی)</a>
+    <a href="developer-en.html">Developer Guide (English)</a>
+  </nav>
 
-  <div class="container">
+  <main class="main">
     <h1>راهنمای توسعه‌دهندگان</h1>
     <p>حسابداری دانیال — مستندات فنی برای توسعه‌دهندگان</p>
     <div class="note">
@@ -53,8 +67,7 @@
     </div>
 
     <h2>۱. ساختار پروژه</h2>
-    <div class="file-tree">
-<pre>
+    <pre>
 src/
 ├── main/                          # فرآیند اصلی Electron (Node.js)
 │   ├── database/
@@ -108,9 +121,7 @@ src/
 ├── preload/
 │   └── index.ts                    # پل ارتباطی UI با بک‌اند (window.api)
 └── types/
-    └── index.ts                    # تایپ‌های TypeScript مشترک
-</pre>
-    </div>
+    └── index.ts                    # تایپ‌های TypeScript مشترک</pre>
 
     <h2>۲. معماری داده‌ها</h2>
 
@@ -122,24 +133,24 @@ src/
 
     <h3>۲.۲ الگوی Repository</h3>
     <p>هر جدول یک فایل repository جداگانه دارد. توابع CRUD به صورت مستقیم از <code>getDatabase()</code> استفاده می‌کنند:</p>
-<pre>
+    <pre>
 // مثال: products.ts
 export function getAllProducts(): Product[] {
   const db = getDatabase()
   return db.prepare('SELECT * FROM products WHERE isActive = 1').all().map(formatProduct)
 }
-</pre>
+    </pre>
 
     <h3>۲.۳ الگوی IPC</h3>
     <p>تمام ارتباط UI با دیتابیس از طریق <code>ipcMain.handle()</code> در <code>handlers.ts</code> انجام می‌شود. UI از طریق <code>window.api</code> (preload) فراخوانی می‌کند:</p>
-<pre>
+    <pre>
 // main process (handlers.ts)
 ipcMain.handle('products:getAll', () => products.getAllProducts())
 
 // renderer (component)
 const r = await window.api.products.getAll()
 if (r.success && r.data) setProducts(r.data)
-</pre>
+    </pre>
 
     <h3>۲.۴ حسابداری دوطرفه</h3>
     <p>هر تراکنش مالی خودکار در دفتر کل ثبت می‌شود:</p>
@@ -153,12 +164,12 @@ if (r.success && r.data) setProducts(r.data)
 
     <h2>۳. مهاجرت خودکار</h2>
     <p>تابع <code>migrateSchema()</code> در <code>connection.ts</code> هنگام شروع برنامه اجرا می‌شود:</p>
-<pre>
+    <pre>
 // 1. PRAGMA table_info() — ستون‌های موجود را می‌خواند
 // 2. مقایسه با لیست ستون‌های مورد انتظار
 // 3. ALTER TABLE ADD COLUMN برای ستون‌های جدید
 // 4. ایدامپوتنت — پس از اولین اجرا no-op می‌شود
-</pre>
+    </pre>
     <div class="warning">
       <strong>هنگام اضافه کردن ستون جدید:</strong> ستون را به لیست <code>expectedColumns</code> در <code>migrateSchema()</code> اضافه کنید و همچنین در <code>CREATE TABLE</code> قرار دهید.
     </div>
@@ -197,7 +208,7 @@ if (r.success && r.data) setProducts(r.data)
     </table>
 
     <h2>۶. تست و اعتبارسنجی</h2>
-<pre>
+    <pre>
 # تایپ چک
 npx tsc --noEmit
 
@@ -206,7 +217,7 @@ npx vite build
 
 # اعتبارسنجی خودکار (۳۲ بررسی)
 node scripts/verify.js
-</pre>
+    </pre>
     <p>بررسی‌ها شامل: ساختار دیتابیس، توابع حسابداری، حذف ledger، پشتیبان‌گیری، صادرات هوشمند، و حداقل استفاده از <code>confirm()</code> هستند.</p>
 
     <h2>۷. راهنمای اضافه کردن قابلیت جدید</h2>
@@ -233,6 +244,6 @@ node scripts/verify.js
       <p>حسابداری دانیال — راهنمای توسعه‌دهندگان</p>
       <p>آخرین به‌روزرسانی: ژوئن ۲۰۲۶</p>
     </div>
-  </div>
+  </main>
 </body>
 </html>

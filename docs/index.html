@@ -23,6 +23,8 @@
     table { width: 100%; border-collapse: collapse; margin: 12px 0; }
     th, td { padding: 10px 12px; text-align: right; border: 1px solid var(--border); font-size: 13px; }
     th { background: var(--card); font-weight: 600; }
+    ul, ol { color: var(--muted); font-size: 14px; margin: 8px 0 8px 20px; line-height: 2; }
+    li { margin-bottom: 4px; }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
     .badge-green { background: rgba(34,197,94,0.15); color: #22c55e; }
     .badge-blue { background: rgba(59,130,246,0.15); color: #3b82f6; }
@@ -33,40 +35,17 @@
 <body>
   <nav class="sidebar">
     <h1>حسابداری دانیال</h1>
-    <div class="section-title">معرفی</div>
-    <a href="#overview">نمای کلی</a>
-    <a href="#architecture">معماری سیستم</a>
-    <a href="#tech-stack">تکنولوژی‌ها</a>
-    <div class="section-title">پایگاه داده</div>
-    <a href="#schema">ساختار جداول</a>
-    <a href="#repositories">لایه دسترسی به داده</a>
-    <a href="#accounting-sync">همگام‌سازی حسابداری</a>
-    <div class="section-title">API (IPC)</div>
-    <a href="#ipc-handlers">هندلرهای IPC</a>
-    <a href="#preload">لایه Preload</a>
-    <div class="section-title">رابط کاربری</div>
-    <a href="#components">کامپوننت‌ها</a>
-    <a href="#views">صفحات</a>
-    <a href="#store">مدیریت وضعیت</a>
-    <div class="section-title">امکانات</div>
-    <a href="#smart-export">خروجی/واردات هوشمند</a>
-    <a href="#migration">مهاجرت نسخه‌ها</a>
-    <a href="#backup">پشتیبان‌گیری و حذف دیتابیس</a>
-    <a href="#dbpath">مسیر پایگاه داده</a>
-    <div class="section-title">توسعه</div>
-    <a href="#structure">ساختار پوشه‌ها</a>
-    <a href="#conventions">قراردادها</a>
-    <a href="#testing">تست‌ها</a>
-    <div class="section-title">توسعه</div>
-    <a href="developer-fa.html">راهنمای توسعه‌دهندگان (فارسی)</a>
-    <a href="developer-en.html">Developer Guide (English)</a>
-    <div class="section-title">مستندات بخشی</div>
+    <div class="section-title">مستندات</div>
+    <a href="index.html" class="active">نمای کلی</a>
+    <a href="doc-features.html">راهنمای قابلیت‌ها</a>
     <a href="doc-schema.html">ساختار دیتابیس</a>
     <a href="doc-api.html">مرجع API</a>
     <a href="doc-accounting.html">سیستم حسابداری</a>
     <a href="doc-backup.html">پشتیبان‌گیری و مهاجرت</a>
     <a href="doc-ui.html">کامپوننت‌های UI</a>
-    <a href="doc-features.html">راهنمای قابلیت‌ها</a>
+    <div class="section-title">توسعه</div>
+    <a href="developer-fa.html">راهنمای توسعه‌دهندگان (فارسی)</a>
+    <a href="developer-en.html">Developer Guide (English)</a>
   </nav>
 
   <main class="main">
@@ -105,7 +84,10 @@
       <tr><td>اعتبار مشتری</td><td>حد اعتبار، مسدودی، امتیاز اعتباری</td><td><span class="badge badge-green">فعال</span></td></tr>
       <tr><td>هشدار انقضا</td><td>رنگ‌بندی: قرمز (&lt;۷ روز)، نارنجی، زرد</td><td><span class="badge badge-green">فعال</span></td></tr>
       <tr><td>سود هر کالا</td><td>گزارش سودآوری با فیلتر تاریخ و نمودار</td><td><span class="badge badge-green">فعال</span></td></tr>
-      <tr><td>نقاط بازیابی</td><td>ایجاد/حذف/تأیید با SHA-256</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>مرجوعی با تفکیک</td><td>تفکیک مرجوعی سالم و خسارتی با isDamaged</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>قیمت‌های اختصاری</td><td>نمایش مقادیر به هزار/میلیون/میلیارد</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>رمز عبور</td><td>پشتیبانی PIN و رمز عبور برای احراز هویت</td><td><span class="badge badge-green">فعال</span></td></tr>
+      <tr><td>سفارشی‌سازی ناوبری</td><td>ترتیب، نمایش/مخفی کردن آیتم‌های منو (navConfig)</td><td><span class="badge badge-green">فعال</span></td></tr>
     </table>
 
     <h2 id="architecture">معماری سیستم</h2>
@@ -118,10 +100,10 @@
 ├─────────────────────────────────┤
 │  Preload Bridge                 │
 ├─────────────────────────────────┤
-│  React UI (Renderer)            │
+│  React 18 UI (Renderer)         │
 │  ├── Views (صفحات)             │
 │  ├── Components (کامپوننت‌ها)   │
-│  ├── Store (Zustand)            │
+│  ├── Store (Zustand 5)          │
 │  └── Utils (ابزارها)            │
 └─────────────────────────────────┘</pre>
     <p>لایه اصلی ارتباط بین UI و دیتابیس از طریق <code>preload</code> و <code>ipcRenderer.invoke()</code> انجام می‌شود. هیچ کد مستقیم Node.js در renderer اجرا نمی‌شود.</p>
@@ -133,36 +115,39 @@
       <tr><td>بک‌اند</td><td>Electron 33 + Node.js</td></tr>
       <tr><td>پایگاه داده</td><td>SQLite (better-sqlite3)</td></tr>
       <tr><td>مدیریت وضعیت</td><td>Zustand 5</td></tr>
-      <tr><td>بیلد</td><td>Vite 6</td></tr>
+      <tr><td>بیلد</td><td>Vite 6 + electron-builder</td></tr>
+      <tr><td>تست</td><td>Vitest — ۵۷ تست در ۵ مجموعه</td></tr>
       <tr><td>تقویم</td><td>jalaali-js (Jalali/Persian)</td></tr>
       <tr><td>فونت</td><td>Vazirmatn (woff2 local)</td></tr>
     </table>
 
     <h2 id="schema">ساختار جداول پایگاه داده</h2>
-    <p>پایگاه داده SQLite شامل ۲۰ جدول اصلی است:</p>
+    <p>پایگاه داده SQLite شامل ۲۲+ جدول اصلی است:</p>
     <table>
       <tr><th>جدول</th><th>توضیح</th><th>کلیدها</th></tr>
       <tr><td><code>users</code></td><td>کاربران سیستم</td><td>id, pin_code, role</td></tr>
       <tr><td><code>products</code></td><td>کالاها با بارکد</td><td>id, barcode, title</td></tr>
       <tr><td><code>customers</code></td><td>مشتریان با حساب دفتری</td><td>id, name, balance</td></tr>
-      <tr><td><code>suppliers</code></td><td>تأمین‌کنندگان</td><td>id, name, balance</td></tr>
       <tr><td><code>sales</code></td><td>فاکتورهای فروش</td><td>id, invoiceNumber</td></tr>
       <tr><td><code>sale_items</code></td><td>اقلام فروش</td><td>id, saleId, productId</td></tr>
-      <tr><td><code>purchases</code></td><td>فاکتورهای خرید</td><td>id, invoiceNumber, supplierId</td></tr>
-      <tr><td><code>purchase_items</code></td><td>اقلام خرید</td><td>id, purchaseId, productId</td></tr>
+      <tr><td><code>customer_ledger</code></td><td>دفتر کل مشتریان</td><td>id, customerId, type</td></tr>
+      <tr><td><code>expenses</code></td><td>هزینه‌ها</td><td>id, category, amount</td></tr>
+      <tr><td><code>settings</code></td><td>تنظیمات کلید-مقدار</td><td>key (PK)</td></tr>
+      <tr><td><code>audit_log</code></td><td>لاگ عملیات</td><td>id, action, entityType</td></tr>
       <tr><td><code>accounts</code></td><td>دفتر حسابها (درختی)</td><td>id, code, type, parentId</td></tr>
       <tr><td><code>journal_entries</code></td><td>اسناد حسابداری</td><td>id, entryDate, referenceType</td></tr>
       <tr><td><code>journal_entry_lines</code></td><td>خطوط دفتر کل</td><td>id, entryId, accountId</td></tr>
-      <tr><td><code>customer_ledger</code></td><td>دفتر کل مشتریان</td><td>id, customerId, type</td></tr>
-      <tr><td><code>supplier_ledger</code></td><td>دفتر کل تأمین‌کنندگان</td><td>id, supplierId, type</td></tr>
+      <tr><td><code>returns</code></td><td>مرجوعی‌ها (isDamaged)</td><td>id, saleId, productId, isDamaged</td></tr>
       <tr><td><code>fiscal_periods</code></td><td>دوره‌های مالی</td><td>id, name, isClosed</td></tr>
-      <tr><td><code>expenses</code></td><td>هزینه‌ها</td><td>id, category, amount</td></tr>
-      <tr><td><code>returns</code></td><td>مرجوعی‌ها</td><td>id, saleId, productId</td></tr>
-      <tr><td><code>audit_log</code></td><td>لاگ عملیات</td><td>id, action, entityType</td></tr>
-      <tr><td><code>settings</code></td><td>تنظیمات کلید-مقدار</td><td>key (PK)</td></tr>
-      <tr><td><code>cash_register</code></td><td>صندوق نقدی</td><td>id, userId</td></tr>
       <tr><td><code>price_history</code></td><td>تاریخچه تغییرات قیمت</td><td>id, productId, priceType</td></tr>
       <tr><td><code>inventory_adjustments</code></td><td>تاریخچه اصلاحات موجودی</td><td>id, productId, adjustmentType</td></tr>
+      <tr><td><code>cross_sell_rules</code></td><td>قوانین فروش مکمل</td><td>id, ruleType, priority</td></tr>
+      <tr><td><code>cross_sell_rule_items</code></td><td>اقلام قوانین فروش مکمل</td><td>id, ruleId, productId</td></tr>
+      <tr><td><code>installments</code></td><td>اقساط</td><td>id, saleId, customerId</td></tr>
+      <tr><td><code>proformas</code></td><td>پیش‌فاکتورها</td><td>id, invoiceNumber</td></tr>
+      <tr><td><code>service_tickets</code></td><td>تیکت‌های خدمات</td><td>id, customerId, status</td></tr>
+      <tr><td><code>customer_credit</code></td><td>اعتبار مشتریان</td><td>id, customerId, creditLimit</td></tr>
+      <tr><td><code>migration_history</code></td><td>تاریخچه مهاجرت</td><td>id, fromVersion, toVersion</td></tr>
     </table>
 
     <h2 id="accounting-sync">همگام‌سازی خودکار با حسابداری</h2>
@@ -181,7 +166,7 @@
     <p>تمام ارتباط بین UI و دیتابیس از طریق هندلرهای IPC در فایل <code>src/main/ipc/handlers.ts</code> انجام می‌شود.</p>
     <table>
       <tr><th>کانال</th><th>توضیح</th></tr>
-      <tr><td><code>auth:login</code></td><td>ورود با رمز</td></tr>
+      <tr><td><code>auth:login</code></td><td>ورود با PIN/رمز عبور</td></tr>
       <tr><td><code>auth:createUser</code></td><td>ایجاد کاربر</td></tr>
       <tr><td><code>auth:updateUser</code></td><td>ویرایش کاربر</td></tr>
       <tr><td><code>products:getAll</code></td><td>لیست تمام کالاها</td></tr>
@@ -194,6 +179,7 @@
       <tr><td><code>purchases:create</code></td><td>ثبت خرید با حسابداری خودکار</td></tr>
       <tr><td><code>suppliers:pay</code></td><td>پرداخت به تأمین‌کننده</td></tr>
       <tr><td><code>sales:create</code></td><td>ثبت فروش با کنترل موجودی</td></tr>
+      <tr><td><code>returns:create</code></td><td>ثبت مرجوعی (isDamaged)</td></tr>
       <tr><td><code>journal:getEntries</code></td><td>روزنامه حسابداری</td></tr>
       <tr><td><code>reports:getTrialBalance</code></td><td>تراز آزمایشی</td></tr>
       <tr><td><code>reports:getProfitLoss</code></td><td>صورت سود و زیان</td></tr>
@@ -202,6 +188,7 @@
       <tr><td><code>backup:restore</code></td><td>بازیابی از پشتیبان</td></tr>
       <tr><td><code>smartExport:execute</code></td><td>خروجی هوشمند</td></tr>
       <tr><td><code>smartImport:execute</code></td><td>واردات هوشمند</td></tr>
+      <tr><td><code>migration:run</code></td><td>اجرای مهاجرت دیتابیس</td></tr>
     </table>
 
     <h2 id="views">صفحات (Views)</h2>
@@ -221,7 +208,7 @@
 
     <h2 id="smart-export">خروجی/واردات هوشمند</h2>
     <p>امکان انتخاب بخش‌های دلخواه برای خروجی/واردات با ویژگی‌های زیر:</p>
-    <ul style="color: var(--muted); line-height: 2;">
+    <ul>
       <li>۱۲ ماژول قابل انتخاب (محصولات، مشتریان، فروش‌ها و ...)</li>
       <li>تشخیص خودکار وابستگی بین بخش‌ها</li>
       <li>رمزنگاری AES-256 و امضای دیجیتال HMAC-SHA256</li>
@@ -232,7 +219,7 @@
 
     <h2 id="migration">مهاجرت نسخه‌ها</h2>
     <p>سیستم از نسخه‌های مختلف پشتیبانی می‌کند. فرآیند مهاجرت:</p>
-    <ol style="color: var(--muted); line-height: 2.2;">
+    <ol>
       <li>تشخیص خودکار نسخه فایل ورودی</li>
       <li>بررسی سازگاری با نسخه فعلی</li>
       <li>مهاجرت خودکار داده‌ها (افزودن فیلدهای جدید)</li>
@@ -263,8 +250,7 @@
       <tr><td>macOS</td><td><code>~/Library/Application Support/hesabdari-danial/pos.db</code></td></tr>
       <tr><td>Linux</td><td><code>~/.config/hesabdari-danial/pos.db</code></td></tr>
     </table>
-    <p style="color: var(--muted); font-size: 13px;">پشتیبان‌ها در پوشه <code>backups/</code> کنار فایل اصلی ذخیره می‌شوند.</p>
-    <p style="color: var(--muted); font-size: 13px;">برای نصب مجدد: از دکمه «حذف کامل دیتابیس» در تنظیمات > پشتیبان‌گیری استفاده کنید، یا فایل <code>pos.db</code> و پوشه <code>backups/</code> را دستی حذف کنید.</p>
+    <p>پشتیبان‌ها در پوشه <code>backups/</code> کنار فایل اصلی ذخیره می‌شوند.</p>
 
     <h2 id="structure">ساختار پوشه‌ها</h2>
     <pre>
@@ -272,7 +258,7 @@ src/
 ├── main/                          # فرآیند اصلی Electron
 │   ├── database/
 │   │   ├── connection.ts           # اتصال و ایجاد جداول
-│   │   ├── repositories/           # لایه دسترسی به داده (۱۸ فایل)
+│   │   ├── repositories/           # لایه دسترسی به داده (۱۸+ فایل)
 │   │   ├── backup.ts               # پشتیبان‌گیری و بازیابی
 │   │   ├── smartExport.ts          # خروجی/واردات هوشمند
 │   │   ├── migration.ts            # مهاجرت نسخه‌ها
@@ -302,22 +288,23 @@ src/
     <table>
       <tr><th>موضوع</th><th>قرارداد</th></tr>
       <tr><td>کامنت‌گذاری</td><td>JSDoc روی تمام توابع، بدون ایموجی، حرفه‌ای و استاندارد</td></tr>
-      <tr><td>تست‌ها</td><td>۱۴ تست واحد: ۱۲ برای خروجی هوشمند + ۲ برای پشتیبان + ۸ برای مهاجرت</td></tr>
+      <tr><td>تست‌ها</td><td>۵۷ تست واحد در ۵ مجموعه با Vitest</td></tr>
       <tr><td>تغییرات</td><td>Conventional Commits: <code>&lt;type&gt;[scope]: &lt;description&gt;</code></td></tr>
       <tr><td>ایموجی</td><td>ممنوع در کامنت‌ها و کد</td></tr>
       <tr><td>فرمت ریسپانسیو</td><td>RTL، پشتیبانی از تم تاریک/روشن</td></tr>
     </table>
 
     <h2 id="testing">تست‌ها</h2>
-    <p>تست‌ها در سه بخش اجرا می‌شوند:</p>
+    <p>تست‌ها با Vitest اجرا می‌شوند — ۵۷ تست در ۵ مجموعه:</p>
     <table>
       <tr><th>فایل</th><th>تعداد</th><th>موضوع</th></tr>
       <tr><td><code>backup.test.ts</code></td><td>۱۱</td><td>ایجاد، بازیابی، یکپارچگی، نسخه</td></tr>
       <tr><td><code>smartExport.test.ts</code></td><td>۱۲</td><td>خروجی/واردات، وابستگی‌ها، امنیت</td></tr>
       <tr><td><code>migration.test.ts</code></td><td>۸</td><td>مهاجرت، سازگاری نسخه‌ها</td></tr>
-      <tr><td><code>scripts/verify.js</code></td><td>۲۷</td><td>بررسی خودکار ریاضیات و اتصالات</td></tr>
+      <tr><td><code>accounting.test.ts</code></td><td>۱۴</td><td>حسابداری دوطرفه، تراز، سود/زیان</td></tr>
+      <tr><td><code>sales.test.ts</code></td><td>۱۲</td><td>فروش، مرجوعی، موجودی</td></tr>
     </table>
-    <p>برای اجرا: <code>backup:runTests</code>، <code>smartExport:runTests</code>، <code>migration:runTests</code> از طریق IPC</p>
+    <p>برای اجرا: <code>npm test</code></p>
 
     <h2 id="components">ساختار کامپوننت‌ها</h2>
     <table>
@@ -342,7 +329,7 @@ src/
     <div style="text-align: center; margin-top: 48px; padding: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px;">
       <p>حسابداری دانیال — نسخه ۱.۰</p>
       <p>آخرین به‌روزرسانی: ژوئن ۲۰۲۶</p>
-      <p style="margin-top: 8px"><a href="developer-fa.html" style="color: var(--primary)">راهنمای توسعه‌دهندگان (فارسی)</a> | <a href="developer-en.html" style="color: var(--primary)">Developer Guide (English)</a></p>
+      <p style="margin-top: 8px"><a href="developer-fa.html" style="color: var(--primary)">راهنمای توسعه‌دهندگان (فارسی)</a> | <a href="developer-en.html" style="color: var(--primary)">Developer Guide (English)</a> | <a href="doc-features.html" style="color: var(--primary)">راهنمای قابلیت‌ها</a></p>
     </div>
   </main>
 </body>
