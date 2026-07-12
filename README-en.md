@@ -27,7 +27,7 @@
 
 ## Quick Links
 
-| [![](https://img.shields.io/badge/🚀_Setup_Guide-Get_Started-blue)](SETUP-en.md) | [![](https://img.shields.io/badge/📚_Technical_Docs-Deep_Dive-green)](TECHNICAL-en.md) | [![](https://img.shields.io/badge/📋_Implementation_Plan-Roadmap-orange)](IMPLEMENTATION_PLAN.md) |
+| [![](https://img.shields.io/badge/🚀_Setup_Guide-Get_Started-blue)](SETUP-en.md) | [![](https://img.shields.io/badge/📚_Technical_Docs-Deep_Dive-green)](TECHNICAL-en.md) |
 |---|---|---|
 
 ---
@@ -198,7 +198,6 @@ npm run dev
 | **[SETUP-en.md](SETUP-en.md)** | English | Installation guide |
 | **[TECHNICAL.md](TECHNICAL.md)** | فارسی | Technical documentation |
 | **[TECHNICAL-en.md](TECHNICAL-en.md)** | English | Technical documentation |
-| **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)** | English | Feature implementation plan |
 | [docs/index.html](docs/index.html) | فارسی | Full technical reference |
 | [docs/developer-fa.html](docs/developer-fa.html) | فارسی | Developer guide |
 | [docs/developer-en.html](docs/developer-en.html) | English | Developer guide |

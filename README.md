@@ -27,7 +27,7 @@
 
 ## دسترسی سریع
 
-| [![](https://img.shields.io/badge/🚀_نصب_و_راه_اندازی-نحوه_شروع-blue)](SETUP.md) | [![](https://img.shields.io/badge/📚_مستندات_فنی-توضیحات_تکمیلی-green)](TECHNICAL.md) | [![](https://img.shields.io/badge/📋_برنامه_پیاده_سازی-نقشه_راه-orange)](IMPLEMENTATION_PLAN.md) |
+| [![](https://img.shields.io/badge/🚀_نصب_و_راه_اندازی-نحوه_شروع-blue)](SETUP.md) | [![](https://img.shields.io/badge/📚_مستندات_فنی-توضیحات_تکمیلی-green)](TECHNICAL.md) |
 |---|---|---|
 
 ---
@@ -199,7 +199,6 @@ npm run dev
 | **[SETUP-en.md](SETUP-en.md)** | English | Installation guide |
 | **[TECHNICAL.md](TECHNICAL.md)** | فارسی | مستندات فنی و معماری |
 | **[TECHNICAL-en.md](TECHNICAL-en.md)** | English | Technical documentation |
-| **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)** | English | Feature implementation plan |
 | [docs/index.html](docs/index.html) | فارسی | مرجع فنی کامل |
 | [docs/developer-fa.html](docs/developer-fa.html) | فارسی | راهنمای توسعه‌دهندگان |
 | [docs/developer-en.html](docs/developer-en.html) | English | Developer guide |
