@@ -192,8 +192,36 @@ export default function AddProduct() {
   const [bulkRows, setBulkRows] = useState<string[][]>([])
   const [bulkMapping, setBulkMapping] = useState<Record<string, number>>({ title: 0, barcode: -1, category: -1, purchase_price: -1, sale_price: -1, stock: -1 })
   const [bulkCategory, setBulkCategory] = useState('')
+  const [bulkStockMode, setBulkStockMode] = useState<'replace' | 'add'>('replace')
+  const [showBulkDupConfirm, setShowBulkDupConfirm] = useState(false)
+  const [bulkDupCount, setBulkDupCount] = useState(0)
+  const [bulkPresets, setBulkPresets] = useState<Record<string, { mapping: Record<string, number>; category: string }>>(() => {
+    try { return JSON.parse(localStorage.getItem('bulkImportPresets') || '{}') } catch { return {} }
+  })
 
   // ─── Excel Import Handlers ──────────────────────────────
+
+  /** Auto-detect column mapping from header names */
+  const autoDetectMapping = (headers: string[]): Record<string, number> => {
+    const patterns: Record<string, string[]> = {
+      title: ['نام', 'name', 'product', 'کالا', 'محصول', 'title', 'عنوان', 'نام کالا'],
+      barcode: ['بارکد', 'barcode', 'code', 'کد', 'کد کالا', 'qr'],
+      category: ['دسته', 'category', 'دسته‌بندی', 'گروه', 'group', 'نوع'],
+      purchase_price: ['قیمت خرید', 'خرید', 'purchase', 'cost', 'fih', 'فی خرید', 'قیمت خرید'],
+      sale_price: ['قیمت فروش', 'فروش', 'sale', 'price', 'قیمت', 'فی فروش', 'قیمت فروش'],
+      stock: ['موجودی', 'stock', 'تعداد', 'count', 'quantity', 'مقدار', 'انبار'],
+    }
+    const mapping: Record<string, number> = { title: -1, barcode: -1, category: -1, purchase_price: -1, sale_price: -1, stock: -1 }
+    for (const [field, words] of Object.entries(patterns)) {
+      for (let i = 0; i < headers.length; i++) {
+        const h = headers[i].toLowerCase().trim()
+        if (words.some(w => h.includes(w))) { mapping[field] = i; break }
+      }
+    }
+    // If title not found, default to first column
+    if (mapping.title === -1 && headers.length > 0) mapping.title = 0
+    return mapping
+  }
 
   /** Parse an uploaded Excel/CSV file into headers + rows */
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,6 +237,7 @@ export default function AddProduct() {
     const rows = raw.slice(1).filter((r: any[]) => r.some((c: any) => c !== undefined && c !== ''))
     setBulkHeaders(headers)
     setBulkRows(rows.map((r: any[]) => r.map((c: any) => String(c ?? ''))))
+    setBulkMapping(autoDetectMapping(headers))
     setBulkStep('mapping')
     e.target.value = ''
   }
@@ -237,6 +266,45 @@ export default function AddProduct() {
     })).filter(p => p.title)
   }
 
+  /** Check for duplicates by comparing barcodes against existing products */
+  const checkDuplicates = async (products: any[]): Promise<(typeof products[0] & { isDuplicate: boolean })[]> => {
+    const allProducts = await window.api.products.getAll()
+    if (!allProducts.success || !allProducts.data) return []
+    const existingBarcodes = new Set(allProducts.data.map((p: any) => p.barcode).filter(Boolean))
+    return products.map(p => ({ ...p, isDuplicate: p.barcode ? existingBarcodes.has(p.barcode) : false })) as any[]
+  }
+
+  /** Save current mapping as a named preset */
+  const savePreset = (name: string) => {
+    const updated = { ...bulkPresets, [name]: { mapping: bulkMapping, category: bulkCategory } }
+    setBulkPresets(updated)
+    localStorage.setItem('bulkImportPresets', JSON.stringify(updated))
+  }
+
+  /** Load a saved preset */
+  const loadPreset = (name: string) => {
+    const preset = bulkPresets[name]
+    if (preset) { setBulkMapping(preset.mapping); setBulkCategory(preset.category) }
+  }
+
+  /** Delete a saved preset */
+  const deletePreset = (name: string) => {
+    const updated = { ...bulkPresets }
+    delete updated[name]
+    setBulkPresets(updated)
+    localStorage.setItem('bulkImportPresets', JSON.stringify(updated))
+  }
+
+  /** Get category breakdown for preview chart */
+  const getCategoryBreakdown = () => {
+    const cats: Record<string, number> = {}
+    for (const row of bulkRows) {
+      const cat = row[bulkMapping.category] || bulkCategory || 'بدون دسته'
+      cats[cat] = (cats[cat] || 0) + 1
+    }
+    return Object.entries(cats).sort((a, b) => b[1] - a[1])
+  }
+
   /** Delete a row from the editable preview */
   const removeBulkRow = (index: number) => {
     setBulkRows(prev => prev.filter((_, i) => i !== index))
@@ -250,6 +318,15 @@ export default function AddProduct() {
   /** Add a blank row */
   const addBulkRow = () => {
     setBulkRows(prev => [...prev, new Array(bulkHeaders.length).fill('')])
+  }
+
+  /** Perform the actual bulk import */
+  const performBulkImport = async () => {
+    const prods = buildMappedProducts()
+    if (prods.length === 0) return
+    setBulkStep('importing')
+    const r = await window.api.products.bulkImport(prods)
+    if (r.success && r.data) setBulkResults(r.data.results)
   }
 
   /** Reset bulk import state */
@@ -331,6 +408,20 @@ export default function AddProduct() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bulk Import Duplicate Confirmation */}
+      {showBulkDupConfirm && (
+        <Dialog open={true} onClose={() => setShowBulkDupConfirm(false)}
+          title="کالاهای تکراری" maxWidth="max-w-sm"
+          icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2"><path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>}
+          footer={<>
+            <button onClick={() => setShowBulkDupConfirm(false)} className="px-4 py-2 rounded-xl text-sm font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>لغو</button>
+            <button onClick={() => { setShowBulkDupConfirm(false); performBulkImport() }} className="px-5 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #006194, #007bb9)' }}>تایید و جایگزینی</button>
+          </>}>
+          <p className="text-sm mb-2" style={{ color: textPrimary }}>{bulkDupCount} کالا تکراری شناسایی شد.</p>
+          <p className="text-xs" style={{ color: textSecondary }}>کالاهای تکراری با داده‌های جدید جایگزین خواهند شد.</p>
+        </Dialog>
       )}
 
       {/* Header */}
@@ -830,23 +921,79 @@ export default function AddProduct() {
                   </table>
                 </div>
 
+                {/* Category Breakdown Chart */}
+                {bulkRows.length > 0 && bulkMapping.category >= 0 && (
+                  <div className="p-3 rounded-xl" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cardBorder}` }}>
+                    <p className="text-[10px] font-bold mb-2" style={{ color: textSecondary }}>توزیع دسته‌بندی</p>
+                    <div className="space-y-1">
+                      {getCategoryBreakdown().map(([cat, count]) => (
+                        <div key={cat} className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold w-20 truncate" style={{ color: textPrimary }}>{cat}</span>
+                          <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#1e293b' : '#f1f5f9' }}>
+                            <div className="h-full rounded-full" style={{ width: `${(count / bulkRows.length) * 100}%`, backgroundColor: primary, opacity: 0.7 }} />
+                          </div>
+                          <span className="text-[10px] font-bold" style={{ color: textSecondary }}>{count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Actions */}
-                <div className="flex gap-2 items-center">
-                  <button onClick={addBulkRow} className="text-xs px-3 py-1.5 rounded-lg font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>+ افزودن ردیف</button>
-                  <div className="flex-1" />
-                  <button onClick={() => { setBulkStep('input'); setBulkRows([]); setBulkHeaders([]) }} className="px-3 py-1.5 rounded-xl text-xs font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>بازگشت</button>
-                  <button onClick={() => { setShowBulkForm(false); resetBulkImport() }} className="px-3 py-1.5 rounded-xl text-xs font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>لغو</button>
-                  <button onClick={async () => {
-                    const products = buildMappedProducts()
-                    if (products.length === 0) return
-                    setBulkStep('importing')
-                    const r = await window.api.products.bulkImport(products)
-                    if (r.success && r.data) setBulkResults(r.data.results)
-                  }} disabled={bulkRows.length === 0}
-                    className="px-5 py-2 rounded-xl text-xs font-bold text-white"
-                    style={{ background: bulkRows.length > 0 ? `linear-gradient(135deg, ${primary}, #007bb9)` : '#94a3b8' }}>
-                    ورود {bulkRows.length} کالا
-                  </button>
+                <div className="space-y-2">
+                  <div className="flex gap-2 items-center">
+                    <button onClick={addBulkRow} className="text-xs px-3 py-1.5 rounded-lg font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>+ افزودن ردیف</button>
+                    <div className="flex-1" />
+                    <button onClick={() => { setBulkStep('input'); setBulkRows([]); setBulkHeaders([]) }} className="px-3 py-1.5 rounded-xl text-xs font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>بازگشت</button>
+                    <button onClick={() => { setShowBulkForm(false); resetBulkImport() }} className="px-3 py-1.5 rounded-xl text-xs font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>لغو</button>
+                    <button onClick={async () => {
+                      const prods = buildMappedProducts()
+                      if (prods.length === 0) return
+                      const checked = await checkDuplicates(prods)
+                      const dupes = checked.filter((p: any) => p.isDuplicate)
+                      if (dupes.length > 0) {
+                        setBulkDupCount(dupes.length)
+                        setShowBulkDupConfirm(true)
+                        return
+                      }
+                      setBulkStep('importing')
+                      const r = await window.api.products.bulkImport(prods)
+                      if (r.success && r.data) setBulkResults(r.data.results)
+                    }} disabled={bulkRows.length === 0}
+                      className="px-5 py-2 rounded-xl text-xs font-bold text-white"
+                      style={{ background: bulkRows.length > 0 ? `linear-gradient(135deg, ${primary}, #007bb9)` : '#94a3b8' }}>
+                      ورود {bulkRows.length} کالا
+                    </button>
+                  </div>
+                  <div className="flex gap-3 items-center">
+                    {/* Stock Mode */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold" style={{ color: textSecondary }}>موجودی:</span>
+                      <button onClick={() => setBulkStockMode('replace')} className="px-2 py-0.5 rounded text-[10px] font-bold"
+                        style={{ backgroundColor: bulkStockMode === 'replace' ? primary : 'transparent', color: bulkStockMode === 'replace' ? '#fff' : textSecondary, border: `1px solid ${bulkStockMode === 'replace' ? primary : cardBorder}` }}>جایگزین</button>
+                      <button onClick={() => setBulkStockMode('add')} className="px-2 py-0.5 rounded text-[10px] font-bold"
+                        style={{ backgroundColor: bulkStockMode === 'add' ? primary : 'transparent', color: bulkStockMode === 'add' ? '#fff' : textSecondary, border: `1px solid ${bulkStockMode === 'add' ? primary : cardBorder}` }}>افزودن</button>
+                    </div>
+                    {/* Presets */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold" style={{ color: textSecondary }}>قالب:</span>
+                      <select onChange={e => { if (e.target.value) { loadPreset(e.target.value); e.currentTarget.value = '' } }} value=""
+                        className="text-[10px] px-2 py-0.5 rounded" style={{ backgroundColor: isDark ? '#1e293b' : '#fff', border: `1px solid ${cardBorder}`, color: textPrimary }}>
+                        <option value="">— انتخاب —</option>
+                        {Object.keys(bulkPresets).map(name => <option key={name} value={name}>{name}</option>)}
+                      </select>
+                      <input onKeyDown={e => { if (e.key === 'Enter' && e.currentTarget.value.trim()) { savePreset(e.currentTarget.value.trim()); e.currentTarget.value = '' } }}
+                        placeholder="ذخیره قالب" className="text-[10px] px-2 py-0.5 rounded w-20"
+                        style={{ backgroundColor: isDark ? '#1e293b' : '#fff', border: `1px solid ${cardBorder}`, color: textPrimary }} />
+                      {Object.keys(bulkPresets).length > 0 && (
+                        <select onChange={e => { if (e.target.value) deletePreset(e.target.value) }} value=""
+                          className="text-[10px] px-2 py-0.5 rounded" style={{ backgroundColor: isDark ? '#1e293b' : '#fff', border: `1px solid #ef4444`, color: '#ef4444' }}>
+                          <option value="">حذف قالب</option>
+                          {Object.keys(bulkPresets).map(name => <option key={name} value={name}>{name}</option>)}
+                        </select>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
