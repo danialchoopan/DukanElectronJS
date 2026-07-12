@@ -5,7 +5,8 @@
  *
  * Key exports:
  * - printA4Report(): Opens a new window with styled HTML, calls window.print()
- * - downloadExcel(): Generates CSV with BOM for Farsi compatibility in Excel
+ * - downloadExcel(): Generates real .xlsx file via xlsx library
+ * - downloadCSV(): Generates CSV with BOM for Farsi compatibility
  * - setShopName/setTaxRate/setPrintCustomization(): Populate module caches
  */
 
@@ -163,7 +164,28 @@ export async function printA4Report(html: string, title: string, options?: {
   win.print()
 }
 
-export function downloadExcel(filename: string, headers: string[], rows: any[][]): void {
+/**
+ * Downloads a real Excel (.xlsx) file using the xlsx library.
+ * @param filename - Output filename (should end with .xlsx)
+ * @param sheetName - Name of the worksheet
+ * @param headers - Column headers array
+ * @param rows - Data rows array
+ */
+export async function downloadExcel(filename: string, headers: string[], rows: any[][], sheetName = 'Sheet1'): Promise<void> {
+  const XLSX = await import('xlsx')
+  const wb = XLSX.utils.book_new()
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows])
+  XLSX.utils.book_append_sheet(wb, ws, sheetName)
+  // Ensure filename ends with .xlsx
+  const safeFilename = filename.endsWith('.xlsx') ? filename : filename.replace(/\.\w+$/, '') + '.xlsx'
+  XLSX.writeFile(wb, safeFilename)
+}
+
+/**
+ * Downloads a CSV file with BOM for Farsi/Excel compatibility.
+ * Kept as fallback for simple text exports.
+ */
+export function downloadCSV(filename: string, headers: string[], rows: any[][]): void {
   const BOM = '\uFEFF'
   let csv = BOM + headers.join(',') + '\n'
   for (const row of rows) {

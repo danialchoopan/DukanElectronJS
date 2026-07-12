@@ -374,10 +374,10 @@ export default function AddProduct() {
     await printA4Report(html, 'لیست کالاها')
   }
 
-  const handleExcelProducts = () => {
+  const handleExcelProducts = async () => {
     const headers = ['بارکد', 'نام', 'دسته', 'موجودی', 'حداقل موجودی', 'قیمت خرید', 'قیمت فروش', 'وضعیت']
     const csvRows = products.map((p: any) => [p.barcode, p.title, p.category || '-', p.stock, p.minStock, p.purchase_price, p.sale_price, p.isActive ? 'فعال' : 'غیرفعال'])
-    downloadExcel('products-list.csv', headers, csvRows)
+    await downloadExcel('products-list.xlsx', headers, csvRows, 'کالاها')
   }
 
   const inputStyle = { background: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }
@@ -840,16 +840,16 @@ export default function AddProduct() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => {
-                    const BOM = '\uFEFF'
-                    const csv = BOM + 'نام,بارکد,دسته,قیمت خرید,قیمت فروش,موجودی\nشیر کاله,626001,لبنیات,28000,32000,50\nبرنج ایرانی,PRD-001,خشکبار,85000,98000,20\nروغن لادن,,روغن,120000,135000,15\n'
-                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-                    const link = document.createElement('a')
-                    link.href = URL.createObjectURL(blob)
-                    link.download = 'sample-import.csv'
-                    link.click()
-                    URL.revokeObjectURL(link.href)
-                  }} className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>دانلود نمونه CSV</button>
+                  <button onClick={async () => {
+                    await downloadExcel('sample-import.xlsx', 
+                      ['نام', 'بارکد', 'دسته', 'قیمت خرید', 'قیمت فروش', 'موجودی'],
+                      [['شیر کاله', '626001', 'لبنیات', 28000, 32000, 50],
+                       ['برنج ایرانی', 'PRD-001', 'خشکبار', 85000, 98000, 20],
+                       ['روغن لادن', '', 'روغن', 120000, 135000, 15],
+                       ['ماکارونی زر', 'MRZ-100', 'خشکبار', 15000, 20000, 40],
+                       ['رب گوجه رعنا', 'RBN-200', 'ادویه', 35000, 42000, 25]],
+                      'نمونه')
+                  }} className="text-xs px-3 py-2 rounded-lg font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>دانلود نمونه اکسل</button>
                   <div className="flex-1" />
                   <button onClick={() => { setShowBulkForm(false); resetBulkImport() }} className="px-4 py-2 rounded-xl text-xs font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: textSecondary }}>لغو</button>
                 </div>
