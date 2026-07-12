@@ -23,6 +23,7 @@
     "better-sqlite3": "^11.7.0",
     "html5-qrcode": "^2.3.8",
     "jalaali-js": "^1.2.8",
+    "xlsx": "^0.18.5",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
