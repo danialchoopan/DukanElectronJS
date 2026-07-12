@@ -89,6 +89,29 @@ export function registerAllHandlers(): void {
   // ─── System ─────────────────────────────────────────────
   handle('system:isFirstRun', () => ({ isFirstRun: isFirstRun() }))
 
+  // ─── Update Check ──────────────────────────────────────
+  ipcMain.handle('system:checkUpdate', async () => {
+    try {
+      const currentVersion = app.getVersion()
+      const res = await fetch('https://api.github.com/repos/danialchoopan/DukanElectronJS/releases/latest')
+      if (!res.ok) return { success: false, error: `HTTP ${res.status}` }
+      const release = await res.json()
+      const latestVersion = (release.tag_name || '').replace('v', '')
+      return {
+        success: true,
+        data: {
+          currentVersion,
+          latestVersion,
+          hasUpdate: latestVersion !== currentVersion,
+          downloadUrl: release.html_url || '',
+          releaseName: release.name || latestVersion,
+          releaseDate: release.published_at || '',
+          body: release.body || '',
+        },
+      }
+    } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
+  })
+
   // ─── Auth ───────────────────────────────────────────────
   handleArg<{ pinCode: string }, ReturnType<typeof auth.login>>('auth:login', (a) => auth.login(a.pinCode))
   handle('auth:listUsers', () => auth.getAllUsers())

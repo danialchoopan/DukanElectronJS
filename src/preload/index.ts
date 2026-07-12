@@ -45,6 +45,8 @@ const api = {
   system: {
     isFirstRun: (): Promise<IPCResponse<{ isFirstRun: boolean }>> =>
       ipcRenderer.invoke('system:isFirstRun'),
+    checkUpdate: (): Promise<IPCResponse<any>> =>
+      ipcRenderer.invoke('system:checkUpdate'),
   },
 
   auth: {

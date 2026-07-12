@@ -174,6 +174,26 @@ export default function UISettings() {
           </div>
         </Card>
 
+        {/* Update Checker */}
+        <Card title="بروزرسانی">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm" style={{ color: tSec }}>بررسی نسخه جدید هنگام شروع برنامه</p>
+              <p className="text-[10px] mt-0.5" style={{ color: colors.text.muted }}>در صورت وجود نسخه جدید در GitHub اطلاع‌رسانی می‌شود</p>
+            </div>
+            <button onClick={async () => {
+              const current = await window.api.settings.get('checkUpdatesOnStart')
+              const newVal = current.data === 'false' ? 'true' : 'false'
+              await window.api.settings.set('checkUpdatesOnStart', newVal)
+            }}
+              className="relative w-11 h-6 rounded-full transition-all duration-200"
+              style={{ backgroundColor: colors.toggle.track }}>
+              <div className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200"
+                style={{ left: '2px' }} />
+            </button>
+          </div>
+        </Card>
+
         {/* Navigation Customization */}
         <Card title="سفارشی‌سازی منوی ناوبری" className="md:col-span-2">
           <div className="flex items-center justify-between mb-3">
