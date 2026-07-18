@@ -79,7 +79,7 @@ function registerNavigationShortcuts(): void {
 app.whenReady().then(async () => {
   try {
     getDatabase()
-    // seedDatabase() — disabled; uncomment to re-seed on next startup
+    // seedDatabase() — disabled
     // Run schema migrations for version upgrades
     const migResult = runMigrations()
     if (migResult.applied.length > 0) console.log(`[Migration] Applied: ${migResult.applied.join(', ')}`)
