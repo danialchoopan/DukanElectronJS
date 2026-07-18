@@ -116,12 +116,16 @@ const MIGRATIONS: Migration[] = [
     version: '1.8.0',
     description: 'Add supplier_ledger table for supplier debt management',
     up: (db) => {
-      db.exec(`CREATE TABLE IF NOT EXISTS supplier_ledger (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, supplierId INTEGER NOT NULL,
-        type TEXT NOT NULL, amount REAL NOT NULL, description TEXT DEFAULT '',
-        images TEXT DEFAULT '[]', createdAt TEXT NOT NULL DEFAULT (datetime('now','localtime')),
-        FOREIGN KEY (supplierId) REFERENCES suppliers(id)
-      )`)
+      const exists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='supplier_ledger'").get()
+      if (!exists) {
+        db.exec(`CREATE TABLE IF NOT EXISTS supplier_ledger (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, supplierId INTEGER NOT NULL,
+          purchaseId INTEGER, type TEXT NOT NULL DEFAULT 'payment',
+          amount REAL NOT NULL DEFAULT 0, description TEXT DEFAULT '',
+          createdAt TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+          FOREIGN KEY (supplierId) REFERENCES suppliers(id)
+        )`)
+      }
     },
     down: () => {},
   },

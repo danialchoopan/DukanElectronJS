@@ -356,18 +356,6 @@ function initializeDatabase(db: Database.Database): void {
       FOREIGN KEY (closedBy) REFERENCES users(id)
     );
 
-    CREATE TABLE IF NOT EXISTS supplier_ledger (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      supplierId INTEGER NOT NULL,
-      type TEXT NOT NULL CHECK(type IN ('debt', 'payment')),
-      amount REAL NOT NULL,
-      description TEXT DEFAULT '',
-      images TEXT DEFAULT '[]',
-      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-      FOREIGN KEY (supplierId) REFERENCES suppliers(id)
-    );
-    CREATE INDEX IF NOT EXISTS idx_supplier_ledger_supplierId ON supplier_ledger(supplierId);
-
     CREATE TABLE IF NOT EXISTS accounts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       code TEXT UNIQUE NOT NULL,

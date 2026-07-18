@@ -6,7 +6,7 @@ import { readFileSync } from 'fs'
 import { appendFileSync } from 'fs'
 // import { seedDatabase } from './database/seed' // disabled
 import { autoBackup } from './database/backup'
-import { runMigrations } from './database/schemaMigration'
+import { runMigrations, getSchemaVersion } from './database/schemaMigration'
 import * as settingsRepo from './database/repositories/settings'
 
 let mainWindow: BrowserWindow | null = null
@@ -82,9 +82,38 @@ app.whenReady().then(async () => {
     // seedDatabase() — disabled
     // Run schema migrations for version upgrades
     const migResult = runMigrations()
-    if (migResult.applied.length > 0) console.log(`[Migration] Applied: ${migResult.applied.join(', ')}`)
-    if (migResult.errors.length > 0) console.error(`[Migration] Errors: ${migResult.errors.join('; ')}`)
+    if (migResult.applied.length > 0) {
+      console.log(`[Migration] Applied: ${migResult.applied.join(', ')}`)
+      dialog.showMessageBoxSync({
+        type: 'info',
+        title: 'بروزرسانی پایگاه داده',
+        message: `پایگاه داده از نسخه ${migResult.applied[0]} به نسخه ${migResult.applied[migResult.applied.length - 1]} بروزرسانی شد.`,
+        detail: `${migResult.applied.length} مرحله مهاجرت با موفقیت اجرا شد.`,
+      })
+    }
+    if (migResult.errors.length > 0) {
+      console.error(`[Migration] Errors: ${migResult.errors.join('; ')}`)
+      dialog.showErrorBox(
+        'خطا در مهاجرت دیتابیس',
+        `مهاجرت پایگاه داده با خطا مواجه شد:\n\n${migResult.errors.join('\n')}\n\nبرنامه با دیتابیس قبلی ادامه می‌دهد.\nبرای رفع مشکل، از پشتیبان بازیابی کنید.`
+      )
+    }
     registerAllHandlers()
+
+    // Check for downgrade: DB version > app version
+    const appVersion = app.getVersion()
+    const dbVersion = getSchemaVersion()
+    if (dbVersion > appVersion) {
+      const result = dialog.showMessageBoxSync({
+        type: 'warning',
+        title: 'هشدار: نسخه قدیمی‌تر',
+        message: `نسخه فعلی برنامه (${appVersion}) قدیمی‌تر از نسخه پایگاه داده (${dbVersion}) است.`,
+        detail: 'امکان بازگشت به نسخه قبلی وجود ندارد. لطفاً نسخه جدیدتر برنامه را دانلود کنید.',
+        buttons: ['خروج', 'ادامه با ریسک'],
+        defaultId: 0,
+      })
+      if (result === 0) { app.quit(); return }
+    }
     const autoBackupSetting = settingsRepo.getSetting('autoBackupEnabled')
     if (autoBackupSetting !== 'false') await autoBackup()
     createWindow()
