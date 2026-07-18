@@ -53,7 +53,7 @@ export default function AddProduct() {
   const [pageSize, setPageSize] = useState(10)
   const [form, setForm] = useState({
     barcode: '', title: '', category: '', subcategory: '', unit: 'number' as 'number' | 'weight',
-    purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '',
+    purchase_price: 0, sale_price: 0, profitPercentage: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '',
   })
   const [subcategories, setSubcategories] = useState<{ id: number; name: string }[]>([])
   const [newSubcategory, setNewSubcategory] = useState('')
@@ -132,6 +132,14 @@ export default function AddProduct() {
     }
   }
 
+  // Auto-calculate sale_price when purchase_price or profitPercentage changes
+  useEffect(() => {
+    if (form.profitPercentage > 0 && form.purchase_price > 0) {
+      const calculated = Math.round(form.purchase_price * (1 + form.profitPercentage / 100))
+      setForm(f => ({ ...f, sale_price: calculated }))
+    }
+  }, [form.purchase_price, form.profitPercentage])
+
   useEffect(() => { loadProducts(); loadCategories() }, [searchQuery])
 
   const handleBarcodeScanned = async (code: string) => {
@@ -139,7 +147,7 @@ export default function AddProduct() {
     if (existing.success && existing.data) {
       setEditProduct(existing.data)
       setForm({
-        barcode: existing.data.barcode, title: existing.data.title, category: existing.data.category, subcategory: existing.data.subcategory || '',
+        barcode: existing.data.barcode, title: existing.data.title, category: existing.data.category, subcategory: existing.data.subcategory || '', profitPercentage: existing.data.profit_percentage || 0,
         unit: existing.data.unit, purchase_price: existing.data.purchase_price, sale_price: existing.data.sale_price,
         stock: existing.data.stock, minStock: existing.data.minStock, isLoose: existing.data.isLoose, isSellable: existing.data.isSellable,
         hasExpiry: existing.data.hasExpiry, expiryDate: existing.data.expiryDate || '', expiryAlertDays: existing.data.expiryAlertDays || 30,
@@ -149,7 +157,7 @@ export default function AddProduct() {
       showNotif(`${existing.data.title} — ${fa.admin.edit}`)
     } else {
       setEditProduct(null)
-      setForm({ barcode: code, title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '' })
+      setForm({ barcode: code, title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, profitPercentage: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '' })
       setShowForm(true)
       showNotif(`${fa.admin.addProduct} — ${code}`)
     }
@@ -163,7 +171,7 @@ export default function AddProduct() {
       if (r.success) {
         showNotif(`${form.title} — ${fa.admin.saved}`)
         setShowForm(false); setEditProduct(null)
-        setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '' })
+        setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, profitPercentage: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '' })
         await loadProducts(); await loadCategories()
         window.dispatchEvent(new Event('products:refresh'))
       } else {
@@ -174,7 +182,7 @@ export default function AddProduct() {
       if (r.success) {
         showNotif(`${form.title} — ${fa.admin.create}`)
         setShowForm(false); setEditProduct(null)
-        setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '' })
+        setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, profitPercentage: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '' })
         await loadProducts(); await loadCategories()
         window.dispatchEvent(new Event('products:refresh'))
       } else {
@@ -348,7 +356,7 @@ export default function AddProduct() {
     if (r.success) {
       showNotif(`${editProduct.title} — ${fa.admin.deleted}`)
       setShowForm(false); setEditProduct(null)
-      setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '' })
+      setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, profitPercentage: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '' })
       await loadProducts()
       window.dispatchEvent(new Event('products:refresh'))
     }
@@ -439,7 +447,7 @@ export default function AddProduct() {
           </div>
         </div>
         <button
-          onClick={() => { setEditProduct(null); setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '' }); setShowForm(true) }}
+          onClick={() => { setEditProduct(null); setForm({ barcode: '', title: '', category: '', subcategory: '', unit: 'number', purchase_price: 0, sale_price: 0, profitPercentage: 0, stock: 0, minStock: 0, isLoose: false, isSellable: true, hasExpiry: false, expiryDate: '', expiryAlertDays: 30, description: '', imageBase64: '' }); setShowForm(true) }}
           className="btn btn-primary text-sm"
         >
           + {fa.admin.addProduct}
@@ -550,6 +558,15 @@ export default function AddProduct() {
                 setForm((f) => ({ ...f, sale_price: v, isSellable: v > 0 ? f.isSellable : false }))
               }} className="input-field text-sm" style={inputStyle} />
               {form.sale_price === 0 && <p className="text-[10px] mt-1" style={{ color: '#f59e0b' }}>قیمت فروش صفر است — کالا در صفحه فروش نمایش داده نمی‌شود</p>}
+            </div>
+            <div>
+              <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>درصد سود</label>
+              <input type="number" min="0" max="1000" step="1" value={form.profitPercentage || ''}
+                onChange={(e) => setForm(f => ({ ...f, profitPercentage: parseFloat(e.target.value) || 0 }))}
+                className="input-field text-sm" style={inputStyle} placeholder="مثلاً 10" />
+              {form.profitPercentage > 0 && form.purchase_price > 0 && (
+                <p className="text-[10px] mt-1" style={{ color: '#22c55e' }}>قیمت فروش خودکار: {form.sale_price.toLocaleString('fa-IR')} تومان</p>
+              )}
             </div>
             <div>
               <label className="text-xs font-bold block mb-1.5" style={{ color: textSecondary }}>{fa.admin.stock}</label>
@@ -706,7 +723,7 @@ export default function AddProduct() {
 
   function startEdit(p: Product) {
     setEditProduct(p)
-    setForm({ barcode: p.barcode, title: p.title, category: p.category, subcategory: p.subcategory || '', unit: p.unit, purchase_price: p.purchase_price, sale_price: p.sale_price, stock: p.stock, minStock: p.minStock, isLoose: p.isLoose, isSellable: p.isSellable, hasExpiry: p.hasExpiry, expiryDate: p.expiryDate || '', expiryAlertDays: p.expiryAlertDays || 30, description: p.description || '', imageBase64: p.imageBase64 || '' })
+    setForm({ barcode: p.barcode, title: p.title, category: p.category, subcategory: p.subcategory || '', unit: p.unit, purchase_price: p.purchase_price, sale_price: p.sale_price, profitPercentage: (p as any).profit_percentage || 0, stock: p.stock, minStock: p.minStock, isLoose: p.isLoose, isSellable: p.isSellable, hasExpiry: p.hasExpiry, expiryDate: p.expiryDate || '', expiryAlertDays: p.expiryAlertDays || 30, description: p.description || '', imageBase64: p.imageBase64 || '' })
     if (p.category) {
       const parentCat = categories.find(c => c.name === p.category)
       if (parentCat) loadSubcategories(parentCat.id)

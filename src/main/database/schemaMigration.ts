@@ -15,7 +15,7 @@
 import { getDatabase } from './connection'
 import { createBackup } from './backup'
 
-const CURRENT_VERSION = '1.6.0'
+const CURRENT_VERSION = '1.7.0'
 
 // Expose for external use
 export { CURRENT_VERSION }
@@ -98,6 +98,17 @@ const MIGRATIONS: Migration[] = [
     up: (db) => {
       const cols = db.prepare('PRAGMA table_info(returns)').all().map((c: any) => c.name)
       if (!cols.includes('isDamaged')) db.exec("ALTER TABLE returns ADD COLUMN isDamaged INTEGER DEFAULT 0")
+    },
+    down: () => {},
+  },
+  {
+    version: '1.7.0',
+    description: 'Add brands table, brand_id and profit_percentage to products',
+    up: (db) => {
+      db.exec("CREATE TABLE IF NOT EXISTS brands (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, description TEXT DEFAULT '', isActive INTEGER NOT NULL DEFAULT 1, createdAt TEXT NOT NULL DEFAULT (datetime('now','localtime')))")
+      const prodCols = db.prepare('PRAGMA table_info(products)').all().map((c: any) => c.name)
+      if (!prodCols.includes('brand_id')) db.exec("ALTER TABLE products ADD COLUMN brand_id INTEGER DEFAULT NULL")
+      if (!prodCols.includes('profit_percentage')) db.exec("ALTER TABLE products ADD COLUMN profit_percentage REAL DEFAULT 0")
     },
     down: () => {},
   },

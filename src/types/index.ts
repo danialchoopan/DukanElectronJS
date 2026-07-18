@@ -7,6 +7,8 @@ export interface Product {
   unit: 'number' | 'weight'
   purchase_price: number
   sale_price: number
+  profit_percentage: number
+  brand_id: number | null
   stock: number
   minStock: number
   isLoose: boolean

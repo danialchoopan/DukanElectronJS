@@ -313,7 +313,7 @@ export function registerAllHandlers(): void {
   handleArg<{ id: number }, any>('customers:deleteSoft', (a) => customers.deleteCustomerSoft(a.id))
   handleArg<{ entryId: number }, any>('customers:deleteLedgerEntry', (a) => customers.deleteLedgerEntry(a.entryId))
   ipcMain.handle('customers:charge', (_event, a: { customerId: number; amount: number; description?: string; images?: string[] }) => {
-    if (!a.amount || a.amount <= 0) return { success: false, error: 'مبلغ باید مثبت باشد' }
+    if (!a.amount || a.amount === 0) return { success: false, error: 'مبلغ نمی‌تواند صفر باشد' }
     customers.updateCustomerBalance(a.customerId, a.amount)
     customers.addLedgerEntry(a.customerId, null, 'charge', a.amount, a.description || 'شارژ حساب', a.images)
     auditRepo.createAuditEntry(null, 'create', 'customer', a.customerId, JSON.stringify({ type: 'charge', amount: a.amount }))

@@ -122,6 +122,14 @@ function initializeDatabase(db: Database.Database): void {
       createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
     );
 
+    CREATE TABLE IF NOT EXISTS brands (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT DEFAULT '',
+      isActive INTEGER NOT NULL DEFAULT 1,
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    );
+
     CREATE TABLE IF NOT EXISTS products (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       barcode TEXT UNIQUE,
@@ -143,13 +151,17 @@ function initializeDatabase(db: Database.Database): void {
       expiry_alert_days INTEGER NOT NULL DEFAULT 30,
       last_alerted INTEGER NOT NULL DEFAULT 0,
       createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-      updatedAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      updatedAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      brand_id INTEGER DEFAULT NULL,
+      profit_percentage REAL DEFAULT 0,
+      FOREIGN KEY (brand_id) REFERENCES brands(id)
     );
 
     CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode);
     CREATE INDEX IF NOT EXISTS idx_products_title ON products(title);
     CREATE INDEX IF NOT EXISTS idx_products_isLoose ON products(isLoose);
     CREATE INDEX IF NOT EXISTS idx_products_expiry ON products(has_expiry, expiry_date);
+    CREATE INDEX IF NOT EXISTS idx_products_brand ON products(brand_id);
 
     CREATE TABLE IF NOT EXISTS customers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -246,6 +246,8 @@ function formatProduct(row: Record<string, unknown>): Product {
     unit: row.unit as 'number' | 'weight',
     purchase_price: row.purchase_price as number,
     sale_price: row.sale_price as number,
+    profit_percentage: (row.profit_percentage as number) ?? 0,
+    brand_id: (row.brand_id as number) ?? null,
     stock: row.stock as number,
     minStock: row.minStock as number,
     isLoose: Boolean(row.isLoose),
