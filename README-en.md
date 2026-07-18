@@ -70,6 +70,13 @@
 - Barcode and QR label printing
 - Inventory reports and warehouse value
 - Slow-moving items tracking
+- Excel file import (.xlsx) with column mapping and editable preview
+- Bulk price update by category, brand, or selection
+- Auto profit percentage calculation and price rounding
+- Inventory adjustments with auto audit trail
+- Expiry date products with automatic alerts
+- A4 printing and Excel export
+- Audit log with full history
 - Inventory adjustments with auto audit trail
 - Expiry date products with automatic alerts
 - A4 printing and Excel export
@@ -172,6 +179,7 @@
 | **Build** | Vite 6 |
 | **Calendar** | jalaali-js (Shamsi/Jalali) |
 | **Font** | Vazirmatn (local woff2) |
+| **Platforms** | Windows, Linux, macOS |
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "name": "hesabdari-danial",
-  "version": "1.8.5",
+  "version": "1.8.6",
   "description": "حسابداری دانیال — نرم‌افزار جامع حسابداری، انبارداری و فروش برای کسب‌وکارهای مدرن",
   "main": "dist-electron/main/index.js",
   "scripts": {
@@ -16,7 +16,8 @@
     "postinstall": "electron-builder install-app-deps",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win",
-    "dist:linux": "electron-builder --linux"
+    "dist:linux": "electron-builder --linux",
+    "dist:mac": "electron-builder --mac"
   },
   "dependencies": {
     "@fontsource/vazirmatn": "^5.2.8",

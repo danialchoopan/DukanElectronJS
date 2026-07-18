@@ -12,7 +12,7 @@ jobs:
       contents: write
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
       fail-fast: false
 
     steps:
@@ -41,6 +41,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Build macOS
+        if: matrix.os == 'macos-latest'
+        run: npm run dist:mac -- --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
@@ -48,6 +54,7 @@ jobs:
             release/*.exe
             release/*.AppImage
             release/*.deb
+            release/*.dmg
             release/*.zip
             release/*.nsis.*
         env:

@@ -18,6 +18,11 @@ win:
 linux:
   target:
     - AppImage
+  artifactName: "HesabDariDanial-${version}.${ext}"
+mac:
+  target:
+    - dmg
+  artifactName: "HesabDariDanial-${version}.${ext}"
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
