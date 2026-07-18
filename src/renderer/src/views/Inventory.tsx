@@ -33,6 +33,7 @@ import { useSettingsStore } from '../store/settingsStore'
 import { printA4Report, downloadExcel } from '../utils/a4Print'
 import { useSortable } from '../hooks/useSortable'
 import PrintDialog from '../components/print/PrintDialog'
+import BulkPriceUpdateDialog from './BulkPriceUpdateDialog'
 import { useHighlight } from '../hooks/useHighlight'
 import { getProductImageUrl } from '../utils/productImage'
 import { generateQRSvg } from '../utils/qrCode'
@@ -183,6 +184,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
   const pagedProducts = filteredProducts.slice(page * pageSize, (page + 1) * pageSize)
   const { sorted: sortedProducts, sortKey, sortDir, toggleSort } = useSortable(pagedProducts)
   const [showPrintDialog, setShowPrintDialog] = useState(false)
+  const [showBulkPriceUpdate, setShowBulkPriceUpdate] = useState(false)
   const [showProductsPrintDialog, setShowProductsPrintDialog] = useState(false)
 
   const donutColors = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#8b5cf6', '#14b8a6']
@@ -748,6 +750,12 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
               </svg>
               خروجی اکسل
             </button>
+            <button onClick={() => setShowBulkPriceUpdate(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
+              style={{ backgroundColor: isDark ? '#1e293b' : '#f8fafc', color: textPrimary, border: `1px solid ${cardBorder}` }}>
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+              بروزرسانی قیمت
+            </button>
           </div>
 
           {/* KPI Cards */}
@@ -1123,6 +1131,7 @@ export default function Inventory({ initialTab, highlightId, onHighlightDone }: 
         </>
       )}
       <PrintDialog open={showPrintDialog} title="چاپ گزارش انبار" totalCount={reportData.byCategory.length} onClose={() => setShowPrintDialog(false)} onPrint={(range) => { setShowPrintDialog(false); handlePrintA4(range) }} />
+      <BulkPriceUpdateDialog open={showBulkPriceUpdate} onClose={() => setShowBulkPriceUpdate(false)} />
       <PrintDialog open={showProductsPrintDialog} title="چاپ لیست موجودی" totalCount={filteredProducts.length} onClose={() => setShowProductsPrintDialog(false)} onPrint={(range) => { setShowProductsPrintDialog(false); handleProductsPrint(range) }} />
 
       {showAdjustment && (

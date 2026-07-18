@@ -15,7 +15,7 @@
 import { getDatabase } from './connection'
 import { createBackup } from './backup'
 
-const CURRENT_VERSION = '1.7.0'
+const CURRENT_VERSION = '1.8.0'
 
 // Expose for external use
 export { CURRENT_VERSION }
@@ -109,6 +109,19 @@ const MIGRATIONS: Migration[] = [
       const prodCols = db.prepare('PRAGMA table_info(products)').all().map((c: any) => c.name)
       if (!prodCols.includes('brand_id')) db.exec("ALTER TABLE products ADD COLUMN brand_id INTEGER DEFAULT NULL")
       if (!prodCols.includes('profit_percentage')) db.exec("ALTER TABLE products ADD COLUMN profit_percentage REAL DEFAULT 0")
+    },
+    down: () => {},
+  },
+  {
+    version: '1.8.0',
+    description: 'Add supplier_ledger table for supplier debt management',
+    up: (db) => {
+      db.exec(`CREATE TABLE IF NOT EXISTS supplier_ledger (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, supplierId INTEGER NOT NULL,
+        type TEXT NOT NULL, amount REAL NOT NULL, description TEXT DEFAULT '',
+        images TEXT DEFAULT '[]', createdAt TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+        FOREIGN KEY (supplierId) REFERENCES suppliers(id)
+      )`)
     },
     down: () => {},
   },

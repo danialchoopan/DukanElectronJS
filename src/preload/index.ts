@@ -318,6 +318,13 @@ const api = {
     seedDemo: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('accounting:seedDemo'),
   },
 
+  brands: {
+    getAll: (): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('brands:getAll'),
+    create: (data: { name: string; description?: string }): Promise<IPCResponse<any>> => ipcRenderer.invoke('brands:create', data),
+    update: (data: { id: number; name?: string; description?: string }): Promise<IPCResponse<boolean>> => ipcRenderer.invoke('brands:update', data),
+    delete: (id: number): Promise<IPCResponse<boolean>> => ipcRenderer.invoke('brands:delete', { id }),
+  },
+
   backup: {
     export: (): Promise<IPCResponse<string>> =>
       ipcRenderer.invoke('backup:export'),
@@ -390,6 +397,7 @@ const api = {
     ledger: (supplierId: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('suppliers:ledger', { supplierId }),
     deleteLedgerEntry: (entryId: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('suppliers:deleteLedgerEntry', { entryId }),
     pay: (supplierId: number, amount: number, description?: string, purchaseId?: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('suppliers:pay', { supplierId, amount, description, purchaseId }),
+    addDebt: (supplierId: number, amount: number, description?: string, images?: string[]): Promise<IPCResponse<any>> => ipcRenderer.invoke('suppliers:addDebt', { supplierId, amount, description, images }),
   },
 
   purchases: {

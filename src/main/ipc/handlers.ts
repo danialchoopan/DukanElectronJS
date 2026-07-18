@@ -660,6 +660,33 @@ export function registerAllHandlers(): void {
   handleArg<{ id: number }, any>('categories:descendants', (a) => ({ ids: categoriesRepo.getCategoryDescendantIds(a.id) }))
   handleArg<{ parentId: number }, any[]>('categories:getSubcategories', (a) => categoriesRepo.getSubcategories(a.parentId))
 
+  // ─── Brands ────────────────────────────────────────────
+  ipcMain.handle('brands:getAll', () => {
+    const db = getDatabase()
+    return db.prepare('SELECT * FROM brands WHERE isActive = 1 ORDER BY name').all()
+  })
+  ipcMain.handle('brands:create', (_event, a: { name: string; description?: string }) => {
+    const db = getDatabase()
+    const r = db.prepare('INSERT INTO brands (name, description) VALUES (?, ?)').run(a.name, a.description || '')
+    return { id: r.lastInsertRowid, name: a.name }
+  })
+  ipcMain.handle('brands:update', (_event, a: { id: number; name?: string; description?: string }) => {
+    const db = getDatabase()
+    const updates: string[] = []
+    const params: any[] = []
+    if (a.name !== undefined) { updates.push('name = ?'); params.push(a.name) }
+    if (a.description !== undefined) { updates.push('description = ?'); params.push(a.description) }
+    if (updates.length === 0) return false
+    params.push(a.id)
+    db.prepare(`UPDATE brands SET ${updates.join(', ')} WHERE id = ?`).run(...params)
+    return true
+  })
+  ipcMain.handle('brands:delete', (_event, a: { id: number }) => {
+    const db = getDatabase()
+    db.prepare('UPDATE brands SET isActive = 0 WHERE id = ?').run(a.id)
+    return true
+  })
+
   // ─── Inventory Adjustments ─────────────────────────────
   ipcMain.handle('inventory:create', (_event, a: { productId: number; newStock: number; reason: string; adjustmentType: string; createdBy?: string; createdAt?: string }) => {
     try {
@@ -767,6 +794,14 @@ export function registerAllHandlers(): void {
 
   ipcMain.handle('suppliers:pay', (_event, a: { supplierId: number; amount: number; description?: string; purchaseId?: number }) => {
     return { success: true, data: purchasesRepo.paySupplier(a.supplierId, a.amount, a.description, a.purchaseId) }
+  })
+
+  ipcMain.handle('suppliers:addDebt', (_event, a: { supplierId: number; amount: number; description?: string; images?: string[] }) => {
+    if (!a.amount || a.amount <= 0) return { success: false, error: 'مبلغ باید مثبت باشد' }
+    const db = getDatabase()
+    db.prepare('UPDATE suppliers SET balance = balance + ? WHERE id = ?').run(a.amount, a.supplierId)
+    db.prepare('INSERT INTO supplier_ledger (supplierId, type, amount, description, images) VALUES (?, ?, ?, ?, ?)').run(a.supplierId, 'debt', a.amount, a.description || 'ثبت بدهی به تأمین‌کننده', JSON.stringify(a.images || []))
+    return { success: true }
   })
 
   // ─── Purchases ──────────────────────────────────────────
