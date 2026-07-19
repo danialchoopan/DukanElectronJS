@@ -57,6 +57,8 @@ function migrateSchema(database: Database.Database): void {
       { name: 'expiry_alert_days', type: 'INTEGER', defaultValue: '30' },
       { name: 'last_alerted', type: 'INTEGER', defaultValue: '0' },
       { name: 'has_expiry', type: 'INTEGER', defaultValue: '0' },
+      { name: 'brand_id', type: 'INTEGER', defaultValue: 'NULL' },
+      { name: 'profit_percentage', type: 'REAL', defaultValue: '0' },
     ],
     sales: [
       { name: 'saleDate', type: 'TEXT', defaultValue: "datetime('now', 'localtime')" },
@@ -69,6 +71,9 @@ function migrateSchema(database: Database.Database): void {
       { name: 'permissions', type: 'TEXT', defaultValue: "'{}'" },
       { name: 'lastLoginAt', type: 'TEXT', defaultValue: "''" },
       { name: 'lastActivityAt', type: 'TEXT', defaultValue: "''" },
+    ],
+    returns: [
+      { name: 'isDamaged', type: 'INTEGER', defaultValue: '0' },
     ],
     audit_log: [
       { name: 'userName', type: 'TEXT', defaultValue: "''" },
@@ -93,6 +98,17 @@ function migrateSchema(database: Database.Database): void {
   if (migrationCount > 0) {
     console.log(`[Migration] ${migrationCount} columns added`)
   }
+
+  // Ensure brands table exists (may not exist in old databases)
+  try {
+    database.exec(`CREATE TABLE IF NOT EXISTS brands (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT DEFAULT '',
+      isActive INTEGER NOT NULL DEFAULT 1,
+      createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    )`)
+  } catch {}
 }
 
 export function closeDatabase(): void {
