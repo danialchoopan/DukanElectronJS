@@ -216,12 +216,11 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
     })
   }
 
+  const [confirmRestore, setConfirmRestore] = useState(false)
+
   const handleConfirmRestore = async () => {
     if (!backupPreview) return
-    const ok = confirm(lang === 'fa'
-      ? 'آیا از بازیابی اطلاعات اطمینان دارید؟ تمام اطلاعات فعلی حذف و با اطلاعات پشتیبان جایگزین می‌شود.'
-      : 'Are you sure you want to restore? All current data will be replaced.')
-    if (!ok) return
+    setConfirmRestore(false)
     setRestoring(true)
     const r = await window.api.backup.restore(backupPreview.dbPath)
     setRestoring(false)
@@ -516,7 +515,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                       </div>
                     )}
                     <div className="flex gap-2 mt-2">
-                      <button onClick={handleConfirmRestore} disabled={restoring} className="flex-1 py-2 rounded-lg text-xs font-bold" style={{ backgroundColor: '#22c55e', color: '#fff' }}>
+                      <button onClick={() => setConfirmRestore(true)} disabled={restoring} className="flex-1 py-2 rounded-lg text-xs font-bold" style={{ backgroundColor: '#22c55e', color: '#fff' }}>
                         {restoring ? (
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
                         ) : (lang === 'fa' ? 'بازیابی' : 'Restore')}
@@ -528,6 +527,26 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                   </div>
                 )}
               </div>
+
+              {/* Restore Confirmation Dialog */}
+              {confirmRestore && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+                  <div className="rounded-2xl p-6 max-w-sm w-full mx-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+                    <div className="text-center">
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: 'rgba(239,68,68,0.1)' }}>
+                        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                      </div>
+                      <h3 className="font-bold mb-2" style={{ color: titleColor }}>{lang === 'fa' ? 'تأیید بازیابی' : 'Confirm Restore'}</h3>
+                      <p className="text-sm mb-1" style={{ color: subtitleColor }}>{lang === 'fa' ? 'تمام اطلاعات فعلی حذف و با اطلاعات پشتیبان جایگزین می‌شود.' : 'All current data will be replaced with the backup.'}</p>
+                      <p className="text-[10px] mb-4" style={{ color: subtitleColor }}>{lang === 'fa' ? 'نسخه‌های قدیمی خودکار ارتقا می‌یابند.' : 'Old versions will be auto-upgraded.'}</p>
+                      <div className="flex gap-2">
+                        <button onClick={() => setConfirmRestore(false)} className="flex-1 py-2 rounded-lg text-sm font-bold" style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', color: subtitleColor }}>{lang === 'fa' ? 'لغو' : 'Cancel'}</button>
+                        <button onClick={handleConfirmRestore} className="flex-1 py-2 rounded-lg text-sm font-bold" style={{ backgroundColor: '#ef4444', color: '#fff' }}>{lang === 'fa' ? 'بازیابی' : 'Restore'}</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <button
                 onClick={handleNext}

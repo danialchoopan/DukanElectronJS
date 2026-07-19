@@ -5,6 +5,7 @@
  */
 
 import { app } from 'electron'
+import Database from 'better-sqlite3'
 import { join } from 'path'
 import { copyFileSync, existsSync, readdirSync, unlinkSync, statSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { createHash } from 'crypto'
@@ -115,6 +116,69 @@ export function restoreBackup(backupPath: string): { success: boolean; error?: s
     const shmPath = backupPath.replace('.db', '.db-shm')
     if (existsSync(walPath)) copyFileSync(walPath, WAL_PATH)
     if (existsSync(shmPath)) copyFileSync(shmPath, SHM_PATH)
+
+    // Re-open the restored database and run auto-migration
+    // This ensures old databases (v1.0+) get all required columns
+    try {
+      const restoredDb = new Database(DB_PATH)
+      // Re-run the same auto-migration that runs on normal startup
+      const expectedColumns: Record<string, { name: string; type: string; defaultValue: string }[]> = {
+        products: [
+          { name: 'subcategory', type: 'TEXT', defaultValue: "''" },
+          { name: 'isSellable', type: 'INTEGER', defaultValue: '1' },
+          { name: 'expiry_date', type: 'TEXT', defaultValue: "''" },
+          { name: 'expiry_alert_days', type: 'INTEGER', defaultValue: '30' },
+          { name: 'last_alerted', type: 'INTEGER', defaultValue: '0' },
+          { name: 'has_expiry', type: 'INTEGER', defaultValue: '0' },
+          { name: 'brand_id', type: 'INTEGER', defaultValue: 'NULL' },
+          { name: 'profit_percentage', type: 'REAL', defaultValue: '0' },
+        ],
+        sales: [
+          { name: 'saleDate', type: 'TEXT', defaultValue: "datetime('now', 'localtime')" },
+          { name: 'affectsInventory', type: 'INTEGER', defaultValue: '1' },
+        ],
+        customers: [
+          { name: 'is_blocked', type: 'INTEGER', defaultValue: '0' },
+        ],
+        users: [
+          { name: 'permissions', type: 'TEXT', defaultValue: "'{}'" },
+          { name: 'lastLoginAt', type: 'TEXT', defaultValue: "''" },
+          { name: 'lastActivityAt', type: 'TEXT', defaultValue: "''" },
+        ],
+        returns: [
+          { name: 'isDamaged', type: 'INTEGER', defaultValue: '0' },
+        ],
+        audit_log: [
+          { name: 'userName', type: 'TEXT', defaultValue: "''" },
+          { name: 'beforeValue', type: 'TEXT', defaultValue: "''" },
+          { name: 'afterValue', type: 'TEXT', defaultValue: "''" },
+          { name: 'ip', type: 'TEXT', defaultValue: "''" },
+        ],
+      }
+      for (const [tableName, columns] of Object.entries(expectedColumns)) {
+        try {
+          const existing = restoredDb.prepare(`PRAGMA table_info(${tableName})`).all() as { name: string }[]
+          const existingNames = new Set(existing.map(c => c.name))
+          for (const col of columns) {
+            if (!existingNames.has(col.name)) {
+              restoredDb.exec(`ALTER TABLE ${tableName} ADD COLUMN ${col.name} ${col.type} DEFAULT ${col.defaultValue}`)
+            }
+          }
+        } catch {}
+      }
+      // Ensure brands table exists
+      try {
+        restoredDb.exec("CREATE TABLE IF NOT EXISTS brands (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, description TEXT DEFAULT '', isActive INTEGER NOT NULL DEFAULT 1, createdAt TEXT NOT NULL DEFAULT (datetime('now','localtime')))")
+      } catch {}
+      // Ensure supplier_ledger table exists
+      try {
+        restoredDb.exec("CREATE TABLE IF NOT EXISTS supplier_ledger (id INTEGER PRIMARY KEY AUTOINCREMENT, supplierId INTEGER NOT NULL, type TEXT NOT NULL, amount REAL NOT NULL, description TEXT DEFAULT '', images TEXT DEFAULT '[]', createdAt TEXT NOT NULL DEFAULT (datetime('now','localtime')))")
+      } catch {}
+      restoredDb.close()
+      console.log('[Backup] Auto-migration completed on restored database')
+    } catch (e) {
+      console.warn('[Backup] Auto-migration on restored DB failed:', e)
+    }
 
     return { success: true }
   } catch (err) {
