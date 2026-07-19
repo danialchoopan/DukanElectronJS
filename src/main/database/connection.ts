@@ -85,14 +85,22 @@ function migrateSchema(database: Database.Database): void {
 
   let migrationCount = 0
   for (const [tableName, columns] of Object.entries(expectedColumns)) {
-    const existing = database.prepare(`PRAGMA table_info(${tableName})`).all() as { name: string }[]
-    const existingNames = new Set(existing.map(c => c.name))
-    for (const col of columns) {
-      if (!existingNames.has(col.name)) {
-        database.exec(`ALTER TABLE ${tableName} ADD COLUMN ${col.name} ${col.type} DEFAULT ${col.defaultValue}`)
-        migrationCount++
-        console.log(`[Migration] Added ${tableName}.${col.name}`)
+    try {
+      const existing = database.prepare(`PRAGMA table_info(${tableName})`).all() as { name: string }[]
+      const existingNames = new Set(existing.map(c => c.name))
+      for (const col of columns) {
+        if (!existingNames.has(col.name)) {
+          try {
+            database.exec(`ALTER TABLE ${tableName} ADD COLUMN ${col.name} ${col.type} DEFAULT ${col.defaultValue}`)
+            migrationCount++
+            console.log(`[Migration] Added ${tableName}.${col.name}`)
+          } catch (e) {
+            console.warn(`[Migration] Failed to add ${tableName}.${col.name}:`, e)
+          }
+        }
       }
+    } catch (e) {
+      // Table might not exist yet — skip silently
     }
   }
   if (migrationCount > 0) {
@@ -108,7 +116,10 @@ function migrateSchema(database: Database.Database): void {
       isActive INTEGER NOT NULL DEFAULT 1,
       createdAt TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
     )`)
-  } catch {}
+    console.log('[Migration] brands table ensured')
+  } catch (e) {
+    console.warn('[Migration] brands table creation skipped:', e)
+  }
 }
 
 export function closeDatabase(): void {
