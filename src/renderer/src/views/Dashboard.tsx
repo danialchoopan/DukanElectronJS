@@ -42,13 +42,13 @@ export default function Dashboard() {
   const [salesPage, setSalesPage] = useState(0)
   const [salesPageSize, setSalesPageSize] = useState(10)
 
-  const { isDark } = useTheme()
+  const { isDark, colors } = useTheme()
   const abbreviatedPrices = useSettingsStore(s => s.abbreviatedPrices)
-  const cardBg = isDark ? '#1e293b' : '#ffffff'
-  const cardBorder = isDark ? '#334155' : '#e2e8f0'
-  const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
-  const textSecondary = isDark ? '#94a3b8' : '#64748b'
-  const btnBg = isDark ? '#334155' : '#f1f5f9'
+  const cardBg = colors.bg.card
+  const cardBorder = colors.border.default
+  const textPrimary = colors.text.primary
+  const textSecondary = colors.text.secondary
+  const btnBg = colors.bg.tertiary
 
   const loadData = async () => {
     let s: string
@@ -71,7 +71,7 @@ export default function Dashboard() {
       window.api.sales.getByDateRange(s, e),
       window.api.sales.getUserPerformance(startDate || undefined, endDate ? endDate + 'T23:59:59' : undefined),
       window.api.sales.getTopProducts(startDate || undefined, endDate ? endDate + 'T23:59:59' : undefined),
-      window.api.expenses.getTotal(),
+      window.api.expenses.getTotal(startDate || undefined, endDate || undefined),
       window.api.returns.getStats(),
       window.api.products.getLowStock(),
     ])

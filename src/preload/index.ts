@@ -160,8 +160,8 @@ const api = {
       ipcRenderer.invoke('expenses:delete', { id }),
     getCategories: (): Promise<IPCResponse<string[]>> =>
       ipcRenderer.invoke('expenses:categories'),
-    getTotal: (): Promise<IPCResponse<number>> =>
-      ipcRenderer.invoke('expenses:total'),
+    getTotal: (startDate?: string, endDate?: string): Promise<IPCResponse<number>> =>
+      ipcRenderer.invoke('expenses:total', { startDate, endDate }),
     saveImage: (data: { base64: string; expenseId: number }): Promise<IPCResponse<string>> =>
       ipcRenderer.invoke('expenses:saveImage', data),
   },

@@ -33,14 +33,14 @@ export default function SalesHistory() {
   const [returnAllReason, setReturnAllReason] = useState('')
   const [returnAllDamaged, setReturnAllDamaged] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
-  const { isDark } = useTheme()
+  const { isDark, colors } = useTheme()
   const user = useAuthStore((s) => s.user)
 
-  const cardBg = isDark ? '#1e293b' : '#ffffff'
-  const cardBorder = isDark ? '#334155' : '#e2e8f0'
-  const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
-  const textSecondary = isDark ? '#94a3b8' : '#64748b'
-  const btnBg = isDark ? '#334155' : '#f1f5f9'
+  const cardBg = colors.bg.card
+  const cardBorder = colors.border.default
+  const textPrimary = colors.text.primary
+  const textSecondary = colors.text.secondary
+  const btnBg = colors.bg.tertiary
 
   const loadData = async () => {
     let s: string, e: string
