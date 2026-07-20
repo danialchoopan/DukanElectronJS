@@ -358,7 +358,7 @@ export function registerAllHandlers(): void {
     } catch (err) { return { success: false, error: err instanceof Error ? err.message : String(err) } }
   })
   handle('expenses:categories', () => expenses.getExpenseCategories())
-  handle('expenses:total', () => expenses.getTotalExpenses())
+  handleArg<{ startDate?: string; endDate?: string }, number>('expenses:total', (a) => expenses.getTotalExpenses(a.startDate, a.endDate))
 
   ipcMain.handle('expenses:saveImage', (_event, arg: { base64: string; expenseId: number }) => {
     try {
