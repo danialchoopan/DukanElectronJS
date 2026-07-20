@@ -69,3 +69,4 @@ code.html
 *.BACKUP.*
 *.base.*
 *.local.*
+_tmp_query*.js
