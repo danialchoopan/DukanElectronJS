@@ -83,11 +83,11 @@ export default function CustomerManagement({ highlightId, onHighlightDone }: Pro
   const [imgZoom, setImgZoom] = useState(1)
   const [imgRotation, setImgRotation] = useState(0)
 
-  const { isDark } = useTheme()
-  const cardBg = isDark ? '#1e293b' : '#ffffff'
-  const cardBorder = isDark ? '#334155' : '#e2e8f0'
-  const textPrimary = isDark ? '#f1f5f9' : '#0d1c2e'
-  const textSecondary = isDark ? '#94a3b8' : '#707881'
+  const { isDark, colors } = useTheme()
+  const cardBg = colors.bg.card
+  const cardBorder = colors.border.default
+  const textPrimary = colors.text.primary
+  const textSecondary = colors.text.secondary
   const surfaceHover = isDark ? 'rgba(0,97,148,0.08)' : 'rgba(0,97,148,0.04)'
 
   const PRIMARY = '#006194'

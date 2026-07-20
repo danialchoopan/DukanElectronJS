@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react'
 import { t, setLanguage } from '../i18n'
 import { useSettingsStore } from '../store/settingsStore'
 import { formatISOToJalali } from '../utils/jalali'
+import { useTheme } from '../hooks/useTheme'
 
 interface BackupPreview {
   dbPath: string
@@ -10,7 +11,7 @@ interface BackupPreview {
   versionCheck: { compatible: boolean; backupVersion: string; currentVersion: string; message: string }
 }
 
-const colors = {
+const setupColors = {
   primary: '#006194',
   primaryContainer: '#007bb9',
   onPrimary: '#ffffff',
@@ -27,7 +28,7 @@ const colors = {
 function LogoIcon({ size = 128 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 128 128" fill="none">
-      <rect width="128" height="128" rx="24" fill={colors.primary} />
+      <rect width="128" height="128" rx="24" fill={setupColors.primary} />
       <path d="M36 48l28-22 28 22v40a3 3 0 01-3 3H39a3 3 0 01-3-3V48z" stroke="white" strokeWidth="3" fill="none" />
       <path d="M56 91V71h16v20" stroke="white" strokeWidth="3" fill="none" />
     </svg>
@@ -102,7 +103,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
   const pinConfirmRefs = useRef<(HTMLInputElement | null)[]>([])
 
   const ui = t()
-  const isDark = theme === 'dark'
+  const { isDark } = useTheme()
 
   const switchLang = useCallback((l: 'fa' | 'en') => {
     setLang(l)
@@ -260,15 +261,15 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
   }
 
   const bg = isDark ? '#0d1c2e' : '#f8f9ff'
-  const brandBg = isDark ? 'rgba(0, 97, 148, 0.08)' : colors.surfaceContainerLow
+  const brandBg = isDark ? 'rgba(0, 97, 148, 0.08)' : setupColors.surfaceContainerLow
   const cardBg = isDark ? 'rgba(35, 49, 68, 0.6)' : '#ffffff'
   const cardBorder = isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #bfc7d2'
-  const titleColor = isDark ? '#fdfcff' : colors.onSurface
-  const subtitleColor = isDark ? '#d5e3fc' : colors.onSurfaceVariant
+  const titleColor = isDark ? '#fdfcff' : setupColors.onSurface
+  const subtitleColor = isDark ? '#d5e3fc' : setupColors.onSurfaceVariant
   const inputBg = isDark ? 'rgba(255,255,255,0.06)' : '#ffffff'
   const inputBorder = isDark ? '1px solid rgba(191,199,210,0.2)' : '1px solid #bfc7d2'
-  const inputColor = isDark ? '#fdfcff' : colors.onSurface
-  const pinBg = isDark ? 'rgba(204,219,243,0.08)' : colors.surfaceContainerLow
+  const inputColor = isDark ? '#fdfcff' : setupColors.onSurface
+  const pinBg = isDark ? 'rgba(204,219,243,0.08)' : setupColors.surfaceContainerLow
   const pinBorder = isDark ? '2px solid rgba(191,199,210,0.2)' : '2px solid #bfc7d2'
 
   return (
@@ -279,7 +280,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
         <div className="md:w-1/2 flex flex-col items-center justify-center text-center relative overflow-hidden p-8 md:py-12 flex-shrink-0" style={{ background: brandBg }}>
           <div className="z-10 flex flex-col items-center gap-6">
             <LogoIcon size={128} />
-            <h1 className="text-4xl font-bold tracking-tight" style={{ color: colors.primary, fontFamily: "'IBM Plex Sans', sans-serif" }}>
+            <h1 className="text-4xl font-bold tracking-tight" style={{ color: setupColors.primary, fontFamily: "'IBM Plex Sans', sans-serif" }}>
               {ui.app.title}
             </h1>
             <p className="text-lg max-w-sm" style={{ color: subtitleColor, fontFamily: "'Noto Sans', sans-serif" }}>
@@ -291,18 +292,18 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                 <div className="flex-1 flex flex-col items-center gap-1">
                   <div 
                     className={`w-full h-1.5 rounded-full transition-all duration-300 ${step === 1 ? 'opacity-100' : 'opacity-30'}`}
-                    style={{ background: step === 1 ? colors.primary : colors.outline }}
+                    style={{ background: step === 1 ? setupColors.primary : setupColors.outline }}
                   />
-                  <span className="text-[10px] font-medium" style={{ color: step === 1 ? colors.primary : subtitleColor, opacity: step === 1 ? 1 : 0.5 }}>
+                  <span className="text-[10px] font-medium" style={{ color: step === 1 ? setupColors.primary : subtitleColor, opacity: step === 1 ? 1 : 0.5 }}>
                     {lang === 'fa' ? 'اطلاعات' : 'Info'}
                   </span>
                 </div>
                 <div className="flex-1 flex flex-col items-center gap-1">
                   <div 
                     className={`w-full h-1.5 rounded-full transition-all duration-300 ${step === 2 ? 'opacity-100' : 'opacity-30'}`}
-                    style={{ background: step === 2 ? colors.primary : colors.outline }}
+                    style={{ background: step === 2 ? setupColors.primary : setupColors.outline }}
                   />
-                  <span className="text-[10px] font-medium" style={{ color: step === 2 ? colors.primary : subtitleColor, opacity: step === 2 ? 1 : 0.5 }}>
+                  <span className="text-[10px] font-medium" style={{ color: step === 2 ? setupColors.primary : subtitleColor, opacity: step === 2 ? 1 : 0.5 }}>
                     {lang === 'fa' ? 'رمز عبور' : 'PIN'}
                   </span>
                 </div>
@@ -339,11 +340,11 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                   <label className="text-xs font-medium mb-1.5 block" style={{ color: subtitleColor }}>{ui.setup.selectLanguage}</label>
                   <div className="flex rounded-lg overflow-hidden" style={{ border: inputBorder }}>
                     <button onClick={() => switchLang('fa')} className="flex-1 py-2 text-xs font-bold transition-all"
-                      style={{ background: lang === 'fa' ? colors.primary : 'transparent', color: lang === 'fa' ? '#fff' : subtitleColor }}>
+                      style={{ background: lang === 'fa' ? setupColors.primary : 'transparent', color: lang === 'fa' ? '#fff' : subtitleColor }}>
                       فارسی
                     </button>
                     <button onClick={() => switchLang('en')} className="flex-1 py-2 text-xs font-bold transition-all"
-                      style={{ background: lang === 'en' ? colors.primary : 'transparent', color: lang === 'en' ? '#fff' : subtitleColor }}>
+                      style={{ background: lang === 'en' ? setupColors.primary : 'transparent', color: lang === 'en' ? '#fff' : subtitleColor }}>
                       English
                     </button>
                   </div>
@@ -352,11 +353,11 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                   <label className="text-xs font-medium mb-1.5 block" style={{ color: subtitleColor }}>{ui.setup.selectTheme}</label>
                   <div className="flex rounded-lg overflow-hidden" style={{ border: inputBorder }}>
                     <button onClick={() => setTheme('light')} className="flex-1 py-2 text-xs font-bold transition-all"
-                      style={{ background: !isDark ? colors.primary : 'transparent', color: !isDark ? '#fff' : subtitleColor }}>
+                      style={{ background: !isDark ? setupColors.primary : 'transparent', color: !isDark ? '#fff' : subtitleColor }}>
                       {lang === 'fa' ? 'روشن' : 'Light'}
                     </button>
                     <button onClick={() => setTheme('dark')} className="flex-1 py-2 text-xs font-bold transition-all"
-                      style={{ background: isDark ? colors.primary : 'transparent', color: isDark ? '#fff' : subtitleColor }}>
+                      style={{ background: isDark ? setupColors.primary : 'transparent', color: isDark ? '#fff' : subtitleColor }}>
                       {lang === 'fa' ? 'تاریک' : 'Dark'}
                     </button>
                   </div>
@@ -384,7 +385,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                       onKeyDown={(e) => { if (e.key === 'Enter') handleNext() }}
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <StoreIcon color={colors.outline} />
+                      <StoreIcon color={setupColors.outline} />
                     </div>
                   </div>
                 </div>
@@ -409,7 +410,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                     ]).map(b => (
                       <button key={b.key} onClick={() => { setBusinessType(b.key); applyBusinessDefaults(b.key) }}
                         className="py-2.5 rounded-lg text-xs font-bold transition-all"
-                        style={{ backgroundColor: businessType === b.key ? colors.primary : (isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9'), color: businessType === b.key ? '#fff' : subtitleColor, border: businessType === b.key ? 'none' : `1px solid ${cardBorder}` }}>
+                        style={{ backgroundColor: businessType === b.key ? setupColors.primary : (isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9'), color: businessType === b.key ? '#fff' : subtitleColor, border: businessType === b.key ? 'none' : `1px solid ${cardBorder}` }}>
                         {b.label}
                       </button>
                     ))}
@@ -427,7 +428,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                       <div className="text-sm font-medium" style={{ color: titleColor }}>مالیات بر ارزش افزوده</div>
                       <div className="text-xs" style={{ color: subtitleColor }}>در صورت نیاز می‌توانید بعداً در تنظیمات تغییر دهید</div>
                     </div>
-                    <button onClick={() => setEnableTax(!enableTax)} className="relative w-10 h-5 rounded-full transition-all" style={{ backgroundColor: enableTax ? colors.primary : (isDark ? '#475569' : '#d1d5db') }}>
+                    <button onClick={() => setEnableTax(!enableTax)} className="relative w-10 h-5 rounded-full transition-all" style={{ backgroundColor: enableTax ? setupColors.primary : (isDark ? '#475569' : '#d1d5db') }}>
                       <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all" style={{ left: enableTax ? '20px' : '2px' }} />
                     </button>
                   </div>
@@ -450,7 +451,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                       placeholder="00 000 0000"
                     />
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <CallIcon color={colors.outline} />
+                      <CallIcon color={setupColors.outline} />
                     </div>
                   </div>
                 </div>
@@ -474,7 +475,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                       rows={2}
                     />
                     <div className="absolute right-3 top-3 pointer-events-none">
-                      <LocationIcon color={colors.outline} />
+                      <LocationIcon color={setupColors.outline} />
                     </div>
                   </div>
                 </div>
@@ -553,15 +554,15 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                 disabled={!shopName.trim()}
                 className="w-full py-3.5 rounded-xl font-semibold text-base flex items-center justify-center gap-2 transition-all disabled:opacity-40 hover:scale-[1.02] active:scale-[0.98] mt-6"
                 style={{ 
-                  background: colors.primary, 
-                  color: colors.onPrimary, 
+                  background: setupColors.primary, 
+                  color: setupColors.onPrimary, 
                   fontFamily: "'IBM Plex Sans', sans-serif", 
                   boxShadow: '0 4px 16px rgba(0,97,148,0.3)',
                   transition: 'all 0.2s ease'
                 }}
               >
                 {lang === 'fa' ? 'مرحله بعد' : 'Next'}
-                <ArrowIcon color={colors.onPrimary} />
+                <ArrowIcon color={setupColors.onPrimary} />
               </button>
             </>
           ) : (
@@ -590,11 +591,11 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                 {/* Toggle between 4-digit PIN and text password for admin login */}
                 <div className="flex gap-2 justify-center">
                   <button onClick={() => setAuthType('pin')} className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
-                    style={{ background: authType === 'pin' ? `linear-gradient(135deg, ${colors.primary}, ${colors.primary}cc)` : 'transparent', color: authType === 'pin' ? '#fff' : subtitleColor, border: `1px solid ${authType === 'pin' ? colors.primary : cardBorder}` }}>
+                    style={{ background: authType === 'pin' ? `linear-gradient(135deg, ${setupColors.primary}, ${setupColors.primary}cc)` : 'transparent', color: authType === 'pin' ? '#fff' : subtitleColor, border: `1px solid ${authType === 'pin' ? setupColors.primary : cardBorder}` }}>
                     {lang === 'fa' ? 'رمز ۴ رقمی (PIN)' : '4-digit PIN'}
                   </button>
                   <button onClick={() => setAuthType('password')} className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
-                    style={{ background: authType === 'password' ? `linear-gradient(135deg, ${colors.primary}, ${colors.primary}cc)` : 'transparent', color: authType === 'password' ? '#fff' : subtitleColor, border: `1px solid ${authType === 'password' ? colors.primary : cardBorder}` }}>
+                    style={{ background: authType === 'password' ? `linear-gradient(135deg, ${setupColors.primary}, ${setupColors.primary}cc)` : 'transparent', color: authType === 'password' ? '#fff' : subtitleColor, border: `1px solid ${authType === 'password' ? setupColors.primary : cardBorder}` }}>
                     {lang === 'fa' ? 'رمز عبور متنی' : 'Text Password'}
                   </button>
                 </div>
@@ -620,10 +621,10 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                         style={{
                           background: pinBg,
                           border: pinBorder,
-                          color: colors.primary,
+                          color: setupColors.primary,
                         }}
                         onFocus={(e) => { 
-                          e.currentTarget.style.borderColor = colors.primary; 
+                          e.currentTarget.style.borderColor = setupColors.primary; 
                           e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,97,148,0.15)' 
                         }}
                         onBlur={(e) => { 
@@ -653,10 +654,10 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                         style={{
                           background: pinBg,
                           border: pinBorder,
-                          color: colors.primary,
+                          color: setupColors.primary,
                         }}
                         onFocus={(e) => { 
-                          e.currentTarget.style.borderColor = colors.primary; 
+                          e.currentTarget.style.borderColor = setupColors.primary; 
                           e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,97,148,0.15)' 
                         }}
                         onBlur={(e) => { 
@@ -678,7 +679,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                     onChange={(e) => { setAdminPassword(e.target.value); setPinError('') }}
                     placeholder={lang === 'fa' ? 'حداقل ۴ کاراکتر' : 'Min 4 characters'}
                     className="w-full px-4 py-3 rounded-xl text-sm font-bold outline-none transition-all"
-                    style={{ background: pinBg, border: pinBorder, color: colors.primary }}
+                    style={{ background: pinBg, border: pinBorder, color: setupColors.primary }}
                   />
                 </div>
                 <div>
@@ -691,7 +692,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                     onChange={(e) => { setAdminPasswordConfirm(e.target.value); setPinError('') }}
                     placeholder={lang === 'fa' ? 'رمز عبور را دوباره وارد کنید' : 'Re-enter password'}
                     className="w-full px-4 py-3 rounded-xl text-sm font-bold outline-none transition-all"
-                    style={{ background: pinBg, border: pinBorder, color: colors.primary }}
+                    style={{ background: pinBg, border: pinBorder, color: setupColors.primary }}
                   />
                 </div>
                 </>)}
@@ -708,8 +709,8 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                 disabled={submitting || (authType === 'pin' ? adminPin.length < 4 || adminPin !== adminPinConfirm : adminPassword.length < 4 || adminPassword !== adminPasswordConfirm)}
                 className="w-full py-3.5 rounded-xl font-semibold text-base flex items-center justify-center gap-2 transition-all disabled:opacity-40 hover:scale-[1.02] active:scale-[0.98] mt-6"
                 style={{ 
-                  background: colors.primary, 
-                  color: colors.onPrimary, 
+                  background: setupColors.primary, 
+                  color: setupColors.onPrimary, 
                   fontFamily: "'IBM Plex Sans', sans-serif", 
                   boxShadow: '0 4px 16px rgba(0,97,148,0.3)',
                   transition: 'all 0.2s ease'
@@ -720,7 +721,7 @@ export default function SetupWizard({ onComplete }: { onComplete: () => void }) 
                 ) : (
                   <>
                     {lang === 'fa' ? 'ایجاد حساب کاربری' : 'Create Account'}
-                    <CheckIcon color={colors.onPrimary} />
+                    <CheckIcon color={setupColors.onPrimary} />
                   </>
                 )}
               </button>
