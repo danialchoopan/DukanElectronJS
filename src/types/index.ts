@@ -117,6 +117,7 @@ export interface SaleInput {
   saleType?: 'in-person' | 'online'
   saleDate?: string
   affectsInventory?: boolean
+  // Shipping cost in toman for online orders
   shippingCost?: number
 }
 

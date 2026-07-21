@@ -118,7 +118,7 @@ export function restoreBackup(backupPath: string): { success: boolean; error?: s
     if (existsSync(shmPath)) copyFileSync(shmPath, SHM_PATH)
 
     // Re-open the restored database and run auto-migration
-    // This ensures old databases (v1.0+) get all required columns
+    // Adds missing columns/tables so old backups (v1.0+) are schema-compatible
     try {
       const restoredDb = new Database(DB_PATH)
       // Re-run the same auto-migration that runs on normal startup

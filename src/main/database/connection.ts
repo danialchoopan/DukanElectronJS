@@ -63,6 +63,7 @@ function migrateSchema(database: Database.Database): void {
     sales: [
       { name: 'saleDate', type: 'TEXT', defaultValue: "datetime('now', 'localtime')" },
       { name: 'affectsInventory', type: 'INTEGER', defaultValue: '1' },
+      // Shipping fields added for online order delivery tracking
       { name: 'shipping_cost', type: 'REAL', defaultValue: '0' },
       { name: 'shipping_tax', type: 'REAL', defaultValue: '0' },
       { name: 'shipping_provider', type: 'TEXT', defaultValue: "''" },
@@ -111,7 +112,7 @@ function migrateSchema(database: Database.Database): void {
     console.log(`[Migration] ${migrationCount} columns added`)
   }
 
-  // Ensure supplier_debts tables exist
+  // Ensure supplier_debts + payment history tables exist
   try {
     database.exec(`CREATE TABLE IF NOT EXISTS supplier_debts (
       id INTEGER PRIMARY KEY AUTOINCREMENT, supplierId INTEGER NOT NULL,
@@ -132,7 +133,7 @@ function migrateSchema(database: Database.Database): void {
   } catch (e) {
     console.warn('[Migration] supplier_debts creation skipped:', e)
   }
-  // Ensure brands table exists (may not exist in old databases)
+  // Ensure brands table exists for product brand organization
   try {
     database.exec(`CREATE TABLE IF NOT EXISTS brands (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
