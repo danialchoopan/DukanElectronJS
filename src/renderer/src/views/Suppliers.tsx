@@ -43,6 +43,13 @@ export default function Suppliers() {
   const [payAmount, setPayAmount] = useState('')
   const [payDesc, setPayDesc] = useState('')
   const [purchaseForm, setPurchaseForm] = useState({ supplierId: 0, items: [{ productTitle: '', quantity: 1, unitCost: 0 }], taxAmount: 0, discountAmount: 0, paidAmount: 0, notes: '' })
+  const [debts, setDebts] = useState<any[]>([])
+  const [debtStats, setDebtStats] = useState({ totalDebt: 0, totalPaid: 0, balance: 0 })
+  const [debtAmount, setDebtAmount] = useState('')
+  const [debtDesc, setDebtDesc] = useState('')
+  const [debtDate, setDebtDate] = useState(new Date().toISOString().slice(0, 10))
+  const [payDebtId, setPayDebtId] = useState<number | null>(null)
+  const [payDebtAmount, setPayDebtAmount] = useState('')
 
   const cBg = isDark ? '#1e293b' : '#ffffff'
   const cBorder = isDark ? '#334155' : '#e2e8f0'
@@ -78,7 +85,33 @@ export default function Suppliers() {
     if (r.success && r.data) setSelectedSupplier(r.data)
     const lr = await window.api.suppliers.ledger(id)
     if (lr.success && lr.data) setLedger(lr.data)
+    const dr = await window.api.supplierDebts.getBySupplier(id)
+    if (dr.success && dr.data) setDebts(dr.data)
+    const ds = await window.api.supplierDebts.stats(id)
+    if (ds.success && ds.data) setDebtStats(ds.data)
     await load()
+  }
+
+  const handleRegisterDebt = async () => {
+    if (!selectedSupplier || !debtAmount) return
+    const amt = parseFloat(debtAmount)
+    if (amt <= 0) return
+    await window.api.supplierDebts.create({ supplierId: selectedSupplier.id, amount: amt, date: debtDate, description: debtDesc || 'ثبت بدهی' })
+    setDebtAmount('')
+    setDebtDesc('')
+    setDialog(null)
+    await refreshSelected(selectedSupplier.id)
+  }
+
+  const handlePayDebt = async () => {
+    if (!payDebtId || !payDebtAmount) return
+    const amt = parseFloat(payDebtAmount)
+    if (amt <= 0) return
+    await window.api.supplierDebts.pay({ debtId: payDebtId, amount: amt, paymentDate: new Date().toISOString().slice(0, 10) })
+    setPayDebtId(null)
+    setPayDebtAmount('')
+    setDialog(null)
+    if (selectedSupplier) await refreshSelected(selectedSupplier.id)
   }
 
   const filtered = search ? suppliers.filter(s => s.name.includes(search) || s.phone.includes(search) || s.company.includes(search)) : suppliers
@@ -320,6 +353,49 @@ export default function Suppliers() {
                     </div>
                   )}
                 </Card>
+
+                {/* Supplier Debts */}
+                <Card className="!p-0 overflow-hidden">
+                  <div className="p-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${cBorder}` }}>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm" style={{ color: tPri }}>بدهی‌ها</span>
+                      {debtStats.balance > 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: ERR + '15', color: ERR }}>{debtStats.balance.toLocaleString('fa-IR')} ت</span>}
+                    </div>
+                    <button onClick={() => { setDialog('addDebt'); setDebtAmount(''); setDebtDesc(''); setDebtDate(new Date().toISOString().slice(0, 10)) }} className="px-3 py-1 rounded-lg text-[10px] font-bold text-white" style={{ background: `linear-gradient(135deg, ${WRN}, #d97706)` }}>+ ثبت بدهی</button>
+                  </div>
+                  {debts.length === 0 ? (
+                    <div className="text-center py-6 text-xs" style={{ color: tSec }}>بدهی ثبت نشده</div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead><tr style={{ backgroundColor: sBg }}>
+                          <th className="px-3 py-2 text-right" style={{ color: tSec }}>تاریخ</th>
+                          <th className="px-3 py-2 text-right" style={{ color: tSec }}>مبلغ</th>
+                          <th className="px-3 py-2 text-right" style={{ color: tSec }}>پرداخت</th>
+                          <th className="px-3 py-2 text-right" style={{ color: tSec }}>مانده</th>
+                          <th className="px-3 py-2 text-right" style={{ color: tSec }}>وضعیت</th>
+                          <th className="px-3 py-2 text-center" style={{ color: tSec }}>عملیات</th>
+                        </tr></thead>
+                        <tbody>
+                          {debts.map((d: any) => (
+                            <tr key={d.id} style={{ borderTop: `1px solid ${cBorder}` }}>
+                              <td className="px-3 py-2" style={{ color: tSec }}>{d.date}</td>
+                              <td className="px-3 py-2 font-bold" style={{ color: tPri }}>{d.amount.toLocaleString('fa-IR')}</td>
+                              <td className="px-3 py-2 font-bold" style={{ color: SUC }}>{d.paidAmount.toLocaleString('fa-IR')}</td>
+                              <td className="px-3 py-2 font-bold" style={{ color: d.amount - d.paidAmount > 0 ? ERR : SUC }}>{(d.amount - d.paidAmount).toLocaleString('fa-IR')}</td>
+                              <td className="px-3 py-2">
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: d.status === 'paid' ? SUC + '15' : WRN + '15', color: d.status === 'paid' ? SUC : WRN }}>{d.status === 'paid' ? 'پرداخت شده' : 'در انتظار'}</span>
+                              </td>
+                              <td className="px-3 py-2 text-center">
+                                {d.status !== 'paid' && <button onClick={() => { setPayDebtId(d.id); setPayDebtAmount(String(d.amount - d.paidAmount)); setDialog('payDebt') }} className="text-[10px] font-bold px-2 py-1 rounded-lg" style={{ backgroundColor: SUC + '15', color: SUC }}>پرداخت</button>}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </Card>
               </div>
             ) : (
               <Card className="p-12 text-center">
@@ -412,6 +488,36 @@ export default function Suppliers() {
           <DialogField label="شماره مالیاتی"><DialogInput value={form.taxId} onChange={v => setForm(f => ({ ...f, taxId: v }))} /></DialogField>
         </div>
         <DialogField label="توضیحات"><DialogTextarea value={form.description} onChange={v => setForm(f => ({ ...f, description: v }))} rows={2} /></DialogField>
+      </Dialog>
+
+      {/* Register Debt Dialog */}
+      <Dialog open={dialog === 'addDebt' && !!selectedSupplier} onClose={() => setDialog(null)}
+        title={`ثبت بدهی — ${selectedSupplier?.name || ''}`}
+        icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>}
+        footer={<>
+          <DialogButton variant="ghost" onClick={() => setDialog(null)}>لغو</DialogButton>
+          <DialogButton variant="danger" onClick={handleRegisterDebt} disabled={!debtAmount || parseFloat(debtAmount) <= 0}>ثبت بدهی</DialogButton>
+        </>}>
+        <DialogField label="مبلغ بدهی *">
+          <FormattedPriceInput value={parseFloat(debtAmount) || 0} onChange={(v) => setDebtAmount(v ? String(v) : '')} className="w-full px-3 py-2.5 rounded-xl text-sm font-bold outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }} />
+        </DialogField>
+        <DialogField label="تاریخ">
+          <input type="date" value={debtDate} onChange={e => setDebtDate(e.target.value)} className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }} />
+        </DialogField>
+        <DialogField label="توضیحات"><DialogInput value={debtDesc} onChange={setDebtDesc} placeholder="اختیاری" /></DialogField>
+      </Dialog>
+
+      {/* Pay Debt Dialog */}
+      <Dialog open={dialog === 'payDebt'} onClose={() => setDialog(null)}
+        title="پرداخت بدهی"
+        icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>}
+        footer={<>
+          <DialogButton variant="ghost" onClick={() => setDialog(null)}>لغو</DialogButton>
+          <DialogButton variant="success" onClick={handlePayDebt} disabled={!payDebtAmount || parseFloat(payDebtAmount) <= 0}>پرداخت</DialogButton>
+        </>}>
+        <DialogField label="مبلغ پرداخت *">
+          <FormattedPriceInput value={parseFloat(payDebtAmount) || 0} onChange={(v) => setPayDebtAmount(v ? String(v) : '')} className="w-full px-3 py-2.5 rounded-xl text-sm font-bold outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }} />
+        </DialogField>
       </Dialog>
 
       <Dialog open={dialog === 'pay' && !!selectedSupplier} onClose={() => setDialog(null)}
