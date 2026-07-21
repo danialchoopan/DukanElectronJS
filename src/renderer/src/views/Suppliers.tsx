@@ -43,6 +43,7 @@ export default function Suppliers() {
   const [payAmount, setPayAmount] = useState('')
   const [payDesc, setPayDesc] = useState('')
   const [purchaseForm, setPurchaseForm] = useState({ supplierId: 0, items: [{ productTitle: '', quantity: 1, unitCost: 0 }], taxAmount: 0, discountAmount: 0, paidAmount: 0, notes: '' })
+  // Supplier debt tracking state
   const [debts, setDebts] = useState<any[]>([])
   const [debtStats, setDebtStats] = useState({ totalDebt: 0, totalPaid: 0, balance: 0 })
   const [debtAmount, setDebtAmount] = useState('')
@@ -92,6 +93,7 @@ export default function Suppliers() {
     await load()
   }
 
+  // Register a new supplier debt record
   const handleRegisterDebt = async () => {
     if (!selectedSupplier || !debtAmount) return
     const amt = parseFloat(debtAmount)
@@ -103,6 +105,7 @@ export default function Suppliers() {
     await refreshSelected(selectedSupplier.id)
   }
 
+  // Record a payment against an outstanding supplier debt
   const handlePayDebt = async () => {
     if (!payDebtId || !payDebtAmount) return
     const amt = parseFloat(payDebtAmount)
@@ -354,7 +357,7 @@ export default function Suppliers() {
                   )}
                 </Card>
 
-                {/* Supplier Debts */}
+                {/* Supplier Debts — list of debts with pay/register actions */}
                 <Card className="!p-0 overflow-hidden">
                   <div className="p-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${cBorder}` }}>
                     <div className="flex items-center gap-2">
@@ -490,7 +493,7 @@ export default function Suppliers() {
         <DialogField label="توضیحات"><DialogTextarea value={form.description} onChange={v => setForm(f => ({ ...f, description: v }))} rows={2} /></DialogField>
       </Dialog>
 
-      {/* Register Debt Dialog */}
+      {/* Register Debt Dialog — form to log a new supplier debt */}
       <Dialog open={dialog === 'addDebt' && !!selectedSupplier} onClose={() => setDialog(null)}
         title={`ثبت بدهی — ${selectedSupplier?.name || ''}`}
         icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>}
@@ -507,7 +510,7 @@ export default function Suppliers() {
         <DialogField label="توضیحات"><DialogInput value={debtDesc} onChange={setDebtDesc} placeholder="اختیاری" /></DialogField>
       </Dialog>
 
-      {/* Pay Debt Dialog */}
+      {/* Pay Debt Dialog — settle part or all of a specific debt */}
       <Dialog open={dialog === 'payDebt'} onClose={() => setDialog(null)}
         title="پرداخت بدهی"
         icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>}

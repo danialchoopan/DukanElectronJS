@@ -133,13 +133,13 @@ const MIGRATIONS: Migration[] = [
     version: '1.9.0',
     description: 'Add shipping_cost to sales, supplier_debts table, business address settings',
     up: (db) => {
-      // Shipping cost on sales
+      // Shipping cost columns on sales for online order delivery fees
       const salesCols = db.prepare('PRAGMA table_info(sales)').all().map((c: any) => c.name)
       if (!salesCols.includes('shipping_cost')) db.exec('ALTER TABLE sales ADD COLUMN shipping_cost REAL DEFAULT 0')
       if (!salesCols.includes('shipping_tax')) db.exec('ALTER TABLE sales ADD COLUMN shipping_tax REAL DEFAULT 0')
       if (!salesCols.includes('shipping_provider')) db.exec("ALTER TABLE sales ADD COLUMN shipping_provider TEXT DEFAULT ''")
       if (!salesCols.includes('tracking_number')) db.exec("ALTER TABLE sales ADD COLUMN tracking_number TEXT DEFAULT ''")
-      // Supplier debt management
+      // Supplier debt tracking tables (debt records + payment history)
       db.exec(`CREATE TABLE IF NOT EXISTS supplier_debts (
         id INTEGER PRIMARY KEY AUTOINCREMENT, supplierId INTEGER NOT NULL,
         amount REAL NOT NULL, paidAmount REAL NOT NULL DEFAULT 0,

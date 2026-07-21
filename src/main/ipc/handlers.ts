@@ -804,7 +804,7 @@ export function registerAllHandlers(): void {
     return { success: true }
   })
 
-  // ─── Supplier Debts ──────────────────────────────────────
+  // ─── Supplier Debts — register, pay, and query supplier debt records ──
   ipcMain.handle('supplierDebts:getBySupplier', (_e, a: { supplierId: number }) => {
     const db = getDatabase()
     return { success: true, data: db.prepare('SELECT * FROM supplier_debts WHERE supplierId = ? ORDER BY date DESC').all(a.supplierId) }

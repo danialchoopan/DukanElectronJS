@@ -400,6 +400,7 @@ const api = {
     addDebt: (supplierId: number, amount: number, description?: string, images?: string[]): Promise<IPCResponse<any>> => ipcRenderer.invoke('suppliers:addDebt', { supplierId, amount, description, images }),
   },
 
+  // Supplier debt management — create, pay, and query debts per supplier
   supplierDebts: {
     getBySupplier: (supplierId: number): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('supplierDebts:getBySupplier', { supplierId }),
     create: (data: { supplierId: number; amount: number; date: string; description?: string; reference?: string }): Promise<IPCResponse<any>> => ipcRenderer.invoke('supplierDebts:create', data),
