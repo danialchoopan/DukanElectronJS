@@ -105,6 +105,7 @@ export default function SalesTerminal() {
   const [saleType, setSaleType] = useState<'in-person' | 'online'>('in-person')
   const [saleDate, setSaleDate] = useState('')
   const [affectsInventory, setAffectsInventory] = useState(true)
+  const [shippingCost, setShippingCost] = useState(0)
 
   const handlePaymentComplete = useCallback(async (method: 'cash' | 'card' | 'ledger', customerPaid?: number) => {
     if (items.length === 0) { showNotif(fa.pos.noItems); return }
@@ -145,6 +146,7 @@ export default function SalesTerminal() {
       saleType: pendingPayment.saleType,
       saleDate: saleDate || undefined,
       affectsInventory,
+      shippingCost,
     })
     if (result.success && result.data) {
       const saleData = { ...result.data, customerName }
@@ -155,6 +157,7 @@ export default function SalesTerminal() {
       setFullyPaid(true)
       setPendingPayment(null)
       setSaleDate('')
+      setShippingCost(0)
       setAffectsInventory(true)
       barcodeRef.current?.focus()
     } else { showNotif(`${result.error}`) }
@@ -236,6 +239,10 @@ export default function SalesTerminal() {
             <label className="text-xs font-bold" style={{ color: 'var(--text-secondary)' }}>کاهش موجودی انبار</label>
           </div>
           {!affectsInventory && <p className="text-[10px] mt-1" style={{ color: '#f59e0b' }}>فقط برای مستندسازی ثبت می‌شود — موجودی تغییر نمی‌کند</p>}
+        </DialogField>
+        <DialogField label="هزینه ارسال (تومان)">
+          <input type="number" min="0" value={shippingCost || ''} onChange={(e) => setShippingCost(Number(e.target.value) || 0)} placeholder="0"
+            className="w-full px-3 py-2 rounded-xl text-sm font-bold outline-none" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
         </DialogField>
         <DialogField label="توضیحات فاکتور">
           <DialogInput value={invoiceDesc} onChange={setInvoiceDesc} placeholder="مثلاً: شماره سفارش، نام پروژه..." />

@@ -41,13 +41,13 @@ export function createSale(input: SaleInput): Sale {
 
   const createSaleTx = db.transaction(() => {
     const saleResult = db.prepare(`
-      INSERT INTO sales (invoiceNumber, userId, customerId, subtotal, total_amount, totalNetProfit, paymentMethod, customerPaid, changeAmount, description, invoiceDescription, manualCustomerName, saleType, saleDate, affectsInventory)
-      VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO sales (invoiceNumber, userId, customerId, subtotal, total_amount, totalNetProfit, paymentMethod, customerPaid, changeAmount, description, invoiceDescription, manualCustomerName, saleType, saleDate, affectsInventory, shipping_cost)
+      VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       invoiceNumber, input.userId, input.customerId ?? null,
       rawSubtotal, total_amount, input.paymentMethod, input.customerPaid, changeAmount,
       input.description || '', input.invoiceDescription || '', input.manualCustomerName || '', input.saleType || 'in-person',
-      saleDate, affectsInventory
+      saleDate, affectsInventory, input.shippingCost || 0
     )
     const saleId = saleResult.lastInsertRowid as number
 

@@ -117,6 +117,7 @@ export interface SaleInput {
   saleType?: 'in-person' | 'online'
   saleDate?: string
   affectsInventory?: boolean
+  shippingCost?: number
 }
 
 export interface Customer {
