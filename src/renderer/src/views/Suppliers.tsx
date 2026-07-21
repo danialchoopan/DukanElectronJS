@@ -19,6 +19,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSettingsStore } from '../store/settingsStore'
 import FormattedPriceInput from '../components/ui/FormattedPriceInput'
+import ShamsiDateInput from '../components/business/ShamsiDateInput'
 import Dialog, { DialogField, DialogInput, DialogTextarea, DialogButton } from '../components/ui/Dialog'
 import { formatISOToJalali } from '../utils/jalali'
 
@@ -505,7 +506,7 @@ export default function Suppliers() {
           <FormattedPriceInput value={parseFloat(debtAmount) || 0} onChange={(v) => setDebtAmount(v ? String(v) : '')} className="w-full px-3 py-2.5 rounded-xl text-sm font-bold outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }} />
         </DialogField>
         <DialogField label="تاریخ">
-          <input type="date" value={debtDate} onChange={e => setDebtDate(e.target.value)} className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, color: tPri }} />
+          <ShamsiDateInput value={debtDate} onChange={(v) => setDebtDate(v)} />
         </DialogField>
         <DialogField label="توضیحات"><DialogInput value={debtDesc} onChange={setDebtDesc} placeholder="اختیاری" /></DialogField>
       </Dialog>

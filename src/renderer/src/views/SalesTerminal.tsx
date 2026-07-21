@@ -41,6 +41,7 @@ import { formatJalaliDateTime, getTodayGregorian } from '../utils/jalali'
 import ShamsiDateInput from '../components/business/ShamsiDateInput'
 import type { Sale, Customer, Product } from "../../../types"
 import Dialog, { DialogField, DialogInput, DialogTextarea, DialogButton } from '../components/ui/Dialog'
+import FormattedPriceInput from '../components/ui/FormattedPriceInput'
 
 const primary = '#006194'
 const success = '#22c55e'
@@ -244,8 +245,7 @@ export default function SalesTerminal() {
         </DialogField>
         {/* Shipping cost input — added for online orders */}
         <DialogField label="هزینه ارسال (تومان)">
-          <input type="number" min="0" value={shippingCost || ''} onChange={(e) => setShippingCost(Number(e.target.value) || 0)} placeholder="0"
-            className="w-full px-3 py-2 rounded-xl text-sm font-bold outline-none" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+          <FormattedPriceInput value={shippingCost} onChange={(v) => setShippingCost(v)} className="w-full px-3 py-2 rounded-xl text-sm font-bold outline-none" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
         </DialogField>
         <DialogField label="توضیحات فاکتور">
           <DialogInput value={invoiceDesc} onChange={setInvoiceDesc} placeholder="مثلاً: شماره سفارش، نام پروژه..." />
