@@ -63,6 +63,10 @@ function migrateSchema(database: Database.Database): void {
     sales: [
       { name: 'saleDate', type: 'TEXT', defaultValue: "datetime('now', 'localtime')" },
       { name: 'affectsInventory', type: 'INTEGER', defaultValue: '1' },
+      { name: 'shipping_cost', type: 'REAL', defaultValue: '0' },
+      { name: 'shipping_tax', type: 'REAL', defaultValue: '0' },
+      { name: 'shipping_provider', type: 'TEXT', defaultValue: "''" },
+      { name: 'tracking_number', type: 'TEXT', defaultValue: "''" },
     ],
     customers: [
       { name: 'is_blocked', type: 'INTEGER', defaultValue: '0' },
@@ -107,6 +111,27 @@ function migrateSchema(database: Database.Database): void {
     console.log(`[Migration] ${migrationCount} columns added`)
   }
 
+  // Ensure supplier_debts tables exist
+  try {
+    database.exec(`CREATE TABLE IF NOT EXISTS supplier_debts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, supplierId INTEGER NOT NULL,
+      amount REAL NOT NULL, paidAmount REAL NOT NULL DEFAULT 0,
+      date TEXT NOT NULL, description TEXT DEFAULT '',
+      reference TEXT DEFAULT '', status TEXT NOT NULL DEFAULT 'pending',
+      notes TEXT DEFAULT '', createdAt TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+      FOREIGN KEY (supplierId) REFERENCES suppliers(id)
+    )`)
+    database.exec(`CREATE TABLE IF NOT EXISTS supplier_debt_payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, debtId INTEGER NOT NULL,
+      amount REAL NOT NULL, paymentDate TEXT NOT NULL,
+      method TEXT DEFAULT 'cash', reference TEXT DEFAULT '',
+      notes TEXT DEFAULT '', createdAt TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+      FOREIGN KEY (debtId) REFERENCES supplier_debts(id)
+    )`)
+    console.log('[Migration] supplier_debts tables ensured')
+  } catch (e) {
+    console.warn('[Migration] supplier_debts creation skipped:', e)
+  }
   // Ensure brands table exists (may not exist in old databases)
   try {
     database.exec(`CREATE TABLE IF NOT EXISTS brands (

@@ -14,12 +14,14 @@ import { formatDateTimeNow } from './jalali'
 
 let cachedShopName = ''
 let cachedShopPhone = ''
+let cachedShopAddress = ''
 let cachedTaxRate = 0
 let cachedCustomization: Record<string, string> = {}
 
-export function setShopName(name: string, phone?: string) {
+export function setShopName(name: string, phone?: string, address?: string) {
   if (name) cachedShopName = name
   if (phone !== undefined) cachedShopPhone = phone
+  if (address !== undefined) cachedShopAddress = address
 }
 
 export function setTaxRate(rate: number) {
@@ -153,6 +155,7 @@ export async function printA4Report(html: string, title: string, options?: {
   ${headerFields}
   <div class="shop-name">${name}</div>
   ${phone ? `<div class="shop-phone">تلفن: ${phone}</div>` : ''}
+  ${cachedShopAddress ? `<div class="shop-phone">آدرس: ${cachedShopAddress}</div>` : ''}
   <div class="report-title">${title}</div>
   ${taxInfo}
   ${html}

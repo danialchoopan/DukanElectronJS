@@ -15,7 +15,7 @@
 import { getDatabase } from './connection'
 import { createBackup } from './backup'
 
-const CURRENT_VERSION = '1.8.0'
+const CURRENT_VERSION = '1.9.0'
 
 // Expose for external use
 export { CURRENT_VERSION }
@@ -126,6 +126,35 @@ const MIGRATIONS: Migration[] = [
           FOREIGN KEY (supplierId) REFERENCES suppliers(id)
         )`)
       }
+    },
+    down: () => {},
+  },
+  {
+    version: '1.9.0',
+    description: 'Add shipping_cost to sales, supplier_debts table, business address settings',
+    up: (db) => {
+      // Shipping cost on sales
+      const salesCols = db.prepare('PRAGMA table_info(sales)').all().map((c: any) => c.name)
+      if (!salesCols.includes('shipping_cost')) db.exec('ALTER TABLE sales ADD COLUMN shipping_cost REAL DEFAULT 0')
+      if (!salesCols.includes('shipping_tax')) db.exec('ALTER TABLE sales ADD COLUMN shipping_tax REAL DEFAULT 0')
+      if (!salesCols.includes('shipping_provider')) db.exec("ALTER TABLE sales ADD COLUMN shipping_provider TEXT DEFAULT ''")
+      if (!salesCols.includes('tracking_number')) db.exec("ALTER TABLE sales ADD COLUMN tracking_number TEXT DEFAULT ''")
+      // Supplier debt management
+      db.exec(`CREATE TABLE IF NOT EXISTS supplier_debts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, supplierId INTEGER NOT NULL,
+        amount REAL NOT NULL, paidAmount REAL NOT NULL DEFAULT 0,
+        date TEXT NOT NULL, description TEXT DEFAULT '',
+        reference TEXT DEFAULT '', status TEXT NOT NULL DEFAULT 'pending',
+        notes TEXT DEFAULT '', createdAt TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+        FOREIGN KEY (supplierId) REFERENCES suppliers(id)
+      )`)
+      db.exec(`CREATE TABLE IF NOT EXISTS supplier_debt_payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, debtId INTEGER NOT NULL,
+        amount REAL NOT NULL, paymentDate TEXT NOT NULL,
+        method TEXT DEFAULT 'cash', reference TEXT DEFAULT '',
+        notes TEXT DEFAULT '', createdAt TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+        FOREIGN KEY (debtId) REFERENCES supplier_debts(id)
+      )`)
     },
     down: () => {},
   },

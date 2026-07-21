@@ -804,6 +804,40 @@ export function registerAllHandlers(): void {
     return { success: true }
   })
 
+  // ─── Supplier Debts ──────────────────────────────────────
+  ipcMain.handle('supplierDebts:getBySupplier', (_e, a: { supplierId: number }) => {
+    const db = getDatabase()
+    return { success: true, data: db.prepare('SELECT * FROM supplier_debts WHERE supplierId = ? ORDER BY date DESC').all(a.supplierId) }
+  })
+  ipcMain.handle('supplierDebts:create', (_e, a: { supplierId: number; amount: number; date: string; description?: string; reference?: string }) => {
+    if (!a.amount || a.amount <= 0) return { success: false, error: 'مبلغ باید مثبت باشد' }
+    const db = getDatabase()
+    const r = db.prepare('INSERT INTO supplier_debts (supplierId, amount, date, description, reference) VALUES (?, ?, ?, ?, ?)').run(a.supplierId, a.amount, a.date, a.description || '', a.reference || '')
+    return { success: true, data: { id: r.lastInsertRowid } }
+  })
+  ipcMain.handle('supplierDebts:pay', (_e, a: { debtId: number; amount: number; paymentDate: string; method?: string; reference?: string }) => {
+    if (!a.amount || a.amount <= 0) return { success: false, error: 'مبلغ باید مثبت باشد' }
+    const db = getDatabase()
+    const debt = db.prepare('SELECT * FROM supplier_debts WHERE id = ?').get(a.debtId) as any
+    if (!debt) return { success: false, error: 'بدهی یافت نشد' }
+    const newPaid = debt.paidAmount + a.amount
+    const newStatus = newPaid >= debt.amount ? 'paid' : 'partial'
+    db.prepare('UPDATE supplier_debts SET paidAmount = ?, status = ? WHERE id = ?').run(newPaid, newStatus, a.debtId)
+    db.prepare('INSERT INTO supplier_debt_payments (debtId, amount, paymentDate, method, reference) VALUES (?, ?, ?, ?, ?)').run(a.debtId, a.amount, a.paymentDate, a.method || 'cash', a.reference || '')
+    db.prepare('UPDATE suppliers SET balance = balance - ? WHERE id = ?').run(a.amount, debt.supplierId)
+    return { success: true }
+  })
+  ipcMain.handle('supplierDebts:delete', (_e, a: { debtId: number }) => {
+    const db = getDatabase()
+    db.prepare('DELETE FROM supplier_debts WHERE id = ?').run(a.debtId)
+    return { success: true }
+  })
+  ipcMain.handle('supplierDebts:stats', (_e, a: { supplierId: number }) => {
+    const db = getDatabase()
+    const r = db.prepare('SELECT COALESCE(SUM(amount), 0) as t, COALESCE(SUM(paidAmount), 0) as p FROM supplier_debts WHERE supplierId = ?').get(a.supplierId) as any
+    return { success: true, data: { totalDebt: r.t, totalPaid: r.p, balance: r.t - r.p } }
+  })
+
   // ─── Purchases ──────────────────────────────────────────
   handle('purchases:getAll', () => purchasesRepo.getAllPurchases())
   ipcMain.handle('purchases:getById', (_e, a: { id: number }) => ({ success: true, data: purchasesRepo.getPurchaseById(a.id) }))

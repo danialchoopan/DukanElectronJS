@@ -84,6 +84,8 @@ export async function createTestDb(): Promise<any> {
     CREATE TABLE IF NOT EXISTS brands (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, description TEXT DEFAULT '', isActive INTEGER NOT NULL DEFAULT 1, createdAt TEXT NOT NULL DEFAULT '');
     CREATE TABLE IF NOT EXISTS suppliers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, phone TEXT DEFAULT '', address TEXT DEFAULT '', notes TEXT DEFAULT '', balance REAL DEFAULT 0, isActive INTEGER NOT NULL DEFAULT 1, createdAt TEXT NOT NULL DEFAULT '');
     CREATE TABLE IF NOT EXISTS supplier_ledger (id INTEGER PRIMARY KEY AUTOINCREMENT, supplierId INTEGER NOT NULL, type TEXT NOT NULL, amount REAL NOT NULL, description TEXT DEFAULT '', images TEXT DEFAULT '[]', createdAt TEXT NOT NULL DEFAULT '');
+    CREATE TABLE IF NOT EXISTS supplier_debts (id INTEGER PRIMARY KEY AUTOINCREMENT, supplierId INTEGER NOT NULL, amount REAL NOT NULL, paidAmount REAL NOT NULL DEFAULT 0, date TEXT NOT NULL, description TEXT DEFAULT '', reference TEXT DEFAULT '', status TEXT NOT NULL DEFAULT 'pending', notes TEXT DEFAULT '', createdAt TEXT NOT NULL DEFAULT '');
+    CREATE TABLE IF NOT EXISTS supplier_debt_payments (id INTEGER PRIMARY KEY AUTOINCREMENT, debtId INTEGER NOT NULL, amount REAL NOT NULL, paymentDate TEXT NOT NULL, method TEXT DEFAULT 'cash', reference TEXT DEFAULT '', notes TEXT DEFAULT '', createdAt TEXT NOT NULL DEFAULT '');
   `)
 
   // Seed chart of accounts
