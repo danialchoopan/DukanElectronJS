@@ -809,12 +809,24 @@ export function registerAllHandlers(): void {
     const db = getDatabase()
     return { success: true, data: db.prepare('SELECT * FROM supplier_debts WHERE supplierId = ? ORDER BY date DESC').all(a.supplierId) }
   })
+  // Register supplier debt: posts journal entry (Debit Purchases, Credit Accounts Payable)
   ipcMain.handle('supplierDebts:create', (_e, a: { supplierId: number; amount: number; date: string; description?: string; reference?: string }) => {
     if (!a.amount || a.amount <= 0) return { success: false, error: 'مبلغ باید مثبت باشد' }
     const db = getDatabase()
     const r = db.prepare('INSERT INTO supplier_debts (supplierId, amount, date, description, reference) VALUES (?, ?, ?, ?, ?)').run(a.supplierId, a.amount, a.date, a.description || '', a.reference || '')
+    const supplier = db.prepare('SELECT name FROM suppliers WHERE id = ?').get(a.supplierId) as any
+    // Journal: Debit Purchases(5100), Credit Accounts Payable(2100)
+    const purchaseAcct = db.prepare("SELECT id FROM accounts WHERE code = '5100'").get() as any
+    const apAcct = db.prepare("SELECT id FROM accounts WHERE code = '2100'").get() as any
+    if (purchaseAcct && apAcct) {
+      const entry = db.prepare('INSERT INTO journal_entries (entryDate, description, referenceType, referenceId) VALUES (?, ?, ?, ?)').run(a.date, `بدهی به تأمین‌کننده: ${supplier?.name || a.supplierId}`, 'debt', r.lastInsertRowid)
+      db.prepare('INSERT INTO journal_entry_lines (entryId, accountId, debit, credit) VALUES (?, ?, ?, ?)').run(entry.lastInsertRowid, purchaseAcct.id, a.amount, 0)
+      db.prepare('INSERT INTO journal_entry_lines (entryId, accountId, debit, credit) VALUES (?, ?, ?, ?)').run(entry.lastInsertRowid, apAcct.id, 0, a.amount)
+    }
     return { success: true, data: { id: r.lastInsertRowid } }
   })
+
+  // Pay supplier debt: posts journal entry (Debit Accounts Payable, Credit Bank/Cash)
   ipcMain.handle('supplierDebts:pay', (_e, a: { debtId: number; amount: number; paymentDate: string; method?: string; reference?: string }) => {
     if (!a.amount || a.amount <= 0) return { success: false, error: 'مبلغ باید مثبت باشد' }
     const db = getDatabase()
@@ -825,6 +837,15 @@ export function registerAllHandlers(): void {
     db.prepare('UPDATE supplier_debts SET paidAmount = ?, status = ? WHERE id = ?').run(newPaid, newStatus, a.debtId)
     db.prepare('INSERT INTO supplier_debt_payments (debtId, amount, paymentDate, method, reference) VALUES (?, ?, ?, ?, ?)').run(a.debtId, a.amount, a.paymentDate, a.method || 'cash', a.reference || '')
     db.prepare('UPDATE suppliers SET balance = balance - ? WHERE id = ?').run(a.amount, debt.supplierId)
+    // Journal: Debit Accounts Payable(2100), Credit Bank(1200)
+    const apAcct = db.prepare("SELECT id FROM accounts WHERE code = '2100'").get() as any
+    const bankAcct = db.prepare("SELECT id FROM accounts WHERE code = '1200'").get() as any
+    if (apAcct && bankAcct) {
+      const supplier = db.prepare('SELECT name FROM suppliers WHERE id = ?').get(debt.supplierId) as any
+      const entry = db.prepare('INSERT INTO journal_entries (entryDate, description, referenceType, referenceId) VALUES (?, ?, ?, ?)').run(a.paymentDate, `پرداخت بدهی به تأمین‌کننده: ${supplier?.name || debt.supplierId}`, 'debt', a.debtId)
+      db.prepare('INSERT INTO journal_entry_lines (entryId, accountId, debit, credit) VALUES (?, ?, ?, ?)').run(entry.lastInsertRowid, apAcct.id, a.amount, 0)
+      db.prepare('INSERT INTO journal_entry_lines (entryId, accountId, debit, credit) VALUES (?, ?, ?, ?)').run(entry.lastInsertRowid, bankAcct.id, 0, a.amount)
+    }
     return { success: true }
   })
   ipcMain.handle('supplierDebts:delete', (_e, a: { debtId: number }) => {
