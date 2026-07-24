@@ -145,7 +145,7 @@ function createWindow(): void {
     height: 900,
     minWidth: 1024,
     minHeight: 700,
-    title: 'Danial Accounting',
+    title: `حسابداری دانیال — v${app.getVersion()}`,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,

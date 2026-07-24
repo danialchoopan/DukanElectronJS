@@ -112,6 +112,56 @@ function migrateSchema(database: Database.Database): void {
     console.log(`[Migration] ${migrationCount} columns added`)
   }
 
+  // Ensure bank + employee tables exist
+  try {
+    database.exec(`CREATE TABLE IF NOT EXISTS bank_accounts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, account_number TEXT DEFAULT '',
+      bank_name TEXT DEFAULT '', branch TEXT DEFAULT '', account_type TEXT DEFAULT 'current',
+      initial_balance REAL DEFAULT 0, current_balance REAL DEFAULT 0, currency TEXT DEFAULT 'IRR',
+      iban TEXT DEFAULT '', swift_code TEXT DEFAULT '', status TEXT DEFAULT 'active',
+      notes TEXT DEFAULT '', createdAt TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+      updatedAt TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+    )`)
+    database.exec(`CREATE TABLE IF NOT EXISTS bank_transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, bankAccountId INTEGER NOT NULL,
+      transactionDate TEXT NOT NULL, description TEXT DEFAULT '',
+      type TEXT NOT NULL DEFAULT 'deposit', amount REAL NOT NULL DEFAULT 0,
+      balanceAfter REAL DEFAULT 0, reference TEXT DEFAULT '',
+      relatedTo TEXT DEFAULT '', status TEXT DEFAULT 'cleared',
+      notes TEXT DEFAULT '', createdBy TEXT DEFAULT 'admin',
+      createdAt TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+      FOREIGN KEY (bankAccountId) REFERENCES bank_accounts(id)
+    )`)
+    database.exec(`CREATE TABLE IF NOT EXISTS employees (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, full_name TEXT NOT NULL,
+      employeeCode TEXT DEFAULT '', nationalId TEXT DEFAULT '',
+      position TEXT DEFAULT '', department TEXT DEFAULT '',
+      hireDate TEXT DEFAULT '', status TEXT DEFAULT 'active',
+      baseSalary REAL DEFAULT 0, salaryType TEXT DEFAULT 'monthly',
+      bankAccount TEXT DEFAULT '', accountNumber TEXT DEFAULT '',
+      phone TEXT DEFAULT '', email TEXT DEFAULT '',
+      address TEXT DEFAULT '', notes TEXT DEFAULT '',
+      createdAt TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+      updatedAt TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+    )`)
+    database.exec(`CREATE TABLE IF NOT EXISTS salary_payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, employeeId INTEGER NOT NULL,
+      paymentDate TEXT NOT NULL, period TEXT DEFAULT '',
+      baseSalary REAL DEFAULT 0, bonuses REAL DEFAULT 0,
+      deductions REAL DEFAULT 0, netSalary REAL DEFAULT 0,
+      overtimeHours REAL DEFAULT 0, overtimeRate REAL DEFAULT 0,
+      overtimeAmount REAL DEFAULT 0, taxAmount REAL DEFAULT 0,
+      insuranceAmount REAL DEFAULT 0, otherDeductions REAL DEFAULT 0,
+      paymentMethod TEXT DEFAULT 'cash', referenceNumber TEXT DEFAULT '',
+      bankAccountId INTEGER, status TEXT DEFAULT 'paid',
+      notes TEXT DEFAULT '', createdBy TEXT DEFAULT 'admin',
+      createdAt TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+      FOREIGN KEY (employeeId) REFERENCES employees(id)
+    )`)
+    console.log('[Migration] bank/employee tables ensured')
+  } catch (e) {
+    console.warn('[Migration] bank/employee tables skipped:', e)
+  }
   // Ensure supplier_debts + payment history tables exist
   try {
     database.exec(`CREATE TABLE IF NOT EXISTS supplier_debts (
