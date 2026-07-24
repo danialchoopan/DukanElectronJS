@@ -40,13 +40,15 @@ import Inventory from './views/Inventory'
 import Categories from './views/Categories'
 import Help from './views/Help'
 import Suppliers from './views/Suppliers'
+import BankAccounts from './views/BankAccounts'
+import Employees from './views/Employees'
 import SetupWizard from './views/SetupWizard'
 import Sidebar from './components/layout/Sidebar'
 import GlobalSearch from './components/business/GlobalSearch'
 import Calculator from './components/business/Calculator'
 import PrintPreviewDialog from './components/print/PrintPreviewDialog'
 
-type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas' | 'service' | 'credit' | 'calculator' | 'auditLog' | 'restorePoints'
+type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas' | 'service' | 'credit' | 'calculator' | 'auditLog' | 'restorePoints' | 'bankAccounts' | 'employees'
 
 const NAV_MAP: Record<string, View> = {
   'nav-pos': 'pos', 'nav-inventory': 'inventory', 'nav-dashboard': 'dashboard',
@@ -198,6 +200,8 @@ export default function App() {
         {currentView === 'service' && <ServiceTicketsView />}
         {currentView === 'credit' && <CustomerCreditView />}
         {currentView === 'calculator' && <div className="h-full p-5 overflow-auto" style={{ background: 'var(--bg-primary, #0f172a)' }}><Calculator docked /></div>}
+        {currentView === 'bankAccounts' && <BankAccounts />}
+        {currentView === 'employees' && <Employees />}
         {currentView === 'auditLog' && <div className="h-full p-5 overflow-auto" style={{ background: 'var(--bg-primary, #0f172a)' }}><AuditLogView /></div>}
         {currentView === 'restorePoints' && <div className="h-full p-5 overflow-auto" style={{ background: 'var(--bg-primary, #0f172a)' }}><RestorePointsView /></div>}
         {currentView === 'customers' && <CustomerManagement highlightId={navParams?.highlightId} onHighlightDone={clearNavParams} />}

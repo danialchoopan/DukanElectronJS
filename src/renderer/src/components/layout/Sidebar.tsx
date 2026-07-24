@@ -5,7 +5,7 @@ import { useTheme } from '../../hooks/useTheme'
 import { t, fa } from '../../i18n'
 import { DashboardIcon, UsersIcon, SettingsIcon, LogoutIcon, MoonIcon, SunIcon, LanguageIcon } from '../ui/Icons'
 
-type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas' | 'service' | 'credit' | 'calculator' | 'auditLog' | 'restorePoints'
+type View = 'pos' | 'dashboard' | 'admin' | 'settings' | 'customers' | 'expenses' | 'sales' | 'addproduct' | 'accounting' | 'inventory' | 'suppliers' | 'help' | 'categories' | 'reports' | 'crossSell' | 'installments' | 'proformas' | 'service' | 'credit' | 'calculator' | 'auditLog' | 'restorePoints' | 'bankAccounts' | 'employees'
 
 interface Props {
   currentView: View
@@ -35,6 +35,8 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
     customers: <UsersIcon className="w-5 h-5" />,
     suppliers: <TruckIcon />,
     calculator: <CalcIcon />,
+    bankAccounts: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/></svg>,
+    employees: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>,
     auditLog: <AuditLogIcon />,
     settings: <SettingsIcon className="w-5 h-5" />,
     admin: <AdminIcon />,
@@ -56,6 +58,8 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
     customers: ui.nav.customers,
     suppliers: 'تأمین\u200cکنندگان',
     calculator: 'ماشین حساب',
+    bankAccounts: 'حساب\u200cهای بانکی',
+    employees: 'کارمندان',
     auditLog: 'لاگ فعالیت',
     settings: 'تنظیمات',
     admin: 'مدیریت',

@@ -43,6 +43,8 @@ export const DEFAULT_NAV_CONFIG: NavConfigItem[] = [
   { key: 'customers', label: 'مشتریان', visible: true },
   { key: 'suppliers', label: 'تأمین\u200cکنندگان', visible: true },
   { key: 'calculator', label: 'ماشین حساب', visible: false },
+  { key: 'bankAccounts', label: 'حساب‌های بانکی', visible: true },
+  { key: 'employees', label: 'کارمندان', visible: true },
   { key: 'auditLog', label: 'لاگ فعالیت', visible: true },
   { key: 'settings', label: 'تنظیمات', visible: true },
   { key: 'admin', label: 'مدیریت', visible: true },

@@ -87,6 +87,12 @@ export default function SettingsTab({ onExport, onImport }: Props) {
             style={{ background: saved ? 'linear-gradient(135deg, #22c55e, #16a34a)' : `linear-gradient(135deg, ${primary}, #007bb9)`, boxShadow: saved ? '0 4px 12px rgba(34,197,94,0.3)' : `0 4px 12px ${primary}4d` }}>
             {saved ? 'ذخیره شد!' : fa.admin.save}
           </button>
+
+          {/* Version Info */}
+          <div className="rounded-xl p-3 flex items-center justify-between" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}` }}>
+            <span className="text-xs font-bold" style={{ color: tSec }}>نسخه برنامه</span>
+            <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ backgroundColor: `${primary}15`, color: primary }}>v1.10.0</span>
+          </div>
         </div>
 
         {/* Left: Tax + Backup + Export (2 cols) */}

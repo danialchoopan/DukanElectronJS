@@ -409,6 +409,27 @@ const api = {
     stats: (supplierId: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('supplierDebts:stats', { supplierId }),
   },
 
+  bankAccounts: {
+    getAll: (): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('bankAccounts:getAll'),
+    create: (data: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('bankAccounts:create', data),
+    update: (id: number, data: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('bankAccounts:update', { id, data }),
+    delete: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('bankAccounts:delete', { id }),
+    deposit: (data: { accountId: number; amount: number; date: string; description?: string }): Promise<IPCResponse<any>> => ipcRenderer.invoke('bankAccounts:deposit', data),
+    withdraw: (data: { accountId: number; amount: number; date: string; description?: string }): Promise<IPCResponse<any>> => ipcRenderer.invoke('bankAccounts:withdraw', data),
+    transfer: (data: { fromId: number; toId: number; amount: number; date: string; description?: string }): Promise<IPCResponse<any>> => ipcRenderer.invoke('bankAccounts:transfer', data),
+    transactions: (accountId: number): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('bankAccounts:transactions', { accountId }),
+  },
+
+  employees: {
+    getAll: (): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('employees:getAll'),
+    create: (data: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('employees:create', data),
+    update: (id: number, data: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('employees:update', { id, data }),
+    delete: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('employees:delete', { id }),
+    payroll: (data: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('employees:payroll', data),
+    getPayroll: (employeeId: number): Promise<IPCResponse<any[]>> => ipcRenderer.invoke('employees:getPayroll', { employeeId }),
+    bulkPayroll: (data: any): Promise<IPCResponse<any>> => ipcRenderer.invoke('employees:bulkPayroll', data),
+  },
+
   purchases: {
     getAll: (): Promise<IPCResponse<any>> => ipcRenderer.invoke('purchases:getAll'),
     getById: (id: number): Promise<IPCResponse<any>> => ipcRenderer.invoke('purchases:getById', { id }),
