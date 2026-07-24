@@ -949,6 +949,7 @@ export function registerAllHandlers(): void {
     db.prepare('UPDATE employees SET status = ? WHERE id = ?').run('inactive', a.id)
     return { success: true }
   })
+  // Process payroll: netSalary = base + bonuses + overtime - deductions - tax - insurance
   ipcMain.handle('employees:payroll', (_e, a: { employeeId: number; paymentDate: string; period: string; baseSalary: number; bonuses?: number; deductions?: number; overtimeHours?: number; overtimeRate?: number; taxAmount?: number; insuranceAmount?: number; paymentMethod?: string }) => {
     const db = getDatabase()
     const emp = db.prepare('SELECT * FROM employees WHERE id = ?').get(a.employeeId) as any
