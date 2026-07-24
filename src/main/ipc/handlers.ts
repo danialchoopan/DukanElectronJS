@@ -859,6 +859,145 @@ export function registerAllHandlers(): void {
     return { success: true, data: { totalDebt: r.t, totalPaid: r.p, balance: r.t - r.p } }
   })
 
+  // ─── Bank Accounts ──────────────────────────────────────
+  ipcMain.handle('bankAccounts:getAll', () => {
+    const db = getDatabase()
+    return { success: true, data: db.prepare('SELECT * FROM bank_accounts ORDER BY name').all() }
+  })
+  ipcMain.handle('bankAccounts:create', (_e, a: any) => {
+    const db = getDatabase()
+    const r = db.prepare('INSERT INTO bank_accounts (name, account_number, bank_name, branch, account_type, initial_balance, current_balance, iban, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(a.name, a.account_number || '', a.bank_name || '', a.branch || '', a.account_type || 'current', a.initial_balance || 0, a.initial_balance || 0, a.iban || '', a.notes || '')
+    return { success: true, data: { id: r.lastInsertRowid } }
+  })
+  ipcMain.handle('bankAccounts:update', (_e, a: { id: number; data: any }) => {
+    const db = getDatabase()
+    const u = a.data; const fields: string[] = []; const params: any[] = []
+    for (const k of ['name', 'account_number', 'bank_name', 'branch', 'account_type', 'iban', 'notes', 'status']) { if (u[k] !== undefined) { fields.push(`${k} = ?`); params.push(u[k]) } }
+    if (fields.length === 0) return { success: false }
+    fields.push("updatedAt = datetime('now','localtime')"); params.push(a.id)
+    db.prepare(`UPDATE bank_accounts SET ${fields.join(', ')} WHERE id = ?`).run(...params)
+    return { success: true }
+  })
+  ipcMain.handle('bankAccounts:delete', (_e, a: { id: number }) => {
+    const db = getDatabase()
+    db.prepare('UPDATE bank_accounts SET status = ? WHERE id = ?').run('inactive', a.id)
+    return { success: true }
+  })
+  ipcMain.handle('bankAccounts:deposit', (_e, a: { accountId: number; amount: number; date: string; description?: string }) => {
+    if (!a.amount || a.amount <= 0) return { success: false, error: 'مبلغ باید مثبت باشد' }
+    const db = getDatabase()
+    const acct = db.prepare('SELECT * FROM bank_accounts WHERE id = ?').get(a.accountId) as any
+    if (!acct) return { success: false, error: 'حساب یافت نشد' }
+    const newBalance = acct.current_balance + a.amount
+    db.prepare('UPDATE bank_accounts SET current_balance = ? WHERE id = ?').run(newBalance, a.accountId)
+    db.prepare('INSERT INTO bank_transactions (bankAccountId, transactionDate, type, amount, balanceAfter, description) VALUES (?, ?, ?, ?, ?, ?)').run(a.accountId, a.date, 'deposit', a.amount, newBalance, a.description || 'واریز')
+    return { success: true, data: { newBalance } }
+  })
+  ipcMain.handle('bankAccounts:withdraw', (_e, a: { accountId: number; amount: number; date: string; description?: string }) => {
+    if (!a.amount || a.amount <= 0) return { success: false, error: 'مبلغ باید مثبت باشد' }
+    const db = getDatabase()
+    const acct = db.prepare('SELECT * FROM bank_accounts WHERE id = ?').get(a.accountId) as any
+    if (!acct) return { success: false, error: 'حساب یافت نشد' }
+    if (acct.current_balance < a.amount) return { success: false, error: 'موجودی کافی نیست' }
+    const newBalance = acct.current_balance - a.amount
+    db.prepare('UPDATE bank_accounts SET current_balance = ? WHERE id = ?').run(newBalance, a.accountId)
+    db.prepare('INSERT INTO bank_transactions (bankAccountId, transactionDate, type, amount, balanceAfter, description) VALUES (?, ?, ?, ?, ?, ?)').run(a.accountId, a.date, 'withdrawal', a.amount, newBalance, a.description || 'برداشت')
+    return { success: true, data: { newBalance } }
+  })
+  ipcMain.handle('bankAccounts:transfer', (_e, a: { fromId: number; toId: number; amount: number; date: string; description?: string }) => {
+    if (!a.amount || a.amount <= 0) return { success: false, error: 'مبلغ باید مثبت باشد' }
+    const db = getDatabase()
+    const from = db.prepare('SELECT * FROM bank_accounts WHERE id = ?').get(a.fromId) as any
+    if (!from) return { success: false, error: 'حساب مبدأ یافت نشد' }
+    if (from.current_balance < a.amount) return { success: false, error: 'موجودی مبدأ کافی نیست' }
+    const to = db.prepare('SELECT * FROM bank_accounts WHERE id = ?').get(a.toId) as any
+    if (!to) return { success: false, error: 'حساب مقصد یافت نشد' }
+    db.prepare('UPDATE bank_accounts SET current_balance = current_balance - ? WHERE id = ?').run(a.amount, a.fromId)
+    db.prepare('UPDATE bank_accounts SET current_balance = current_balance + ? WHERE id = ?').run(a.amount, a.toId)
+    const fromBal = db.prepare('SELECT current_balance FROM bank_accounts WHERE id = ?').get(a.fromId) as any
+    const toBal = db.prepare('SELECT current_balance FROM bank_accounts WHERE id = ?').get(a.toId) as any
+    db.prepare('INSERT INTO bank_transactions (bankAccountId, transactionDate, type, amount, balanceAfter, description) VALUES (?, ?, ?, ?, ?, ?)').run(a.fromId, a.date, 'transfer', a.amount, fromBal.current_balance, `انتقال به ${to.name}`)
+    db.prepare('INSERT INTO bank_transactions (bankAccountId, transactionDate, type, amount, balanceAfter, description) VALUES (?, ?, ?, ?, ?, ?)').run(a.toId, a.date, 'transfer', a.amount, toBal.current_balance, `انتقال از ${from.name}`)
+    return { success: true }
+  })
+  ipcMain.handle('bankAccounts:transactions', (_e, a: { accountId: number }) => {
+    const db = getDatabase()
+    return { success: true, data: db.prepare('SELECT * FROM bank_transactions WHERE bankAccountId = ? ORDER BY transactionDate DESC').all(a.accountId) }
+  })
+
+  // ─── Employees ──────────────────────────────────────────
+  ipcMain.handle('employees:getAll', () => {
+    const db = getDatabase()
+    return { success: true, data: db.prepare('SELECT * FROM employees ORDER BY full_name').all() }
+  })
+  ipcMain.handle('employees:create', (_e, a: any) => {
+    const db = getDatabase()
+    const r = db.prepare('INSERT INTO employees (full_name, employeeCode, nationalId, position, department, hireDate, baseSalary, salaryType, phone, bankAccount, accountNumber, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(a.full_name, a.employeeCode || '', a.nationalId || '', a.position || '', a.department || '', a.hireDate || '', a.baseSalary || 0, a.salaryType || 'monthly', a.phone || '', a.bankAccount || '', a.accountNumber || '', a.notes || '')
+    return { success: true, data: { id: r.lastInsertRowid } }
+  })
+  ipcMain.handle('employees:update', (_e, a: { id: number; data: any }) => {
+    const db = getDatabase()
+    const u = a.data; const fields: string[] = []; const params: any[] = []
+    for (const k of ['full_name', 'employeeCode', 'nationalId', 'position', 'department', 'hireDate', 'baseSalary', 'salaryType', 'phone', 'bankAccount', 'accountNumber', 'notes', 'status']) { if (u[k] !== undefined) { fields.push(`${k} = ?`); params.push(u[k]) } }
+    if (fields.length === 0) return { success: false }
+    fields.push("updatedAt = datetime('now','localtime')"); params.push(a.id)
+    db.prepare(`UPDATE employees SET ${fields.join(', ')} WHERE id = ?`).run(...params)
+    return { success: true }
+  })
+  ipcMain.handle('employees:delete', (_e, a: { id: number }) => {
+    const db = getDatabase()
+    db.prepare('UPDATE employees SET status = ? WHERE id = ?').run('inactive', a.id)
+    return { success: true }
+  })
+  ipcMain.handle('employees:payroll', (_e, a: { employeeId: number; paymentDate: string; period: string; baseSalary: number; bonuses?: number; deductions?: number; overtimeHours?: number; overtimeRate?: number; taxAmount?: number; insuranceAmount?: number; paymentMethod?: string }) => {
+    const db = getDatabase()
+    const emp = db.prepare('SELECT * FROM employees WHERE id = ?').get(a.employeeId) as any
+    if (!emp) return { success: false, error: 'کارمند یافت نشد' }
+    const bonuses = a.bonuses || 0
+    const deductions = a.deductions || 0
+    const otHours = a.overtimeHours || 0
+    const otRate = a.overtimeRate || 0
+    const otAmount = otHours * otRate
+    const tax = a.taxAmount || 0
+    const insurance = a.insuranceAmount || 0
+    const base = a.baseSalary || emp.baseSalary
+    const netSalary = base + bonuses + otAmount - deductions - tax - insurance
+    const r = db.prepare('INSERT INTO salary_payments (employeeId, paymentDate, period, baseSalary, bonuses, deductions, netSalary, overtimeHours, overtimeRate, overtimeAmount, taxAmount, insuranceAmount, paymentMethod, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(a.employeeId, a.paymentDate, a.period, base, bonuses, deductions, netSalary, otHours, otRate, otAmount, tax, insurance, a.paymentMethod || 'cash', 'paid')
+    // Journal: Debit Salaries Expense(6300), Credit Bank(1200)
+    const salaryAcct = db.prepare("SELECT id FROM accounts WHERE code = '6300'").get() as any
+    const bankAcct = db.prepare("SELECT id FROM accounts WHERE code = '1200'").get() as any
+    if (salaryAcct && bankAcct && netSalary > 0) {
+      const entry = db.prepare('INSERT INTO journal_entries (entryDate, description, referenceType, referenceId) VALUES (?, ?, ?, ?)').run(a.paymentDate, `حقوق ${emp.full_name} — ${a.period}`, 'salary', r.lastInsertRowid)
+      db.prepare('INSERT INTO journal_entry_lines (entryId, accountId, debit, credit) VALUES (?, ?, ?, ?)').run(entry.lastInsertRowid, salaryAcct.id, netSalary, 0)
+      db.prepare('INSERT INTO journal_entry_lines (entryId, accountId, debit, credit) VALUES (?, ?, ?, ?)').run(entry.lastInsertRowid, bankAcct.id, 0, netSalary)
+    }
+    return { success: true, data: { id: r.lastInsertRowid, netSalary } }
+  })
+  ipcMain.handle('employees:getPayroll', (_e, a: { employeeId: number }) => {
+    const db = getDatabase()
+    return { success: true, data: db.prepare('SELECT * FROM salary_payments WHERE employeeId = ? ORDER BY paymentDate DESC').all(a.employeeId) }
+  })
+  ipcMain.handle('employees:bulkPayroll', (_e, a: { employeeIds: number[]; paymentDate: string; period: string }) => {
+    const db = getDatabase()
+    const results: any[] = []
+    for (const empId of a.employeeIds) {
+      const emp = db.prepare('SELECT * FROM employees WHERE id = ? AND status = ?').get(empId, 'active') as any
+      if (!emp) continue
+      const base = emp.baseSalary
+      const netSalary = base
+      const r = db.prepare('INSERT INTO salary_payments (employeeId, paymentDate, period, baseSalary, netSalary, paymentMethod, status) VALUES (?, ?, ?, ?, ?, ?, ?)').run(empId, a.paymentDate, a.period, base, netSalary, 'bank_transfer', 'paid')
+      const salaryAcct = db.prepare("SELECT id FROM accounts WHERE code = '6300'").get() as any
+      const bankAcct = db.prepare("SELECT id FROM accounts WHERE code = '1200'").get() as any
+      if (salaryAcct && bankAcct && netSalary > 0) {
+        const entry = db.prepare('INSERT INTO journal_entries (entryDate, description, referenceType, referenceId) VALUES (?, ?, ?, ?)').run(a.paymentDate, `حقوق ${emp.full_name} — ${a.period}`, 'salary', r.lastInsertRowid)
+        db.prepare('INSERT INTO journal_entry_lines (entryId, accountId, debit, credit) VALUES (?, ?, ?, ?)').run(entry.lastInsertRowid, salaryAcct.id, netSalary, 0)
+        db.prepare('INSERT INTO journal_entry_lines (entryId, accountId, debit, credit) VALUES (?, ?, ?, ?)').run(entry.lastInsertRowid, bankAcct.id, 0, netSalary)
+      }
+      results.push({ id: empId, name: emp.full_name, netSalary })
+    }
+    return { success: true, data: results }
+  })
+
   // ─── Purchases ──────────────────────────────────────────
   handle('purchases:getAll', () => purchasesRepo.getAllPurchases())
   ipcMain.handle('purchases:getById', (_e, a: { id: number }) => ({ success: true, data: purchasesRepo.getPurchaseById(a.id) }))
