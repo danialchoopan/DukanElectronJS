@@ -10,6 +10,7 @@ export default function Help() {
   const { shortcuts } = useShortcutsStore()
   const [updateInfo, setUpdateInfo] = useState<any>(null)
   const [checkingUpdate, setCheckingUpdate] = useState(false)
+  const appVersion = typeof window !== 'undefined' ? (window as any).electron?.app?.getVersion?.() || '1.10.0' : '1.10.0'
 
   const tPri = colors.text.primary
   const tSec = colors.text.secondary
@@ -120,7 +121,7 @@ export default function Help() {
           <h2 className="text-xl font-bold" style={{ color: tPri }}>راهنمای استفاده</h2>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs px-2 py-1 rounded-full font-bold" style={{ backgroundColor: `${primary}15`, color: primary }}>v{updateInfo?.currentVersion || '1.0.0'}</span>
+          <span className="text-xs px-2 py-1 rounded-full font-bold" style={{ backgroundColor: `${primary}15`, color: primary }}>v{updateInfo?.currentVersion || appVersion}</span>
           <button onClick={checkForUpdate} disabled={checkingUpdate}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
             style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, color: tSec }}>
